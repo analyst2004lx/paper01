@@ -1,0 +1,30 @@
+# OS / editor
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.swp
+*~
+.vscode/
+.idea/
+
+# Secrets / local env
+.env
+.env.*
+*.pem
+credentials.json
+
+# Python leftovers
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# One-shot local scripts
+_*.py
+fix_*.py
+doc2md.py
+
+# Optional: uncomment if PDFs/DOC make the repo too large
+# *.pdf
+# *.doc
+# *.docx
