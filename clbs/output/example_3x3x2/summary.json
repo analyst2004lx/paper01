@@ -1,0 +1,85 @@
+{
+  "instance": "example_3x3x2",
+  "delta_return": 1,
+  "features": {
+    "Tt_over_Tp": 0.9917,
+    "heterogeneity": 0.2007,
+    "flexibility": 1.0,
+    "NA_over_NM": 0.6667,
+    "num_jobs": 3,
+    "num_machines": 3,
+    "num_agvs": 2,
+    "num_real_ops": 7,
+    "num_nodes": 6,
+    "num_corridors": 6
+  },
+  "ga_config": {
+    "pop": 100,
+    "max_gen": 200,
+    "stall_gen": 30,
+    "seed": 42
+  },
+  "results": {
+    "closed": {
+      "makespan": 33.0,
+      "runtime_sec": 0.84,
+      "valid": true,
+      "validation_errors": [],
+      "generations": 37,
+      "evaluations": 3700,
+      "convergence_history": [
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        36.0,
+        34.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0,
+        33.0
+      ]
+    },
+    "twostage": {
+      "makespan": 36.0,
+      "runtime_sec": 0.25,
+      "valid": true,
+      "validation_errors": [],
+      "stage1_ideal_makespan": 32.0
+    },
+    "rule": {
+      "makespan": 48.0,
+      "runtime_sec": 0.0,
+      "valid": true,
+      "validation_errors": []
+    }
+  },
+  "improvement_closed_vs_twostage": 0.0833
+}

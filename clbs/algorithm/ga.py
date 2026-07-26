@@ -1,0 +1,236 @@
+"""上层调度层:GA 主循环、遗传算子与拥堵反馈局部搜索(规格文档 6.1、6.4、6.5)。"""
+from __future__ import annotations
+
+import math
+import random
+import time
+from dataclasses import dataclass, asdict
+from typing import Callable, Dict, List, Optional, Tuple
+
+from .instance import Instance, OpKey
+from .network import Network
+from .decoder import DecodeResult, decode, critical_real_ops
+
+
+@dataclass
+class GAConfig:
+    pop: int = 100
+    max_gen: int = 200
+    stall_gen: int = 30
+    pc: float = 0.8
+    pm: float = 0.2
+    elite: int = 5
+    tournament: int = 2
+    top_ls: float = 0.10      # 每代做局部搜索的精英比例
+    L_ls: int = 5             # 每轮尝试的关键工序数上限
+    lam: float = 0.5          # 拥堵惩罚权重 λ
+    ls_rounds: int = 3
+    seed: int = 42
+
+
+Chromosome = Dict[str, object]  # {"ma": Dict[OpKey,int], "os": List[int]}
+
+
+# ---------------- 染色体构造 ----------------
+
+def random_os(inst: Instance, rng: random.Random) -> List[int]:
+    seq: List[int] = []
+    for j, cnt in inst.os_job_counts().items():
+        seq.extend([j] * cnt)
+    rng.shuffle(seq)
+    return seq
+
+
+def random_ma(inst: Instance, rng: random.Random) -> Dict[OpKey, int]:
+    return {op: rng.choice(inst.eligible(*op)) for op in inst.real_ops()}
+
+
+def ma_min_time(inst: Instance) -> Dict[OpKey, int]:
+    """启发式个体 1:行内最小加工时间指派。"""
+    return {op: min(inst.proc_time[op], key=lambda m: (inst.proc_time[op][m], m))
+            for op in inst.real_ops()}
+
+
+def ma_load_balance(inst: Instance) -> Dict[OpKey, int]:
+    """启发式个体 2:贪心负载均衡指派。"""
+    load = {m: 0.0 for m in inst.machine_node}
+    ma: Dict[OpKey, int] = {}
+    for op in inst.real_ops():
+        m = min(inst.eligible(*op), key=lambda mm: (load[mm] + inst.proc_time[op][mm], mm))
+        ma[op] = m
+        load[m] += inst.proc_time[op][m]
+    return ma
+
+
+def init_population(inst: Instance, cfg: GAConfig, rng: random.Random) -> List[Chromosome]:
+    pop: List[Chromosome] = [
+        {"ma": ma_min_time(inst), "os": random_os(inst, rng)},
+        {"ma": ma_load_balance(inst), "os": random_os(inst, rng)},
+    ]
+    while len(pop) < cfg.pop:
+        pop.append({"ma": random_ma(inst, rng), "os": random_os(inst, rng)})
+    return pop[: cfg.pop]
+
+
+# ---------------- 遗传算子 ----------------
+
+def pox_crossover(os1: List[int], os2: List[int], jobs: List[int],
+                  rng: random.Random) -> Tuple[List[int], List[int]]:
+    """POX:随机工件子集在父代中保位,其余按另一父代顺序回填。"""
+    k = rng.randint(1, max(1, len(jobs) - 1))
+    keep = set(rng.sample(jobs, k))
+
+    def make(a: List[int], b: List[int]) -> List[int]:
+        child: List[Optional[int]] = [j if j in keep else None for j in a]
+        rest = iter([j for j in b if j not in keep])
+        return [j if j is not None else next(rest) for j in child]
+
+    return make(os1, os2), make(os2, os1)
+
+
+def ma_uniform_crossover(ma1: Dict[OpKey, int], ma2: Dict[OpKey, int],
+                         rng: random.Random) -> Tuple[Dict[OpKey, int], Dict[OpKey, int]]:
+    c1, c2 = {}, {}
+    for op in ma1:
+        if rng.random() < 0.5:
+            c1[op], c2[op] = ma1[op], ma2[op]
+        else:
+            c1[op], c2[op] = ma2[op], ma1[op]
+    return c1, c2
+
+
+def mutate(inst: Instance, chrom: Chromosome, rng: random.Random) -> None:
+    """OS 段:随机交换两位;MA 段:随机改派 Ω 内另一 RA。"""
+    os_seq: List[int] = chrom["os"]  # type: ignore
+    a, b = rng.randrange(len(os_seq)), rng.randrange(len(os_seq))
+    os_seq[a], os_seq[b] = os_seq[b], os_seq[a]
+
+    ma: Dict[OpKey, int] = chrom["ma"]  # type: ignore
+    flexible = [op for op in ma if len(inst.eligible(*op)) > 1]
+    if flexible:
+        op = rng.choice(flexible)
+        others = [m for m in inst.eligible(*op) if m != ma[op]]
+        ma[op] = rng.choice(others)
+
+
+def clone(chrom: Chromosome) -> Chromosome:
+    return {"ma": dict(chrom["ma"]), "os": list(chrom["os"])}  # type: ignore
+
+
+# ---------------- 拥堵反馈局部搜索(规格 6.5) ----------------
+
+def local_search(inst: Instance, net: Network, chrom: Chromosome,
+                 result: DecodeResult, cfg: GAConfig,
+                 conflict_free: bool) -> Tuple[Chromosome, DecodeResult]:
+    def congestion_at(node: str) -> float:
+        return sum(result.congestion.get(cid, 0.0) for cid in net.incident_corridors(node))
+
+    for _ in range(cfg.ls_rounds):
+        improved = False
+        chain = critical_real_ops(result)
+        for op in chain[: cfg.L_ls]:
+            j, i = op
+            cur_m = chrom["ma"][op]  # type: ignore
+            candidates = [m for m in inst.eligible(j, i) if m != cur_m]
+            if not candidates:
+                continue
+            pos_prev = inst.lu_node if i == 1 else inst.machine_node[chrom["ma"][(j, i - 1)]]  # type: ignore
+
+            def score(m: int) -> float:
+                node = inst.machine_node[m]
+                return (net.ideal_dist[pos_prev][node] + inst.proc_time[op][m]
+                        + cfg.lam * congestion_at(node))
+
+            best_m = min(candidates, key=lambda m: (score(m), m))
+            neighbor = clone(chrom)
+            neighbor["ma"][op] = best_m  # type: ignore
+            res2 = decode(inst, net, neighbor["ma"], neighbor["os"],  # type: ignore
+                          conflict_free=conflict_free)
+            if res2.makespan < result.makespan - 1e-9:
+                chrom, result = neighbor, res2
+                improved = True
+                break  # 首改进:重新提取关键路径
+        if not improved:
+            break
+    return chrom, result
+
+
+# ---------------- GA 主循环 ----------------
+
+def run_ga(inst: Instance, net: Network, cfg: GAConfig,
+           conflict_free: bool = True, use_ls: bool = True,
+           log: Optional[Callable[[str], None]] = None) -> dict:
+    rng = random.Random(cfg.seed)
+    t_start = time.time()
+
+    def evaluate(ch: Chromosome) -> DecodeResult:
+        return decode(inst, net, ch["ma"], ch["os"], conflict_free=conflict_free)  # type: ignore
+
+    population = init_population(inst, cfg, rng)
+    results = [evaluate(ch) for ch in population]
+    history: List[float] = []
+    best_idx = min(range(len(results)), key=lambda x: results[x].makespan)
+    best_chrom, best_result = clone(population[best_idx]), results[best_idx]
+    stall = 0
+    n_eval = len(population)
+
+    for gen in range(1, cfg.max_gen + 1):
+        order = sorted(range(len(population)), key=lambda x: results[x].makespan)
+
+        # 精英个体做拥堵反馈局部搜索(决策级闭环)
+        if use_ls:
+            n_ls = max(1, math.ceil(cfg.top_ls * cfg.pop))
+            for idx in order[:n_ls]:
+                ch2, res2 = local_search(inst, net, population[idx], results[idx],
+                                         cfg, conflict_free)
+                if res2.makespan < results[idx].makespan - 1e-9:
+                    population[idx], results[idx] = ch2, res2
+            order = sorted(range(len(population)), key=lambda x: results[x].makespan)
+
+        # 更新全局最优
+        if results[order[0]].makespan < best_result.makespan - 1e-9:
+            best_chrom = clone(population[order[0]])
+            best_result = results[order[0]]
+            stall = 0
+        else:
+            stall += 1
+        history.append(best_result.makespan)
+        if log and (gen % 10 == 0 or gen == 1):
+            log(f"  gen {gen:4d}  best C_max = {best_result.makespan:.1f}")
+        if stall >= cfg.stall_gen:
+            break
+
+        # 生成下一代:精英保留 + 锦标赛 + POX/均匀交叉 + 变异
+        new_pop: List[Chromosome] = [clone(population[i]) for i in order[: cfg.elite]]
+
+        def pick() -> Chromosome:
+            cand = rng.sample(range(len(population)), cfg.tournament)
+            return population[min(cand, key=lambda x: results[x].makespan)]
+
+        while len(new_pop) < cfg.pop:
+            p1, p2 = pick(), pick()
+            if rng.random() < cfg.pc:
+                os1, os2 = pox_crossover(p1["os"], p2["os"], inst.job_ids, rng)  # type: ignore
+                ma1, ma2 = ma_uniform_crossover(p1["ma"], p2["ma"], rng)  # type: ignore
+                kids = [{"ma": ma1, "os": os1}, {"ma": ma2, "os": os2}]
+            else:
+                kids = [clone(p1), clone(p2)]
+            for kid in kids:
+                if rng.random() < cfg.pm:
+                    mutate(inst, kid, rng)
+                new_pop.append(kid)
+                if len(new_pop) >= cfg.pop:
+                    break
+        population = new_pop
+        results = [evaluate(ch) for ch in population]
+        n_eval += len(population)
+
+    return {
+        "best_chrom": best_chrom,
+        "best_result": best_result,
+        "history": history,
+        "generations": len(history),
+        "evaluations": n_eval,
+        "runtime_sec": round(time.time() - t_start, 2),
+        "config": asdict(cfg),
+    }
