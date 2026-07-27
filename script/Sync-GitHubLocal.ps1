@@ -16,13 +16,13 @@ param(
 # If the repo is only for paper files, prefer a dedicated subfolder, e.g.
 #   LocalFolder = 'C:\Users\analy\Desktop\AI_Folder\paper01'
 $Config = @{
-    LocalFolder   = 'C:\Users\analy\Desktop\AI_Folder'
+    LocalFolder   = 'C:\Users\Administrator\Desktop\新建文件夹\AI_Folder'
     RepoUrl       = 'https://github.com/analyst2004lx/paper01'
     # Use 'master' if your default branch is master; empty = auto-detect
     Branch        = 'main'
     WindowStart   = '10:00'
     WindowEnd     = '17:00'
-    LogDir        = 'C:\Users\analy\Desktop\AI_Folder\script\logs'
+    LogDir        = 'C:\Users\Administrator\Desktop\新建文件夹\AI_Folder\script\logs'
     CommitPrefix  = 'auto-sync'
     NewerSkewSec  = 5
     SyncDeletions = $false
@@ -380,6 +380,18 @@ try {
         Invoke-Git -GitArgs @('checkout', '-B', $branch) | Out-Null
     }
 
+    # If repo was created via "git init" on a non-empty folder, local history may be
+    # unrelated to GitHub. Soft-reset onto remote keeps all local file contents.
+    $headCheck = Invoke-Git -GitArgs @('rev-parse', '--verify', 'HEAD') -AllowFail
+    if ($headCheck.ExitCode -eq 0) {
+        $mergeBase = Invoke-Git -GitArgs @('merge-base', 'HEAD', $remoteRef) -AllowFail
+        if ($mergeBase.ExitCode -ne 0) {
+            Write-Log 'Local history is unrelated to remote (common after git init on existing files). Reattaching onto remote; local files kept.' -Level WARN
+            Invoke-Git -GitArgs @('reset', '--soft', $remoteRef) | Out-Null
+            Write-Log ('Soft-reset onto {0} complete' -f $remoteRef)
+        }
+    }
+
     function Get-RemoteCommitTime([string]$RelPath) {
         $r = Invoke-Git -GitArgs @('log', '-1', '--format=%ct', $remoteRef, '--', $RelPath) -AllowFail
         if ($r.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($r.Output)) { return $null }
@@ -507,37 +519,76 @@ try {
             }
         }
         Write-Log ('git add done: ok={0}, fail={1}' -f $added, $addFail)
+    } else {
+        Write-Log 'No local-newer/local-only files to stage'
+    }
 
-        $status = Invoke-Git -GitArgs @('status', '--porcelain')
-        if ([string]::IsNullOrWhiteSpace($status.Output)) {
-            Write-Log 'Nothing staged to commit (files may be ignored by .gitignore, or identical to index).' -Level WARN
-            Write-Log 'Tip: check .gitignore, or use git check-ignore -v <file>' -Level WARN
+    # Commit only when the index actually differs from HEAD (ignore untracked noise like logs/)
+    $cachedQuiet = Invoke-Git -GitArgs @('diff', '--cached', '--quiet') -AllowFail
+    $hasStaged = ($cachedQuiet.ExitCode -ne 0)
+    if ($hasStaged) {
+        $stagedList = Invoke-Git -GitArgs @('diff', '--cached', '--name-only') -AllowFail
+        $stagedNames = @()
+        if (-not [string]::IsNullOrWhiteSpace($stagedList.Output)) {
+            $stagedNames = @($stagedList.Output -split "`r?`n" | Where-Object { $_ })
+        }
+        Write-Log ('Staged files for commit: {0}' -f $stagedNames.Count)
+        if ($stagedNames.Count -gt 0) {
+            Write-Log (($stagedNames | Select-Object -First 15) -join [Environment]::NewLine) -Level DEBUG
+        }
+
+        $msg = '{0} {1:yyyy-MM-dd HH:mm:ss} ({2} files)' -f $Config.CommitPrefix, (Get-Date), $stagedNames.Count
+        $commit = Invoke-Git -GitArgs @('commit', '-m', $msg) -AllowFail -WithCommitIdentity
+        if ($commit.ExitCode -ne 0) {
+            Write-Log ('commit failed (exit={0}): {1}' -f $commit.ExitCode, $commit.Output) -Level ERROR
+            Write-Log 'If identity error: set Config.GitUserName / GitUserEmail in this script.' -Level ERROR
             $pushOk = $false
         } else {
-            $stagedLines = @($status.Output -split "`r?`n" | Where-Object { $_ })
-            Write-Log ('Staged/changed entries: {0}' -f $stagedLines.Count)
-            Write-Log ($stagedLines | Select-Object -First 15 | Out-String).Trim() -Level DEBUG
+            Write-Log ('committed: {0}' -f $msg)
+        }
+    } else {
+        Write-Log 'Nothing new to commit (working tree matches HEAD, or only timestamp differed).'
+    }
 
-            $msg = '{0} {1:yyyy-MM-dd HH:mm:ss} ({2} files)' -f $Config.CommitPrefix, (Get-Date), $pushCandidates.Count
-            # Pass identity explicitly to avoid "Author identity unknown"
-            $commit = Invoke-Git -GitArgs @('commit', '-m', $msg) -AllowFail -WithCommitIdentity
-            if ($commit.ExitCode -ne 0) {
-                Write-Log ('commit failed (exit={0}): {1}' -f $commit.ExitCode, $commit.Output) -Level ERROR
-                Write-Log 'If identity error: set Config.GitUserName / GitUserEmail in this script.' -Level ERROR
-                $pushOk = $false
-            } else {
-                Write-Log ('committed: {0}' -f $msg)
-                Write-Log ('push origin/{0} ...' -f $branch)
+    # Push whenever local is ahead of remote (including commits from a previous run)
+    if ($pushOk) {
+        $mbPush = Invoke-Git -GitArgs @('merge-base', 'HEAD', $remoteRef) -AllowFail
+        if ($mbPush.ExitCode -ne 0) {
+            Write-Log 'Skip push: local history still unrelated to remote.' -Level ERROR
+            $pushOk = $false
+        } else {
+            $ahead = Invoke-Git -GitArgs @('rev-list', '--count', ('{0}..HEAD' -f $remoteRef)) -AllowFail
+            $behind = Invoke-Git -GitArgs @('rev-list', '--count', ('HEAD..{0}' -f $remoteRef)) -AllowFail
+            $aheadN = 0
+            $behindN = 0
+            if ($ahead.ExitCode -eq 0 -and $ahead.Output -match '^\d+') { $aheadN = [int]$ahead.Output.Trim() }
+            if ($behind.ExitCode -eq 0 -and $behind.Output -match '^\d+') { $behindN = [int]$behind.Output.Trim() }
+
+            if ($behindN -gt 0) {
+                Write-Log ('Remote ahead by {0} commit(s); merging {1} before push...' -f $behindN, $remoteRef) -Level WARN
+                $merge = Invoke-Git -GitArgs @('merge', '--no-edit', $remoteRef) -AllowFail -WithCommitIdentity
+                if ($merge.ExitCode -ne 0) {
+                    Write-Log ('merge failed: {0}' -f $merge.Output) -Level ERROR
+                    Write-Log 'Resolve conflicts manually, then re-run the script.' -Level ERROR
+                    $pushOk = $false
+                } else {
+                    Write-Log 'merge ok'
+                    $aheadN = 1
+                }
+            }
+
+            if ($pushOk -and $aheadN -gt 0) {
+                Write-Log ('push origin/{0} (ahead={1}) ...' -f $branch, $aheadN)
                 $push = Invoke-Git -GitArgs @('push', '-u', 'origin', $branch) -AllowFail
                 if ($push.ExitCode -ne 0) {
                     Write-Log ('push failed. Login Git Credential Manager / SSH first.{0}{1}' -f [Environment]::NewLine, $push.Output) -Level ERROR
                     exit 3
                 }
                 Write-Log 'push ok'
+            } elseif ($pushOk) {
+                Write-Log 'Remote already up to date (nothing to push)'
             }
         }
-    } else {
-        Write-Log 'No local updates to push'
     }
 
     if ($pushOk) {

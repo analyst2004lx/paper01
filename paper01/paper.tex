@@ -1,0 +1,1885 @@
+%%
+%% The original source files were:
+%%
+%% samples.dtx  (with options: `all,proceedings,bibtex,manuscript')
+%% 
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from sample-manuscript.tex.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file samples.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+%%
+%%
+%% Commands for TeXCount
+%TC:macro \cite [option:text,text]
+%TC:macro \citep [option:text,text]
+%TC:macro \citet [option:text,text]
+%TC:envir table 0 1
+%TC:envir table* 0 1
+%TC:envir tabular [ignore] word
+%TC:envir displaymath 0 word
+%TC:envir math 0 word
+%TC:envir comment 0 0
+%%
+%% The first command in your LaTeX source must be the \documentclass
+%% command.
+%%
+%% For submission and review of your manuscript please change the
+%% command to \documentclass[manuscript, screen, review]{acmart}.
+%%
+%% When submitting camera ready or to TAPS, please change the command
+%% to \documentclass[sigconf]{acmart} or whichever template is required
+%% for your publication.
+%%
+%%
+\documentclass[manuscript,screen,review]{acmart}
+
+
+\usepackage{algorithm}
+% Use algorithmicx + algpseudocode: provides \Require, \Ensure, \State, and \Comment
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+% Load common tikz libraries used in figures (positioning provides the "of" syntax)
+\usetikzlibrary{positioning,arrows.meta,calc,shapes,shadows}
+% color support for \textcolor used inside algorithms
+\usepackage{xcolor}
+% Math packages required for \text and bold symbols inside math
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage{multirow}
+% Enable list customization (leftmargin, itemsep, etc.) used in the document
+\usepackage{enumitem}
+% Ensure header height is sufficient for fancyhdr
+\setlength{\headheight}{20.48303pt}
+% theorem environments used in the document
+\usepackage{amsthm}
+\newtheorem{assumption}{Assumption}
+\newtheorem{problem}{Problem}
+% Define remark environment (was missing and caused compilation errors)
+\newtheorem{remark}{Remark}
+
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+\setcopyright{acmlicensed}
+\copyrightyear{2025}
+\acmYear{2025}
+\acmDOI{XXXXXXX.XXXXXXX}
+
+%% These commands are for a PROCEEDINGS abstract or paper.
+%%  \acmConference[Conference acronym 'XX]{Make sure to enter the correct
+%% 	conference title from your rights confirmation email}{June 03--05,
+%% 	2018}{Woodstock, NY}
+
+%%
+%%  Uncomment \acmBooktitle if the title of the proceedings is different
+%%  from ``Proceedings of ...''!
+%%
+%%\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
+%%  June 03--05, 2018, Woodstock, NY}
+%%\acmISBN{978-1-4503-XXXX-X/2018/06}
+
+
+%%
+%% Submission ID.
+%% Use this when submitting an article to a sponsored event. You'll
+%% receive a unique submission ID from the organizers
+%% of the event, and this ID should be used as the parameter to this command.
+%%\acmSubmissionID{123-A56-BU3}
+
+%%
+%% For managing citations, it is recommended to use bibliography
+%% files in BibTeX format.
+%%
+%% You can then either use BibTeX with the ACM-Reference-Format style,
+%% or BibLaTeX with the acmnumeric or acmauthoryear sytles, that include
+%% support for advanced citation of software artefact from the
+%% biblatex-software package, also separately available on CTAN.
+%%
+%% Look at the sample-*-biblatex.tex files for templates showcasing
+%% the biblatex styles.
+%%
+
+%%
+%% The majority of ACM publications use numbered citations and
+%% references.  The command \citestyle{authoryear} switches to the
+%% "author year" style.
+%%
+%% If you are preparing content for an event
+%% sponsored by ACM SIGGRAPH, you must use the "author year" style of
+%% citations and references.
+%% Uncommenting
+%% the next command will enable that style.
+%%\citestyle{acmauthoryear}
+
+
+%%
+%% end of the preamble, start of the body of the document source.
+\begin{document}
+
+%%
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
+\title{Coordinated Scheduling of Continuous--Discrete Hybrid Agent Systems via Spatiotemporal Logic and Hybrid Dynamic Programming}
+
+%%
+%% The "author" command and its associated commands are used to define
+%% the authors and their affiliations.
+%% Of note is the shared affiliation of the first two authors, and the
+%% "authornote" and "authornotemark" commands
+%% used to denote shared contribution to the research.
+
+%\author{Qi Yu}
+%%%\authornote{.}
+%%%\authornotemark[1]
+%\email{230240012@seu.edu.cn}
+%\orcid{0009-0008-7843-6345}
+%%%\authornote{corresponding author}
+%\affiliation{%
+%	\institution{School of Cyber Science and Engineering, Southeast University}
+%	\city{Nanjing}
+%	\state{Jiangsu}
+%	\country{PR China}
+%}
+%\author{Wei Li}
+%\orcid{0009-0001-0949-329X}
+%\email{xchlw@seu.edu.cn}
+%\authornote{corresponding author}
+%\affiliation{%
+%	\institution{School of Computer Science and Engineering, Southeast University}
+%	\city{Nanjing}
+%	\state{Jiangsu}
+%	\country{PR China}
+%}
+
+\author{Qi Yu $^{\dagger\diamondsuit}$}
+%%\authornote{.}
+%%\authornotemark[1]
+\email{230240012@seu.edu.cn}
+\orcid{0009-0008-7843-6345}
+%%\authornote{corresponding author}
+
+
+\author{Wei Li $^{\dagger*\diamondsuit}$}
+\email{xchlw@seu.edu.cn}
+\authornote{corresponding author}
+
+\affiliation{%
+	\institution{$^\dagger$ School of Cyber Science and Engineering, Southeast University}
+	\city{Nanjing}
+	\state{Jiangsu}
+	\country{PR China}
+}
+\affiliation{%
+	\institution{$^{\dagger*}$ School of Computer Science and Engineering, Southeast University}
+	\city{Nanjing}
+	\state{Jiangsu}
+	\country{PR China}
+}
+\affiliation{%
+	\institution{$^\diamondsuit$ Key Laboratory of Computer Network and Information Integration (Southeast University), MOE}
+	\city{Nanjing}
+	\state{Jiangsu}
+	\country{PR China}
+}
+
+%%
+%% By default, the full list of authors will be used in the page
+%% headers. Often, this list is too long, and will overlap
+%% other information printed in the page headers. This command allows
+%% the author to define a more concise list
+%% of authors' names for this purpose.
+%%\renewcommand{\shortauthors}{Qi et al.}
+
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+Multi-agent coordination in heterogeneous manufacturing systems integrating mobile and stationary agents faces fundamental challenges: 
+coupled discrete-continuous optimization is computationally intractable, existing 
+approaches sacrifice optimality by solving subproblems independently. 
+We propose the Hybrid Dynamic Programming (HDP) framework for solving the 
+Coupled Discrete-Continuous Heterogeneous Agent Scheduling (CDHAS) problem in 
+intelligent manufacturing. HDP decomposes the intractable joint problem into 
+Continuous State Space (CSS) trajectory optimization and Discrete Event System 
+(DES) task scheduling, coordinating them through iterative refinement with 
+proven convergence guarantees. We establish theoretical results on geometric convergence (the iterative 
+coordination converges in 6 iterations on average, with empirical 
+convergence rate $\rho_{\text{eff}} \approx 0.41$---faster than the 
+theoretical worst-case prediction of $0.45$--$0.68$, owing to sparse 
+coupling and schedule stability in practice), near-optimality (within 
+1.2\% of global optimal), and polynomial \textit{task} complexity 
+($O(M^{1.8})$ for fixed agent numbers, where $M$ is the number of tasks, compared to MILP's 
+exponential $O(2^M)$). Experiments on a heterogeneous manufacturing system across three problem 
+scales (12-60 tasks, with 10 instances per dataset) demonstrate 15--23\%
+makespan reduction and 25\% utilization improvement compared to baseline methods, with polynomial \textit{task 
+scalability} enabling 100 task problems to be solved in under 2 minutes.
+\end{abstract}
+%%
+%% The code below is generated by the tool at http://dl.acm.org/ccs.cfm.
+%% Please copy and paste the code instead of the example below.
+%%
+\begin{CCSXML}
+	<ccs2012>
+	<concept>
+	<concept_id>10010520.10010553.10010554.10010557</concept_id>
+	<concept_desc>Computer systems organization~Robotic autonomy</concept_desc>
+	<concept_significance>500</concept_significance>
+	</concept>
+	</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Computer systems organization~Robotic autonomy}
+
+%%
+%% Keywords. The author(s) should pick words that accurately describe
+%% the work being presented. Separate the keywords with commas.
+\keywords{Continuous--Discrete Hybrid Agent System (CDHAS), Hybrid Dynamic Programming (HDP), Spatiotemporal Logic Modeling, Intelligent Manufacturing Scheduling, Multi-Agent System}
+
+
+
+%\Acknowledgements{This work was supported partly by Key Laboratory of Computer Network and Information Integration (Southeast University) of Ministry of Education of China under Grants NO. 93K-9 and Jiangsu Provincial Key Laboratory of Network and Information Security under Grants No.BM2003201.}
+
+
+\received{27 November 2025}
+\received[revised]{26 February 2026}
+\received[accepted]{XX XX 2026}
+
+%%
+%% This command processes the author and affiliation and title
+%% information and builds the first part of the formatted document.
+\maketitle
+\section{Introduction}
+\label{sec:Chapter_I}
+
+The deployment of intelligent manufacturing systems promises to revolutionize 
+industrial production through the coordinated operation of heterogeneous agents. 
+These systems integrate mobile agents—such as Automated Guided Vehicles (AGVs) 
+navigating factory floors with continuous spatiotemporal dynamics—and stationary 
+agents—such as robotic manipulators executing discrete event-driven processing 
+tasks~\cite{chryssolouris2023artificial}. While these subsystems 
+are often studied independently, their real-world interactions form a 
+\textit{Continuous–Discrete Hybrid Agent System (CDHAS)}, where mobile and 
+stationary agents exhibit \textit{bidirectional spatiotemporal coupling}—mobile 
+agent trajectories constrain discrete task assignments, while task schedules 
+constrain mobile agent destinations and arrival times. This coupling requires 
+joint optimization of spatial trajectories and discrete task logic to achieve 
+efficient production~\cite{giordani2013distributed}.
+
+Such coordination is critical across manufacturing applications. In warehouse 
+logistics, AGVs must deliver materials to robotic assembly stations at precise 
+times to minimize idle time~\cite{ellithy2024agv}.
+This type of applications share a common structure: continuous mobile agents with 
+spatiotemporal dynamics must coordinate with discrete stationary agents executing 
+event-driven tasks.
+
+However, a fundamental challenge impedes practical deployment: the 
+\textit{bidirectional spatiotemporal coupling} between continuous and discrete 
+subsystems~\cite{senkul2002logical}. As illustrated in 
+Fig.~\ref{fig:intro_problem}, this coupling creates a circular dependency that 
+traditional sequential methods cannot resolve effectively.
+
+\begin{figure}[t]
+\centering
+    \includegraphics[width=0.85\columnwidth]{fig/fig_intro_problem_new.pdf}
+    \Description{Illustration of the introductory problem setup: AGVs and robotic arms.}
+\caption{The bidirectional coupling challenge in CDHAS.
+\textbf{(a) Physical scenario}: AGV1 starts near RA1 (2m), but RA1 is busy
+for 12s; RA2 is idle but 5m away. The spatially greedy choice ignores temporal availability.
+\textbf{(b) Circular dependency}: CSS agents require a DES schedule to plan
+trajectories, while DES agents require CSS arrival times to schedule tasks---
+neither subsystem can be solved independently, and traditional sequential
+methods inevitably break this coupling.
+\textbf{(c) Consequence}: Greedy-Single assigns AGV1 to the nearest RA1,
+creating a 10s idle gap, illustrating the cost of ignoring bidirectional coupling.}
+\label{fig:intro_problem}
+\end{figure}
+
+Fig.~\ref{fig:intro_problem}(b) illustrates the core challenge: CSS and DES 
+are mutually dependent. CSS trajectories constrain which discrete tasks can be 
+assigned, while discrete task assignments constrain where CSS agents must travel. 
+This creates a circular dependency---neither subsystem can be solved 
+independently. As shown in Fig.~\ref{fig:intro_problem}(a), consider a concrete 
+scenario where AGV1 starts near RA1 (2\,m away), but RA1 is busy for 12\,s, 
+while RA2 is idle but located 5\,m away. Traditional sequential methods that 
+optimize subsystems separately break this coupling: as shown in 
+Fig.~\ref{fig:intro_problem}(c), Greedy-Single assigns AGV1 to the spatially 
+nearest RA1, creating a 10\,s idle gap and a makespan of 18\,s---a direct 
+consequence of ignoring the bidirectional spatiotemporal coupling.
+
+Our Hybrid Dynamic Programming (HDP) framework addresses this through a 
+\textit{decompose-coordinate-converge} strategy. HDP decomposes the coupled 
+problem into Continuous State Space Dynamic Programming (CSS-DP) for trajectory 
+optimization and Discrete Event System Dynamic Programming (DES-DP) for task 
+scheduling. Solutions are coordinated through iterative refinement that preserves 
+coupling constraints while converging to near-optimal joint solutions.
+
+To illustrate why traditional methods fail and how HDP resolves the challenge,
+consider the concrete scenario in Fig.~\ref{fig:motivating_example}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\columnwidth]{fig/fig_intro_solution.pdf}
+\Description{Illustrative solution snapshot showing AGV routing and task assignment.}
+\caption{HDP framework: \textbf{decompose--coordinate--converge} strategy.
+\textbf{(a) Physical scenario}: AGV1 starts near RA1 (2m, busy 12s) and RA2
+(5m, idle).
+\textbf{(b) Decompose}: CSS-DP independently computes that AGV1 reaches RA2
+in 5s; DES-DP independently identifies RA2 as immediately available---each
+subproblem is tractable in isolation.
+\textbf{(c) Coordinate}: CSS-DP and DES-DP iteratively exchange coupling
+variables (arrival times $\boldsymbol{\tau}$ and schedule $\mathbf{S}$) via
+the Coordinator; makespan decreases geometrically.
+\textbf{(d) Converge}: Upon convergence, HDP assigns AGV1 to RA2, trading 3s
+extra travel for eliminating a 10s idle gap.}
+\label{fig:motivating_example}
+\end{figure}
+
+Traditional greedy methods assign AGV1 to RA1 based solely on spatial proximity,
+ignoring temporal constraints. This creates a 10-second idle gap where AGV1
+waits at RA1 while RA2 remains idle with no material with significant resource underutilization.
+
+In contrast, HDP resolves this through three coordinated steps
+(Fig.~\ref{fig:motivating_example}b--d). First, \textit{Decompose}
+(Fig.~\ref{fig:motivating_example}b): the coupled problem is split into two
+tractable subproblems---CSS-DP independently computes that AGV1 can reach RA2
+in 5\,s, while DES-DP independently identifies RA2 as immediately available.
+Second, \textit{Coordinate} (Fig.~\ref{fig:motivating_example}c): CSS-DP and
+DES-DP iteratively exchange coupling variables---arrival times
+$\boldsymbol{\tau}$ from CSS-DP to DES-DP, and updated schedules $\mathbf{S}$
+from DES-DP back to CSS-DP---until the solutions are mutually consistent.
+Third, \textit{Converge} (Fig.~\ref{fig:motivating_example}d): upon
+convergence, HDP assigns AGV1 to RA2 instead. Although AGV1 travels 3\,s
+longer (5\,s vs.\ 2\,s), it eliminates the 10-second wait, reducing makespan and get improvement with zero idle gaps.
+
+This example demonstrates the fundamental limitation of sequential optimization:
+spatial proximity does not guarantee temporal efficiency.
+
+Beyond the circular dependency, three challenges complicate CDHAS scheduling.
+First, \textit{computational intractability}: the coupled continuous-discrete
+state space grows exponentially, making direct optimization infeasible~\cite{belotti2013mixed}.
+Traditional mixed-integer nonlinear programming (MINLP) approaches suffer from
+exponential complexity~\cite{kimiaei2025machine}.
+Second, \textit{performance robustness}: real-world manufacturing tasks are
+subject to inherent uncertainties such as variations in material properties,
+robot performance, and processing conditions, which cause task durations to
+deviate from nominal values~\cite{calvaresi2021real}.
+Third, \textit{limited generalizability}: existing methods are often tailored
+to fixed configurations and fail to maintain consistent performance across
+varying task volumes, agent counts, or workspace
+layouts~\cite{mahajan2022generalization}.
+
+We make three key contributions:
+
+\begin{enumerate}[leftmargin=*]
+    
+\item \textbf{Unified modeling and decomposition framework:} We formulate
+CDHAS scheduling as coupled optimization over CSS and DES dynamics, introducing
+a spatiotemporal logic framework for modeling bidirectional spatiotemporal 
+coupling constraints. Exploiting the weak coupling structure of the problem, 
+we develop a decomposition into Continuous State Space Dynamic Programming 
+(CSS-DP) for trajectory optimization and Discrete Event System Dynamic 
+Programming (DES-DP) for task scheduling, coordinated through iterative 
+refinement with proven convergence guarantees.
+    
+\item \textbf{Convergence-guaranteed algorithms with task-scalable implementation:} 
+    We develop specialized DP algorithms for each subproblem and an iterative 
+    coordination mechanism, prove convergence to coordinately optimal solutions 
+    and provide convergence rate analysis. Although the worst-case complexity is polynomial in the number of tasks, agents, and discretization parameters, three practical techniques—reachability-based pruning, adaptive discretization, and warm-start initialization—compress each dominant factor, 
+	achieving empirical task complexity $O(M^{1.8})$ for fixed agent numbers and scaling to 100+ task problems within 2 minutes.
+
+\item \textbf{Comprehensive validation:} Experiments on three problem scales
+(DS1: 12 tasks, DS2: 30 tasks, DS3: 60 tasks) with 10 random instances per dataset demonstrate  15-23\% makespan reduction and 25\% improvement in CSS agent utilization—a proxy for overall system coordination efficiency—versus traditional methods.
+\end{enumerate}
+
+The remainder of this paper is organized as follows. Section~\ref{sec:Chapter_II} 
+reviews related work. Section~\ref{sec:Chapter_III} presents the problem 
+formulation. Section~\ref{sec:Chapter_IV} 
+details the HDP framework, algorithms, and theoretical analysis. 
+Section~\ref{sec:Chapter_V} reports experimental results. 
+Section~\ref{sec:Chapter_VI} discusses limitations and future directions.
+
+\textbf{Notation:} We use bold lowercase for vectors ($\mathbf{x}$), bold 
+uppercase for matrices ($\mathbf{A}$), calligraphic for sets and spaces ($\mathcal{X}$), 
+and blackboard bold for standard number sets ($\mathbb{R}$). The notation $[n]$ 
+denotes $\{1, 2, \ldots, n\}$, $\|\cdot\|$ denotes Euclidean norm, and 
+$|\cdot|$ denotes set cardinality. We use $\mathcal{A}^c = \{A_1^c, \ldots, A_{N_c}^c\}$ 
+for CSS agents (mobile robots) and $\mathcal{A}^d = \{A_1^d, \ldots, A_{N_d}^d\}$ 
+for DES agents (stationary machines), with $i$ and $j$ used interchangeably 
+for $A_i^c$ and $A_j^d$ when context is clear.
+
+
+\section{Related Work}
+\label{sec:Chapter_II}
+
+The scheduling of Continuous--Discrete Hybrid Agent Systems (CDHAS) intersects
+three research domains: continuous spatiotemporal system scheduling, discrete
+event system scheduling, and hybrid system optimization. While significant
+progress has been made in each domain independently, existing approaches have
+not adequately addressed the spatiotemporal coupling constraints that arise
+when heterogeneous agents with fundamentally different dynamics must operate
+in a tightly coordinated manner.
+
+
+\textbf{Continuous spatiotemporal system scheduling.} Existing methods optimize 
+mobile agent trajectories (AGVs, AMRs, drones)~\cite{lian2022spatio}, 
+using network flow models~\cite{chen2020yard}, conflict-based search~\cite{cao2025conflict}, 
+and dynamic window approaches~\cite{liu2019route}. These methods are designed for 
+purely continuous agent systems, focusing on trajectory feasibility and efficiency 
+such as collision avoidance and travel time minimization~\cite{lei2025cooperative, zheng2024continuous}. 
+However, they do not address the joint scheduling of heterogeneous agents with 
+fundamentally different dynamics.
+
+\textbf{Discrete event system scheduling.} Discrete event scheduling has been 
+extensively studied in manufacturing systems, focusing on job-shop scheduling, 
+flexible manufacturing, and robotic task sequencing~\cite{wang2024smart}. Luo et al.\ \cite{luo2016using} introduced Scheduling 
+Metric Temporal Logic (SMTL) for complex scheduling with temporal constraints. 
+Zhou et al.\ \cite{zhou2016timed} utilized Metric Interval Temporal Logic 
+(MITL) and timed automata for robotic manipulator sequencing. Zheng et al.\ 
+\cite{zheng2007temporal} proposed Extended Temporal Logic-based Workflow 
+Specification (ETLWS) for grid computing. These methods provide powerful 
+tools for modeling operation sequences under temporal and logical constraints~\cite{zhang2024generation}. 
+However, they abstract away the continuous physical space in which mobile 
+agents operate, treating material delivery as instantaneous or externally 
+handled~\cite{pooch2024discrete}.
+
+\textbf{Hybrid system optimization.} Hybrid system research addresses systems
+with both continuous dynamics and discrete event behavior using hybrid automata,
+mixed-integer programming, and hybrid dynamic programming~\cite{lin2022hybrid}.
+Representative approaches include Lipschitz dynamic programming for power grid
+scheduling~\cite{shen2022coordinated}, route-reduction-based DP for satellite
+scheduling~\cite{liu2019route}, and Coordinated Robust Reserve Scheduling using
+ADMM for transmission-distribution networks~\cite{chen2020fully}. While these
+methods have made important contributions to continuous-discrete optimization,
+they are predominantly designed for domain-specific applications (power systems,
+satellite networks) where the coupling is primarily \textit{temporal} (e.g.,
+power dispatch timing) rather than \textit{spatiotemporal} (e.g., physical
+co-location of mobile agents and processing units). They do not address the
+unique challenge of spatiotemporal coupling in multi-agent systems---where
+continuous mobile agents must synchronize physical positions and arrival times
+with discrete state transitions of processing units.
+
+In the robotics domain, hybrid system optimization is instantiated as
+Task and Motion Planning (TAMP)~\cite{zhao2024survey}, a framework that
+integrates symbolic task planning with geometric motion planning for systems
+where discrete actions (e.g., pick, place, navigate) must be grounded in
+continuous motion trajectories. Representative TAMP approaches include:
+PDDLStream~\cite{garrett2021integrated}, which combines PDDL-based symbolic planning with sampling-based motion planning;
+Logic-Geometric Programming~\cite{driess2021learning}, which formulates TAMP as constrained optimization with logic predicates;
+and Asymov~\cite{dantam2016incremental}, which uses SMT solvers for symbolic planning and trajectory optimization.
+While these methods advance discrete-continuous integration
+for manipulation tasks, they share a structural limitation with respect to
+CDHAS: existing TAMP solvers are designed for \textit{feasibility-driven}
+planning---finding any valid plan via symbolic search with geometric
+feasibility checks---whereas CDHAS requires \textit{optimality-driven}
+planning in which AGV arrival times are continuous optimization variables
+that directly determine makespan.
+Furthermore, CDHAS involves \textit{bidirectional} spatiotemporal
+coupling---AGV trajectories constrain Robot Arm schedules and vice versa---which
+cannot be resolved by existing TAMP implementations.
+
+Our work fills this gap by: (1) proposing a unified modeling framework that 
+integrates \textit{spatiotemporal coupling constraints} (Eq.~\ref{eq:coupling_constraints}) 
+with continuous dynamics (Eq.~\ref{eq:css_dynamics}) and discrete event logic 
+(Eq.~\ref{eq:precedence}); (2) developing hybrid dynamic programming that 
+jointly optimizes task allocation, trajectory planning, and operation sequencing 
+under bidirectional spatiotemporal coupling; (3) proving convergence guarantees 
+(Theorem~\ref{thm:convergence}) and near-optimality bounds 
+(Theorem~\ref{thm:near_optimality}).
+
+\section{Problem Formulation}
+\label{sec:Chapter_III}
+
+This section formulates the Coupled Discrete-Continuous Heterogeneous Agent 
+Scheduling (CDHAS) problem, integrating continuous spatiotemporal dynamics 
+of mobile agents with discrete event logic of stationary agents.
+
+\subsection{System Model}
+
+A CDHAS consists of two types of agents operating in a shared workspace 
+$\mathcal{W} \subset \mathbb{R}^2$:
+
+\begin{itemize}[leftmargin=*, itemsep=3pt]
+    \item \textbf{Continuous State Space (CSS) agents} $\mathcal{A}^c = \{A_1^c, \ldots, A_{N_c}^c\}$: 
+    Mobile agents (e.g., AGVs) that navigate the workspace with continuous 
+    dynamics. Each CSS agent $i$ has state $\mathbf{x}_i^c(t) = [\mathbf{p}_i(t), \mathbf{v}_i(t)]^\top$, 
+    where $\mathbf{p}_i(t) \in \mathcal{W}$ is position and $\mathbf{v}_i(t) \in \mathbb{R}^2$ 
+    is velocity at time $t$.
+    
+    \item \textbf{Discrete Event System (DES) agents} $\mathcal{A}^d = \{A_1^d, \ldots, A_{N_d}^d\}$: 
+    Stationary agents (e.g., robotic arms) that execute discrete tasks. Each 
+    DES agent $j$ is located at fixed position $\mathbf{p}_j^{\text{target}} \in \mathcal{W}$ 
+    with discrete state $q_j^d(t) \in \{\text{idle}, \text{processing}, \text{waiting}\}$ 
+    and task queue $\mathcal{T}_j = \{T_j^1, \ldots, T_j^{m_j}\}$.
+\end{itemize}
+
+The workspace contains static obstacles $\mathcal{O} = \{O_1, \ldots, O_{N_o}\}$ 
+that CSS agents must avoid. The planning horizon is $[0, T_{\text{horizon}}]$.
+
+\subsection{Mathematical Model}
+
+\subsubsection{Continuous State Space (CSS) Dynamics}
+
+CSS agents follow kinematic motion models with velocity control:
+
+\begin{equation}
+\dot{\mathbf{x}}_i^c(t) = \frac{d\mathbf{x}_i^c}{dt} = 
+\begin{bmatrix}
+\dot{\mathbf{p}}_i(t) \\
+\dot{\mathbf{v}}_i(t)
+\end{bmatrix}
+= 
+\begin{bmatrix}
+\mathbf{v}_i(t) \\
+\mathbf{u}_i^c(t)
+\end{bmatrix}, \quad i \in [N_c]
+\label{eq:css_dynamics}
+\end{equation}
+
+where $\dot{\mathbf{x}}_i^c(t) = \frac{d\mathbf{x}_i^c}{dt}$ denotes the time 
+derivative, $\mathbf{v}_i(t)$ is velocity, and $\mathbf{u}_i^c(t) \in \mathbb{R}^2$ 
+is control input (acceleration) subject to:
+
+\begin{equation}
+\begin{aligned}
+\|\mathbf{v}_i(t)\| &\leq v_{\max}, \quad
+\|\mathbf{u}_i^c(t)\| \leq a_{\max}, \\
+\mathbf{p}_i(t) &\in \mathcal{W} \setminus \mathcal{O}, \quad
+\|\mathbf{p}_i(t) - \mathbf{p}_{i'}(t)\| \geq d_{\text{safe}}, \; \forall i' \neq i
+\end{aligned}
+\label{eq:css_constraints}
+\end{equation}
+
+where $v_{\max}$ is maximum velocity, $a_{\max}$ is maximum acceleration, 
+and $d_{\text{safe}}$ is minimum safe distance for collision avoidance.
+
+\subsubsection{Discrete Event System (DES) Logic}
+
+Each task $T_j^k$ represents the processing operation (e.g., welding,
+assembly, or inspection) that DES agent $j$ performs on a workpiece
+delivered by a CSS agent. The processing duration $d_j^k$ captures
+only the arm's active execution time and excludes AGV travel time;
+the latter instead determines the earliest feasible scheduled start
+time $\tau_j^k$, as formalized by the coupling constraints in
+Section~\ref{sec:coupling_cons}.
+
+Tasks are subject to precedence constraints:
+
+\begin{equation}
+    T_j^k \prec T_j^{k'} \implies \tau_j^k + d_j^k \leq \tau_j^{k'}, \quad k < k'
+    \label{eq:precedence}
+\end{equation}
+
+Each DES agent processes at most one task at a time (non-preemptive):
+
+\begin{equation}
+    [\tau_j^k,\, \tau_j^k + d_j^k] \cap [\tau_j^{k'},\, \tau_j^{k'} + d_j^{k'}] = \emptyset, \quad k \neq k'
+    \label{eq:nonpreemptive}
+\end{equation}
+
+\subsubsection{Spatiotemporal Coupling Constraints}
+\label{sec:coupling_cons}
+The key challenge is \textit{bidirectional spatiotemporal coupling} between 
+CSS and DES agents, captured by predicates $\mathcal{P}_{\text{sync}}$ that 
+synchronize continuous motion with discrete state transitions. For CSS agent 
+$i$ serving DES agent $j$ on task $k$:
+
+\begin{equation}
+\mathcal{P}_{\text{sync}}(i, j, k): \quad
+\begin{cases}
+|\mathbf{p}_i(t) - \mathbf{p}_j^{\text{target}}| \leq \epsilon & \text{(spatial proximity)} \\
+q_j^d(t) = \text{idle} & \text{(robot availability)} \\
+t \in [\tau_j^k - \Delta t, \tau_j^k] & \text{(temporal window)}
+\end{cases}
+\label{eq:coupling_predicate}
+\end{equation}
+
+where $\epsilon$ is positioning tolerance (typically 0.1--0.5\,m), $\Delta t$ 
+is the acceptable early-arrival window (typically 1--5\,s), and $\tau_j^k$ is 
+the scheduled start time. The complete coupling constraint set is:
+
+\begin{equation}
+\mathcal{C}_{\text{system}} = \bigwedge_{(i,j,k):\, z_{ijk}=1} \mathcal{P}_{\text{sync}}(i, j, k)
+\label{eq:coupling_constraints}
+\end{equation}
+
+where $z_{ijk} \in \{0,1\}$ indicates whether CSS agent $i$ serves DES agent 
+$j$ for task $k$.
+
+We adopt \textit{Boolean satisfaction} (hard constraints) rather than STL 
+\textit{quantitative robustness semantics}~\cite{melani2025tree}
+for two reasons.
+%
+First, manufacturing systems demand hard feasibility guarantees: an AGV
+arriving outside $[\tau_j^k - \Delta t,\, \tau_j^k]$ causes outright task
+rejection, not graceful degradation, so optimizing a robustness degree
+$\rho(\phi,\mathbf{x})$ that permits ``nearly satisfied'' constraints is
+physically inadmissible.
+%
+Second, Boolean predicates enable the separable DP decomposition central to
+HDP (Section~\ref{sec:Chapter_IV}): CSS-DP and DES-DP enforce hard constraints
+via indicator functions $\mathbb{1}[\mathcal{P}_{\text{sync}}]$ in their
+Bellman equations (Eq.~\ref{eq:css_bellman},~\ref{eq:des_bellman}), whereas
+STL robustness would require evaluating $\rho(\phi,\mathbf{x})$ at every DP
+state and increase complexity by a factor of $T_{\text{horizon}}$ due to
+STL's temporal operators.
+%
+Implicit robustness is nonetheless provided by the tolerance parameters
+$\epsilon$ and $\Delta t$, which function analogously to STL's
+$\Diamond_{[0,\Delta t]}\phi$ operator as hard margins; experiments confirm
+this suffices under 40\% task-duration uncertainty
+(Section~\ref{sec:robustness}).
+
+\subsection{Problem Statement}
+
+The CDHAS scheduling problem is:
+
+\begin{align}
+\label{eq:cdhas_problem}
+    \min_{\mathbf{c}, \boldsymbol{\tau}, \mathbf{z}} \quad & T_{\text{makespan}} = \max_{j \in [N_d]} \left( \tau_j^{m_j} + d_j^{m_j} \right) \\
+    \text{s.t.} \quad & \text{CSS dynamics}~\eqref{eq:css_dynamics}, \eqref{eq:css_constraints} \\
+    & \text{DES logic}~\eqref{eq:precedence}, \eqref{eq:nonpreemptive} \\
+    & \text{Coupling } \mathcal{C}_{\text{system}} \text{ from}~\eqref{eq:coupling_constraints} \\
+    & \text{Assignment: } \sum_{i \in [N_c]} z_{ijk} = 1, \, \forall j \in [N_d], k \in [m_j]
+\end{align}
+
+where decision variables are: $\mathbf{c}$ (CSS control
+trajectories), $\boldsymbol{\tau}$ (DES task start times), and
+$\mathbf{z}$ (task-agent assignments). The objective minimizes
+makespan (total completion time). The assignment constraint ensures each task
+is served by exactly one CSS agent. Although the makespan expression
+involves only the scheduled start times $\tau_j^k$ and processing
+durations $d_j^k$ of the robotic arms, it implicitly accounts for AGV
+travel times: the coupling constraints require each
+assigned AGV to arrive at the designated workstation before the
+corresponding task can begin, so a longer AGV travel time forces a
+later $\tau_j^k$, which in turn increases the makespan. In this sense,
+minimizing makespan simultaneously incentivizes efficient AGV routing
+and compact task scheduling---the two objectives are inseparable.
+
+\subsection{Intractability of the Coupled Problem}
+
+\begin{proposition}
+The CDHAS scheduling problem~\eqref{eq:cdhas_problem} is NP-hard.
+\label{prop:np_hard}
+\end{proposition}
+
+\begin{proof}
+We prove NP-hardness by polynomial-time reduction from the Job Shop Scheduling 
+Problem (JSSP), which is known to be NP-hard~\cite{zheng2024continuous}.
+
+\textbf{Reduction construction:} Given a JSSP instance with $n$ jobs, $m$ 
+machines, and processing times $\{p_{ij}\}$, we construct a CDHAS instance 
+as follows: (i) Create $n$ CSS agents with trivial dynamics (single-point 
+position space, $v_{\max} = \infty$), eliminating continuous optimization. 
+(ii) Create $m$ DES agents corresponding to machines, all co-located with 
+CSS agents (eliminating spatial constraints). (iii) Create tasks $\{T_j^k\}$ 
+corresponding to job operations with durations $d_j^k = p_{ij}$ and precedence 
+matching job sequences. (iv) Set coupling constraints trivially satisfied 
+since transport is instantaneous.
+
+\textbf{Equivalence:} Any JSSP schedule corresponds to a CDHAS schedule with 
+identical makespan. Since CSS dynamics are trivial, only DES scheduling matters, 
+and the two problems are equivalent. Conversely, any CDHAS schedule corresponds 
+to a JSSP schedule by extracting task start times and machine assignments. 
+Optimal solutions have the same makespan: $T_{\text{JSSP}}^* = T_{\text{CDHAS}}^*$.
+
+Since JSSP is NP-hard and the reduction is polynomial-time, the CDHAS scheduling 
+problem is NP-hard. \qed
+\end{proof}
+
+This complexity result motivates our decomposition-based approach 
+(Section~\ref{sec:Chapter_IV}), which achieves near-optimal solutions in 
+polynomial time for practical problem sizes by exploiting the separable 
+structure of CSS and DES subproblems.
+
+\section{Hybrid Dynamic Programming Framework}
+\label{sec:Chapter_IV}
+
+We present the Hybrid Dynamic Programming (HDP) framework for solving the 
+CDHAS problem~\eqref{eq:cdhas_problem}. HDP decomposes the intractable joint 
+optimization into two coordinated subproblems: Continuous State Space Dynamic 
+Programming (CSS-DP) for trajectory optimization and Discrete Event System 
+Dynamic Programming (DES-DP) for task scheduling.
+
+\subsection{Framework Overview}
+
+Fig.~\ref{fig:hdp_framework} illustrates the HDP architecture.
+As shown in Fig.~\ref{fig:hdp_framework}(A), the physical scenario
+comprises three AGVs (CSS agents) and three robotic arms RA1--RA3
+(DES agents), where each AGV must be assigned to and travel to a
+robotic arm to deliver materials. 
+Note that this scenario depicts a \textit{mid-operation} state rather than the system's initial
+configuration: in a typical manufacturing setting, the system
+starts with all robotic arms idle and all AGVs co-located at a
+central staging area (e.g., a warehouse buffer zone). Here we deliberately select a mid-operation
+snapshot---where robotic arms are in mixed busy/idle states and AGVs are spatially dispersed---to better illustrate the bidirectional coupling that HDP resolve.
+
+The framework operates through iterative refinement
+(Fig.~\ref{fig:hdp_framework}B): DES-DP generates task schedules
+$\boldsymbol{\tau}^{(\ell)}$ and assignments $\mathbf{z}^{(\ell)}$,
+CSS-DP computes optimal trajectories $\mathbf{u}^{c,(\ell)}$ and
+arrival times $\mathbf{t}^{(\ell)}$, and the Coordinator updates
+coupling constraints until convergence.
+Fig.~\ref{fig:hdp_framework}(C) details the variable exchange
+process across iterations: CSS-DP passes arrival times
+$\mathbf{t}^{(\ell)}$ to DES-DP, which returns an updated schedule
+$\boldsymbol{\tau}^{(\ell+1)}$; the resulting makespan decreases
+monotonically until the improvement falls within a defined scope.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=0.92\columnwidth]{fig/fig_hdp_architecture_new.pdf}
+    \Description{Diagram of the HDP framework: decomposition and coordinator flow.}
+    \caption{HDP framework architecture.
+        \textbf{(A) Physical scenario}: Three AGVs (CSS agents, circles)
+        deliver materials to three robotic arms RA1--RA3 (DES agents,
+        rectangles).
+        \textbf{(B) Decompose--Coordinate--Converge}: The CDHAS problem
+        is decomposed into CSS-DP (trajectory optimization) and DES-DP
+        (task scheduling); the Coordinator iteratively exchanges arrival
+        times $\mathbf{t}^{(\ell)}$ and schedules
+        $\boldsymbol{\tau}^{(\ell+1)}$ until makespan improvement within a defined scope.
+        \textbf{(C) Iterative variable exchange}: CSS-DP computes arrival times given the
+        current schedule, DES-DP updates the schedule given new arrival
+        times, and the resulting makespan decreases monotonically.}
+    \label{fig:hdp_framework}
+\end{figure}
+The decomposition is the key to tractability: direct joint DP over the
+coupled CSS--DES state space incurs exponential complexity in both the
+number of agents and tasks, rendering it computationally infeasible for
+practical problem sizes. HDP breaks this curse through two complementary
+reductions---\textit{spatial decomposition} and \textit{temporal decomposition}.
+As illustrated in Fig.~\ref{fig:hdp_framework}(C), this iterative
+coordination reduces the makespan from 18\,s to 14\,s in the
+depicted example, a 22\% improvement achieved within a small number
+of coordination iterations.
+
+\subsection{Continuous State Space Dynamic Programming (CSS-DP)}
+
+\subsubsection{Problem Formulation}
+
+Given a task schedule $\{\tau_j^k\}$ and assignments
+$\{z_{ijk}\}$ from DES-DP, CSS-DP computes minimum-time
+trajectories for each CSS agent $i$ to visit assigned targets
+$\{\mathbf{p}_{j_\ell}^{\text{target}}\}_{\ell=1}^{n_i}$ in sequence while satisfying
+spatiotemporal constraints~\eqref{eq:css_constraints} and coupling
+constraints~\eqref{eq:coupling_constraints}.
+
+Let $\mathcal{T}_i^{\text{assigned}} = \{(j_1, k_1), \ldots, (j_{n_i}, k_{n_i})\}$
+denote the ordered sequence of tasks assigned to CSS agent $i$ (where
+$n_i = \sum_{j,k} z_{ijk}$). The CSS-DP problem for agent $i$ is:
+
+\begin{equation}
+\begin{aligned}
+\min_{\mathbf{u}_i^c(\cdot)} \quad & \sum_{\ell=1}^{n_i} t_i^{j_\ell k_\ell} \\
+\text{subject to} \quad & \dot{\mathbf{x}}_i^c(t) = [\mathbf{v}_i(t), \mathbf{u}_i^c(t)]^\top, \\
+& \|\mathbf{v}_i(t)\| \leq v_{\max}, \; \|\mathbf{u}_i^c(t)\| \leq a_{\max}, \\
+& \mathbf{p}_i(t) \in \mathcal{W} \setminus \mathcal{O}, \\
+& \|\mathbf{p}_i(t_i^{j_\ell k_\ell}) - \mathbf{p}_{j_\ell}^{\text{target}}\| \leq \epsilon, \\
+& t_i^{j_\ell k_\ell} \in [\tau_{j_\ell}^{k_\ell} - \Delta t, \tau_{j_\ell}^{k_\ell}]
+\end{aligned}
+\label{eq:css_dp_problem}
+\end{equation}
+
+where $t_i^{j_\ell k_\ell}$ is the arrival time of CSS agent $i$ at target 
+$\mathbf{p}_{j_\ell}^{\text{target}}$ for task $(j_\ell, k_\ell)$.
+
+\subsubsection{Bellman Equation and Discretization}
+
+We discretize the continuous state space using a grid with resolution
+$\Delta x$ and time step $\Delta t$. We adopt grid-based discretization
+rather than function approximation (e.g., neural networks) for three reasons:
+(1)~\textit{Optimality guarantees}---grid-based DP provides deterministic
+near-optimality bounds with error $O(\Delta x + \Delta t)$
+(Theorem~\ref{thm:near_optimality}), whereas function approximation
+introduces unquantifiable errors;
+(2)~\textit{Obstacle handling}---non-convex obstacles
+(Eq.~\ref{eq:css_constraints}) are handled naturally via state masking,
+without the convergence difficulties that discontinuous feasible regions
+pose for function approximation;
+(3)~\textit{Computational tractability}---the resulting state space of size
+$O\!\left((W/\Delta x)^{2} \cdot T_{\max}/\Delta t\right)$ per agent
+remains tractable with reachability-based pruning
+(Section~\ref{sec:acceleration}).
+
+Define the value function:
+
+\begin{equation}
+V_i(\mathbf{x}, k, t) = \min_{\mathbf{u}_i^c} \left\{ \text{cost to complete tasks } k, k+1, \ldots, n_i \text{ from state } \mathbf{x} \text{ at time } t \right\}
+\label{eq:css_value_function}
+\end{equation}
+
+The Bellman equation is:
+
+\begin{equation}
+V_i(\mathbf{x}, k, t) = \min_{\mathbf{u} \in \mathcal{U}} \left\{ c(\mathbf{x}, \mathbf{u}, \Delta t) + V_i(f(\mathbf{x}, \mathbf{u}, \Delta t), k, t + \Delta t) \right\}
+\label{eq:css_bellman}
+\end{equation}
+
+where $f(\mathbf{x}, \mathbf{u}, \Delta t)$ is the discrete-time state
+transition from~\eqref{eq:css_dynamics}, $c(\mathbf{x}, \mathbf{u}, \Delta t) = \Delta t$
+is the time cost, and $\mathcal{U}$ is the discretized control set satisfying
+constraints~\eqref{eq:css_constraints}.
+
+Boundary conditions: $V_i(\mathbf{x}, n_i+1, t) = 0$ (all tasks completed),
+and $V_i(\mathbf{x}, k, t) = \infty$ if $\mathbf{x}$ violates constraints
+(collision or out of bounds).
+
+Algorithm~\ref{alg:css_dp} solves CSS-DP using backward dynamic programming. 
+The algorithm iterates backward in time from the final task to the initial 
+state, computing optimal value functions and control policies at each stage.
+
+\begin{algorithm}[t]
+	\caption{CSS-DP: Continuous State Space Dynamic Programming}
+	\label{alg:css_dp}
+	\small
+	\begin{algorithmic}[1]
+		\Require DES schedule $\boldsymbol{\tau} = \{\tau_j^k\}$, task assignments $\mathbf{z} = \{z_{ijk}\}$
+		\Ensure CSS trajectories $\{\mathbf{u}_i^c(t)\}$ and arrival times $\{t_i^{jk}\}$
+		\State Initialize value function $V_i(\mathbf{x}, t) \leftarrow \infty$ for all states
+		\State Set terminal condition: $V_i(\mathbf{x}, T_{\text{horizon}}) $
+		\For{each CSS agent $i \in [N_c]$}
+		\State Extract target sequence: $\mathcal{S}_i = \{(j,k): z_{ijk}=1\}$ ordered by $\tau_j^k$
+		\For{$t = T_{\text{horizon}}-\Delta t$ \textbf{down to} $0$ \textbf{(backward in time)}} % \Comment{Modified: Added explanation}
+		\For{each state $\mathbf{x} \in \mathcal{X}_i^c$}
+		\State $V_i(\mathbf{x}, t) \leftarrow \min_{\mathbf{u} \in \mathcal{U}} \left[ c(\mathbf{x}, \mathbf{u}, t) \cdot \Delta t + V_i(f(\mathbf{x}, \mathbf{u}), t+\Delta t) \right]$
+		\State Store optimal control: $\mathbf{u}_i^*(\mathbf{x}, t) \leftarrow \arg\min_{\mathbf{u}} [\cdots]$
+		\EndFor
+		\EndFor
+		\State \textbf{Forward pass:} Simulate trajectory $\mathbf{x}_i^c(t)$ using $\mathbf{u}_i^*(\cdot, \cdot)$ from $\mathbf{x}_i^c(0)$
+		\State Extract arrival times: $t_i^{jk} \leftarrow \min\{t: \|\mathbf{p}_i(t) - \mathbf{p}_j^{\text{target}}\| \leq \epsilon\}$ for each $(j,k) \in \mathcal{S}_i$
+		\EndFor
+		\State \Return $\{\mathbf{u}_i^c(t)\}_{i \in [N_c]}, \{t_i^{jk}\}$
+	\end{algorithmic}
+\end{algorithm}
+
+\subsubsection{Computational Considerations}
+
+The backward iteration (Line 6 of Algorithm~\ref{alg:css_dp}) is necessary 
+because future task requirements constrain earlier decisions---an agent must 
+plan trajectories knowing where it needs to be later. The forward pass 
+(Line 11 of Algorithm~\ref{alg:css_dp}) then executes the computed policy 
+to generate the actual trajectory.
+
+State space size per agent is
+\begin{equation*}
+    |\mathcal{X}_i| = \left(\frac{W}{\Delta x}\right)^{2} \cdot 
+    \frac{T_{\text{horizon}}}{\Delta t},
+\end{equation*}
+growing quadratically with spatial resolution $W/\Delta x$ and linearly 
+with the temporal horizon. This quantity directly governs CSS-DP complexity 
+(Proposition~\ref{prop:complexity}), and Section~\ref{sec:acceleration} 
+introduces pruning techniques that substantially reduce the effective 
+state space in practice.
+
+\subsection{Discrete Event System Dynamic Programming (DES-DP)}
+
+\subsubsection{Problem Formulation}
+
+Given CSS arrival times $\mathbf{t} = \{t_i^{jk}\}$ from CSS-DP---where 
+$t_i^{jk}$ denotes the arrival time of CSS agent $i$ at the target location 
+of DES agent $j$ for task $T_j^k$---DES-DP 
+determines optimal task schedules $\boldsymbol{\tau} = \{\tau_j^k\}$ (start 
+times) and assignments $\mathbf{z} = \{z_{ijk}\}$ (binary: whether CSS agent 
+$i$ serves DES agent $j$ on task $k$) that minimize makespan while satisfying 
+precedence~\eqref{eq:precedence}, non-preemption~\eqref{eq:nonpreemptive}, 
+and coupling constraints~\eqref{eq:coupling_predicate}.
+
+For each DES agent $j$, define state $s_j^k$ as the completion time of task 
+$T_j^{k-1}$ together with the set of candidate arrival times 
+$\{t_i^{jk}\}_{i \in [N_c]}$ for the next task $T_j^k$---these arrival times 
+are needed because DES-DP must select the optimal CSS agent assignment $z_{ijk}$ 
+at each stage. The DES-DP problem is:
+
+\begin{equation}
+\begin{aligned}
+\min_{\boldsymbol{\tau}, \mathbf{z}} \quad & T_{\text{makespan}} = \max_{j \in [N_d]} (\tau_j^{m_j} + d_j^{m_j}) \\
+\text{subject to} \quad & \tau_j^k + d_j^k \leq \tau_j^{k+1}, \quad \forall j, k \\
+& \tau_j^k \geq \max_{i: z_{ijk}=1} t_i^{jk}, \quad \forall j, k \\
+& \sum_{i=1}^{N_c} z_{ijk} = 1, \quad \forall j, k
+\end{aligned}
+\label{eq:des_dp_problem}
+\end{equation}
+
+The second constraint ensures tasks start only after the assigned CSS agent 
+arrives (coupling constraint). The third constraint ensures each task is 
+assigned to exactly one CSS agent.
+
+\subsubsection{Dynamic Programming Formulation}
+
+Define the value function for DES agent $j$:
+
+\begin{equation}
+W_j(s_j^k) = \min_{\tau_j^k, z_{ijk}} \left\{ \text{makespan for tasks } k, k+1, \ldots, m_j \text{ given state } s_j^k \right\}
+\label{eq:des_value_function}
+\end{equation}
+
+The Bellman equation is:
+
+\begin{equation}
+W_j(s_j^k) = \min_{i \in [N_c]} \left\{ \max\{s_j^{k-1} + d_j^{k-1}, t_i^{jk}\} + d_j^k + W_j(s_j^{k+1}) \right\}
+\label{eq:des_bellman}
+\end{equation}
+
+where the minimization over $i$ selects the CSS agent assignment, and the 
+$\max$ operation enforces both precedence (task $k$ starts after task $k-1$ 
+completes) and coupling (task $k$ starts after CSS agent $i$ arrives).
+
+Boundary condition: $W_j(s_j^{m_j+1}) = 0$ (all tasks completed).
+
+Algorithm~\ref{alg:des_dp} solves DES-DP independently for each DES agent 
+and then coordinates across agents to compute global makespan.
+
+\begin{algorithm}[t]
+    \caption{DES-DP: Discrete Event System Dynamic Programming}
+    \label{alg:des_dp}
+    \small
+    \begin{algorithmic}[1]
+        \Require CSS arrival times $\{t_i^{jk}\}$ for all $i \in [N_c]$,
+                 $j \in [N_d]$, $k \in [m_j]$;
+                 task durations $\{d_j^k\}$
+        \Ensure DES schedule $\boldsymbol{\tau} = \{\tau_j^k\}$,
+                assignments $\mathbf{z} = \{z_{ijk}\}$
+        \For{each DES agent $j \in [N_d]$}
+            \State Initialize value function: $W_j(s_j^{m_j+1}) \leftarrow 0$
+            \For{$k = m_j$ \textbf{down to} $1$} \Comment{Backward pass}
+                \For{each state $s_j^k \in \mathcal{S}_j$}
+                    \State $W_j(s_j^k) \leftarrow \min_{i \in [N_c]}
+                           \left[ \max\!\left(s_j^k,\ t_i^{jk}\right)
+                           + d_j^k + W_j(s_j^{k+1}) \right]$
+                    \State Store optimal assignment:
+                           $i_j^{k,*} \leftarrow \arg\min_{i \in [N_c]}
+                           \left[ \max\!\left(s_j^k,\ t_i^{jk}\right)
+                           + d_j^k + W_j(s_j^{k+1}) \right]$
+                \EndFor
+            \EndFor
+            \State \textbf{Forward pass:} Initialize $\tau_j^0 \leftarrow 0$;
+                   compute for $k = 1, \ldots, m_j$:
+            \State \quad $\tau_j^k \leftarrow
+                   \max\!\left(\tau_j^{k-1} + d_j^{k-1},\
+                   t_{i_j^{k,*}}^{jk}\right)$
+        \EndFor
+        \State Construct assignment matrix:
+               $z_{ijk} = 1$ if $i = i_j^{k,*}$, else $z_{ijk} = 0$
+        \Return $\boldsymbol{\tau} = \{\tau_j^k\},\quad
+                \mathbf{z} = \{z_{ijk}\}$
+    \end{algorithmic}
+\end{algorithm}
+
+The computational complexity of DES-DP is $O(N_d \cdot M \cdot N_c)$ where 
+$M = \sum_{j=1}^{N_d} m_j$ is the total number of tasks. This is polynomial 
+and significantly more efficient than MILP formulations, which have exponential 
+complexity $O(2^M)$ in the worst case.
+
+\subsection{Coordination Mechanism}
+
+Algorithm~\ref{alg:hdp_coordination} coordinates CSS-DP and DES-DP through 
+iterative refinement. Starting from an initial schedule, the algorithm 
+alternates between CSS trajectory optimization and DES task scheduling until 
+convergence.
+
+\begin{algorithm}[t]
+	\caption{HDP Coordination}
+	\label{alg:hdp_coordination}
+	\small
+	\begin{algorithmic}[1]
+		\Require Initial schedule $\boldsymbol{\tau}^{(0)}$, assignments $\mathbf{z}^{(0)}$, threshold $\delta$
+		\Ensure Converged solution $(\mathbf{u}^{c,*}, \boldsymbol{\tau}^*, \mathbf{z}^*)$
+		\State Initialize iteration counter: $\ell \leftarrow 0$
+		\Repeat
+		\State $\ell \leftarrow \ell + 1$
+		\State Solve CSS-DP: $\{\mathbf{u}_i^{c,(\ell)}\}, \{t_i^{jk,(\ell)}\} \leftarrow \text{CSS-DP}(\boldsymbol{\tau}^{(\ell-1)}, \mathbf{z}^{(\ell-1)})$ \Comment{Algorithm~\ref{alg:css_dp}}
+		\State Solve DES-DP: $\boldsymbol{\tau}^{(\ell)}, \mathbf{z}^{(\ell)} \leftarrow \text{DES-DP}(\{t_i^{jk,(\ell)}\})$ \Comment{Algorithm~\ref{alg:des_dp}}
+		\State Compute makespan: $T_{\text{makespan}}^{(\ell)} \leftarrow \max_{j \in [N_d]} (\tau_j^{m_j,(\ell)} + d_j^{m_j})$
+		\State Compute improvement: $\Delta T^{(\ell)} \leftarrow |T_{\text{makespan}}^{(\ell)} - T_{\text{makespan}}^{(\ell-1)}|$
+		\Until{$\Delta T^{(\ell)} < \delta$ or $\ell \geq L_{\max}$}
+		\Return $(\mathbf{u}^{c,(\ell)}, \boldsymbol{\tau}^{(\ell)}, \mathbf{z}^{(\ell)})$
+	\end{algorithmic}
+\end{algorithm}
+
+The coordination operates as follows: CSS-DP computes optimal trajectories 
+given the current schedule, producing updated arrival times. DES-DP then 
+reschedules tasks based on these arrival times, potentially changing 
+assignments and start times. This process repeats until the makespan 
+stabilizes.
+
+\subsection{Convergence Guarantee}
+
+We establish convergence of the HDP coordination mechanism under two mild 
+assumptions on the smoothness of the CSS and DES mappings.
+
+\begin{assumption}[Lipschitz Continuity of CSS-DP]
+The CSS arrival time mapping $\Psi: \boldsymbol{\tau} \mapsto \mathbf{t}$ 
+satisfies:
+\begin{equation}
+\|\Psi(\boldsymbol{\tau}') - \Psi(\boldsymbol{\tau})\| \leq L_{\Psi} \|\boldsymbol{\tau}' - \boldsymbol{\tau}\|
+\end{equation}
+for some $L_{\Psi} > 0$.
+\label{ass:lipschitz_css}
+\end{assumption}
+
+\textit{Interpretation and justification.} This assumption states that small 
+disturbance in the task schedule $\boldsymbol{\tau}$ produce proportionally 
+bounded changes in AGV arrival times $\mathbf{t}$. It holds whenever 
+the CSS-DP trajectory optimizer is stable: since AGV dynamics are governed 
+by bounded-velocity kinematics and the workspace is compact, the optimal 
+arrival time varies continuously with the departure schedule. 
+Empirically, $L_{\Psi} \approx 4.5$ (Section~\ref{sec:convergence_validation}).
+
+\begin{assumption}[Lipschitz Continuity of DES-DP]
+The DES scheduling mapping $\Phi: \mathbf{t} \mapsto \boldsymbol{\tau}$ 
+satisfies:
+\begin{equation}
+\|\Phi(\mathbf{t}') - \Phi(\mathbf{t})\| \leq L_{\Phi} \|\mathbf{t}' - \mathbf{t}\|
+\end{equation}
+for some $L_{\Phi} > 0$.
+\label{ass:lipschitz_des}
+\end{assumption}
+
+\textit{Interpretation and justification.} This assumption states that small 
+changes in AGV arrival times produce proportionally bounded changes in the 
+task release schedule $\boldsymbol{\tau}$. It holds because DES-DP solves a 
+finite-horizon scheduling problem whose optimal value function is piecewise 
+linear in the input arrival times; the slope is bounded by the maximum 
+task-processing rate. Empirically, $L_{\Phi} \approx 1$ due to the 
+schedule-stability property: DES-DP rarely reassigns tasks after the first 
+few iterations (Section~\ref{sec:convergence_validation}).
+
+\begin{theorem}[Convergence of HDP]
+Under Assumptions~\ref{ass:lipschitz_css} and~\ref{ass:lipschitz_des} below, 
+the HDP coordination (Algorithm~\ref{alg:hdp_coordination}) converges 
+geometrically to a coordinately optimal solution with rate $\rho < 1$:
+\begin{equation}
+T_{\text{makespan}}^{(\ell+1)} - T_{\text{makespan}}^* \leq \rho \cdot (T_{\text{makespan}}^{(\ell)} - T_{\text{makespan}}^*)
+\label{eq:convergence_rate}
+\end{equation}
+where $T_{\text{makespan}}^*$ is the fixed-point makespan and $\rho = L_{\Psi} \cdot L_{\Phi} \cdot \alpha_{\text{crit}}$ 
+with $L_{\Psi}$, $L_{\Phi}$ being Lipschitz constants and $\alpha_{\text{crit}}$ 
+the critical coupling strength.
+\label{thm:convergence}
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Define the composite mapping $\mathcal{F} = \Phi \circ \Psi$ that maps 
+schedules to schedules: $\boldsymbol{\tau}^{(\ell+1)} = \mathcal{F}(\boldsymbol{\tau}^{(\ell)})$. 
+By Assumptions~\ref{ass:lipschitz_css} and~\ref{ass:lipschitz_des}:
+\begin{equation}
+\|\mathcal{F}(\boldsymbol{\tau}') - \mathcal{F}(\boldsymbol{\tau})\| \leq L_{\Psi} \cdot L_{\Phi} \|\boldsymbol{\tau}' - \boldsymbol{\tau}\|
+\end{equation}
+
+The makespan is bounded by schedule changes through coupling strength 
+$\alpha_{\text{crit}}$, giving contraction factor $\rho = L_{\Psi} \cdot L_{\Phi} \cdot \alpha_{\text{crit}}$. 
+For $\rho < 1$, the Banach fixed-point theorem guarantees convergence to a 
+unique fixed point $\boldsymbol{\tau}^*$ with geometric rate~\eqref{eq:convergence_rate}.
+Unrolling the recurrence yields $T_{\text{makespan}}^{(\ell)} - T_{\text{makespan}}^* 
+\leq \rho^{\ell}(T_{\text{makespan}}^{(0)} - T_{\text{makespan}}^*)$,
+from which the iteration bound in Corollary~\ref{cor:iteration_bound} follows directly.
+\qed
+\end{proof}
+
+\begin{corollary}[Iteration Bound]
+\label{cor:iteration_bound}
+Let $\Delta_0 = T_{\text{makespan}}^{(0)} - T_{\text{makespan}}^*$ denote the 
+initial suboptimality and $\epsilon > 0$ be a prescribed tolerance. 
+Under the conditions of Theorem~\ref{thm:convergence}, 
+the number of coordination iterations $L$ required to satisfy
+$T_{\text{makespan}}^{(L)} - T_{\text{makespan}}^* \leq \epsilon$ is bounded by:
+\begin{equation}
+L \;\leq\; \left\lceil \frac{\log\!\left(\epsilon \,/\, \Delta_0\right)}{\log \rho} \right\rceil
+\label{eq:iteration_bound}
+\end{equation}
+In particular, setting $\epsilon = 0.01\,\Delta_0$ (1\% relative tolerance) gives
+$L \leq \lceil {-4.605}/{\log \rho} \rceil$, which decreases monotonically as 
+$\rho \to 0$.
+\end{corollary}
+
+\textbf{Theoretical vs.\ practical convergence rates.}
+The contraction factor satisfies $\rho = L_{\Psi} \cdot L_{\Phi} \cdot \alpha_{\text{crit}}$,
+where $L_{\Psi}$, $L_{\Phi}$ are the Lipschitz constants of the CSS-DP and 
+DES-DP mappings respectively, and $\alpha_{\text{crit}} \in (0,1)$ is the 
+critical coupling strength---the fraction of tasks whose makespan is 
+sensitive to arrival-time perturbations.
+Worst-case estimates ($L_{\Psi} \approx 4.5$, $L_{\Phi} \approx 1$) 
+yield $\rho \approx 4.5\,\alpha_{\text{crit}}$; convergence ($\rho < 1$) 
+therefore requires $\alpha_{\text{crit}} < 0.22$, i.e., fewer than 22\% 
+of tasks are tightly coupled.
+In practice, four structural properties jointly reduce the \emph{effective} 
+coupling strength $\alpha_{\text{crit}}^{\text{eff}}$, driving 
+$\rho_{\text{eff}} = L_{\Psi} \cdot L_{\Phi} \cdot \alpha_{\text{crit}}^{\text{eff}} 
+= 0.41 \pm 0.03$ (Section~\ref{sec:convergence_validation}):
+(1)~\textit{sparse coupling}---only 20--30\% of tasks have tight temporal 
+constraints, directly bounding $\alpha_{\text{crit}}^{\text{eff}} \leq 0.30$;
+(2)~\textit{spatial locality}---CSS agents typically serve nearby DES agents,
+reducing trajectory sensitivity and hence $L_{\Psi}$;
+(3)~\textit{schedule stability}---DES-DP rarely changes assignments after 
+initial iterations, reducing the effective $L_{\Phi}$;
+(4)~\textit{warm-start initialization}--- a good initial solution reduces the number of iterations needed to reach convergence tolerance, 
+though it does not alter $\rho$ itself.
+
+\textbf{Quantitative explanation of observed iteration counts.}
+Equation~\eqref{eq:iteration_bound} directly explains the empirically observed
+iteration counts. Setting $\epsilon = 0.01\,\Delta_0$ and substituting
+representative values of $\rho$:
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+    \item \textit{Favorable regime} ($\rho_{\text{eff}} = 0.41$, with warm-start,
+          $N_d = 3$): $L \leq \lceil {-4.605}/{\log 0.41} \rceil = \lceil 5.17 \rceil = 6$,
+          consistent with the empirically observed \textbf{4--6 iterations}.
+    \item \textit{Challenging regime} ($\rho \approx 0.60$, without warm-start
+          or $N_d = 6$): $L \leq \lceil {-4.605}/{\log 0.60} \rceil = \lceil 9.01 \rceil = 10$,
+          consistent with the empirically observed \textbf{8--10 iterations}.
+    \item \textit{Worst-case theoretical} ($\rho = 0.68$): 
+          $L \leq \lceil {-4.605}/{\log 0.68} \rceil = \lceil 11.93 \rceil = 12$,
+          providing a conservative upper bound.
+\end{itemize}
+These values are \emph{empirically calibrated} upper bounds: $\rho_{\text{eff}}$
+is measured experimentally (Section~\ref{sec:convergence_validation}), while
+$\rho \approx 0.60$ is estimated from agent-scalability experiments
+(Section~\ref{sec:scalability02}). The bound~\eqref{eq:iteration_bound}
+thus serves as a \emph{post-hoc} theoretical justification for the observed
+iteration counts rather than an \emph{a priori} guarantee.
+
+\subsection{Acceleration Techniques}
+\label{sec:acceleration}
+
+We introduce three techniques that reduce HDP's computational complexity while 
+preserving solution quality.
+
+\textbf{(1) Reachability-based state space pruning.} For CSS-DP, we prune 
+states unreachable within velocity and acceleration limits. Given current 
+state $\mathbf{x}$ at time $t$ and target arrival time $\tau$, we compute 
+the reachable set:
+\begin{equation}
+\mathcal{R}(\mathbf{x}, t, \tau) = \{\mathbf{x}': \exists \mathbf{u}(\cdot) \text{ s.t. } \mathbf{x}(t) = \mathbf{x}, \mathbf{x}(\tau) = \mathbf{x}', \|\mathbf{u}\| \leq a_{\max}\}
+\end{equation}
+States outside $\mathcal{R}$ are pruned. This reduces state space by 60\% 
+on average (Section~\ref{sec:ablation}).
+
+\textbf{(2) Adaptive grid refinement.} We use coarse grids ($\Delta x = 1.0$m) 
+in open space and fine grids ($\Delta x = 0.2$m) near obstacles and targets. 
+This reduces grid points by 30\% while maintaining accuracy at critical regions.
+
+\textbf{(3) Warm-start initialization.} We initialize HDP with a greedy 
+solution: assign each task to the nearest available CSS agent and schedule 
+tasks in earliest-deadline-first order. This provides $\boldsymbol{\tau}^{(0)}$ 
+and $\mathbf{z}^{(0)}$ that are typically within 15-20\% of optimal, reducing 
+iterations needed for convergence from 8-10 to 4-6 (Section~\ref{sec:convergence_validation}).
+
+\textbf{Implementation note.} All three acceleration techniques are enabled 
+by default in all experiments reported in Section~\ref{sec:Chapter_V}, 
+corresponding to the \textit{HDP-Full} configuration. Their individual 
+contributions are quantified through ablation studies in 
+Section~\ref{sec:ablation}.
+
+\subsection{Computational Complexity and Near-Optimality}
+\label{sec:complexity_nearopt}
+
+This section characterises the theoretical guarantees of HDP from two
+complementary angles: first, the quality of the solution it produces
+(near-optimality analysis); second, the computational cost required to obtain
+that solution (complexity analysis and grid-resolution trade-off).
+\subsubsection{Near-Optimality Analysis}
+
+We analyze the quality of HDP solutions relative to the global optimum.
+
+\begin{theorem}[Near-Optimality of HDP]
+\label{eq:near_optimality}
+Let $T_{\text{HDP}}$ be the makespan obtained by HDP and $T_{\text{opt}}$
+be the global optimal makespan. Then:
+\begin{equation}
+T_{\text{HDP}} \leq (1 + \delta_{\text{CSS}} + \delta_{\text{DES}}) \cdot T_{\text{opt}}
+\end{equation}
+where $\delta_{\text{CSS}} = O(\Delta x + \Delta t)$ and $\delta_{\text{DES}} = O(1/N_c)$ are approximation
+factors from discretization in CSS-DP and DES-DP respectively.
+\label{thm:near_optimality}
+\end{theorem}
+
+\begin{proof}[Proof sketch]
+Decompose the optimality gap into three sources: (1) CSS discretization error 
+bounded by $\delta_{\text{CSS}} = O(\Delta x + \Delta t)$, (2) DES discretization 
+error bounded by $\delta_{\text{DES}} = O(1/N_c)$ (more CSS agents reduce 
+assignment suboptimality), and (3) coordination error that vanishes as 
+$\ell \to \infty$ by Theorem~\ref{thm:convergence}. Combining these bounds 
+yields~\eqref{eq:near_optimality}. \qed
+\end{proof}
+
+For typical parameters ($\Delta x = 0.5$m, $\Delta t = 0.1$s, $N_c = 3$),
+we have $\delta_{\text{CSS}} \approx 0.04$ and $\delta_{\text{DES}} \approx 0.03$,
+giving a theoretical bound of 7\%. Experiments (Table~\ref{tab:main_results})
+show actual gaps of 1.2-3.8\% against MILP optimal solutions, validating the
+tightness of our analysis.
+
+\subsubsection{Computational Complexity}
+
+We analyze the computational complexity of HDP at two levels:
+the \textit{worst-case theoretical complexity} of the base algorithms
+(Proposition~\ref{prop:complexity}), and the \textit{effective empirical
+complexity} achieved when the acceleration techniques of
+Section~\ref{sec:acceleration} are applied.
+
+\begin{proposition}[Computational Complexity of HDP]
+\label{eq:complexity_hdp}
+The worst-case time complexity of HDP is:
+\begin{equation}
+    O\!\left( L \cdot \left[
+        N_c \cdot M \cdot \left(\frac{W}{\Delta x}\right)^{\!2}
+        \cdot \frac{T_{\text{horizon}}}{\Delta t}
+        \;+\;
+        N_d \cdot M \cdot N_c
+    \right] \right)
+\end{equation}
+where $L$ is the number of coordination iterations, $M$ is the total number
+of tasks, $N_c$ and $N_d$ are the numbers of CSS and DES agents, $W$ is the
+workspace size, and $\Delta x$, $\Delta t$ are discretization parameters.
+\label{prop:complexity}
+\end{proposition}
+
+\begin{proof}
+Each coordination iteration involves:
+(1)~CSS-DP for $N_c$ agents, each solving DP over
+$(W/\Delta x)^2 \cdot (T_{\text{horizon}}/\Delta t)$ states for $M/N_c$
+tasks on average, giving
+$O\!\left(N_c \cdot M \cdot (W/\Delta x)^2 \cdot T_{\text{horizon}}/\Delta t\right)$;
+(2)~DES-DP for $N_d$ agents, each solving DP over $M$ tasks with $N_c$
+assignment choices, giving $O(N_d \cdot M \cdot N_c)$. 
+Multiplying by $L$ iterations yields~\eqref{eq:complexity_hdp}. \qed
+\end{proof}
+
+Equation~\eqref{eq:complexity_hdp} exposes distinct scalability
+dimensions with qualitatively different characteristics.
+
+\textbf{Task scalability ($M$).}
+For fixed workspace and agent counts, the dominant cost is linear in $M$.
+With the three acceleration techniques of Section~\ref{sec:acceleration}, the effective complexity reduces to $O(M^{1.8})$
+empirically, enabling HDP to solve 100-task problems in under 2 minutes
+(Section~\ref{sec:Chapter_V}). 
+
+\textbf{Agent scalability ($N_c$, $N_d$).}
+Scaling with the number of agents presents a qualitatively different
+challenge from task scalability. The DES-DP term is linear in $N_d$, but
+CSS-DP must account for inter-agent collision avoidance, which introduces
+$O(N_c^2)$ pairwise constraints in the worst case. Consequently, the
+scalability claims in this paper refer specifically to \textit{task
+scalability}; agent scalability under dense collision constraints remains
+an open challenge discussed in Section~\ref{sec:future_work}.
+
+\subsubsection{Grid Resolution Trade-off}
+
+The CSS-DP term in~\eqref{eq:complexity_hdp} grows as
+$O\!\left((W/\Delta x)^{2}\right)$, a manifestation of the curse of
+dimensionality inherent to grid-based DP. This introduces a fundamental
+trade-off between computational cost and solution accuracy, both of which
+are governed solely by the grid resolution $\Delta x$. We characterize
+each direction analytically below.
+
+\textbf{(1) Quadratic sensitivity of computation cost.}
+The number of grid states per spatial dimension is $\lfloor W/\Delta x
+\rfloor$, so the 2-D state space contains $(W/\Delta x)^2$ cells.
+Each Bellman update in CSS-DP visits every cell
+exactly once per time step, yielding a per-agent, per-task cost of
+$O\!\left((W/\Delta x)^2 \cdot T_{\text{horizon}}/\Delta t\right)$.
+Consequently, halving $\Delta x$ multiplies the CSS-DP cost by
+$2^2 = 4$, and reducing $\Delta x$ by a factor of $k$ multiplies it by
+$k^2$. This quadratic growth is structural and cannot be eliminated by
+implementation optimizations alone.
+
+\textbf{(2) Linear reduction of discretization error.}
+Grid-based DP approximates the continuous value function
+$V_i^*(\mathbf{x}, k, t)$ by its piecewise-constant projection onto the
+grid. For a Lipschitz-continuous cost function $c(\cdot)$ with constant
+$K_c$, the approximation error at each grid cell is bounded by
+$K_c \cdot \Delta x$ (first-order interpolation error). Propagating this
+local error through $M/N_c$ task stages via the Bellman recursion yields
+a cumulative trajectory error:
+\begin{equation}
+    \varepsilon_{\text{traj}} \;\leq\; \frac{M}{N_c} \cdot K_c \cdot \Delta x
+    \;=\; O(\Delta x),
+    \label{eq:disc_error}
+\end{equation}
+which enters the near-optimality bound of Theorem~\ref{thm:near_optimality}
+as the $\Delta x$ component of $\delta_{\text{CSS}} = O(\Delta x + \Delta t)$.
+Hence, halving $\Delta x$ halves the trajectory error---but at a $4\times$
+increase in computation cost, reflecting strongly diminishing returns.
+
+\textbf{(3) Practical implication and mitigation.}
+The two results above jointly define the break-even criterion for
+resolution selection: given a positioning tolerance $\varepsilon$
+(determined by the task specification), the coarsest admissible grid is
+$\Delta x^* = O(\varepsilon \cdot N_c \cdot v_{\max} / (M \cdot K_c))$,
+beyond which further refinement yields negligible accuracy gain at
+quadratically growing cost. For typical manufacturing tasks
+($\varepsilon = 0.3$--$0.5$\,m), this criterion yields
+$\Delta x^* \approx 0.5$\,m as the recommended operating point.
+Adaptive grid refinement---concentrating resolution only near task
+locations where the value function varies rapidly---mitigates the quadratic
+growth without sacrificing accuracy at critical regions.
+
+\section{Experimental Evaluation}
+\label{sec:Chapter_V}
+We evaluate HDP across three dimensions: 
+(1) solution quality—comparing against baselines and ablating individual components; 
+(2) computational behavior—analyzing convergence, task/agent scalability, and grid resolution sensitivity; 
+and (3) robustness under task duration uncertainty and diverse workspace layouts. 
+All experiments use Python~3.12.10 with NumPy on an Intel Core i7-10700K CPU (8 cores, 3.8 GHz) with 32 GB RAM.
+
+\subsection{Experimental Setup}
+
+\subsubsection{System Configuration}
+
+We consider an AGV-Robotic Arm manufacturing system in a rectangular workspace:
+
+\begin{itemize}[leftmargin=*, itemsep=3pt]
+    \item \textbf{CSS agents (AGVs):} $N_c = 3$ mobile robots with $v_{\max} = 1$ m/s, 
+    $a_{\max} = 0.5$ m/s², $d_{\text{safe}} = 0.5$ m, dimensions $0.3 \times 0.3$ m.
+    
+    \item \textbf{DES agents (Robotic Arms):} $N_d = 3$ stationary manipulators 
+    at fixed positions. Each processes one task at a time with durations 
+    $d_j^k \sim \mathcal{U}(3, 15)$ s.
+    
+    \item \textbf{Workspace:} $7 \times 6$ grid (7 m × 6 m) with 4 static 
+    obstacles ($1 \times 1$ m each). Grid resolution $\Delta x = 0.5$ m, 
+    time step $\Delta t = 0.1$ s.
+    
+    \item \textbf{Tasks:} Three datasets:
+    \begin{itemize}[itemsep=1pt]
+        \item \textbf{DS1 (Small):} 4 tasks/robot ($M = 12$ total)
+        \item \textbf{DS2 (Medium):} 10 tasks/robot ($M = 30$ total)
+        \item \textbf{DS3 (Large):} 20 tasks/robot ($M = 60$ total)
+    \end{itemize}
+    Each dataset has 10 random instances with different task durations, 
+    obstacle placements, and initial AGV positions.
+\end{itemize}
+
+This configuration is designed to be both industrially representative and 
+experimentally rigorous, motivated by three considerations.
+
+\textbf{Typicality of the base configuration.}
+The agent counts $N_c = N_d = 3$ reflect a standard flexible manufacturing cell setup: the AGV scheduling literature consistently uses 2--5 AGVs as a representative senario~\cite{fragapane2021planning, zhong2020multi}. 
+The $7 \times 6$ m workspace (42 m²) corresponds to the footprint of a standard industrial robot workstation, consistent with the spatial specifications for robot work cells defined in ISO~10218:2025~\cite{iso10218-2-2025}. 
+All kinematic parameters (AGV velocity 1 m/s, task durations 3--15 s, positioning tolerance 0.1--0.5 m) are calibrated from industrial AGV specifications (MiR100, KUKA KMR iiwa) and real manufacturing scenarios.
+
+\textbf{Task scale and dataset construction.}
+The task range of $M = 12$--$60$ corresponds to the typical workload of a single production shift in job-shop and flexible manufacturing environments, 
+representing a small-to-medium scale in the scheduling literature~\cite{rema2025task}. 
+Unlike domains with established benchmarks, the TAMP and heterogeneous-agent scheduling literature---including methods such as PDDLStream, LGP, and Asymov---relies on custom, scenario-specific instances due to the absence of a unified public benchmark~\cite{garrett2021integrated}. 
+We therefore construct our datasets from calibrated industrial specifications to ensure physical validity and reproducibility.
+
+\textbf{Coverage through scalability analysis.}
+While the base configuration is intentionally small-scale to enable controlled comparison with all baselines, Section~\ref{sec:scalability} systematically evaluates task scalability and agent scalability.
+
+\subsubsection{Baseline Methods}
+
+As discussed in Section~\ref{sec:Chapter_II},
+CDHAS intersects with the Task and Motion Planning (TAMP) problem family.
+However, existing TAMP solvers (e.g., PDDLStream,
+LGP, Asymov) are not directly applicable as
+baselines for CDHAS, for two structural reasons.
+
+\textbf{(1) Architectural mismatch in optimization objective.}
+Existing TAMP solvers are architected for \textit{feasibility-driven} planning:
+they enumerate symbolic action sequences and verify geometric realizability
+via per-action motion feasibility checks. This architecture is well-suited
+for manipulation tasks where the goal is to find \emph{any} valid plan.
+CDHAS, by contrast, demands \textit{optimality-driven} planning in which
+AGV arrival times are continuous optimization variables that directly
+determine makespan.
+Adapting existing TAMP solvers to this objective would require enumeration
+over an $O(2^M)$ symbolic search space ($M$ tasks), which is computationally
+intractable at the scales we consider.
+
+\textbf{(2) Empirical scalability barrier.} TAMP solvers face combinatorial explosion in the joint task-assignment search space, 
+further compounded in CDHAS by the need to re-evaluate continuous trajectories for each candidate discrete plan ~\cite{zhao2024survey}. 
+Our preliminary experiments on DS1 confirmed this scalability barrier: PDDLStream returned no solution within 1 hour, 
+consistent with the known combinatorial scalability limitations of PDDLStream~\cite{garrett2020pddlstream}.
+
+
+\textbf{Alternative validation strategy.} This baseline set therefore provides meaningful performance benchmarks
+across optimization paradigms, we validate HDP against four baselines that 
+collectively cover the full spectrum of optimization paradigms---exact, 
+heuristic, receding-horizon, and learning-based:
+\begin{enumerate}[leftmargin=*, itemsep=3pt]
+    \item \textbf{MILP:}~\cite{wang2024more} Monolithic optimization using Gurobi. 
+    Serves as a near-optimal benchmark for DS1 only (does not scale to DS2/DS3 
+    within 1 hour), establishing a solution quality upper bound.
+
+    \item \textbf{Greedy-Single:} Improved greedy method that jointly considers 
+    assignment and trajectory cost. For each task, evaluates all AGV--task pairs 
+    and selects the minimum estimated completion time.
+
+    \item \textbf{RHC:}~\cite{yan2021rnn} Receding horizon control with a 10\,s horizon, 
+    re-planning every 2\,s. Represents state-of-the-art 
+    continuous trajectory optimization with online re-planning.
+
+    \item \textbf{RL (DQN):}~\cite{li2022improved} Deep Q-network trained for 50,000 episodes on 
+    random instances. Represents learning-based approaches 
+    that have shown promise in multi-agent coordination.
+\end{enumerate}
+This baseline set provides meaningful performance benchmarks across 
+optimization paradigms for CDHAS scheduling. Furthermore, integrating HDP 
+within TAMP frameworks represents a promising future direction (Section~\ref{sec:future_work}).
+
+
+\subsubsection{Evaluation Metrics}
+
+\begin{itemize}[leftmargin=*, itemsep=3pt]
+
+    \item \textbf{Makespan} (primary objective, total completion time):
+    \begin{equation}
+        T_{\text{makespan}} = \max_{j \in [N_d]} \bigl(\tau_j^{m_j} + d_j^{m_j}\bigr)
+    \end{equation}
+    where $m_j$ indexes the last task of DES agent $j$, and $\tau_j^{m_j}$,
+    $d_j^{m_j}$ are its scheduled start time and processing duration.
+
+    \item \textbf{AGV utilization} (fraction of time AGVs spend actively
+    transporting, averaged over all $N_c$ agents):
+    \begin{equation}
+        \text{Utilization} = \frac{\sum_{i=1}^{N_c} t_i^{\text{travel}}}{N_c \cdot T_{\text{makespan}}} \times 100\%
+    \end{equation}
+    where $t_i^{\text{travel}}$ is the cumulative travel time of AGV $i$.
+
+    \item \textbf{Computation time:} Wall-clock time to compute a feasible
+    solution (seconds).
+
+    \item \textbf{Solution quality gap} (relative deviation from the best
+    known makespan $T_{\text{best}}$, i.e., MILP for DS1 and best heuristic
+    for DS2/DS3):
+    \begin{equation}
+        \text{Gap} = \frac{T_{\text{method}} - T_{\text{best}}}{T_{\text{best}}} \times 100\%
+    \end{equation}
+
+\end{itemize}
+
+Results are averaged over 10 instances per dataset with 95\% confidence
+intervals. Statistical significance uses paired $t$-tests:
+$^{***}$\,$p < 0.001$, $^{**}$\,$p < 0.01$, $^{*}$\,$p < 0.05$.
+
+\subsection{Comparison with Baseline Methods}
+
+\subsubsection{Solution Quality and Efficiency}
+
+Table~\ref{tab:main_results} shows performance comparison across methods 
+and datasets; Fig.~\ref{fig:gantt} provides complementary qualitative 
+evidence of the scheduling differences.
+
+\begin{table}[t]
+\centering
+\caption{Overall Performance Comparison Across All Methods and Datasets}
+\label{tab:main_results}
+\small
+\begin{tabular}{l|ccc|ccc|ccc}
+\toprule
+\multirow{2}{*}{\textbf{Method}} & \multicolumn{3}{c|}{\textbf{Makespan (s)}} & \multicolumn{3}{c|}{\textbf{Utilization (\%)}} & \multicolumn{3}{c}{\textbf{Comp. Time (s)}} \\
+& DS1 & DS2 & DS3 & DS1 & DS2 & DS3 & DS1 & DS2 & DS3 \\
+\midrule
+MILP & 16.8 & --- & --- & 78.2 & --- & --- & 45.3 & --- & --- \\
+Greedy-Single & 22.0 & 103.4 & 412.7 & 61.2 & 61.3 & 59.8 & 0.5 & 2.1 & 8.3 \\
+RHC & 19.3 & 95.8 & 389.5 & 68.5 & 67.9 & 66.2 & 8.7 & 38.4 & 152.6 \\
+RL (DQN) & 21.2 & 98.6 & 401.3 & 64.1 & 63.7 & 62.4 & 0.1 & 0.2 & 0.4 \\
+\midrule
+\textbf{HDP (Ours)} & \textbf{17.0} & \textbf{87.2} & \textbf{351.6} & \textbf{75.8} & \textbf{76.1} & \textbf{74.8} & \textbf{2.3} & \textbf{9.8} & \textbf{38.7} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\columnwidth]{fig/fig_comprehensive_comparison.pdf}
+\Description{Comprehensive comparison of algorithms across metrics (makespan/time).}
+\caption{Gantt chart comparison for DS1. \textbf{Top:} Greedy-Single exhibits 
+significant idle gaps (white spaces) due to poor AGV-task coordination. 
+\textbf{Bottom:} HDP minimizes idle time through joint optimization of 
+trajectories and schedules.}
+\label{fig:gantt}
+\end{figure}
+
+HDP achieves near-optimal makespan (1.2\% gap vs.\ MILP for DS1) and 
+significant improvements over baselines: 11.9\% reduction vs.\ RHC for DS1 
+($p < 0.001$), 9.0\% for DS2 ($p < 0.001$), 9.7\% for DS3 ($p < 0.001$). 
+AGV utilization reaches 75--76\% across all datasets, representing a 
+10--15 percentage point improvement. As visible in Fig.~\ref{fig:gantt}, 
+these gains stem from better load balancing across robotic arms and reduced 
+idle gaps between tasks---outcomes that pure numerical metrics alone do not 
+fully convey. HDP is 4--5$\times$ faster than RHC and scales to DS3 where 
+MILP times out.
+
+
+\subsubsection{Ablation Study}
+\label{sec:ablation}
+
+Table~\ref{tab:ablation} shows contribution of each HDP component on DS2.
+
+\begin{table}[t]
+\centering
+\caption{Ablation Study on DS2 (30 tasks)}
+\label{tab:ablation}
+\small
+\begin{tabular}{l|ccc}
+\toprule
+\textbf{Variant} & \textbf{Makespan (s)} & \textbf{Comp. Time (s)} & \textbf{Iterations} \\
+\midrule
+HDP-Full & 87.2 & 9.8 & 6 \\
+HDP-NoPrune & 87.5 & 24.6 (+151\%) & 6 \\
+HDP-NoAdapt & 88.1 & 14.2 (+45\%) & 6 \\
+HDP-NoWarm & 89.3 & 10.1 & 9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+State space pruning is most critical, confirming it eliminates truly unreachable states. Adaptive discretization 
+provides 45\% speedup while maintaining quality within 1\%.
+
+\subsection{Convergence Analysis}
+\label{sec:convergence_validation}
+
+Fig.~\ref{fig:convergence} shows solution quality versus cumulative 
+computation time for all methods on DS2 (30 tasks). HDP converges 
+in 6 CSS--DES coordination rounds totaling 9.8\,s, achieving a 
+makespan of 86.3\,s---within 0.9\% of MILP's last incumbent while 
+requiring $370\times$ less computation time. RHC reaches a worse 
+makespan (95.8\,s) only after 38.4\,s, and MILP exhausts its 
+3{,}600\,s budget without certifying optimality.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.7\columnwidth]{fig/fig_convergence_time_axis.pdf}
+\Description{Convergence plot for HDP showing makespan over iterations (time axis).}
+\caption{Solution quality vs.\ cumulative computation time on DS2
+(30 tasks, log-scale time axis).
+HDP converges in 6 coordination rounds (9.8\,s) to a makespan of
+86.3\,s, consistent with geometric decay at $\rho_{\text{eff}}\approx 0.40$
+(Theorem~\ref{thm:convergence}).
+MILP's data points represent Branch-and-Bound incumbent updates
+(intermediate feasible solutions \emph{without} optimality guarantees);
+MILP times out at 3{,}600\,s before certifying optimality.}
+\label{fig:convergence}
+\end{figure}
+
+To validate the convergence rate analysis in Theorem~\ref{thm:convergence},
+we note that each HDP coordination round takes approximately 1.6\,s,
+so the six rounds correspond to cumulative times of 1.6, 3.2, 4.8,
+6.4, 8.0, and 9.8\,s in Fig.~\ref{fig:convergence}.
+We fit the geometric model $\Delta T^{(\ell)} = \Delta T^{(0)} \cdot 
+\rho_{\text{eff}}^{\ell}$ to the per-round improvements:
+$\Delta T^{(1)} = 10.3$\,s, $\Delta T^{(2)} = 4.2$\,s,
+$\Delta T^{(3)} = 1.7$\,s, $\Delta T^{(4)} = 0.7$\,s,
+$\Delta T^{(5)} = 0.3$\,s, $\Delta T^{(6)} = 0.1$\,s.
+Least-squares regression yields $\rho_{\text{eff}} = 0.41 \pm 0.03$
+(95\% Confidence Interval), confirming geometric convergence. This is \textit{better
+than} the theoretical worst-case prediction of 0.45--0.68 from
+Theorem~\ref{thm:convergence}, demonstrating that problem structure
+leads to faster convergence in practice.
+
+\subsection{Scalability and Sensitivity Analysis}
+
+\subsubsection{Task Scalability Analysis}
+\label{sec:scalability}
+
+Fig.~\ref{fig:scalability} shows computation time vs. problem size (4-100 tasks).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\columnwidth]{fig/fig_scalability.pdf}
+\Description{Scalability results: makespan vs. number of tasks for different methods.}
+\caption{Scalability comparison. HDP exhibits polynomial growth ($O(M^{1.8})$
+empirically fitted) \textit{with respect to task volume} while MILP shows 
+exponential growth. HDP solves 100-task problems in under 2 minutes. Note: 
+Scalability is evaluated with fixed $N_c = 3$ AGVs and $N_d = 3$ robotic arms.}
+\label{fig:scalability}
+\end{figure}
+
+\textbf{Task scalability.} HDP's computation time grows as $O(M^{1.8})$ 
+(empirically fitted), significantly better than MILP's exponential $O(2^M)$. 
+MILP times out for $M > 20$ tasks (1 hour limit), while HDP solves 100-task 
+instances in $\approx$ 120 seconds. Greedy-Single remains fastest ($<$ 10 s) 
+but sacrifices 15-20\% quality. The empirical exponent 1.8 is slightly better 
+than the theoretical $O(M^2)$ (Proposition~\ref{prop:complexity}) due to 
+state space pruning becoming more effective for larger problems 
+(Section~\ref{sec:acceleration}).
+
+Interestingly, HDP becomes faster than Greedy-Single beyond 70 tasks. This crossover occurs because Greedy-Single's iterative assignment
+grows linearly with $M$, while HDP's state space pruning becomes more effective
+for larger problems. For $M = 100$, pruning reduces state space by 70-80\%
+(vs. 60\% for $M = 30$) due to tighter temporal constraints and spatial
+clustering. DP computation cost is amortized over multiple tasks, yielding
+effective complexity $O(M^{1.8}/M) = O(M^{0.8})$ per task, while
+Greedy-Single evaluates $O(N_c \cdot M)$ candidates sequentially.
+
+\subsubsection{Agent Scalability Analysis}
+\label{sec:scalability02}
+\textbf{Agent scalability.} While HDP demonstrates strong 
+\textit{task scalability} ($O(M^{1.8})$), scaling with respect to the 
+number of agents presents different challenges:
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+    \item \textit{CSS agents ($N_c$)}: Collision avoidance constraints grow 
+    as $O(N_c^2)$ (Eq.~\ref{eq:css_constraints}), increasing CSS-DP complexity 
+    from $O(N_c \cdot M)$ to $O(N_c^2 \cdot M)$ when collision checking is 
+    performed pairwise. Our experiments (Table~\ref{tab:agent_scalability}) 
+    show that HDP scales to $N_c = 5$ AGVs within reasonable time ($<$ 5 minutes 
+    for 30 tasks), but beyond $N_c = 8$, decentralized variants (e.g., consensus 
+    ADMM) may be necessary (Section~\ref{sec:future_work}).
+    
+    \item \textit{DES agents ($N_d$)}: DES-DP complexity is $O(N_d \cdot M \cdot N_c)$ 
+    (Proposition~\ref{prop:complexity}), which is linear in $N_d$. However, 
+    coordination iterations $L$ may increase with $N_d$ due to more complex 
+    coupling patterns. Empirically, $L$ grows from 4-6 iterations ($N_d = 3$) 
+    to 8-10 iterations ($N_d = 6$).
+\end{itemize}
+To quantify agent scalability, we conduct experiments on DS2 (30 tasks) with 
+varying agent configurations. Table~\ref{tab:agent_scalability} shows HDP 
+maintains 15-20\% makespan advantage across all configurations, but computation 
+time grows super-linearly with $N_c$ due to collision avoidance overhead. 
+Increasing from $N_c = 3$ to $N_c = 5$ increases computation time by $3.5\times$ 
+(9.8s → 34.7s), consistent with the empirically fitted $O(N_c^{1.6})$ scaling reported in Table~\ref{tab:agent_scalability}. In contrast, 
+increasing $N_d$ from 3 to 5 only increases time by $1.5\times$, consistent with the mild super-linear $O(N_d^{1.1})$ dependency observed in the joint fit---substantially weaker than the $O(N_c)$ effect.
+
+\begin{table}[h]
+\centering
+\caption{Agent Scalability on DS2 (30 tasks, $7 \times 6$ m workspace)}
+\label{tab:agent_scalability}
+\small
+\begin{tabular}{l|cc|cc}
+\toprule
+\multirow{2}{*}{\textbf{Configuration}} & \multicolumn{2}{c|}{\textbf{Makespan (s)}} & \multicolumn{2}{c}{\textbf{Comp. Time (s)}} \\
+& HDP & Greedy & HDP & Greedy \\
+\midrule
+$N_c=2$, $N_d=3$ & 112.4 & 128.7 & 7.2 & 1.8 \\
+$N_c=3$, $N_d=3$ (default) & 87.2 & 103.4 & 9.8 & 2.1 \\
+$N_c=4$, $N_d=3$ & 71.3 & 89.6 & 18.5 & 2.5 \\
+$N_c=5$, $N_d=3$ & 63.8 & 82.1 & 34.7 & 3.1 \\
+$N_c=3$, $N_d=4$ & 88.9 & 105.2 & 12.4 & 2.3 \\
+$N_c=3$, $N_d=5$ & 89.6 & 106.8 & 15.1 & 2.6 \\
+\bottomrule
+\multicolumn{5}{l}{\small Note: Computation time grows as $O(N_c^{1.6} \cdot N_d^{1.1})$ (empirically fitted)} \\
+\end{tabular}
+\end{table}
+
+\textbf{Practical implications.} These results clarify HDP's scalability profile:
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+    \item \textit{Task scalability} is the primary strength, enabling 
+    $M = 4$-100 tasks with polynomial complexity.
+    
+    \item \textit{Agent scalability} is acceptable for typical manufacturing 
+    cells ($N_c, N_d \leq 5$), where agent counts are fixed by factory layout 
+    and remain constant~\cite{wang2024smart}.
+    
+    \item For large-scale systems ($N_c > 8$), hierarchical decomposition 
+    (partition workspace into zones) or decentralized coordination (consensus 
+    ADMM) is recommended to break the $O(N_c^2)$ barrier 
+    (Section~\ref{sec:future_work}).
+\end{itemize}
+
+\subsubsection{Grid Resolution Sensitivity Analysis}
+\label{sec:grid_sensitivity}
+
+\begin{figure}[htpb]
+\centering
+\includegraphics[width=0.85\columnwidth]{fig/fig_grid_sensitivity.pdf}
+\Description{Grid resolution sensitivity: computation time and makespan vs. grid size.}
+\caption{Grid resolution sensitivity on DS2 (30 tasks). \textbf{Left}: 
+Computation time grows quadratically with finer grids (exponent 1.97). 
+\textbf{Right}: Makespan improves with finer resolution but plateaus 
+at $\Delta x \approx 0.3$ m. The optimal choice is $\Delta x = 0.5$ m 
+(red marker), balancing accuracy (3.2\% error) and speed (9.8 s).}
+\label{fig:grid_sensitivity}
+\end{figure}
+
+Fig.~\ref{fig:grid_sensitivity} shows the trade-off between grid resolution 
+$\Delta x$ and computation time/solution quality on DS2 (30 tasks).
+
+\textbf{Quadratic computational sensitivity.} Computation time grows as 
+$O((W/\Delta x)^2)$: refining from $\Delta x = 0.5$m to 0.25m increases 
+CSS-DP time from 9.8s to 39s ($4\times$), while refining to 0.1m increases 
+to 245s ($25\times$). 
+
+\textbf{Diminishing returns on accuracy.} Makespan improvement shows diminishing 
+returns: $\Delta x = 0.5$m achieves 87.2s, $\Delta x = 0.2$m improves to 86.1s 
+(1.3\% gain), while $\Delta x = 0.1$m only improves to 85.8s (0.3\% additional 
+gain) at $25\times$ computational cost.
+
+\textbf{Practical recommendation:} For typical manufacturing tasks 
+($\epsilon = 0.3$--$0.5$\,m), $\Delta x = 0.5$ m provides the best balance 
+(3-4\% discretization error, $<$ 10 s computation for 30 tasks). High-precision 
+applications ($\epsilon < 0.2$m) should use adaptive discretization.
+
+\textbf{Practical guideline:} For manufacturing applications, we recommend:
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+    \item \textit{Standard tasks} ($\epsilon = 0.3$-0.5 m): $\Delta x = 0.5$ m 
+    (3-4\% error, $<$ 10 s for 30 tasks)
+    \item \textit{High-precision tasks} ($\epsilon = 0.1$-0.2 m): $\Delta x = 0.25$ m 
+    with adaptive discretization (1-2\% error, $<$ 20 s for 30 tasks)
+    \item \textit{Large workspaces} ($W > 20$ m): Workspace partitioning 
+    (Section~\ref{sec:future_work}) to maintain $\Delta x = 0.5$ m locally
+\end{itemize}
+
+\subsection{Robustness Analysis}
+\label{sec:robustness}
+We evaluate HDP's robustness under two sources of real-world variability:
+(1) uncertain task durations and (2) diverse workspace layouts.
+
+\subsubsection{Robustness to Task Duration Uncertainty}
+
+Real-world manufacturing tasks have uncertain durations due to variations in 
+material properties, robot performance, or environmental conditions. We 
+introduce Gaussian noise to task durations:
+\begin{equation}
+d_j^{k,\text{actual}} = d_j^{k,\text{nominal}} \cdot (1 + \mathcal{N}(0, \sigma^2))
+\end{equation}
+where $\sigma \in \{0.1, 0.2, 0.3, 0.4\}$ represents 10-40\% uncertainty.
+
+Fig.~\ref{fig:robustness_duration} shows makespan degradation under increasing 
+uncertainty. HDP maintains 12-19\% improvement over Greedy-Single even under 
+40\% uncertainty, demonstrating robust performance.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\columnwidth]{fig/fig_robustness.pdf}
+\Description{Robustness evaluation plots across disturbance levels and layouts.}
+\caption{Robustness to task duration uncertainty. HDP's advantage over 
+Greedy-Single persists across all uncertainty levels, with graceful degradation 
+as uncertainty increases.}
+\label{fig:robustness_duration}
+\end{figure}
+
+\subsubsection{Robustness to Workspace Layout}
+
+We test HDP on three layout variants to evaluate generalization:
+
+\begin{itemize}[leftmargin=*, itemsep=2pt]
+    \item \textbf{Layout A (Sparse):} 2 obstacles, open workspace
+    \item \textbf{Layout B (Standard):} 4 obstacles (default)
+    \item \textbf{Layout C (Dense):} 8 obstacles, narrow corridors
+\end{itemize}
+
+Table~\ref{tab:robustness_layout} shows HDP maintains consistent performance 
+across layouts, with makespan increasing only 8-12\% in dense layout due to 
+longer collision-free paths. HDP's advantage actually increases in dense 
+layouts (19.9\% vs. 15.5\% in sparse), suggesting coupling-aware optimization 
+becomes more valuable when navigation constraints are tighter.
+
+\begin{table}[t]
+\centering
+\caption{Robustness to Workspace Layout (DS2)}
+\label{tab:robustness_layout}
+\small
+\begin{tabular}{l|ccc}
+\toprule
+\textbf{Method} & \textbf{Layout A} & \textbf{Layout B} & \textbf{Layout C} \\
+\midrule
+MILP & ---$^{\dagger}$ & ---$^{\dagger}$ & ---$^{\dagger}$ \\
+Greedy-Single & 98.3 & 103.4 & 121.7 \\
+RHC & 91.2 & 95.8 & 109.3 \\
+RL (DQN) & 93.9 & 98.6 & 113.6 \\
+\textbf{HDP} & \textbf{83.1} & \textbf{87.2} & \textbf{97.5} \\
+\midrule
+HDP Improvement & 15.5\% & 15.7\% & 19.9\% \\
+\bottomrule
+\multicolumn{4}{l}{\small $^{\dagger}$ MILP: Timeout (>1 hour) for DS2 scale} \\
+\multicolumn{4}{l}{\small Layout A: 2 obstacles; Layout B: 4 obstacles; Layout C: 8 obstacles}
+\end{tabular}
+\end{table}
+
+
+\subsection{Summary}
+
+Taken together, these results confirm that HDP bridges the gap between
+theoretical optimality and practical deployability: it achieves near-optimal
+makespan with polynomial complexity, remains robust under real-world
+uncertainties, and its empirical convergence behavior closely tracks
+theoretical predictions.
+
+\section{Conclusion}
+\label{sec:Chapter_VI}
+
+We addressed the CDHAS scheduling problem in intelligent manufacturing,
+where bidirectional spatiotemporal coupling between AGV trajectories and
+robotic arm task assignments creates a circular dependency that traditional
+sequential methods cannot resolve.
+
+\subsection{Summary of Contributions}
+\label{sec:contributions}
+We proposed the Hybrid Dynamic Programming (HDP) framework via a
+decompose-coordinate-converge strategy. Theoretically, we proved that the
+NP-hard coupled problem decomposes into tractable CSS-DP and DES-DP
+subproblems under mild separability conditions, with geometric convergence
+guarantees ($\rho = L_{\Psi} \cdot L_{\Phi} \cdot \alpha_{\text{crit}} < 1$)
+and polynomial task scalability $O(M^{1.8})$
+(Sections~\ref{sec:Chapter_III}--\ref{sec:Chapter_IV}). Practically, three
+acceleration techniques---reachability-based pruning, adaptive discretization,
+and warm-start initialization---reduce CSS state space by 60--80\%, enabling
+HDP to scale to problem sizes where MILP times out. Empirically, HDP achieves
+near-optimal solution quality and significant makespan reduction with robust
+performance under uncertainty, confirming that coupling-aware joint
+optimization outperforms sequential baselines
+(Section~\ref{sec:Chapter_V}).
+
+\subsection{Limitations and Future Directions}
+\label{sec:future_work}
+
+\textbf{(1) Grid resolution sensitivity.}
+Grid-based CSS-DP exhibits quadratic computational sensitivity
+$O((W/\Delta x)^2)$ and approximately 3\% discretization error at
+$\Delta x = 0.5$\,m, which becomes prohibitive for high-precision applications
+($\epsilon < 0.1$\,m). Future work will pursue adaptive discretization
+(dynamically adjusting grid resolution based on local obstacle density) and
+hybrid planning (combining grid-based DP for global routing).
+
+
+
+\textbf{(2) Agent scalability and TAMP integration.}
+Scaling with CSS agents is constrained by quadratic collision avoidance
+complexity $O(N^2)$. Two directions are planned: decentralized coordination via consensus
+ADMM, where each CSS agent optimizes its own trajectory while exchanging only
+local coupling variables, and hierarchical decomposition that partitions large
+fleets into smaller teams coordinated by a higher-level scheduler.
+More broadly, embedding CSS-DP as a numeric trajectory optimization module
+within TAMP frameworks (e.g., PDDLStream) is a promising direction, where HDP's optimality guarantees and bidirectional
+coupling resolution complement symbolic high-level reasoning.
+
+
+\textbf{(3) Static environment assumptions.}
+The current formulation assumes static obstacles and known task durations.
+Although HDP maintains performance under uncertainty (up to 40\%, Section~\ref{sec:robustness}), fully dynamic
+environments with online task arrivals and moving obstacles remain an open
+challenge. Rolling horizon optimization with warm-start re-planning provides
+a near-term direction, while robust DP formulations and predictive obstacle
+avoidance offer a longer-term direction.
+
+
+%\section*{Acknowledgments}
+%This work was supported partly by Key Laboratory of Computer Network and Information Integration (Southeast University) of Ministry of Education of China under Grants NO. 93K-9 and Jiangsu Provincial Key Laboratory of Network and Information Security under Grants No.BM2003201.
+
+%%
+%% The next two lines define the bibliography style to be used, and
+%% the bibliography file.
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{reference-base}
+
+
+%%
+%% If your work has an appendix, this is the place to put it.
+\appendix
+
+
+
+\end{document}
+\endinput
+%%
+
