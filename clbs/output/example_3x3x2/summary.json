@@ -22,7 +22,7 @@
   "results": {
     "closed": {
       "makespan": 33.0,
-      "runtime_sec": 0.84,
+      "runtime_sec": 1.03,
       "valid": true,
       "validation_errors": [],
       "generations": 37,
@@ -69,7 +69,7 @@
     },
     "twostage": {
       "makespan": 36.0,
-      "runtime_sec": 0.25,
+      "runtime_sec": 0.35,
       "valid": true,
       "validation_errors": [],
       "stage1_ideal_makespan": 32.0
