@@ -1,0 +1,393 @@
+{
+  "instance": "congested_8x4x4",
+  "delta_return": 1,
+  "features": {
+    "Tt_over_Tp": 1.1556,
+    "heterogeneity": 0.2999,
+    "flexibility": 0.9583,
+    "NA_over_NM": 1.0,
+    "num_jobs": 8,
+    "num_machines": 4,
+    "num_agvs": 4,
+    "num_real_ops": 24,
+    "num_nodes": 7,
+    "num_corridors": 8,
+    "funnel_share": 0.2667,
+    "lu_min_cut": 1,
+    "lu_cut_corridors": [
+      "c1|v0"
+    ],
+    "far_group_cut": 1,
+    "corridors_per_node": 1.1429
+  },
+  "ga_config": {
+    "pop": 40,
+    "max_gen": 30,
+    "stall_gen": 12,
+    "seed": 42,
+    "theta": 0.0,
+    "max_entry_options": 3,
+    "price_top_k": 24,
+    "price_refresh": 5,
+    "fd_calibrate": false,
+    "dispatch": "exact",
+    "use_conflict_ops": true
+  },
+  "results": {
+    "closed": {
+      "makespan": 82.0,
+      "runtime_sec": 8.55,
+      "valid": true,
+      "validation_errors": [],
+      "bucket_width": 6.75,
+      "price_slots": 0,
+      "price_cost_total": 0.0,
+      "generations": 28,
+      "evaluations": 1120,
+      "convergence_history": [
+        105.0,
+        96.0,
+        88.0,
+        88.0,
+        88.0,
+        88.0,
+        88.0,
+        83.0,
+        83.0,
+        83.0,
+        83.0,
+        83.0,
+        83.0,
+        83.0,
+        83.0,
+        82.0,
+        82.0,
+        82.0,
+        82.0,
+        82.0,
+        82.0,
+        82.0,
+        82.0,
+        82.0,
+        82.0,
+        82.0,
+        82.0,
+        82.0
+      ],
+      "occupancy": {
+        "bucket_width": 6.75,
+        "num_buckets": 13,
+        "bottleneck_corridor": "c1|c2",
+        "by_corridor": {
+          "c1|c2": {
+            "mean": 0.6838,
+            "peak": 1.0,
+            "busy_buckets": 12
+          },
+          "c1|v0": {
+            "mean": 0.547,
+            "peak": 1.0,
+            "busy_buckets": 11
+          },
+          "c1|r2": {
+            "mean": 0.3761,
+            "peak": 1.0,
+            "busy_buckets": 10
+          },
+          "c1|r1": {
+            "mean": 0.2507,
+            "peak": 0.5926,
+            "busy_buckets": 9
+          },
+          "c2|r4": {
+            "mean": 0.1368,
+            "peak": 0.5185,
+            "busy_buckets": 5
+          },
+          "c2|r3": {
+            "mean": 0.1368,
+            "peak": 0.4074,
+            "busy_buckets": 6
+          },
+          "r1|r2": {
+            "mean": 0.114,
+            "peak": 0.5556,
+            "busy_buckets": 4
+          },
+          "r3|r4": {
+            "mean": 0.0456,
+            "peak": 0.2963,
+            "busy_buckets": 2
+          }
+        },
+        "hottest_slots": [
+          {
+            "corridor": "c1|v0",
+            "bucket": 0,
+            "t_from": 0.0,
+            "t_to": 6.75,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|v0",
+            "bucket": 1,
+            "t_from": 6.75,
+            "t_to": 13.5,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|r2",
+            "bucket": 1,
+            "t_from": 6.75,
+            "t_to": 13.5,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 3,
+            "t_from": 20.25,
+            "t_to": 27.0,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 9,
+            "t_from": 60.75,
+            "t_to": 67.5,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 5,
+            "t_from": 33.75,
+            "t_to": 40.5,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 10,
+            "t_from": 67.5,
+            "t_to": 74.25,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 6,
+            "t_from": 40.5,
+            "t_to": 47.25,
+            "util": 1.0
+          }
+        ]
+      }
+    },
+    "twostage": {
+      "makespan": 100.0,
+      "runtime_sec": 0.37,
+      "valid": true,
+      "validation_errors": [],
+      "stage1_ideal_makespan": 71.0,
+      "occupancy": {
+        "bucket_width": 6.75,
+        "num_buckets": 15,
+        "bottleneck_corridor": "c1|c2",
+        "by_corridor": {
+          "c1|c2": {
+            "mean": 0.8296,
+            "peak": 1.0,
+            "busy_buckets": 15
+          },
+          "c1|v0": {
+            "mean": 0.4741,
+            "peak": 1.0,
+            "busy_buckets": 12
+          },
+          "c1|r1": {
+            "mean": 0.2173,
+            "peak": 0.7778,
+            "busy_buckets": 8
+          },
+          "c2|r4": {
+            "mean": 0.2074,
+            "peak": 0.8519,
+            "busy_buckets": 8
+          },
+          "c1|r2": {
+            "mean": 0.2074,
+            "peak": 0.8519,
+            "busy_buckets": 7
+          },
+          "c2|r3": {
+            "mean": 0.1383,
+            "peak": 0.5926,
+            "busy_buckets": 5
+          },
+          "r3|r4": {
+            "mean": 0.0988,
+            "peak": 0.5926,
+            "busy_buckets": 4
+          },
+          "r1|r2": {
+            "mean": 0.0593,
+            "peak": 0.2963,
+            "busy_buckets": 5
+          }
+        },
+        "hottest_slots": [
+          {
+            "corridor": "c1|v0",
+            "bucket": 0,
+            "t_from": 0.0,
+            "t_to": 6.75,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 7,
+            "t_from": 47.25,
+            "t_to": 54.0,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 8,
+            "t_from": 54.0,
+            "t_to": 60.75,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|v0",
+            "bucket": 2,
+            "t_from": 13.5,
+            "t_to": 20.25,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 10,
+            "t_from": 67.5,
+            "t_to": 74.25,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 4,
+            "t_from": 27.0,
+            "t_to": 33.75,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 9,
+            "t_from": 60.75,
+            "t_to": 67.5,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 11,
+            "t_from": 74.25,
+            "t_to": 81.0,
+            "util": 1.0
+          }
+        ]
+      }
+    },
+    "rule": {
+      "makespan": 184.0,
+      "runtime_sec": 0.0,
+      "valid": true,
+      "validation_errors": [],
+      "occupancy": {
+        "bucket_width": 6.75,
+        "num_buckets": 28,
+        "bottleneck_corridor": "c1|c2",
+        "by_corridor": {
+          "c1|c2": {
+            "mean": 0.7619,
+            "peak": 1.0,
+            "busy_buckets": 25
+          },
+          "c1|v0": {
+            "mean": 0.254,
+            "peak": 1.0,
+            "busy_buckets": 16
+          },
+          "c2|r4": {
+            "mean": 0.1746,
+            "peak": 0.8148,
+            "busy_buckets": 11
+          },
+          "r3|r4": {
+            "mean": 0.1587,
+            "peak": 0.6667,
+            "busy_buckets": 13
+          },
+          "c2|r3": {
+            "mean": 0.1376,
+            "peak": 0.6296,
+            "busy_buckets": 10
+          }
+        },
+        "hottest_slots": [
+          {
+            "corridor": "c1|v0",
+            "bucket": 0,
+            "t_from": 0.0,
+            "t_to": 6.75,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 1,
+            "t_from": 6.75,
+            "t_to": 13.5,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 9,
+            "t_from": 60.75,
+            "t_to": 67.5,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 10,
+            "t_from": 67.5,
+            "t_to": 74.25,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 11,
+            "t_from": 74.25,
+            "t_to": 81.0,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 12,
+            "t_from": 81.0,
+            "t_to": 87.75,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 18,
+            "t_from": 121.5,
+            "t_to": 128.25,
+            "util": 1.0
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 21,
+            "t_from": 141.75,
+            "t_to": 148.5,
+            "util": 1.0
+          }
+        ]
+      }
+    }
+  },
+  "improvement_closed_vs_twostage": 0.18
+}

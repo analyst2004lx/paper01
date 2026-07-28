@@ -1,4 +1,4 @@
-"""规格文档第九节 T1–T8 测试断言。运行方式(clbs/ 目录下): py -m tests.test_all"""
+"""规格文档第九节 T1–T12 测试断言。运行方式(clbs/ 目录下): py -m tests.test_all"""
 from __future__ import annotations
 
 import json
@@ -12,6 +12,10 @@ from algorithm.instance import load_instance, parse_instance
 from algorithm.network import Network
 from algorithm.decoder import decode
 from algorithm.ga import GAConfig, run_ga, random_ma, random_os
+from algorithm.generator import (CONGESTION_PRESETS, build_instance, make_spec,
+                                 measure)
+from algorithm.pricing import default_bucket_width
+from algorithm.report import corridor_occupancy
 from algorithm.validator import validate
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -185,6 +189,124 @@ def t8_ga_beats_reference():
           f"{out['evaluations']} 次评估)")
 
 
+# ---------------- T9 禁派集:被禁车辆不得承接,且全禁时仍可解码 ----------------
+
+def t9_forbid_vehicles():
+    inst, net = _load()
+    ma = {(1, 1): 1, (3, 1): 1, (1, 2): 2, (1, 3): 3,
+          (2, 1): 2, (2, 2): 3, (3, 2): 2}
+    os_seq = [1, 3, 1, 1, 2, 2, 3, 1, 2, 3]
+
+    base = decode(inst, net, ma, os_seq, conflict_free=True)
+    tr0 = next(t for t in base.transports if t.job == 3 and t.i == 1)
+    assert tr0.agv == 2, f"基线下 J3 首道应派给 AGV2,实际 AGV{tr0.agv}"
+
+    # 禁掉 AGV2 后,该任务必须换车,且方案仍可行
+    res = decode(inst, net, ma, os_seq, conflict_free=True, forbid={(3, 1): {2}})
+    tr = next(t for t in res.transports if t.job == 3 and t.i == 1)
+    assert tr.agv != 2, "禁派集未生效:AGV2 仍承接了 (3,1)"
+    errors = validate(inst, res.to_timetable())
+    assert not errors, "禁派后方案不可行:\n" + "\n".join(errors)
+
+    # 全禁则回退到完整车队(保可解码性),不得抛异常或产生无限完工时间
+    res_all = decode(inst, net, ma, os_seq, conflict_free=True,
+                     forbid={(3, 1): {1, 2}})
+    assert res_all.makespan < float("inf"), "全禁时应回退到完整车队"
+    assert not validate(inst, res_all.to_timetable())
+
+
+# ---------------- T10 占用率两套算法一致(顺带验预约表回滚无残留) ----------------
+
+def t10_occupancy_consistency():
+    inst, net = _load()
+    delta = default_bucket_width(inst)
+    ma = {(1, 1): 1, (3, 1): 1, (1, 2): 2, (1, 3): 3,
+          (2, 1): 2, (2, 2): 3, (3, 2): 2}
+    os_seq = [1, 3, 1, 1, 2, 2, 3, 1, 2, 3]
+    # dispatch=exact 会做试探性落表再回滚;若回滚有残留,预约表侧会多出占用
+    res = decode(inst, net, ma, os_seq, conflict_free=True, dispatch="exact",
+                 bucket_width=delta, collect_occupancy=True)
+    assert res.occupancy, "collect_occupancy=True 时应采集到占用率"
+
+    from_table = res.occupancy                                  # 预约表侧
+    from_tt = corridor_occupancy(res.to_timetable(), delta)      # 时刻表侧(独立重算)
+    assert set(from_table) == set(from_tt), (
+        f"占用槽位不一致: 仅预约表 {set(from_table) - set(from_tt)}, "
+        f"仅时刻表 {set(from_tt) - set(from_table)}(疑似回滚残留)")
+    for key, v in from_table.items():
+        assert abs(v - from_tt[key]) < 1e-9, \
+            f"槽位 {key} 占用率不一致: 预约表 {v} vs 时刻表 {from_tt[key]}"
+    assert all(0.0 - 1e-9 <= v <= 1.0 + 1e-9 for v in from_tt.values()), \
+        "独占语义下占用率不应超过 1"
+
+
+# ---------------- T11 生成算例可解码、下界合法、H=0 退化 ----------------
+
+def t11_generated_instances():
+    rng = random.Random(0)
+    for tag in sorted(CONGESTION_PRESETS):
+        for h in (0.0, 0.3):
+            spec = make_spec(tag, heterogeneity=h, flexibility=0.6, num_jobs=4,
+                             num_machines=4, num_agvs=3, ops_per_job=2, seed=11)
+            data = build_instance(spec)
+            feat = measure(data)
+            gi = parse_instance(data)
+            gnet = Network(gi.nodes, gi.corridors, gi.lu_node)
+            gnet.check_reachability()
+
+            if h == 0.0:
+                assert feat["heterogeneity"] == 0.0, \
+                    f"{tag}: H=0 应退化为零异构,实测 {feat['heterogeneity']}"
+            else:
+                assert abs(feat["heterogeneity"] - h) < 0.06, \
+                    f"{tag}: H 目标 {h} 实测 {feat['heterogeneity']},偏差过大"
+
+            lb = feat["lower_bound"]
+            for _ in range(20):
+                res = decode(gi, gnet, random_ma(gi, rng), random_os(gi, rng),
+                             conflict_free=True)
+                assert res.makespan < float("inf")
+                errors = validate(gi, res.to_timetable())
+                assert not errors, f"{tag} 生成算例不可行:\n" + "\n".join(errors)
+                # 下界必须真的是下界,否则 (a) 界推导错 或 (b) 解码违反了某条约束
+                assert res.makespan >= lb - 1e-6, \
+                    f"{tag}: C_max {res.makespan} 低于下界 {lb},界或解码有错"
+
+
+# ---------------- T12 拥堵度旋钮只改容量:high/funnel 与 mid/high 受控对比 ----------------
+
+def t12_congestion_knobs_isolated():
+    def gen(tag):
+        d = build_instance(make_spec(tag, heterogeneity=0.3, flexibility=0.6,
+                                     num_jobs=6, num_machines=4, num_agvs=4,
+                                     ops_per_job=3, seed=5))
+        return d, measure(d)
+
+    mid, f_mid = gen("mid")
+    high, f_high = gen("high")
+    funnel, f_funnel = gen("funnel")
+
+    # high vs funnel:仅 LU 出口容量不同,其余逐字段相同
+    assert high["proc_time"] == funnel["proc_time"], "high/funnel 加工时间应完全相同"
+    assert high["machines"] == funnel["machines"], "high/funnel 机器位置应完全相同"
+    assert abs(f_high["Tt_over_Tp"] - f_funnel["Tt_over_Tp"]) < 1e-9, \
+        "high/funnel 的 Tt/Tp 应相同(容量旋钮不得改距离)"
+    assert (f_high["lu_min_cut"], f_funnel["lu_min_cut"]) == (2, 1), \
+        f"LU 割应为 2 vs 1,实测 {f_high['lu_min_cut']} vs {f_funnel['lu_min_cut']}"
+
+    # mid vs high:仅中段通道数不同,LU 割相同
+    assert (f_mid["far_group_cut"], f_high["far_group_cut"]) == (2, 1), \
+        f"远端割应为 2 vs 1,实测 {f_mid['far_group_cut']} vs {f_high['far_group_cut']}"
+    assert f_mid["lu_min_cut"] == f_high["lu_min_cut"] == 2, "mid/high 的 LU 割应相同"
+
+    # 同种子必须逐字节可复现(F1)
+    again = build_instance(make_spec("high", heterogeneity=0.3, flexibility=0.6,
+                                     num_jobs=6, num_machines=4, num_agvs=4,
+                                     ops_per_job=3, seed=5))
+    assert json.dumps(again, sort_keys=True) == json.dumps(high, sort_keys=True), \
+        "同种子生成结果不可复现"
+
+
 # ---------------- 运行器 ----------------
 
 TESTS = [
@@ -196,6 +318,10 @@ TESTS = [
     ("T6 回运开关 δ_return", t6_delta_return_switch),
     ("T7 走廊冲突消解与让行", t7_conflict_resolution),
     ("T8 GA 有效性(<=51)", t8_ga_beats_reference),
+    ("T9 禁派集生效与兜底", t9_forbid_vehicles),
+    ("T10 占用率一致性与回滚无残留", t10_occupancy_consistency),
+    ("T11 生成算例可行性与下界合法性", t11_generated_instances),
+    ("T12 拥堵度旋钮受控性与可复现", t12_congestion_knobs_isolated),
 ]
 
 

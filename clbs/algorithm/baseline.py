@@ -13,7 +13,7 @@ from .ga import GAConfig, run_ga, ma_min_time
 
 def two_stage_baseline(inst: Instance, net: Network, cfg: GAConfig,
                        log=None) -> dict:
-    """8.1 两阶段 open-loop:
+    """规格 8.1 档 2 —— 两阶段 open-loop:
     阶段一在退化模式(运输时间取常数 t*、无冲突约束)下运行同一 GA;
     阶段二冻结阶段一的机器指派、工序顺序与派车序列,在真实冲突模型下重放修复,
     报告修复后的真实 C_max。"""
@@ -37,15 +37,58 @@ def two_stage_baseline(inst: Instance, net: Network, cfg: GAConfig,
 
 def ablation_no_feedback(inst: Instance, net: Network, cfg: GAConfig,
                          log=None) -> dict:
-    """8.2 消融:同一闭环框架但关闭拥堵反馈局部搜索。"""
+    """规格 8.1 档 3 —— 消融:同一闭环框架但关闭决策级反馈(局部搜索)。"""
     out = run_ga(inst, net, cfg, conflict_free=True, use_ls=False, log=log)
     out["name"] = "no_feedback"
     out["makespan"] = out["best_result"].makespan
     return out
 
 
+def ablation_open_dispatch(inst: Instance, net: Network, cfg: GAConfig,
+                           log=None) -> dict:
+    """规格 8.1 档 4 —— 消融:派车决策回到开环(用理想最短路矩阵估算送达,不查预约表)。
+
+    与完整版之差 = 补上"框架最后一处开环残余"所带来的增益。注意本档运行时间显著更短,
+    因此论文对比必须**同算力预算**复核,不能只比同代数(规格 8.2 协议 1、13.2)。
+    """
+    out = run_ga(inst, net, replace(cfg, dispatch="rule"), conflict_free=True,
+                 use_ls=True, log=log)
+    out["name"] = "open_dispatch"
+    out["makespan"] = out["best_result"].makespan
+    return out
+
+
+def ablation_no_stagger(inst: Instance, net: Network, cfg: GAConfig,
+                        log=None) -> dict:
+    """规格 8.1 档 5 —— 消融:关闭冲突凭证制导的错峰算子,只保留改派算子。
+
+    与完整版之差 = "换时间"这一类邻域的贡献;拥堵的两条缓解路径(换地方 / 换时间)
+    由此分离。
+    """
+    out = run_ga(inst, net, replace(cfg, use_conflict_ops=False), conflict_free=True,
+                 use_ls=True, log=log)
+    out["name"] = "no_stagger"
+    out["makespan"] = out["best_result"].makespan
+    return out
+
+
+def ablation_priced(inst: Instance, net: Network, cfg: GAConfig,
+                    theta: float = 0.15, log=None) -> dict:
+    """规格 8.1 档 7 —— 对照(负面结果):在完整版之上开启价格加权路由。
+
+    诊断实验显示该机制在本问题上系统性有害:走廊争用的延误已完整体现在该车自身的
+    到达时刻中,再按占用收一次价格属重复计价,导致过度绕行与过度等待。保留此档是为了
+    在论文中如实报告并给出机制解释,而非作为方法贡献(规格 13.2、13.3)。
+    """
+    out = run_ga(inst, net, replace(cfg, theta=theta), conflict_free=True,
+                 use_ls=True, log=log)
+    out["name"] = "priced"
+    out["makespan"] = out["best_result"].makespan
+    return out
+
+
 def rule_baseline(inst: Instance, net: Network) -> dict:
-    """8.4 派工规则基线:机器取最小加工时间,顺序按 SPT 贪心,闭环解码一次。"""
+    """规格 8.1 档 1 —— 派工规则基线:机器取最小加工时间,顺序按 SPT 贪心,闭环解码一次。"""
     t0 = time.time()
     ma: Dict[OpKey, int] = ma_min_time(inst)
     counts = dict(inst.os_job_counts())

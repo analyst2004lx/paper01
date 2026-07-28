@@ -1,0 +1,12 @@
+      |----+----|----+----|----+----|----+----|----+----|----+----|----+----|----+----|----+----|----+-
+      0         10        20        30        40        50        60        70        80        90     
+RA1   ····DDDDDDD··································DDDDDDDDEEEEEEEEGGGGGGGGGEEEEEEEEEE·················
+RA2   ·········HHHHHHHHHBBBBBBBBBGGGGGGGGGGGGGGGGEEEEEEECCCCCCCCCAAAAAAAAAAAAAAAAAAAAAAAAAAA···········
+RA3   ·······································BBBBBB····FFFFF······HHHHH·····CCCCCCCCCCC················
+RA4   ·············FFFFFF···DDDDD·······HHHHH········BBBBB··········FFFFF······························
+AGV1  DDDD·······DDDDDDDDDDD·····DDDwwwwwwwDDDDDDDDee···EEee·····CCCCCCCCCCC···········CCCCCCCCCC······
+AGV2  ··FFFFFFFFFFFeeewwweeeeeeeeeBBBBBBBBBBB······BBFFee·BBBBBBBBBBB··eewwwwwwwwweeeeeeweeHHwwHHHHHHHH
+AGV3  ····HHHHH·········HHHwwwwHHHHHHHHHeeewwwwwweeeeeeeeAAAAAGGDDwwwDD··eeeee··············AAAwwAA····
+AGV4  ······BBwBBBeeeeeGGGGGGeeeeeeEEEEEeeeeeCCCCCeeewweeeeeeeeeHHFF·····FFFFFFFFFFFeeeeGGGGeeeeEEwEE··
+
+图例: 大写字母=对应工件加工/载运, e=空驶, w=途中等待, ·=空闲

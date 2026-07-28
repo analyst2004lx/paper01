@@ -7,7 +7,8 @@
 (d) AGV 一致性:同车分段时间不重叠、路径空间连续、区间长度 = 走廊通行时间;
 (e) 走廊互斥:同一物理走廊(双向合并)上时间窗 [enter, exit) 两两不重叠;
 (f) 运输-工序衔接:载货段完成 <= 对应工序 start,起运 >= 前道 finish;
-(g) C_max 一致性:与时刻表中所有事件的最大完成时刻相符。
+(g) C_max 一致性:等于全部工件末道(伪)工序完成时刻的最大值,**不含空载段**;
+(h) 载货段不得晚于 C_max(空载归位段允许,见 (g) 的口径注释)。
 """
 from __future__ import annotations
 
@@ -115,11 +116,20 @@ def validate(inst: Instance, timetable: dict) -> List[str]:
                 errors.append(f"(f) 工件 {j} 第 {i} 段起运早于前道完工: {lo} < {prev['finish']}")
 
     # ---- (g) C_max 一致性 ----
+    # 口径(建模文档 E1 / 规格假设 8):全部工件末道(伪)工序完成时刻的最大值,
+    # **不含任何空载段**。空载归位段允许晚于 C_max(车队收尾不属于工件完工),
+    # 故此处不并入 agv_segments;越界检查改由下面 (h) 独立承担。
     events = [o["finish"] for o in ops] + [r["complete"] for r in returns]
-    if inst.delta_return == 1:
-        events += [s["exit"] for s in segs]
     expected = max(events) if events else 0.0
     if abs(timetable.get("makespan", -1) - expected) > EPS:
         errors.append(f"(g) C_max 不一致: 报告 {timetable.get('makespan')} != 事件最大值 {expected}")
+
+    # ---- (h) 载货段不得晚于 C_max ----
+    # 载货段晚于 C_max 意味着某件工件在"报告完工"之后还在被搬运,属真实错误;
+    # 这条与 (g) 分离,使 C_max 口径的收敛不会丢掉原先的越界防御。
+    for s in segs:
+        mt = _TASK_RE.match(s.get("task", ""))
+        if mt and mt.group(3) == "loaded" and s["exit"] > expected + EPS:
+            errors.append(f"(h) 载货段晚于 C_max: 任务 {s['task']} 于 {s['exit']} 结束 > {expected}")
 
     return errors
