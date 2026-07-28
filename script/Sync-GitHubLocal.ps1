@@ -37,7 +37,7 @@ $Config = @{
     # LogDir is also auto-ignored when it lies under LocalFolder.
     IgnoreFolders = @(
         'script\logs'
-        # 'script\logs'
+        #'script\logs'
     )
     # Match by exact relative path, path prefix, or any path segment (file/folder name)
     IgnoreNames   = @(
