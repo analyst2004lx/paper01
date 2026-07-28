@@ -14,24 +14,34 @@ param(
 # ======================== USER CONFIG ========================
 # WARNING: LocalFolder is synced with the ENTIRE GitHub repo.
 # If the repo is only for paper files, prefer a dedicated subfolder, e.g.
-#   LocalFolder = 'C:\Users\analy\Desktop\AI_Folder\paper01'
+#   LocalFolder = Join-Path $env:USERPROFILE 'Desktop\AI_Folder\paper01'
+#
+# Default: parent of this script folder (…\AI_Folder\script -> …\AI_Folder).
+# Works on any PC / any Windows username without hardcoding paths.
 $Config = @{
-    LocalFolder   = 'C:\Users\Administrator\Desktop\新建文件夹\AI_Folder'
+    LocalFolder   = (Split-Path -Parent $PSScriptRoot)
     RepoUrl       = 'https://github.com/analyst2004lx/paper01'
     # Use 'master' if your default branch is master; empty = auto-detect
     Branch        = 'main'
     WindowStart   = '10:00'
     WindowEnd     = '17:00'
-    LogDir        = 'C:\Users\Administrator\Desktop\新建文件夹\AI_Folder\script\logs'
+    LogDir        = (Join-Path $PSScriptRoot 'logs')
     CommitPrefix  = 'auto-sync'
     NewerSkewSec  = 5
     SyncDeletions = $false
     # Used only for commits made by this script (does not change your global git config)
     GitUserName   = 'analyst2004lx'
     GitUserEmail  = 'analyst2004lx@users.noreply.github.com'
+    # Relative folders under LocalFolder to ignore entirely (folder + all contents).
+    # Add more as needed, e.g. 'script\temp', 'script\cache'
+    # LogDir is also auto-ignored when it lies under LocalFolder.
+    IgnoreFolders = @(
+        'script\logs'
+        # 'script\logs'
+    )
+    # Match by exact relative path, path prefix, or any path segment (file/folder name)
     IgnoreNames   = @(
         '.git'
-        'script\logs'
         '.cursor'
         'node_modules'
         '.venv'
@@ -135,7 +145,7 @@ function Invoke-Git {
     $git = $script:GitExe
 
     # Always disable quotepath so Chinese paths are not shown as \345\273\272...
-    $prefix = @('-c', 'core.quotepath=false')
+    $prefix = @('-c', 'core.quotepath=false', '-c', 'i18n.logoutputencoding=utf-8')
     if ($WithCommitIdentity) {
         if ($Config.GitUserName)  { $prefix += @('-c', ('user.name={0}' -f $Config.GitUserName)) }
         if ($Config.GitUserEmail) { $prefix += @('-c', ('user.email={0}' -f $Config.GitUserEmail)) }
@@ -143,29 +153,43 @@ function Invoke-Git {
     $allArgs = $prefix + $GitArgs
     Write-Log ('git {0}  (cwd={1})' -f ($GitArgs -join ' '), $WorkDir) -Level DEBUG
 
-    # Native git stderr becomes ErrorRecord in PowerShell; keep it from terminating
-    $prevEap = $ErrorActionPreference
-    $ErrorActionPreference = 'SilentlyContinue'
+    # Start git as a process with UTF-8 stdout/stderr. Default PowerShell capture
+    # re-decodes UTF-8 as the system ANSI page and corrupts Chinese paths.
+    $argLine = ($allArgs | ForEach-Object {
+        $a = [string]$_
+        if ($a -match '[\s"]') { '"' + ($a -replace '"', '\"') + '"' } else { $a }
+    }) -join ' '
+
+    $psi = New-Object System.Diagnostics.ProcessStartInfo
+    $psi.FileName = $git
+    $psi.Arguments = $argLine
+    $psi.WorkingDirectory = $WorkDir
+    $psi.UseShellExecute = $false
+    $psi.RedirectStandardOutput = $true
+    $psi.RedirectStandardError = $true
+    $psi.CreateNoWindow = $true
+    $psi.StandardOutputEncoding = [System.Text.UTF8Encoding]::new($false)
+    $psi.StandardErrorEncoding = [System.Text.UTF8Encoding]::new($false)
+
+    $proc = New-Object System.Diagnostics.Process
+    $proc.StartInfo = $psi
     try {
-        $output = & $git -C $WorkDir @allArgs 2>&1
-        $code = $LASTEXITCODE
+        [void]$proc.Start()
+        $stdout = $proc.StandardOutput.ReadToEnd()
+        $stderr = $proc.StandardError.ReadToEnd()
+        $proc.WaitForExit()
+        $code = $proc.ExitCode
     } catch {
         $code = 1
-        $output = $_.Exception.Message
+        $stdout = ''
+        $stderr = $_.Exception.Message
     } finally {
-        $ErrorActionPreference = $prevEap
+        if ($null -ne $proc) { $proc.Dispose() }
     }
 
-    # Flatten ErrorRecord / strings
     $parts = @()
-    foreach ($o in @($output)) {
-        if ($null -eq $o) { continue }
-        if ($o -is [System.Management.Automation.ErrorRecord]) {
-            $parts += $o.ToString()
-        } else {
-            $parts += [string]$o
-        }
-    }
+    if (-not [string]::IsNullOrWhiteSpace($stdout)) { $parts += $stdout.TrimEnd() }
+    if (-not [string]::IsNullOrWhiteSpace($stderr)) { $parts += $stderr.TrimEnd() }
     $text = ($parts -join [Environment]::NewLine).Trim()
 
     if ($code -ne 0) {
@@ -205,14 +229,50 @@ function Test-InTimeWindow {
     return ($nowMin -ge $startMin -or $nowMin -le $endMin)
 }
 
+function Get-EffectiveIgnoreFolders {
+    # Relative folder paths (Windows '\') that should be fully ignored
+    $set = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
+
+    foreach ($f in @($Config.IgnoreFolders)) {
+        if ($null -eq $f) { continue }
+        $s = ([string]$f).Trim().Trim('"').Replace('/', '\').TrimEnd('\')
+        if (-not [string]::IsNullOrWhiteSpace($s)) { [void]$set.Add($s) }
+    }
+
+    # Always ignore LogDir when it is inside LocalFolder (multi-PC safe)
+    if ($Config.LogDir -and $Config.LocalFolder) {
+        try {
+            $logFull  = [System.IO.Path]::GetFullPath($Config.LogDir)
+            $rootFull = [System.IO.Path]::GetFullPath($Config.LocalFolder).TrimEnd('\')
+            $prefix = $rootFull + '\'
+            if ($logFull.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -or
+                $logFull.Equals($rootFull, [StringComparison]::OrdinalIgnoreCase)) {
+                $rel = if ($logFull.Length -le $rootFull.Length) { '' }
+                       else { $logFull.Substring($rootFull.Length).TrimStart('\') }
+                if (-not [string]::IsNullOrWhiteSpace($rel)) { [void]$set.Add($rel) }
+            }
+        } catch {}
+    }
+
+    return @($set)
+}
+
 function Test-IgnoredPath {
     param([string]$RelativePath)
-    $norm = $RelativePath -replace '/', '\'
+    $norm = ($RelativePath -replace '/', '\').TrimStart('\')
     # NTFS alternate data streams e.g. file.pdf:Zone.Identifier
     if ($norm -match ':') { return $true }
     if ($norm -match 'Zone\.Identifier$') { return $true }
-    foreach ($ig in $Config.IgnoreNames) {
-        $igNorm = $ig -replace '/', '\'
+
+    foreach ($folder in @(Get-EffectiveIgnoreFolders)) {
+        if ($norm -eq $folder) { return $true }
+        if ($norm.StartsWith(($folder + '\'), [StringComparison]::OrdinalIgnoreCase)) { return $true }
+    }
+
+    foreach ($ig in @($Config.IgnoreNames)) {
+        if ($null -eq $ig) { continue }
+        $igNorm = ([string]$ig).Replace('/', '\').TrimEnd('\')
+        if ([string]::IsNullOrWhiteSpace($igNorm)) { continue }
         if ($norm -eq $igNorm) { return $true }
         if ($norm.StartsWith(($igNorm + '\'), [StringComparison]::OrdinalIgnoreCase)) { return $true }
         $parts = $norm.Split('\')
@@ -253,6 +313,7 @@ try {
     Write-Log '========== sync start =========='
     Write-Log ('LocalFolder: {0}' -f $Config.LocalFolder)
     Write-Log ('RepoUrl: {0}' -f $Config.RepoUrl)
+    Write-Log ('IgnoreFolders: {0}' -f ((@(Get-EffectiveIgnoreFolders) -join ', ')))
     Write-Log ('Force={0} WhatIf={1}' -f $Force, $WhatIf)
 
     if (-not $Force) {
@@ -380,16 +441,25 @@ try {
         Invoke-Git -GitArgs @('checkout', '-B', $branch) | Out-Null
     }
 
-    # If repo was created via "git init" on a non-empty folder, local history may be
-    # unrelated to GitHub. Soft-reset onto remote keeps all local file contents.
+    # After "git init" on a non-empty folder there is often no commit yet, or an
+    # orphan commit unrelated to GitHub. Reattach onto remote BEFORE sync/commit
+    # so later push shares history. Working tree files are preserved.
     $headCheck = Invoke-Git -GitArgs @('rev-parse', '--verify', 'HEAD') -AllowFail
-    if ($headCheck.ExitCode -eq 0) {
+    $needReattach = $false
+    if ($headCheck.ExitCode -ne 0) {
+        $needReattach = $true
+        Write-Log 'No local HEAD commit yet (fresh init). Attaching onto remote...' -Level WARN
+    } else {
         $mergeBase = Invoke-Git -GitArgs @('merge-base', 'HEAD', $remoteRef) -AllowFail
         if ($mergeBase.ExitCode -ne 0) {
-            Write-Log 'Local history is unrelated to remote (common after git init on existing files). Reattaching onto remote; local files kept.' -Level WARN
-            Invoke-Git -GitArgs @('reset', '--soft', $remoteRef) | Out-Null
-            Write-Log ('Soft-reset onto {0} complete' -f $remoteRef)
+            $needReattach = $true
+            Write-Log 'Local history is unrelated to remote (common after git init). Reattaching onto remote; local files kept.' -Level WARN
         }
+    }
+    if ($needReattach) {
+        # mixed: HEAD+index = remote; working tree unchanged (local edits kept)
+        Invoke-Git -GitArgs @('reset', '--mixed', $remoteRef) | Out-Null
+        Write-Log ('Reset --mixed onto {0} complete' -f $remoteRef)
     }
 
     function Get-RemoteCommitTime([string]$RelPath) {

@@ -24,8 +24,10 @@ _*.py
 fix_*.py
 doc2md.py
 
-# Sync script logs (stay local)
+# Sync script local-only folders (keep in sync with Config.IgnoreFolders)
 script/logs/
+# script/temp/
+# script/cache/
 
 # Optional: uncomment if PDFs/DOC make the repo too large
 # *.pdf
