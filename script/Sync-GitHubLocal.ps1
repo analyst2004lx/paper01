@@ -16,13 +16,13 @@ param(
 # If the repo is only for paper files, prefer a dedicated subfolder, e.g.
 #   LocalFolder = 'C:\Users\analy\Desktop\AI_Folder\paper01'
 $Config = @{
-    LocalFolder   = 'C:\Users\Administrator\Desktop\新建文件夹\AI_Folder'
+    LocalFolder   = 'C:\Users\Administrator\Desktop\AI_Folder'
     RepoUrl       = 'https://github.com/analyst2004lx/paper01'
     # Use 'master' if your default branch is master; empty = auto-detect
     Branch        = 'main'
     WindowStart   = '10:00'
     WindowEnd     = '17:00'
-    LogDir        = 'C:\Users\Administrator\Desktop\新建文件夹\AI_Folder\script\logs'
+    LogDir        = 'C:\Users\Administrator\Desktop\AI_Folder\script\logs'
     CommitPrefix  = 'auto-sync'
     NewerSkewSec  = 5
     SyncDeletions = $false

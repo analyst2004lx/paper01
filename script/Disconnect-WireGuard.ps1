@@ -1,7 +1,8 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-  If WireGuard tunnel to Vultr is connected, disconnect it (same as GUI Deactivate).
+  On this PC: if a listed WireGuard tunnel is connected to Vultr, disconnect it
+  (same as GUI Deactivate). Missing tunnel names are ignored (multi-PC shared config).
 
 .NOTES
   Stopping/uninstalling a WireGuard tunnel service REQUIRES Administrator.
@@ -16,12 +17,16 @@ param(
 
 # ======================== USER CONFIG ========================
 $Config = @{
-    # Tunnel name shown in WireGuard UI (conf name without .conf)
-    TunnelName           = 'windows02'
-    # true = disconnect every running WireGuardTunnel$* service
+    # Candidate tunnel names (WireGuard UI / conf name without .conf).
+    # Shared across PCs: each machine may only have one of these.
+    # Not present on this PC -> ignore; present + connected to Vultr -> disconnect.
+    # Accepts one string or an array: 'windows02'  or  @('windows','windows01','windows02')
+    TunnelName           = @('windows', 'windows01', 'windows02')
+    # true = disconnect every running WireGuardTunnel$* service (ignores TunnelName list)
     DisconnectAllRunning = $false
     WireGuardDir         = "$env:ProgramFiles\WireGuard"
-    # Only disconnect when endpoint contains this string; empty = no filter
+    # Treat as "Vultr": only disconnect when this tunnel's endpoint/conf contains the string.
+    # Empty = no filter (disconnect any listed tunnel that is running).
     EndpointFilter       = '104.156.231.123'
     LogDir               = 'C:\Users\analy\Desktop\AI_Folder\script\logs'
     # Manual run: if not admin, popup UAC and relaunch as admin
@@ -31,6 +36,19 @@ $Config = @{
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+function Get-ConfiguredTunnelNames {
+    # Normalize TunnelName config: string | array | empty -> string[]
+    # Write to pipeline (do not "return ,$array") so @(Get-ConfiguredTunnelNames) stays flat.
+    $raw = $Config.TunnelName
+    if ($null -eq $raw) { return }
+    foreach ($item in @($raw)) {
+        if ($null -eq $item) { continue }
+        $s = ([string]$item).Trim()
+        if ([string]::IsNullOrWhiteSpace($s)) { continue }
+        $s
+    }
+}
 
 function Write-Log {
     param(
@@ -124,22 +142,12 @@ function Get-TunnelNameFromServiceName {
 
 function Test-TunnelMatchesEndpointFilter {
     param([string]$TunnelName, [string]$Filter)
+    # true = treat as Vultr / OK to disconnect
     if ([string]::IsNullOrWhiteSpace($Filter)) { return $true }
 
-    $wg = Join-Path $Config.WireGuardDir 'wg.exe'
-    if (Test-Path -LiteralPath $wg) {
-        try {
-            $out = & $wg show 2>&1 | Out-String
-            if ($out -match [regex]::Escape($Filter)) { return $true }
-            if ($out -match 'interface:' -or $out -match 'peer:') {
-                Write-Log ('wg show did not match EndpointFilter={0}' -f $Filter) -Level WARN
-                return $false
-            }
-        } catch {
-            Write-Log ('wg.exe error: {0}' -f $_.Exception.Message) -Level DEBUG
-        }
-    }
+    $escaped = [regex]::Escape($Filter)
 
+    # 1) Readable per-tunnel conf (plain .conf; Windows often stores .conf.dpapi instead)
     $confCandidates = @(
         (Join-Path (Join-Path $Config.WireGuardDir 'Data\Configurations') ($TunnelName + '.conf')),
         (Join-Path (Join-Path $env:LOCALAPPDATA 'WireGuard') ($TunnelName + '.conf')),
@@ -149,13 +157,32 @@ function Test-TunnelMatchesEndpointFilter {
         if (-not (Test-Path -LiteralPath $conf)) { continue }
         try {
             $text = Get-Content -LiteralPath $conf -Raw -ErrorAction Stop
-            if ($text -match [regex]::Escape($Filter)) { return $true }
+            if ($text -match $escaped) { return $true }
+            Write-Log ('Ignore {0}: conf has no EndpointFilter ({1})' -f $TunnelName, $Filter)
+            return $false
         } catch {
             Write-Log ('read conf failed: {0}' -f $conf) -Level DEBUG
         }
     }
 
-    Write-Log ('Cannot verify EndpointFilter; proceed by tunnel name: {0}' -f $TunnelName) -Level WARN
+    # 2) Live state for this interface only (needs rights; may fail before UAC)
+    $wg = Join-Path $Config.WireGuardDir 'wg.exe'
+    if (Test-Path -LiteralPath $wg) {
+        try {
+            $out = & $wg show $TunnelName 2>&1 | Out-String
+            if ($out -match $escaped) { return $true }
+            if ($out -match 'endpoint:' -or $out -match 'peer:') {
+                Write-Log ('Ignore {0}: wg show has no EndpointFilter ({1})' -f $TunnelName, $Filter)
+                return $false
+            }
+        } catch {
+            Write-Log ('wg.exe error: {0}' -f $_.Exception.Message) -Level DEBUG
+        }
+    }
+
+    # Listed name + Running, but conf/wg not readable yet: allow disconnect
+    # (typical on Windows with .conf.dpapi before elevation)
+    Write-Log ('EndpointFilter unverified for {0}; proceed (listed tunnel is running)' -f $TunnelName) -Level WARN
     return $true
 }
 
@@ -247,9 +274,12 @@ function Disconnect-Tunnel {
 }
 
 try {
+    $configuredNames = @(Get-ConfiguredTunnelNames)
+    $tunnelNameLog = if ($configuredNames.Count -eq 0) { '(empty)' } else { ($configuredNames -join ',') }
+
     Write-Log '========== WireGuard check start =========='
     Write-Log ('TunnelName={0}; DisconnectAllRunning={1}; EndpointFilter={2}; WhatIf={3}' -f `
-        $Config.TunnelName, $Config.DisconnectAllRunning, $Config.EndpointFilter, $WhatIf)
+        $tunnelNameLog, $Config.DisconnectAllRunning, $Config.EndpointFilter, $WhatIf)
 
     $isAdmin = Test-IsAdministrator
     Write-Log ('IsAdministrator={0}; ElevatedRelaunch={1}' -f $isAdmin, $ElevatedRelaunch)
@@ -270,38 +300,46 @@ try {
         Write-Log ('  - {0} Status={1}' -f $s.Name, $s.Status)
     }
 
-    # Resolve targets first (may exit early with nothing to do)
+    # Resolve targets: only tunnels that exist AND are running on THIS PC
     $targets = @()
     if ($Config.DisconnectAllRunning) {
         $targets = @(
             $running | ForEach-Object { Get-TunnelNameFromServiceName $_.Name } | Where-Object { $_ }
         )
     } else {
-        if ([string]::IsNullOrWhiteSpace($Config.TunnelName)) {
+        if ($configuredNames.Count -eq 0) {
             Write-Log 'TunnelName empty and DisconnectAllRunning=false.' -Level ERROR
             exit 2
         }
-        $exact = Get-TunnelService -TunnelName $Config.TunnelName
-        if (-not $exact) {
-            Write-Log ('Specified tunnel service not found: WireGuardTunnel${0}. Nothing to do.' -f $Config.TunnelName)
+        foreach ($name in $configuredNames) {
+            $exact = Get-TunnelService -TunnelName $name
+            if (-not $exact) {
+                # Expected on multi-PC deploy: this machine simply does not have that tunnel
+                Write-Log ('Ignore {0}: not present on this PC' -f $name)
+                continue
+            }
+            if ($exact.Status -ne 'Running') {
+                Write-Log ('Ignore {0}: present but not connected (Status={1})' -f $name, $exact.Status)
+                continue
+            }
+            Write-Log ('Candidate {0}: present and Running' -f $name)
+            $targets += $name
+        }
+        if ($targets.Count -eq 0) {
+            Write-Log 'No listed tunnel is connected on this PC. Nothing to do.'
             Write-Log '========== WireGuard check end (not connected) =========='
             exit 0
         }
-        if ($exact.Status -ne 'Running') {
-            Write-Log ('Specified tunnel not running: {0} Status={1}. Nothing to do.' -f $exact.Name, $exact.Status)
-            Write-Log '========== WireGuard check end (not connected) =========='
-            exit 0
-        }
-        $targets = @($Config.TunnelName)
     }
 
-    # Filter by endpoint before elevating (avoid unnecessary UAC)
+    # Only disconnect if connected to Vultr (EndpointFilter); elevate only when needed
     $needDisconnect = @()
     foreach ($name in $targets) {
         if (Test-TunnelMatchesEndpointFilter -TunnelName $name -Filter $Config.EndpointFilter) {
+            Write-Log ('Will disconnect {0}: matches Vultr EndpointFilter' -f $name)
             $needDisconnect += $name
         } else {
-            Write-Log ('Skip {0}: EndpointFilter not matched' -f $name) -Level WARN
+            Write-Log ('Ignore {0}: running but not Vultr (EndpointFilter)' -f $name)
         }
     }
 

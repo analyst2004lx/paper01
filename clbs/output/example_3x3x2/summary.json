@@ -11,75 +11,345 @@
     "num_agvs": 2,
     "num_real_ops": 7,
     "num_nodes": 6,
-    "num_corridors": 6
+    "num_corridors": 6,
+    "funnel_share": 0.3333,
+    "lu_min_cut": 1,
+    "lu_cut_corridors": [
+      "c1|v0"
+    ],
+    "far_group_cut": 1,
+    "corridors_per_node": 1.0
   },
   "ga_config": {
-    "pop": 100,
-    "max_gen": 200,
-    "stall_gen": 30,
-    "seed": 42
+    "pop": 40,
+    "max_gen": 30,
+    "stall_gen": 12,
+    "seed": 42,
+    "theta": 0.0,
+    "max_entry_options": 3,
+    "price_top_k": 24,
+    "price_refresh": 5,
+    "fd_calibrate": false,
+    "dispatch": "exact",
+    "use_conflict_ops": true
   },
   "results": {
     "closed": {
-      "makespan": 33.0,
-      "runtime_sec": 0.84,
+      "makespan": 34.0,
+      "runtime_sec": 0.79,
       "valid": true,
       "validation_errors": [],
-      "generations": 37,
-      "evaluations": 3700,
+      "bucket_width": 5.7143,
+      "price_slots": 0,
+      "price_cost_total": 0.0,
+      "generations": 20,
+      "evaluations": 800,
       "convergence_history": [
-        36.0,
-        36.0,
-        36.0,
-        36.0,
-        36.0,
+        35.0,
+        35.0,
+        35.0,
+        35.0,
+        35.0,
+        35.0,
+        35.0,
         34.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0,
-        33.0
-      ]
+        34.0,
+        34.0,
+        34.0,
+        34.0,
+        34.0,
+        34.0,
+        34.0,
+        34.0,
+        34.0,
+        34.0,
+        34.0,
+        34.0
+      ],
+      "occupancy": {
+        "bucket_width": 5.7143,
+        "num_buckets": 6,
+        "bottleneck_corridor": "c1|v0",
+        "by_corridor": {
+          "c1|v0": {
+            "mean": 0.4667,
+            "peak": 0.975,
+            "busy_buckets": 4
+          },
+          "c1|r1": {
+            "mean": 0.35,
+            "peak": 0.65,
+            "busy_buckets": 6
+          },
+          "c1|c2": {
+            "mean": 0.175,
+            "peak": 0.525,
+            "busy_buckets": 3
+          },
+          "c2|r3": {
+            "mean": 0.1167,
+            "peak": 0.35,
+            "busy_buckets": 3
+          }
+        },
+        "hottest_slots": [
+          {
+            "corridor": "c1|v0",
+            "bucket": 4,
+            "t_from": 22.86,
+            "t_to": 28.57,
+            "util": 0.975
+          },
+          {
+            "corridor": "c1|v0",
+            "bucket": 0,
+            "t_from": 0.0,
+            "t_to": 5.71,
+            "util": 0.7
+          },
+          {
+            "corridor": "c1|v0",
+            "bucket": 1,
+            "t_from": 5.71,
+            "t_to": 11.43,
+            "util": 0.7
+          },
+          {
+            "corridor": "c1|r1",
+            "bucket": 0,
+            "t_from": 0.0,
+            "t_to": 5.71,
+            "util": 0.65
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 4,
+            "t_from": 22.86,
+            "t_to": 28.57,
+            "util": 0.525
+          },
+          {
+            "corridor": "c1|r1",
+            "bucket": 5,
+            "t_from": 28.57,
+            "t_to": 34.29,
+            "util": 0.425
+          },
+          {
+            "corridor": "c1|v0",
+            "bucket": 5,
+            "t_from": 28.57,
+            "t_to": 34.29,
+            "util": 0.425
+          },
+          {
+            "corridor": "c2|r3",
+            "bucket": 1,
+            "t_from": 5.71,
+            "t_to": 11.43,
+            "util": 0.35
+          }
+        ]
+      }
     },
     "twostage": {
-      "makespan": 36.0,
-      "runtime_sec": 0.25,
+      "makespan": 34.0,
+      "runtime_sec": 0.05,
       "valid": true,
       "validation_errors": [],
-      "stage1_ideal_makespan": 32.0
+      "stage1_ideal_makespan": 32.0,
+      "occupancy": {
+        "bucket_width": 5.7143,
+        "num_buckets": 6,
+        "bottleneck_corridor": "c1|v0",
+        "by_corridor": {
+          "c1|v0": {
+            "mean": 0.4667,
+            "peak": 0.7,
+            "busy_buckets": 6
+          },
+          "c1|r1": {
+            "mean": 0.35,
+            "peak": 0.45,
+            "busy_buckets": 6
+          },
+          "c2|r3": {
+            "mean": 0.2333,
+            "peak": 0.575,
+            "busy_buckets": 4
+          },
+          "c2|r1": {
+            "mean": 0.2333,
+            "peak": 0.825,
+            "busy_buckets": 3
+          },
+          "c1|c2": {
+            "mean": 0.175,
+            "peak": 0.525,
+            "busy_buckets": 3
+          }
+        },
+        "hottest_slots": [
+          {
+            "corridor": "c2|r1",
+            "bucket": 2,
+            "t_from": 11.43,
+            "t_to": 17.14,
+            "util": 0.825
+          },
+          {
+            "corridor": "c1|v0",
+            "bucket": 0,
+            "t_from": 0.0,
+            "t_to": 5.71,
+            "util": 0.7
+          },
+          {
+            "corridor": "c1|v0",
+            "bucket": 5,
+            "t_from": 28.57,
+            "t_to": 34.29,
+            "util": 0.7
+          },
+          {
+            "corridor": "c1|v0",
+            "bucket": 1,
+            "t_from": 5.71,
+            "t_to": 11.43,
+            "util": 0.6
+          },
+          {
+            "corridor": "c2|r3",
+            "bucket": 1,
+            "t_from": 5.71,
+            "t_to": 11.43,
+            "util": 0.575
+          },
+          {
+            "corridor": "c1|c2",
+            "bucket": 0,
+            "t_from": 0.0,
+            "t_to": 5.71,
+            "util": 0.525
+          },
+          {
+            "corridor": "c1|r1",
+            "bucket": 4,
+            "t_from": 22.86,
+            "t_to": 28.57,
+            "util": 0.45
+          },
+          {
+            "corridor": "c2|r1",
+            "bucket": 1,
+            "t_from": 5.71,
+            "t_to": 11.43,
+            "util": 0.425
+          }
+        ]
+      }
     },
     "rule": {
       "makespan": 48.0,
       "runtime_sec": 0.0,
       "valid": true,
-      "validation_errors": []
+      "validation_errors": [],
+      "occupancy": {
+        "bucket_width": 5.7143,
+        "num_buckets": 9,
+        "bottleneck_corridor": "c1|v0",
+        "by_corridor": {
+          "c1|v0": {
+            "mean": 0.3111,
+            "peak": 0.7,
+            "busy_buckets": 6
+          },
+          "c2|r2": {
+            "mean": 0.3111,
+            "peak": 0.975,
+            "busy_buckets": 5
+          },
+          "c2|r1": {
+            "mean": 0.3111,
+            "peak": 1.0,
+            "busy_buckets": 5
+          },
+          "c1|c2": {
+            "mean": 0.2333,
+            "peak": 0.525,
+            "busy_buckets": 5
+          },
+          "c1|r1": {
+            "mean": 0.1556,
+            "peak": 0.65,
+            "busy_buckets": 4
+          },
+          "c2|r3": {
+            "mean": 0.1556,
+            "peak": 0.825,
+            "busy_buckets": 3
+          }
+        },
+        "hottest_slots": [
+          {
+            "corridor": "c2|r1",
+            "bucket": 3,
+            "t_from": 17.14,
+            "t_to": 22.86,
+            "util": 1.0
+          },
+          {
+            "corridor": "c2|r2",
+            "bucket": 2,
+            "t_from": 11.43,
+            "t_to": 17.14,
+            "util": 0.975
+          },
+          {
+            "corridor": "c2|r3",
+            "bucket": 6,
+            "t_from": 34.29,
+            "t_to": 40.0,
+            "util": 0.825
+          },
+          {
+            "corridor": "c1|v0",
+            "bucket": 0,
+            "t_from": 0.0,
+            "t_to": 5.71,
+            "util": 0.7
+          },
+          {
+            "corridor": "c2|r2",
+            "bucket": 4,
+            "t_from": 22.86,
+            "t_to": 28.57,
+            "util": 0.7
+          },
+          {
+            "corridor": "c1|v0",
+            "bucket": 5,
+            "t_from": 28.57,
+            "t_to": 34.29,
+            "util": 0.7
+          },
+          {
+            "corridor": "c2|r1",
+            "bucket": 1,
+            "t_from": 5.71,
+            "t_to": 11.43,
+            "util": 0.7
+          },
+          {
+            "corridor": "c2|r2",
+            "bucket": 6,
+            "t_from": 34.29,
+            "t_to": 40.0,
+            "util": 0.7
+          }
+        ]
+      }
     }
   },
-  "improvement_closed_vs_twostage": 0.0833
+  "improvement_closed_vs_twostage": 0.0
 }
