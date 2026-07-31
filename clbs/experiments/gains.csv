@@ -1,0 +1,9 @@
+instance,tag,het,baseline,kind,n_pairs,baseline_mean,closed_mean,rel_gain,gain_sd,n_eff,p_value,method
+S8x4x4-LD21-H0.3-F0.6-A4-s42,high,0.3,twostage,integration,2,70.0,67.5,0.03582,0.011,2,0.5,exact
+S8x4x4-LD21-H0.3-F0.6-A4-s42,high,0.3,nofeedback,mechanism,2,77.0,67.5,0.12329,0.005,2,0.5,exact
+S8x4x4-LD21-H0.3-F0.6-A4-s42,high,0.3,opendispatch,mechanism,2,71.5,67.5,0.05597,0.002,2,0.34578,normal
+S8x4x4-LD21-H0.3-F0.6-A4-s42,high,0.3,nostagger,mechanism,2,70.0,67.5,0.03486,0.028,2,0.5,exact
+S8x4x4-LD11-H0.3-F0.6-A4-s42,funnel,0.3,twostage,integration,2,76.0,77.0,-0.0149,0.094,2,1.0,exact
+S8x4x4-LD11-H0.3-F0.6-A4-s42,funnel,0.3,nofeedback,mechanism,2,77.0,77.0,0.0,0.0,0,1.0,all-ties
+S8x4x4-LD11-H0.3-F0.6-A4-s42,funnel,0.3,opendispatch,mechanism,2,77.0,77.0,-0.00068,0.018,2,1.0,normal
+S8x4x4-LD11-H0.3-F0.6-A4-s42,funnel,0.3,nostagger,mechanism,2,78.5,77.0,0.01948,0.028,1,1.0,exact

@@ -48,6 +48,12 @@ class GAConfig:
     use_conflict_ops: bool = True  # 是否启用冲突凭证制导的错峰算子
     dispatch: str = "exact"   # 'rule' = 理想最短路估算(开环);'exact' = 预约表试探(闭环)
 
+    # ---- 同算力预算(规格 8.2 协议 1) ----
+    # 各消融档的单次评价代价相差数倍(派车试探约 5 倍),只比同代数会把"多花算力"
+    # 误读为"机制更好"(规格 13.2 结论 2)。给定该值后,主循环在每代末检查挂钟时间,
+    # 超出即停,使各档在**相同算力**下比较;None = 只由 max_gen / stall_gen 停机。
+    time_budget_sec: Optional[float] = None
+
 
 Chromosome = Dict[str, object]  # {"ma": Dict[OpKey,int], "os": List[int]}
 
@@ -310,11 +316,15 @@ def run_ga(inst: Instance, net: Network, cfg: GAConfig,
     population = init_population(inst, cfg, rng)
     results = [evaluate(ch) for ch in population]
     history: List[float] = []
+    # 各档每次评价的成本相差一两个数量级,按代数画收敛曲线会严重误导;
+    # 逐代记下挂钟耗时,使收敛图能以"同一时间轴"呈现(规格 8.2 协议 3)
+    history_sec: List[float] = []
     best_idx = min(range(len(results)), key=lambda x: results[x].makespan)
     best_chrom, best_result = clone(population[best_idx]), results[best_idx]
     refresh_prices(best_chrom, best_result)
     stall = 0
     n_eval = len(population)
+    stopped_by = "max_gen"
 
     for gen in range(1, cfg.max_gen + 1):
         order = sorted(range(len(population)), key=lambda x: results[x].makespan)
@@ -337,9 +347,15 @@ def run_ga(inst: Instance, net: Network, cfg: GAConfig,
         else:
             stall += 1
         history.append(best_result.makespan)
+        history_sec.append(round(time.time() - t_start, 3))
         if log and (gen % 10 == 0 or gen == 1):
             log(f"  gen {gen:4d}  best C_max = {best_result.makespan:.1f}")
         if stall >= cfg.stall_gen:
+            stopped_by = "stall"
+            break
+        if (cfg.time_budget_sec is not None
+                and time.time() - t_start >= cfg.time_budget_sec):
+            stopped_by = "budget"
             break
 
         if price_on and cfg.price_refresh > 0 and gen % cfg.price_refresh == 0:
@@ -374,8 +390,10 @@ def run_ga(inst: Instance, net: Network, cfg: GAConfig,
         "best_chrom": best_chrom,
         "best_result": best_result,
         "history": history,
+        "history_sec": history_sec,
         "generations": len(history),
         "evaluations": n_eval,
+        "stopped_by": stopped_by,
         "runtime_sec": round(time.time() - t_start, 2),
         "config": asdict(cfg),
         "bucket_width": round(bw, 4),

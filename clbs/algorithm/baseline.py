@@ -10,6 +10,14 @@ from .network import Network
 from .decoder import decode
 from .ga import GAConfig, run_ga, ma_min_time
 
+# 递进式消融链的档位顺序(规格 8.1):每一档只比上一档多闭合一个环节;
+# priced 是如实报告的负面对照,不属于递进链本身。
+ARMS = ("rule", "twostage", "nofeedback", "opendispatch", "nostagger",
+        "closed", "priced")
+
+# 不含 GA 搜索的档位:单次解码即完成,故"同算力预算"对其无意义,报告时须单列。
+NO_SEARCH_ARMS = ("rule",)
+
 
 def two_stage_baseline(inst: Instance, net: Network, cfg: GAConfig,
                        log=None) -> dict:
@@ -32,6 +40,15 @@ def two_stage_baseline(inst: Instance, net: Network, cfg: GAConfig,
         "runtime_sec": round(time.time() - t0, 2),
         "generations": stage1["generations"],
         "evaluations": stage1["evaluations"],
+        # 轨迹来自阶段一,其目标是**理想运输模型**下的 C_max,系统性低估;
+        # 与闭环档的轨迹画在同一张图上时必须标注清楚,并同时给出修复后的真实值,
+        # 否则会被误读成"两阶段收敛得更好"
+        "history": stage1.get("history"),
+        "history_sec": stage1.get("history_sec"),
+        "history_is_surrogate": True,
+        # 第一阶段的停机原因要透传:同算力预算下"被预算掐停"与"自然收敛"是两种
+        # 完全不同的处境,批跑脚本的预算体检靠它判断比较是否公平(规格 8.2)
+        "stopped_by": stage1.get("stopped_by"),
     }
 
 
@@ -85,6 +102,34 @@ def ablation_priced(inst: Instance, net: Network, cfg: GAConfig,
     out["name"] = "priced"
     out["makespan"] = out["best_result"].makespan
     return out
+
+
+def solve_arm(arm: str, inst: Instance, net: Network, cfg: GAConfig,
+              theta_priced: float = 0.15, log=None) -> dict:
+    """按档位名求解一次(规格 8.1 的七档)。
+
+    七档的配置只在此处定义一次,`main.py` 与批跑脚本共用,避免两处 if/elif 漂移
+    导致"同名档位、不同配置"这种最难发现的实验错误。
+    """
+    if arm == "closed":
+        out = run_ga(inst, net, cfg, conflict_free=True, use_ls=True, log=log)
+        out["name"] = "closed"
+        out["makespan"] = out["best_result"].makespan
+        return out
+    if arm == "twostage":
+        return two_stage_baseline(inst, net, cfg, log=log)
+    if arm == "nofeedback":
+        return ablation_no_feedback(inst, net, cfg, log=log)
+    if arm == "opendispatch":
+        return ablation_open_dispatch(inst, net, cfg, log=log)
+    if arm == "nostagger":
+        return ablation_no_stagger(inst, net, cfg, log=log)
+    if arm == "priced":
+        return ablation_priced(inst, net, cfg,
+                               theta=max(theta_priced, cfg.theta), log=log)
+    if arm == "rule":
+        return rule_baseline(inst, net)
+    raise ValueError(f"未知档位 {arm};可选 {ARMS}")
 
 
 def rule_baseline(inst: Instance, net: Network) -> dict:

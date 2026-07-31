@@ -16,20 +16,15 @@ import time
 
 from algorithm.instance import load_instance, feature_params
 from algorithm.network import Network
-from algorithm.ga import GAConfig, run_ga
-from algorithm.baseline import (two_stage_baseline, rule_baseline,
-                                ablation_no_feedback, ablation_open_dispatch,
-                                ablation_no_stagger, ablation_priced)
+from algorithm.ga import GAConfig
+from algorithm.baseline import ARMS, solve_arm
 from algorithm.pricing import default_bucket_width
 from algorithm.validator import validate
 from algorithm.report import gantt_text, occupancy_profile, summary_line
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-# 递进式消融链(论文骨架):每一档只比上一档多闭合一个环节;
-# priced 一档是如实报告的负面对照,不属于递进链的一部分。
-ABLATION_MODES = ["rule", "twostage", "nofeedback", "opendispatch",
-                  "nostagger", "closed", "priced"]
+ABLATION_MODES = list(ARMS)      # 递进式消融链,档位定义见 algorithm/baseline.py
 
 
 def parse_args() -> argparse.Namespace:
@@ -80,22 +75,7 @@ def solve_one(path: str, args: argparse.Namespace) -> dict:
 
     for mode in modes:
         print(f"\n-- 模式 {mode} --")
-        if mode == "closed":
-            out = run_ga(inst, net, cfg, conflict_free=True, use_ls=True, log=print)
-            out["makespan"] = out["best_result"].makespan
-        elif mode == "twostage":
-            out = two_stage_baseline(inst, net, cfg, log=print)
-        elif mode == "nofeedback":
-            out = ablation_no_feedback(inst, net, cfg, log=print)
-        elif mode == "opendispatch":
-            out = ablation_open_dispatch(inst, net, cfg, log=print)
-        elif mode == "nostagger":
-            out = ablation_no_stagger(inst, net, cfg, log=print)
-        elif mode == "priced":
-            out = ablation_priced(inst, net, cfg, theta=max(0.15, args.theta), log=print)
-        else:
-            out = rule_baseline(inst, net)
-
+        out = solve_arm(mode, inst, net, cfg, log=print)
         timetable = out["best_result"].to_timetable()
         errors = validate(inst, timetable)
         out["valid"] = not errors
@@ -140,6 +120,7 @@ def solve_one(path: str, args: argparse.Namespace) -> dict:
         if "history" in o:
             entry["generations"] = o["generations"]
             entry["evaluations"] = o["evaluations"]
+            entry["stopped_by"] = o.get("stopped_by")
             entry["convergence_history"] = o["history"]
         # 占用率画像:只对该模式的**最终最优解**算一次(报告用,不参与搜索)
         prof = occupancy_profile(r["timetable"], o.get("bucket_width") or bucket_w)

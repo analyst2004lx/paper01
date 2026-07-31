@@ -19,8 +19,18 @@ py main.py --mode closed                         # 只跑闭环算法
 py main.py --mode ablation                       # 跑完整递进消融链(七档)
 py main.py --seed 7 --pop 100 --gen 200          # 覆盖 GA 参数
 py main.py --dispatch rule                       # 派车回到开环(对照)
-py -m tests.test_all                             # 运行 T1–T8 全部测试断言
+py -m tests.test_all                             # 运行 T1–T14 全部测试断言
 py -m tools.sweep_price                          # 机制诊断扫描(θ / 派车 / 错峰 / 同算力复核)
+```
+
+矩阵批跑(主试验入口,规格 8.4):
+
+```powershell
+py -m tools.run_matrix --preset smoke             # 流程自检(2 算例 x 7 档 x 2 种子)
+py -m tools.run_matrix --preset p3 --dry-run      # 先看任务数与预计耗时
+py -m tools.run_matrix --preset p3                # high/funnel 受控对比(预测 3)
+py -m tools.run_matrix --preset full --budget gen # 完整矩阵的等代数口径
+py -m tools.run_matrix --preset full --report-only # 随时用已有账本出报告
 ```
 
 纯 Python 标准库实现,**无第三方依赖**(见 requirements.txt)。
@@ -38,20 +48,24 @@ clbs/
     network.py         #   路网、t*、容量化预约表、价格表、多标签路由(规格 5.1–5.5)
     pricing.py         #   影子价格估计:有限差分定义式 + 代理式 + 一致性(规格 5.5)
     decoder.py         #   解码器、两种派车规则、带类型标签的关键链归因(规格 6.2–6.3、6.5)
-    ga.py              #   主循环、通用算子、冲突制导局部搜索(规格 6.4–6.5)
-    baseline.py        #   两阶段 open-loop 与四个消融档(规格 8)
+    ga.py              #   主循环、通用算子、冲突制导局部搜索(规格 6.4–6.5);
+                       #   挂钟预算闸门 time_budget_sec(规格 8.2 协议 1)
+    baseline.py        #   七档定义 ARMS / solve_arm + 两阶段 open-loop(规格 8.1)
+    stats.py           #   描述统计、Wilcoxon 配对检验、Spearman(规格 8.2 协议 2)
     validator.py       #   独立校验器,八项检查 (a)–(h)(规格 9)
     report.py          #   字符甘特图、走廊占用率画像、结果摘要生成(规格 3.3)
   tools/
     sweep_price.py     #   机制诊断扫描(含同算力预算复核)
     gen_instances.py   #   扩展算例矩阵生成 CLI(规格 12.3.4)
+    run_matrix.py      #   矩阵批跑器:预算标定 / 账本续跑 / 配对检验(规格 8.4)
   input/               # 输入算例(规格 3.1 JSON 格式)
     example_3x3x2.json #   验证用基准算例(建模文档第六节示例,已知可行解 makespan=51)
     congested_8x4x4.json #  拥堵型算例:哑铃拓扑 + 独占瓶颈走廊 + 远端快机
     ext/               #   生成的受控扩展算例(子目录,默认 glob 不扫)
   output/              # 运行结果(每算例一个子目录,含 summary.json、时刻表、甘特图)
+    matrix/<run>/      #   批跑账本 records.jsonl + summary.json + report.md
   tests/
-    test_all.py        # 规格 9 的 T1–T10 测试断言
+    test_all.py        # 规格 9 的 T1–T14 测试断言
 ```
 
 ## 三、算例输入格式
@@ -97,7 +111,26 @@ py -m tools.gen_instances --seeds 42 7 2024 --jobs 10 --machines 5
 | priced | **负面对照**:开启价格加权路由(θ>0),经检验有害,如实报告用 | 5.5、13.3 |
 | ablation | 依次跑上述七档 | 8.1 |
 
-> **对比协议(规格 8.2)**:① `opendispatch`/`nostagger` 等档运行更快,必须**同算力预算**比较(放宽快档早停至运行时间相当),否则会把"多花算力"误读为"机制更好";② 需 ≥10 个种子并报告离散度——拥堵算例上单档三种子极差可达 11,而各档均值之差仅 1–3。
+> **对比协议(规格 8.2)**:① `opendispatch`/`nostagger` 等档运行更快,必须**同算力预算**比较(放宽快档早停至运行时间相当),否则会把"多花算力"误读为"机制更好";② 需 ≥10 个种子并报告离散度——拥堵算例上单档三种子极差可达 11,而各档均值之差仅 1–3;③ **等时间与等评估数两种口径都要报**——`twostage` 的第一阶段在理想模型下评价,单次成本比闭环低一到两个数量级(实测 0.43 vs 17–20 ms),等时间等于给它数十倍搜索次数,等评估数又等于让闭环多花数十倍 CPU,两种口径都不中立。
+>
+> 这三条已由 `tools/run_matrix.py` 做成默认行为(见下节),不必靠人工纪律维持。
+
+### 矩阵批跑器(规格 8.4)
+
+```powershell
+py -m tools.run_matrix --preset p3 --dry-run   # 任务数与预计耗时
+py -m tools.run_matrix --preset p3             # 跑;中断后重复同一命令即续跑
+py -m tools.run_matrix --preset p3 --report-only   # 只出报告
+```
+
+- **预算标定**:`--budget auto` 逐算例以"完整方法的自然用时"为全部档位共享的挂钟预算;
+  `--budget gen` 为等代数口径;`--budget 30` 为固定秒数;
+- **可中断续跑**:每完成一个 (算例, 档位, 种子) 立即追加一行 JSONL 并 `fsync`,重跑
+  同名 `--run` 自动跳过;任务顺序为"算例 → 种子 → 全部档位",中断后留下的是**完整
+  配对块**而非半个种子;
+- **报告**:`output/matrix/<run>/report.md` 含各格均值±标准差、毫秒每评价与停机原因
+  (预算体检)、集成收益与机制增益的配对 Wilcoxon,以及 12.3.6 三条预期的自动判定。
+  每个解都过独立校验器并与复合下界比对,失败项在报告顶部单列。
 >
 > **算例强度提示**:`example_3x3x2` 上 closed 与 twostage 均为 34.0,集成收益为 0(冲突太稀疏)。要检验集成收益必须用规格 12.3 的扩展算例,基准算例只用于 T1–T8 回归。
 
@@ -126,14 +159,16 @@ pop=100, max_gen=200, stall_gen=30, pc=0.8, pm=0.2, elite=5,
 top_ls=10%, L_ls=5, ls_rounds=3;random_seed 默认 42(命令行可覆盖)。
 派车默认 `dispatch=exact`(查预约表试探,闭环);`use_conflict_ops=True`(启用错峰算子);
 `theta=0.0`,即**价格协调默认关闭**——诊断显示 θ>0 系统性有害,数据见规格 13.2、
-机制解释见规格 13.3。
+机制解释见规格 13.3。`time_budget_sec=None`,即默认不设挂钟预算(仅批跑时由
+`run_matrix` 设定,见规格 8.2 协议 1)。
 
-已知的文档—代码不一致项(待修)列于规格 13.4,其中"C_max 口径分散在 decoder 与
-validator 两处"属正确性风险,应最先处理。
+已知的文档—代码不一致项列于规格 13.4(C_max 口径与占用率采集两项已修;禁派集接入
+GA 与增量评价为有意暂缓)。
 
 ## 七、测试
 
-`py -m tests.test_all` 依次执行规格 9 的 T1–T12:最短路矩阵、makespan=51 参考方案
+`py -m tests.test_all` 依次执行规格 9 的 T1–T14:最短路矩阵、makespan=51 参考方案
 校验、1000 随机染色体可行性、解码确定性、同机免运输、回运开关、冲突消解、GA 有效性、
 禁派集生效与兜底、占用率两套计算一致性(顺带验证派车试探的落表-回滚无残留)、
-生成算例可行性与下界合法性、拥堵度旋钮受控性与可复现性。全部通过后方可用于数据集实验。
+生成算例可行性与下界合法性、拥堵度旋钮受控性与可复现性、统计工具与已知精确值一致、
+批跑基础设施(预算闸门 / 账本续跑 / 配对不错位)。全部通过后方可用于数据集实验。

@@ -28,6 +28,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Tuple
 
 from .instance import Instance, OpKey
 from .network import BucketKey, Network, PriceTable
+from .stats import spearman
 
 # 非关键链上的让行等待在代理价中的折扣系数
 OFF_CRITICAL_WEIGHT = 0.25
@@ -129,29 +130,5 @@ def price_agreement(surrogate: PriceTable, exact: PriceTable) -> Optional[float]
     keys = sorted({k for k, _ in surrogate.items()} | {k for k, _ in exact.items()})
     if len(keys) < 3:
         return None
-    xs = [surrogate.get(*k) for k in keys]
-    ys = [exact.get(*k) for k in keys]
-
-    def ranks(vals: List[float]) -> List[float]:
-        order = sorted(range(len(vals)), key=lambda i: vals[i])
-        rk = [0.0] * len(vals)
-        i = 0
-        while i < len(order):
-            j = i
-            while j + 1 < len(order) and abs(vals[order[j + 1]] - vals[order[i]]) < 1e-12:
-                j += 1
-            avg = (i + j) / 2.0 + 1.0
-            for t in range(i, j + 1):
-                rk[order[t]] = avg
-            i = j + 1
-        return rk
-
-    rx, ry = ranks(xs), ranks(ys)
-    n = len(keys)
-    mx, my = sum(rx) / n, sum(ry) / n
-    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
-    dx = sum((a - mx) ** 2 for a in rx) ** 0.5
-    dy = sum((b - my) ** 2 for b in ry) ** 0.5
-    if dx < 1e-12 or dy < 1e-12:
-        return None
-    return round(num / (dx * dy), 4)
+    rho = spearman([surrogate.get(*k) for k in keys], [exact.get(*k) for k in keys])
+    return None if rho is None else round(rho, 4)
