@@ -1,4 +1,4 @@
-"""规格文档第九节 T1–T12 测试断言。运行方式(clbs/ 目录下): py -m tests.test_all"""
+"""规格文档第九节 T1–T14 测试断言。运行方式(clbs/ 目录下): py -m tests.test_all"""
 from __future__ import annotations
 
 import json
@@ -307,6 +307,90 @@ def t12_congestion_knobs_isolated():
         "同种子生成结果不可复现"
 
 
+# ---------------- T13 统计工具:与已知精确值逐位一致 ----------------
+
+def t13_statistics():
+    from algorithm.stats import describe, spearman, wilcoxon_signed_rank
+
+    # 全部同向 5 对:零分布下 P(W+ <= 0) = 1/32,两侧 p = 0.0625
+    w = wilcoxon_signed_rank([2, 3, 4, 5, 6], [1, 1, 1, 1, 1])
+    assert w["method"] == "exact" and abs(w["p_value"] - 0.0625) < 1e-9, w
+
+    # 教科书算例(与 scipy.stats.wilcoxon 一致:statistic=5, p=0.0391)
+    x = [1.83, 0.50, 1.62, 2.48, 1.68, 1.88, 1.55, 3.06, 1.30]
+    y = [0.878, 0.647, 0.598, 2.05, 1.06, 1.29, 1.06, 3.14, 1.29]
+    w = wilcoxon_signed_rank(x, y)
+    assert w["statistic"] == 5.0, w
+    assert abs(w["p_value"] - 0.0390625) < 1e-4, w
+
+    # 全平局:makespan 取整后最常见的情形,必须如实报出 n_eff=0 而非伪显著
+    w = wilcoxon_signed_rank([70, 72, 70], [70, 72, 70])
+    assert w["n_eff"] == 0 and w["p_value"] == 1.0 and w["method"] == "all-ties", w
+
+    d = describe([71, 69, 80])          # 规格 13.2 的实测三种子
+    assert d["range"] == 11 and abs(d["mean"] - 73.333) < 1e-3, d
+    assert spearman([1, 2, 3, 4], [2, 4, 6, 9]) > 0.999
+    assert spearman([1, 1, 1], [1, 2, 3]) is None, "无变异时应返回 None 而非 0"
+
+
+# ---------------- T14 批跑基础设施:预算闸门、账本续跑、配对不错位 ----------------
+
+def t14_batch_infrastructure():
+    import shutil
+    import tempfile
+    from tools.run_matrix import Ledger, _check_p3
+
+    inst, net = _load()
+
+    # (1) 时间预算必须真的掐停:早停与代数上限都放开,只能由预算终止
+    cfg = GAConfig(pop=30, max_gen=10 ** 9, stall_gen=10 ** 9, seed=42,
+                   time_budget_sec=1.0)
+    out = run_ga(inst, net, cfg, conflict_free=True, use_ls=True)
+    assert out["stopped_by"] == "budget", f"应由预算终止,实际 {out['stopped_by']}"
+    assert 1.0 <= out["runtime_sec"] <= 6.0, f"预算 1s 却用了 {out['runtime_sec']}s"
+    assert not validate(inst, out["best_result"].to_timetable())
+
+    # 不给预算时行为不变(向后兼容:stopped_by 只能是 stall / max_gen)
+    out2 = run_ga(inst, net, GAConfig(pop=20, max_gen=3, stall_gen=99, seed=42),
+                  conflict_free=True, use_ls=False)
+    assert out2["stopped_by"] == "max_gen", out2["stopped_by"]
+
+    # (2) 账本:追加即落盘,重新打开后能识别已完成项(续跑的唯一依据)
+    tmp = tempfile.mkdtemp(prefix="clbs_ledger_")
+    try:
+        led = Ledger(tmp)
+        led.append({"kind": "result", "instance": "I", "arm": "closed", "seed": 42,
+                    "makespan": 50.0, "valid": True})
+        led.append({"kind": "budget", "instance": "I", "budget_sec": 12.5})
+        again = Ledger(tmp)
+        assert again.done_keys() == {("I", "closed", 42)}, again.done_keys()
+        assert again.budgets()["I"]["budget_sec"] == 12.5
+        assert len(again.results()) == 1, "budget 记录不得混入结果集"
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # (3) high/funnel 配对:high 侧多一个 funnel 没有的种子(seed=3,且其增益极大)。
+    #     只有按 (H, 种子) 取交集才会把它排除;若按列表顺序拼接,它会被算进均值。
+    cells = {
+        ("HI", "closed"): {42: 80.0, 7: 90.0, 3: 100.0},
+        ("HI", "nofeedback"): {42: 88.0, 7: 99.0, 3: 200.0},
+        ("FU", "closed"): {42: 80.0, 7: 90.0},
+        ("FU", "nofeedback"): {42: 82.0, 7: 90.0},
+    }
+    feat = {"HI": {"congestion_tag": "high", "target_heterogeneity": 0.3},
+            "FU": {"congestion_tag": "funnel", "target_heterogeneity": 0.3}}
+
+    class _A:
+        arms = ["closed", "nofeedback"]
+
+    d = _check_p3(cells, feat, _A())["by_mechanism"]["nofeedback"]
+    assert d["n_pairs"] == 2, f"只有 seed 42/7 可配对,实际 {d['n_pairs']}"
+    assert abs(d["high_mean_gain"] - 8.0 / 88.0) < 1e-4, \
+        f"high 侧均值 {d['high_mean_gain']} 疑似混入了未配对的 seed=3"
+    assert abs(d["funnel_mean_gain"] - (2.0 / 82.0) / 2) < 1e-4, d
+    assert d["verdict"] == "支持", d
+
+
 # ---------------- 运行器 ----------------
 
 TESTS = [
@@ -322,6 +406,8 @@ TESTS = [
     ("T10 占用率一致性与回滚无残留", t10_occupancy_consistency),
     ("T11 生成算例可行性与下界合法性", t11_generated_instances),
     ("T12 拥堵度旋钮受控性与可复现", t12_congestion_knobs_isolated),
+    ("T13 统计工具(精确 Wilcoxon / 平局 / 秩相关)", t13_statistics),
+    ("T14 批跑基础设施(预算闸门/账本续跑/配对不错位)", t14_batch_infrastructure),
 ]
 
 
