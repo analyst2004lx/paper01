@@ -1,0 +1,32 @@
+{
+ "runs": [
+  "smoke_auto"
+ ],
+ "num_results": 28,
+ "instances": [
+  "S8x4x4-LD21-H0.3-F0.6-A4-s42",
+  "S8x4x4-LD11-H0.3-F0.6-A4-s42"
+ ],
+ "arms": [
+  "rule",
+  "twostage",
+  "nofeedback",
+  "opendispatch",
+  "nostagger",
+  "closed",
+  "priced"
+ ],
+ "seeds": [
+  7,
+  42
+ ],
+ "num_seeds": 2,
+ "budgets_sec": {
+  "S8x4x4-LD21-H0.3-F0.6-A4-s42": 39.22,
+  "S8x4x4-LD11-H0.3-F0.6-A4-s42": 26.42
+ },
+ "invalid_count": 0,
+ "invalid": [],
+ "complete_cells": 14,
+ "total_cells": 14
+}

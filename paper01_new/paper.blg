@@ -1,0 +1,69 @@
+This is BibTeX, Version 0.99d (TeX Live 2024)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: paper.aux
+The style file: ACM-Reference-Format.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Database file #1: reference-base.bib
+Warning--I didn't find a database entry for "zhong2020multi"
+Warning--I didn't find a database entry for "iso10218-2-2025"
+Warning--I didn't find a database entry for "rema2025task"
+Warning--I didn't find a database entry for "garrett2021integrated"
+Warning--I didn't find a database entry for "zhao2024survey"
+Warning--I didn't find a database entry for "garrett2020pddlstream"
+Warning--I didn't find a database entry for "wang2024more"
+Warning--I didn't find a database entry for "yan2021rnn"
+Warning--I didn't find a database entry for "li2022improved"
+Warning--I didn't find a database entry for "wang2024smart"
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 9000 items from 6000.
+Reallocated glb_str_ptr (elt_size=4) to 20 items from 10.
+Reallocated global_strs (elt_size=200001) to 20 items from 10.
+Reallocated glb_str_end (elt_size=4) to 20 items from 10.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Warning--empty publisher in zhang2024guidance
+Warning--empty address in zhang2024guidance
+Warning--page numbers missing in both pages and numpages fields in zhang2024guidance
+You've used 11 entries,
+            6273 wiz_defined-function locations,
+            1682 strings with 22054 characters,
+and the built_in function-call counts, 13928 in all, are:
+= -- 2113
+> -- 493
+< -- 0
++ -- 181
+- -- 166
+* -- 1029
+:= -- 1290
+add.period$ -- 54
+call.type$ -- 11
+change.case$ -- 94
+chr.to.int$ -- 11
+cite$ -- 14
+duplicate$ -- 1090
+empty$ -- 753
+format.name$ -- 210
+if$ -- 3595
+int.to.chr$ -- 2
+int.to.str$ -- 1
+missing$ -- 45
+newline$ -- 135
+num.names$ -- 77
+pop$ -- 406
+preamble$ -- 1
+purify$ -- 182
+quote$ -- 0
+skip$ -- 394
+stack$ -- 0
+substring$ -- 944
+swap$ -- 131
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 190
+warning$ -- 3
+while$ -- 59
+width$ -- 0
+write$ -- 254
+(There were 13 warnings)

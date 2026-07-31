@@ -40,6 +40,12 @@ def two_stage_baseline(inst: Instance, net: Network, cfg: GAConfig,
         "runtime_sec": round(time.time() - t0, 2),
         "generations": stage1["generations"],
         "evaluations": stage1["evaluations"],
+        # 轨迹来自阶段一,其目标是**理想运输模型**下的 C_max,系统性低估;
+        # 与闭环档的轨迹画在同一张图上时必须标注清楚,并同时给出修复后的真实值,
+        # 否则会被误读成"两阶段收敛得更好"
+        "history": stage1.get("history"),
+        "history_sec": stage1.get("history_sec"),
+        "history_is_surrogate": True,
         # 第一阶段的停机原因要透传:同算力预算下"被预算掐停"与"自然收敛"是两种
         # 完全不同的处境,批跑脚本的预算体检靠它判断比较是否公平(规格 8.2)
         "stopped_by": stage1.get("stopped_by"),

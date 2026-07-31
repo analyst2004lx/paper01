@@ -316,6 +316,9 @@ def run_ga(inst: Instance, net: Network, cfg: GAConfig,
     population = init_population(inst, cfg, rng)
     results = [evaluate(ch) for ch in population]
     history: List[float] = []
+    # 各档每次评价的成本相差一两个数量级,按代数画收敛曲线会严重误导;
+    # 逐代记下挂钟耗时,使收敛图能以"同一时间轴"呈现(规格 8.2 协议 3)
+    history_sec: List[float] = []
     best_idx = min(range(len(results)), key=lambda x: results[x].makespan)
     best_chrom, best_result = clone(population[best_idx]), results[best_idx]
     refresh_prices(best_chrom, best_result)
@@ -344,6 +347,7 @@ def run_ga(inst: Instance, net: Network, cfg: GAConfig,
         else:
             stall += 1
         history.append(best_result.makespan)
+        history_sec.append(round(time.time() - t_start, 3))
         if log and (gen % 10 == 0 or gen == 1):
             log(f"  gen {gen:4d}  best C_max = {best_result.makespan:.1f}")
         if stall >= cfg.stall_gen:
@@ -386,6 +390,7 @@ def run_ga(inst: Instance, net: Network, cfg: GAConfig,
         "best_chrom": best_chrom,
         "best_result": best_result,
         "history": history,
+        "history_sec": history_sec,
         "generations": len(history),
         "evaluations": n_eval,
         "stopped_by": stopped_by,
