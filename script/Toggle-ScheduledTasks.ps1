@@ -122,7 +122,7 @@ function Register-TasksModern {
 
     Register-ScheduledTask -TaskName $TaskWg -Action $wgAction -Trigger $wgTrigger `
         -Principal $wgPrincipal -Settings $wgSettings -Force | Out-Null
-    Write-Ok "$TaskWg registered (daily 20:00, Highest)"
+    Write-Ok "$TaskWg registered (daily 23:00, Highest)"
 }
 
 function Register-TasksSchtasks {
@@ -144,10 +144,10 @@ function Register-TasksSchtasks {
     }
 
     schtasks /Delete /TN $TaskWg /F 2>$null | Out-Null
-    schtasks /Create /TN $TaskWg /TR $trWg /SC DAILY /ST 20:00 /RL HIGHEST /F
+    schtasks /Create /TN $TaskWg /TR $trWg /SC DAILY /ST 23:00 /RL HIGHEST /F
     $ErrorActionPreference = $prev
     if ($LASTEXITCODE -ne 0) { throw "schtasks create $TaskWg failed" }
-    Write-Ok "$TaskWg registered (daily 20:00 Highest)"
+    Write-Ok "$TaskWg registered (daily 23:00 Highest)"
 }
 
 Write-Host ''
