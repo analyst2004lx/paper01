@@ -140,7 +140,9 @@ function Invoke-Git {
         [Parameter(Mandatory = $true)][string[]]$GitArgs,
         [string]$WorkDir = $Config.LocalFolder,
         [switch]$AllowFail,
-        [switch]$WithCommitIdentity
+        [switch]$WithCommitIdentity,
+        # Print "still running" every N seconds (0 = silent wait)
+        [int]$HeartbeatSec = 15
     )
     $git = $script:GitExe
 
@@ -151,40 +153,65 @@ function Invoke-Git {
         if ($Config.GitUserEmail) { $prefix += @('-c', ('user.email={0}' -f $Config.GitUserEmail)) }
     }
     $allArgs = $prefix + $GitArgs
-    Write-Log ('git {0}  (cwd={1})' -f ($GitArgs -join ' '), $WorkDir) -Level DEBUG
+    $cmdLabel = ($GitArgs -join ' ')
+    Write-Log ('git {0}  (cwd={1})' -f $cmdLabel, $WorkDir) -Level DEBUG
 
-    # Start git as a process with UTF-8 stdout/stderr. Default PowerShell capture
-    # re-decodes UTF-8 as the system ANSI page and corrupts Chinese paths.
-    $argLine = ($allArgs | ForEach-Object {
-        $a = [string]$_
-        if ($a -match '[\s"]') { '"' + ($a -replace '"', '\"') + '"' } else { $a }
-    }) -join ' '
+    # UTF-8 capture via temp files + heartbeat (avoids stdout/stderr pipe deadlock)
+    $outFile = [System.IO.Path]::GetTempFileName()
+    $errFile = [System.IO.Path]::GetTempFileName()
+    $argList = @()
+    foreach ($a in $allArgs) { $argList += [string]$a }
 
-    $psi = New-Object System.Diagnostics.ProcessStartInfo
-    $psi.FileName = $git
-    $psi.Arguments = $argLine
-    $psi.WorkingDirectory = $WorkDir
-    $psi.UseShellExecute = $false
-    $psi.RedirectStandardOutput = $true
-    $psi.RedirectStandardError = $true
-    $psi.CreateNoWindow = $true
-    $psi.StandardOutputEncoding = [System.Text.UTF8Encoding]::new($false)
-    $psi.StandardErrorEncoding = [System.Text.UTF8Encoding]::new($false)
-
-    $proc = New-Object System.Diagnostics.Process
-    $proc.StartInfo = $psi
+    $code = 1
+    $stdout = ''
+    $stderr = ''
+    $proc = $null
     try {
+        $psi = New-Object System.Diagnostics.ProcessStartInfo
+        $psi.FileName = $git
+        # ArgumentList not available on older ProcessStartInfo in all hosts; build safely
+        $psi.Arguments = (($argList | ForEach-Object {
+            $a = $_
+            if ($a -match '[\s"]') { '"' + ($a -replace '"', '\"') + '"' } else { $a }
+        }) -join ' ')
+        $psi.WorkingDirectory = $WorkDir
+        $psi.UseShellExecute = $false
+        $psi.RedirectStandardOutput = $true
+        $psi.RedirectStandardError = $true
+        $psi.CreateNoWindow = $true
+        $psi.StandardOutputEncoding = [System.Text.UTF8Encoding]::new($false)
+        $psi.StandardErrorEncoding = [System.Text.UTF8Encoding]::new($false)
+
+        $proc = New-Object System.Diagnostics.Process
+        $proc.StartInfo = $psi
         [void]$proc.Start()
-        $stdout = $proc.StandardOutput.ReadToEnd()
-        $stderr = $proc.StandardError.ReadToEnd()
-        $proc.WaitForExit()
+
+        # Read both streams asynchronously to prevent buffer deadlock
+        $outTask = $proc.StandardOutput.ReadToEndAsync()
+        $errTask = $proc.StandardError.ReadToEndAsync()
+
+        $sw = [System.Diagnostics.Stopwatch]::StartNew()
+        $lastBeat = 0
+        while (-not $proc.HasExited) {
+            Start-Sleep -Milliseconds 500
+            if ($HeartbeatSec -gt 0 -and $sw.Elapsed.TotalSeconds -ge ($lastBeat + $HeartbeatSec)) {
+                $lastBeat = [int]$sw.Elapsed.TotalSeconds
+                Write-Log ('... git still running ({0}s): {1}' -f $lastBeat, $cmdLabel) -Level INFO
+            }
+        }
+        # Ensure async readers finish
+        $stdout = $outTask.Result
+        $stderr = $errTask.Result
         $code = $proc.ExitCode
+        if ($sw.Elapsed.TotalSeconds -ge 3) {
+            Write-Log ('git finished in {0:N1}s (exit={1}): {2}' -f $sw.Elapsed.TotalSeconds, $code, $cmdLabel) -Level DEBUG
+        }
     } catch {
         $code = 1
-        $stdout = ''
         $stderr = $_.Exception.Message
     } finally {
         if ($null -ne $proc) { $proc.Dispose() }
+        Remove-Item -LiteralPath $outFile, $errFile -Force -ErrorAction SilentlyContinue
     }
 
     $parts = @()
@@ -196,7 +223,7 @@ function Invoke-Git {
         if ($AllowFail) {
             return [pscustomobject]@{ ExitCode = $code; Output = $text }
         }
-        throw ('git failed (exit={0}): git {1}{2}{3}' -f $code, ($GitArgs -join ' '), [Environment]::NewLine, $text)
+        throw ('git failed (exit={0}): git {1}{2}{3}' -f $code, $cmdLabel, [Environment]::NewLine, $text)
     }
     return [pscustomobject]@{ ExitCode = 0; Output = $text }
 }
@@ -331,6 +358,39 @@ try {
     Write-Log ('Git: {0}' -f $script:GitExe)
     Write-Log (Invoke-Git -GitArgs @('--version') -WorkDir $env:TEMP).Output
 
+    # Remove stale .git/*.lock left by crashed/interrupted git (common after Ctrl+C / network fail)
+    function Clear-StaleGitLocks {
+        param([string]$RepoRoot, [int]$MinAgeSec = 60)
+        $gitMeta = Join-Path $RepoRoot '.git'
+        if (-not (Test-Path -LiteralPath $gitMeta)) { return }
+        $gitRunning = @(Get-Process -Name 'git','git-remote-https','git-remote-http' -ErrorAction SilentlyContinue)
+        if ($gitRunning.Count -gt 0) {
+            Write-Log ('Other git process running (PIDs: {0}); leave lock files alone.' -f `
+                (($gitRunning | ForEach-Object { $_.Id }) -join ',')) -Level WARN
+            return
+        }
+        $locks = @(Get-ChildItem -LiteralPath $gitMeta -Filter '*.lock' -Force -ErrorAction SilentlyContinue)
+        # also index.lock at .git root
+        $indexLock = Join-Path $gitMeta 'index.lock'
+        if ((Test-Path -LiteralPath $indexLock) -and ($locks.FullName -notcontains $indexLock)) {
+            $locks += Get-Item -LiteralPath $indexLock -Force
+        }
+        foreach ($lk in $locks) {
+            $age = ((Get-Date) - $lk.LastWriteTime).TotalSeconds
+            if ($age -lt $MinAgeSec) {
+                Write-Log ('Lock is recent ({0:N0}s): {1} — skip auto-remove' -f $age, $lk.Name) -Level WARN
+                continue
+            }
+            try {
+                Remove-Item -LiteralPath $lk.FullName -Force -ErrorAction Stop
+                Write-Log ('Removed stale lock: {0} (age {1:N0}s)' -f $lk.Name, $age) -Level WARN
+            } catch {
+                Write-Log ('Cannot remove lock {0}: {1}' -f $lk.Name, $_.Exception.Message) -Level WARN
+            }
+        }
+    }
+    Clear-StaleGitLocks -RepoRoot $Config.LocalFolder
+
     if (-not (Test-Path -LiteralPath $Config.LocalFolder)) {
         Write-Log ('Local folder missing, create: {0}' -f $Config.LocalFolder) -Level WARN
         if (-not $WhatIf) {
@@ -339,11 +399,33 @@ try {
     }
 
     $gitDir = Join-Path $Config.LocalFolder '.git'
-    $isRepo = Test-Path -LiteralPath $gitDir
+    $gitDirExists = Test-Path -LiteralPath $gitDir
+    # Do not trust a mere .git folder — empty/corrupt leftover is common after failed sync
+    $probe = Invoke-Git -GitArgs @('rev-parse', '--is-inside-work-tree') -AllowFail
+    $isRepo = ($probe.ExitCode -eq 0 -and $probe.Output.Trim() -eq 'true')
+
+    if ($gitDirExists -and -not $isRepo) {
+        Write-Log 'Found broken/empty .git (not a valid repo). Removing it so we can re-init...' -Level WARN
+        if (-not $WhatIf) {
+            try {
+                # Clear ReadOnly/Hidden so Remove-Item can delete
+                Get-ChildItem -LiteralPath $gitDir -Force -Recurse -ErrorAction SilentlyContinue |
+                    ForEach-Object { $_.Attributes = 'Normal' }
+                $item = Get-Item -LiteralPath $gitDir -Force
+                $item.Attributes = 'Normal'
+                Remove-Item -LiteralPath $gitDir -Recurse -Force -ErrorAction Stop
+                Write-Log 'Removed broken .git'
+            } catch {
+                throw ("Cannot remove broken .git: {0}. Delete it manually then re-run." -f $_.Exception.Message)
+            }
+        }
+        $gitDirExists = $false
+    }
 
     if (-not $isRepo) {
         Write-Log 'Not a git repo yet; clone or init...'
-        $items = @(Get-ChildItem -LiteralPath $Config.LocalFolder -Force -ErrorAction SilentlyContinue)
+        $items = @(Get-ChildItem -LiteralPath $Config.LocalFolder -Force -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -ne '.git' })
         if ($items.Count -eq 0) {
             if ($WhatIf) {
                 Write-Log ('[WhatIf] would clone {0}' -f $Config.RepoUrl)
@@ -352,11 +434,12 @@ try {
                 Write-Log 'clone done'
             }
         } else {
-            Write-Log 'Folder not empty and has no .git: git init + remote add (files kept)' -Level WARN
+            Write-Log 'Folder not empty and has no valid .git: git init + remote add (files kept)' -Level WARN
             if (-not $WhatIf) {
                 Invoke-Git -GitArgs @('init') | Out-Null
                 Invoke-Git -GitArgs @('remote', 'remove', 'origin') -AllowFail | Out-Null
                 Invoke-Git -GitArgs @('remote', 'add', 'origin', $Config.RepoUrl) | Out-Null
+                Write-Log ('origin set to {0}' -f $Config.RepoUrl)
             }
         }
     } else {
@@ -429,37 +512,48 @@ try {
     $remoteRef = 'origin/{0}' -f $branch
     Write-Log ('Remote ref: {0}' -f $remoteRef)
 
-    $cur = Invoke-Git -GitArgs @('rev-parse', '--abbrev-ref', 'HEAD') -AllowFail
-    if ($cur.ExitCode -ne 0 -or $cur.Output -eq 'HEAD' -or [string]::IsNullOrWhiteSpace($cur.Output)) {
-        Write-Log ('Checkout local branch {0}' -f $branch)
-        $co = Invoke-Git -GitArgs @('checkout', '-B', $branch, $remoteRef) -AllowFail
-        if ($co.ExitCode -ne 0) {
-            Invoke-Git -GitArgs @('checkout', '-B', $branch) -AllowFail | Out-Null
-        }
-    } elseif ($cur.Output.Trim() -ne $branch) {
-        Write-Log ('Switch {0} -> {1}' -f $cur.Output.Trim(), $branch) -Level WARN
-        Invoke-Git -GitArgs @('checkout', '-B', $branch) | Out-Null
-    }
-
     # After "git init" on a non-empty folder there is often no commit yet, or an
-    # orphan commit unrelated to GitHub. Reattach onto remote BEFORE sync/commit
-    # so later push shares history. Working tree files are preserved.
+    # orphan commit unrelated to GitHub. Prefer lightweight attach (NO full checkout)
+    # so we don't rewrite the whole working tree and appear hung.
     $headCheck = Invoke-Git -GitArgs @('rev-parse', '--verify', 'HEAD') -AllowFail
     $needReattach = $false
     if ($headCheck.ExitCode -ne 0) {
         $needReattach = $true
-        Write-Log 'No local HEAD commit yet (fresh init). Attaching onto remote...' -Level WARN
+        Write-Log 'No local HEAD commit yet (fresh init). Will attach onto remote without full checkout...' -Level WARN
     } else {
         $mergeBase = Invoke-Git -GitArgs @('merge-base', 'HEAD', $remoteRef) -AllowFail
         if ($mergeBase.ExitCode -ne 0) {
             $needReattach = $true
-            Write-Log 'Local history is unrelated to remote (common after git init). Reattaching onto remote; local files kept.' -Level WARN
+            Write-Log 'Local history is unrelated to remote. Will reattach onto remote; local files kept.' -Level WARN
         }
     }
+
     if ($needReattach) {
-        # mixed: HEAD+index = remote; working tree unchanged (local edits kept)
-        Invoke-Git -GitArgs @('reset', '--mixed', $remoteRef) | Out-Null
-        Write-Log ('Reset --mixed onto {0} complete' -f $remoteRef)
+        Write-Log ('Attaching branch "{0}" -> {1} (reset --mixed; worktree files kept)...' -f $branch, $remoteRef)
+        # Point HEAD at branch name even if unborn, then move branch/index to remote tip
+        Invoke-Git -GitArgs @('symbolic-ref', 'HEAD', ('refs/heads/{0}' -f $branch)) -AllowFail | Out-Null
+        $reset = Invoke-Git -GitArgs @('reset', '--mixed', $remoteRef) -AllowFail -HeartbeatSec 10
+        if ($reset.ExitCode -ne 0 -and $reset.Output -match 'index\.lock') {
+            Write-Log 'reset hit index.lock; clearing stale locks and retrying...' -Level WARN
+            Clear-StaleGitLocks -RepoRoot $Config.LocalFolder -MinAgeSec 0
+            $reset = Invoke-Git -GitArgs @('reset', '--mixed', $remoteRef) -AllowFail -HeartbeatSec 10
+        }
+        if ($reset.ExitCode -ne 0) {
+            throw ('git reset --mixed failed: {0}' -f $reset.Output)
+        }
+        Write-Log ('Attach complete: HEAD is {0} (index synced to remote; local edits kept)' -f $branch)
+    } else {
+        $cur = Invoke-Git -GitArgs @('rev-parse', '--abbrev-ref', 'HEAD') -AllowFail
+        if ($cur.ExitCode -eq 0 -and $cur.Output.Trim() -ne $branch -and $cur.Output.Trim() -ne 'HEAD') {
+            Write-Log ('Switch branch {0} -> {1} (no remote tree checkout)...' -f $cur.Output.Trim(), $branch) -Level WARN
+            # -B without start-point only moves branch tip / switches; much faster than checkout origin/*
+            $sw = Invoke-Git -GitArgs @('checkout', '-B', $branch) -AllowFail -HeartbeatSec 10
+            if ($sw.ExitCode -ne 0) {
+                Write-Log ('checkout -B failed: {0}; continuing on current branch' -f $sw.Output) -Level WARN
+            }
+        } else {
+            Write-Log ('Already on usable branch (HEAD={0})' -f $(if ($cur.Output) { $cur.Output.Trim() } else { '?' }))
+        }
     }
 
     function Get-RemoteCommitTime([string]$RelPath) {
