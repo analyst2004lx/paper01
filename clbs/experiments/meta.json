@@ -1,11 +1,17 @@
 {
  "runs": [
-  "smoke_auto"
+  "p3"
  ],
- "num_results": 28,
+ "num_results": 560,
  "instances": [
+  "S8x4x4-LD21-H0-F0.6-A4-s42",
+  "S8x4x4-LD21-H0.15-F0.6-A4-s42",
   "S8x4x4-LD21-H0.3-F0.6-A4-s42",
-  "S8x4x4-LD11-H0.3-F0.6-A4-s42"
+  "S8x4x4-LD21-H0.5-F0.6-A4-s42",
+  "S8x4x4-LD11-H0-F0.6-A4-s42",
+  "S8x4x4-LD11-H0.15-F0.6-A4-s42",
+  "S8x4x4-LD11-H0.3-F0.6-A4-s42",
+  "S8x4x4-LD11-H0.5-F0.6-A4-s42"
  ],
  "arms": [
   "rule",
@@ -17,16 +23,30 @@
   "priced"
  ],
  "seeds": [
+  3,
   7,
-  42
+  11,
+  19,
+  23,
+  31,
+  42,
+  47,
+  53,
+  2024
  ],
- "num_seeds": 2,
+ "num_seeds": 10,
  "budgets_sec": {
-  "S8x4x4-LD21-H0.3-F0.6-A4-s42": 39.22,
-  "S8x4x4-LD11-H0.3-F0.6-A4-s42": 26.42
+  "S8x4x4-LD21-H0-F0.6-A4-s42": 40.79,
+  "S8x4x4-LD21-H0.15-F0.6-A4-s42": 42.19,
+  "S8x4x4-LD21-H0.3-F0.6-A4-s42": 46.71,
+  "S8x4x4-LD21-H0.5-F0.6-A4-s42": 50.32,
+  "S8x4x4-LD11-H0-F0.6-A4-s42": 46.6,
+  "S8x4x4-LD11-H0.15-F0.6-A4-s42": 30.21,
+  "S8x4x4-LD11-H0.3-F0.6-A4-s42": 60.09,
+  "S8x4x4-LD11-H0.5-F0.6-A4-s42": 41.26
  },
  "invalid_count": 0,
  "invalid": [],
- "complete_cells": 14,
- "total_cells": 14
+ "complete_cells": 56,
+ "total_cells": 56
 }
