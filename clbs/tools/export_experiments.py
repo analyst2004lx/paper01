@@ -26,11 +26,15 @@ EXT_DIR = os.path.join(HERE, "input", "ext")
 OUT_DIR = os.path.join(HERE, "experiments")
 
 # 递进链顺序:报告与图例都按这个顺序排,避免不同图里档位次序不一致
-ARM_ORDER = ["rule", "twostage", "nofeedback", "opendispatch", "nostagger",
-             "closed", "priced"]
+ARM_ORDER = ["rule", "twostage", "nofeedback", "opendispatch",
+             "opendispatch_nols", "nostagger", "closed", "priced"]
 TAG_ORDER = {"low": 0, "mid": 1, "high": 2, "funnel": 3}
-# closed 相对它们的差值分别对应"集成收益"与三项"机制增益"
-BASELINE_ARMS = ["twostage", "nofeedback", "opendispatch", "nostagger"]
+# closed 相对它们的差值分别对应"集成收益"与各项"机制增益"。
+# opendispatch_nols 与 nofeedback 只差派车方式一项(两者都不含局部搜索),故这一对
+# 才是"精确派车值多少"的干净归因;opendispatch 含局部搜索,与 nofeedback 相减同时
+# 差着两个因素,不可单独归因。
+BASELINE_ARMS = ["twostage", "nofeedback", "opendispatch", "opendispatch_nols",
+                 "nostagger"]
 
 
 def load_ledger(run: str) -> List[dict]:
@@ -239,6 +243,8 @@ def export(runs: Sequence[str], out_dir: str) -> None:
                "job_chain", "machine_load", "lu_cut", "lower_bound", "budget_sec"])
 
     # ---------------- 6. 元信息(图注要引用种子数与预算口径) ----------------
+    # 注:双口径对比表由 export_protocols 单独写出,见 --gen-runs
+
     seeds = sorted({r["seed"] for r in results})
     invalid = [r for r in results if not r.get("valid")]
     meta = {
@@ -262,12 +268,103 @@ def export(runs: Sequence[str], out_dir: str) -> None:
           % ("meta.json", seeds, len(invalid)))
 
 
+def _results_of(runs: Sequence[str]) -> List[dict]:
+    out = []
+    for run in runs:
+        for rec in load_ledger(run):
+            if rec.get("kind") == "result":
+                rec["run"] = run
+                out.append(rec)
+    return out
+
+
+def export_protocols(wall_runs: Sequence[str], gen_runs: Sequence[str],
+                     out_dir: str) -> None:
+    """双预算口径对比表:同一组算例、同一组种子,分别在同挂钟与同代数下配对。
+
+    这张表本身就是一个结论。两种口径都不中立:同挂钟偏向单次评价便宜的开环法,
+    同代数偏向每次评价都做真实路由的闭环法,且把局部搜索的邻居解码记为免费。
+    只报一种就能把同一份数据讲成两个相反的故事,故规格 8.2 协议 3 要求并列给出。
+    为可比,只取两次批跑共有的算例与种子。
+    """
+    wall, gen = _results_of(wall_runs), _results_of(gen_runs)
+    if not wall or not gen:
+        raise SystemExit("双口径导出需要两次批跑都有 result 记录")
+
+    common_inst = ({r["instance"] for r in wall} & {r["instance"] for r in gen})
+    common_seed = ({r["seed"] for r in wall} & {r["seed"] for r in gen})
+    print("双口径对比:共有算例 %d 个,共有种子 %d 个"
+          % (len(common_inst), len(common_seed)))
+
+    rows = []
+    for protocol, recs in (("wallclock", wall), ("generations", gen)):
+        sel = [r for r in recs
+               if r["instance"] in common_inst and r["seed"] in common_seed]
+        idx: Dict[Tuple[str, str], Dict[int, dict]] = {}
+        for r in sel:
+            idx.setdefault((r["instance"], r["arm"]), {})[r["seed"]] = r
+        arms = {a for (_n, a) in idx}
+        for base_arm in BASELINE_ARMS + ["priced"]:
+            if base_arm not in arms or "closed" not in arms:
+                continue
+            xs, ys, bsec, csec, bev, cev = [], [], [], [], [], []
+            for n in sorted(common_inst):
+                base = idx.get((n, base_arm))
+                new = idx.get((n, "closed"))
+                if not base or not new:
+                    continue
+                for s in sorted(set(base) & set(new)):
+                    xs.append(base[s]["makespan"])
+                    ys.append(new[s]["makespan"])
+                    bsec.append(base[s].get("runtime_sec") or 0.0)
+                    csec.append(new[s].get("runtime_sec") or 0.0)
+                    bev.append(base[s].get("evaluations") or 0)
+                    cev.append(new[s].get("evaluations") or 0)
+            if not xs:
+                continue
+            w = wilcoxon_signed_rank(xs, ys)
+            per = [(x - y) / x for x, y in zip(xs, ys) if x > 0]
+            rows.append({
+                "protocol": protocol, "baseline": base_arm,
+                "kind": ("integration" if base_arm == "twostage" else "mechanism"),
+                "n_pairs": len(xs), "n_eff": w["n_eff"],
+                "baseline_mean": round(mean(xs), 3),
+                "closed_mean": round(mean(ys), 3),
+                "rel_gain": round(mean(per), 5),
+                "p_value": w["p_value"],
+                "baseline_sec": round(mean(bsec), 2),
+                "closed_sec": round(mean(csec), 2),
+                "baseline_evals": int(mean(bev)) if bev else None,
+                "closed_evals": int(mean(cev)) if cev else None,
+            })
+    os.makedirs(out_dir, exist_ok=True)
+    write_csv(os.path.join(out_dir, "protocols.csv"), rows,
+              ["protocol", "baseline", "kind", "n_pairs", "n_eff",
+               "baseline_mean", "closed_mean", "rel_gain", "p_value",
+               "baseline_sec", "closed_sec", "baseline_evals", "closed_evals"])
+
+    meta_path = os.path.join(out_dir, "protocols_meta.json")
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump({"wallclock_runs": list(wall_runs),
+                   "generation_runs": list(gen_runs),
+                   "instances": sorted(common_inst),
+                   "seeds": sorted(common_seed),
+                   "num_seeds": len(common_seed)}, f, ensure_ascii=False, indent=1)
+    print("  写出 %-22s 算例 %d,种子 %d"
+          % ("protocols_meta.json", len(common_inst), len(common_seed)))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description="批跑账本 -> 论文绘图数据集")
     ap.add_argument("--runs", nargs="+", default=["p3"], help="账本名(可多个,合并导出)")
+    ap.add_argument("--gen-runs", nargs="+", default=None,
+                    help="同代数口径的账本名;给定后额外写出 protocols.csv")
     ap.add_argument("--out", default=OUT_DIR)
     args = ap.parse_args()
     export(args.runs, args.out)
+    if args.gen_runs:
+        print()
+        export_protocols(args.runs, args.gen_runs, args.out)
     return 0
 
 

@@ -1,14 +1,16 @@
-"""Figure: the progressive ablation chain under an equal wall-clock budget.
+"""Figure: what each extra millisecond per evaluation buys.
 
-Makespans are divided by each instance's composite lower bound so that cells
-with different bounds can be pooled; the ratio is an upper bound on the
-optimality gap, not the gap itself.
+The natural chart here would be makespan against configuration, but it does not
+work: makespans differ far more across instances and heterogeneity levels than
+across configurations, so the between-instance spread swamps a 6\% effect even
+after dividing by each instance's lower bound.  The paired statistics avoid that
+by differencing within (instance, seed), and this figure plots exactly what they
+test -- the paired gain over the two-stage baseline -- against the cost per
+evaluation that buys it.
 
-Two deliberate choices.  The dispatch rule is excluded from the panel: it
-performs a single decoding, so an equal-time budget means nothing for it, and
-its value is reported in the caption instead.  The chart is a dot plot rather
-than a bar chart because the interesting range is narrow and far from zero,
-where bars would either mislead or waste the axis.
+Read left to right: cost rises by a factor of forty, and quality does not follow.
+The proposed method is the leftmost point of the loop family, and the most
+expensive configuration has fallen below the baseline it was meant to improve.
 """
 from __future__ import annotations
 
@@ -16,55 +18,79 @@ import numpy as np
 
 import _style as S
 
-SKIP = {"rule"}                      # no search: an equal-time budget is vacuous
-MARKERS = {"low": "^", "mid": "v", "high": "o", "funnel": "s"}
+SKIP = {"rule", "twostage"}     # 前者无搜索,后者是被减去的基准
+
+
+def paired_gain(runs, arm):
+    """按 (算例, 种子) 与两阶段配对,返回逐对相对改进(%)。"""
+    idx = {}
+    for r in runs.itertuples():
+        idx.setdefault((r.instance, r.seed), {})[r.arm] = r.makespan
+    out = []
+    for v in idx.values():
+        if "twostage" in v and arm in v and v["twostage"] > 0:
+            out.append(100.0 * (v["twostage"] - v[arm]) / v["twostage"])
+    return np.asarray(out)
 
 
 def main():
     m = S.require_seeds()
-    cells = S.load("cells.csv")
-    cells = cells[cells["lower_bound"].notna()].copy()
-    cells["ratio"] = cells["mean"] / cells["lower_bound"]
+    runs = S.load("runs.csv")
+    runs = runs[runs["makespan"].notna()]
 
     arms = [a for a in S.ARM_ORDER
-            if a not in SKIP and (cells["arm"] == a).any()]
-    tags = [t for t in ["low", "mid", "high", "funnel"]
-            if (cells["tag"] == t).any()]
+            if a not in SKIP and (runs["arm"] == a).any()]
 
-    fig, ax = S.plt.subplots(figsize=(S.COL * 1.5, 2.35))
-    ys = np.arange(len(arms))[::-1]          # chain reads top to bottom
-    offs = np.linspace(-0.16, 0.16, len(tags)) if len(tags) > 1 else [0.0]
+    fig, ax = S.plt.subplots(figsize=(S.COL * 1.5, 2.45))
 
-    for tag, off in zip(tags, offs):
-        sub = cells[cells["tag"] == tag]
-        mus, sds = [], []
-        for a in arms:
-            r = sub[sub["arm"] == a]["ratio"]
-            mus.append(r.mean())
-            sds.append(r.std(ddof=1) if len(r) > 1 else 0.0)
-        ax.errorbar(mus, ys + off, xerr=sds, fmt=MARKERS.get(tag, "o"),
-                    ms=4.2, lw=0, elinewidth=0.8, capsize=1.8,
-                    color=S.TAG_COLOR.get(tag, "0.4"),
-                    ecolor=S.TAG_COLOR.get(tag, "0.4"),
-                    label="%s congestion" % S.TAG_LABEL.get(tag, tag))
+    xs, ys, es = [], [], []
+    for a in arms:
+        sub = runs[runs["arm"] == a]
+        cost = sub["ms_per_eval"].dropna().mean()
+        g = paired_gain(runs, a)
+        xs.append(cost)
+        ys.append(g.mean())
+        es.append(g.std(ddof=1) / np.sqrt(len(g)))
 
-    ax.set_yticks(ys)
-    ax.set_yticklabels([S.ARM_SHORT[a] for a in arms])
-    ax.set_xlabel(r"$C_{\max}$ / composite lower bound")
-    ax.set_ylim(-0.6, len(arms) - 0.4)
-    ax.grid(axis="y", alpha=0.12)
+    ax.plot(xs, ys, "-", color="0.72", lw=0.9, zorder=1)
+    for a, x, y, e in zip(arms, xs, ys, es):
+        ax.errorbar([x], [y], yerr=[e], fmt="o", ms=6.2, elinewidth=1.0,
+                    capsize=2.4, zorder=3,
+                    color=S.ARM_COLOR.get(a, "0.4"),
+                    ecolor=S.ARM_COLOR.get(a, "0.4"))
 
-    # mark the full method so the eye finds the reference row immediately
-    if "closed" in arms:
-        ax.axhline(ys[arms.index("closed")], color="0.75", lw=6, alpha=0.22,
-                   zorder=0)
-    ax.legend(loc="lower right", handletextpad=0.4, borderaxespad=0.3)
+    # 标注:主方法与定价档各自朝远离折线的一侧,其余交替避让
+    place = {
+        "opendispatch_nols": (4, 11, "left"),
+        "opendispatch": (0, -15, "center"),
+        "nofeedback": (6, 10, "left"),
+        "nostagger": (0, -15, "center"),
+        "closed": (8, 8, "left"),
+        "priced": (-4, 11, "right"),
+    }
+    for a, x, y in zip(arms, xs, ys):
+        dx, dy, ha = place.get(a, (0, 10, "center"))
+        ax.annotate(S.ARM_SHORT.get(a, a), (x, y),
+                    textcoords="offset points", xytext=(dx, dy), ha=ha,
+                    fontsize=6.9, color=S.ARM_COLOR.get(a, "0.3"))
 
-    rule = cells[cells["arm"] == "rule"]["ratio"]
-    note = ("%d seeds, equal wall-clock budget per instance" % m.get("num_seeds", 0))
-    if len(rule):
-        note += ";  dispatch rule (no search) at %.2f" % rule.mean()
-    ax.set_title(note, fontsize=6.8, color="0.3", pad=4)
+    ax.axhline(0, color="0.35", lw=0.9, ls="--")
+    ax.annotate("two-stage baseline", (xs[0], 0), textcoords="offset points",
+                xytext=(2, -11), fontsize=6.5, color="0.4")
+    ax.set_xscale("log")
+    ax.set_xlim(min(xs) / 1.55, max(xs) * 1.5)
+    lo, hi = min(ys) - max(es) - 1.0, max(ys) + max(es) + 2.2
+    ax.set_ylim(lo, hi)          # 顶部留白,免得标注压到标题
+    ax.set_xlabel("cost per evaluation (ms, log scale)")
+    ax.set_ylabel(r"paired $\Delta C_{\max}$ vs two-stage (\%)")
+    ax.xaxis.set_major_locator(S.mticker.FixedLocator([2, 3, 5, 10, 20, 40, 80]))
+    ax.xaxis.set_minor_locator(S.mticker.NullLocator())
+    ax.xaxis.set_major_formatter(S.mticker.FuncFormatter(
+        lambda v, _p: ("%g" % v)))
+    ax.set_title("%d instances $\\times$ %d seeds, equal wall-clock budget; "
+                 "higher is better" % (len(m.get("instances") or []),
+                                       m.get("num_seeds", 0)),
+                 fontsize=6.8, color="0.3", pad=4)
     S.save(fig, "fig_ablation")
 
 

@@ -1,14 +1,20 @@
 """价格协调强度 theta 的受控扫描(负面结果的证据链)。
 
 论文主张"价格化层间接口系统性有害、且随 theta 单调恶化"。要让这句话站得住,
-扫描必须满足两条,否则结论会被"价格档只是算力更少"这个平凡解释吃掉:
+扫描必须满足三条,否则结论会被平凡解释吃掉:
 
-1. **同挂钟预算**:theta>0 每次评价要跑多标签 Pareto 搜索,实测比 theta=0 贵
-   数倍。预算由 theta=0 档的自然用时标定,全部 theta 共用(规格 8.2 协议 1);
-2. **多种子配对**:同一 theta 下用同一组种子,报告相对 theta=0 的配对增益与
+1. **路由搜索宽度全程恒定**:theta>0 每次评价要跑多标签 Pareto 搜索,天然更贵。
+   若为了压成本而只给 theta>0 收窄 `max_entry_options`,就同时改了两个变量,
+   "theta 越大越差"随即可以被"路由搜得更窄"解释掉。此处对所有 theta 取同一值;
+2. **两种预算口径并列**:同挂钟回答"在给定算力下用不用得起价格",同代数回答
+   "抛开成本,价格给出的方向本身对不对"。前者会把"贵"记作"差",后者会把"贵"
+   记作免费,只报一种都不足以支撑单调性主张(规格 8.2 协议 1、3);
+3. **多种子配对**:同一 theta 下用同一组种子,报告相对 theta=0 的配对增益与
    Wilcoxon p 值(协议 2)。
 
-运行(clbs/ 目录下):  py -m tools.sweep_theta --n-seeds 10
+运行(clbs/ 目录下):
+    py -m tools.sweep_theta --n-seeds 10                      # 同挂钟
+    py -m tools.sweep_theta --budget gen --gen 20 --n-seeds 5 # 同代数
 """
 from __future__ import annotations
 
@@ -62,8 +68,16 @@ def main() -> int:
     ap.add_argument("--n-seeds", type=int, default=10)
     ap.add_argument("--pop", type=int, default=60)
     ap.add_argument("--budget-cap", type=float, default=None)
-    ap.add_argument("--out", default=os.path.join(OUT_DIR, "theta_sweep.csv"))
+    ap.add_argument("--budget", default="auto", choices=["auto", "gen"],
+                    help="auto = 同挂钟(由 theta=0 自然用时标定);gen = 同代数")
+    ap.add_argument("--gen", type=int, default=20, help="同代数口径下的代数")
+    ap.add_argument("--entry-options", type=int, default=3,
+                    help="多标签路由每条弧考察的进入时刻数;全程恒定,不随 theta 变")
+    ap.add_argument("--out", default=None)
     args = ap.parse_args()
+    if args.out is None:
+        args.out = os.path.join(
+            OUT_DIR, "theta_sweep%s.csv" % ("" if args.budget == "auto" else "_gen"))
 
     seeds = SEED_POOL[: args.n_seeds]
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
@@ -77,22 +91,30 @@ def main() -> int:
         with open(path, encoding="utf-8") as f:
             feats = json.load(f).get("_features", {})
 
-        # 预算标定:theta=0 的完整方法在默认停机规则下的自然用时
         base = GAConfig(pop=args.pop, max_gen=200, stall_gen=30, seed=seeds[0],
-                        theta=0.0, dispatch="exact", use_conflict_ops=True)
-        t0 = time.time()
-        run_ga(inst, net, base, conflict_free=True, use_ls=True)
-        natural = round(time.time() - t0, 2)
-        budget = min(natural, args.budget_cap) if args.budget_cap else natural
-        print("[%s] 标定预算 %.1fs (自然用时 %.1fs)" % (inst.name, budget, natural),
-              flush=True)
+                        theta=0.0, dispatch="exact", use_conflict_ops=True,
+                        max_entry_options=args.entry_options)
+        budget: Optional[float] = None
+        if args.budget == "auto":
+            # 预算标定:theta=0 的完整方法在默认停机规则下的自然用时
+            t0 = time.time()
+            run_ga(inst, net, base, conflict_free=True, use_ls=True)
+            natural = round(time.time() - t0, 2)
+            budget = min(natural, args.budget_cap) if args.budget_cap else natural
+            print("[%s] 标定预算 %.1fs (自然用时 %.1fs)" % (inst.name, budget, natural),
+                  flush=True)
+        else:
+            print("[%s] 同代数口径:每档固定 %d 代 x %d 种群"
+                  % (inst.name, args.gen, args.pop), flush=True)
 
         for theta in args.thetas:
             for s in seeds:
-                # 放宽早停,否则预算根本用不完,"同算力"名存实亡
-                cfg = replace(base, seed=s, theta=theta, max_gen=100000,
-                              stall_gen=100000, time_budget_sec=budget,
-                              max_entry_options=(1 if theta > 0 else 3))
+                # 同挂钟口径下必须放宽早停,否则预算根本用不完,"同算力"名存实亡
+                cfg = (replace(base, seed=s, theta=theta, max_gen=100000,
+                               stall_gen=100000, time_budget_sec=budget)
+                       if budget is not None else
+                       replace(base, seed=s, theta=theta, max_gen=args.gen,
+                               stall_gen=10 ** 9))
                 t1 = time.time()
                 out = run_ga(inst, net, cfg, conflict_free=True, use_ls=True)
                 errs = validate(inst, out["best_result"].to_timetable())
@@ -102,13 +124,20 @@ def main() -> int:
                     "instance": inst.name,
                     "tag": feats.get("congestion_tag"),
                     "het": feats.get("target_heterogeneity"),
+                    "protocol": ("wallclock" if budget is not None
+                                 else "generations"),
                     "theta": theta, "seed": s,
                     "makespan": out["best_result"].makespan,
                     "runtime_sec": sec, "evaluations": ev,
+                    "ls_evaluations": out["ls_evaluations"],
+                    "decodes": out["decodes"],
                     "ms_per_eval": round(1000.0 * sec / ev, 3) if ev else None,
+                    "ms_per_decode": (round(1000.0 * sec / out["decodes"], 3)
+                                      if out["decodes"] else None),
                     "generations": out["generations"],
                     "stopped_by": out["stopped_by"],
                     "price_slots": out["price_slots"],
+                    "entry_options": args.entry_options,
                     "budget_sec": budget, "valid": int(not errs),
                 })
                 print("  theta=%.2f seed=%-5d C_max=%6.1f  %5.1fs  eval=%-6d %s"

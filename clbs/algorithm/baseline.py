@@ -12,8 +12,8 @@ from .ga import GAConfig, run_ga, ma_min_time
 
 # 递进式消融链的档位顺序(规格 8.1):每一档只比上一档多闭合一个环节;
 # priced 是如实报告的负面对照,不属于递进链本身。
-ARMS = ("rule", "twostage", "nofeedback", "opendispatch", "nostagger",
-        "closed", "priced")
+ARMS = ("rule", "twostage", "nofeedback", "opendispatch", "opendispatch_nols",
+        "nostagger", "closed", "priced")
 
 # 不含 GA 搜索的档位:单次解码即完成,故"同算力预算"对其无意义,报告时须单列。
 NO_SEARCH_ARMS = ("rule",)
@@ -75,6 +75,22 @@ def ablation_open_dispatch(inst: Instance, net: Network, cfg: GAConfig,
     return out
 
 
+def ablation_open_dispatch_no_ls(inst: Instance, net: Network, cfg: GAConfig,
+                                 log=None) -> dict:
+    """消融:开环派车,且同时关闭局部搜索。
+
+    `opendispatch` 是在完整版(含局部搜索)之上改动派车方式,因此它与 `nofeedback`
+    (精确派车、无局部搜索)之间同时差着两个因素,两者相减得不出"精确派车值多少"。
+    本档把局部搜索也关掉,使 `nofeedback` 与本档只差派车方式这一项,精确派车的
+    贡献才可单独归因。
+    """
+    out = run_ga(inst, net, replace(cfg, dispatch="rule"), conflict_free=True,
+                 use_ls=False, log=log)
+    out["name"] = "open_dispatch_no_ls"
+    out["makespan"] = out["best_result"].makespan
+    return out
+
+
 def ablation_no_stagger(inst: Instance, net: Network, cfg: GAConfig,
                         log=None) -> dict:
     """规格 8.1 档 5 —— 消融:关闭冲突凭证制导的错峰算子,只保留改派算子。
@@ -122,6 +138,8 @@ def solve_arm(arm: str, inst: Instance, net: Network, cfg: GAConfig,
         return ablation_no_feedback(inst, net, cfg, log=log)
     if arm == "opendispatch":
         return ablation_open_dispatch(inst, net, cfg, log=log)
+    if arm == "opendispatch_nols":
+        return ablation_open_dispatch_no_ls(inst, net, cfg, log=log)
     if arm == "nostagger":
         return ablation_no_stagger(inst, net, cfg, log=log)
     if arm == "priced":

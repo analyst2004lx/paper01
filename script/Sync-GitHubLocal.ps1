@@ -49,6 +49,9 @@ $Config = @{
         'Thumbs.db'
         '.DS_Store'
     )
+    # Optional list file: <Ignore>...</Ignore> skip sync; <Delete>...</Delete> remove from GitHub.
+    # If a path is in both, Ignore wins. Missing paths are skipped.
+    IgnoreDeleteListFile = (Join-Path $PSScriptRoot 'Sync-GitHub-Ignore_and_Delete.txt')
     GitPath       = ''
 }
 # =============================================================
@@ -256,13 +259,71 @@ function Test-InTimeWindow {
     return ($nowMin -ge $startMin -or $nowMin -le $endMin)
 }
 
+function Normalize-RelPathEntry {
+    param([string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path)) { return $null }
+    $s = $Path.Trim().Trim('"').Replace('/', '\').TrimStart('\').TrimEnd('\')
+    if ([string]::IsNullOrWhiteSpace($s)) { return $null }
+    if ($s.StartsWith('#')) { return $null }
+    return $s
+}
+
+function Test-PathCoveredByEntry {
+    param(
+        [Parameter(Mandatory = $true)][string]$RelativePath,
+        [Parameter(Mandatory = $true)][string]$Entry
+    )
+    $norm = ($RelativePath -replace '/', '\').TrimStart('\').TrimEnd('\')
+    $ent  = Normalize-RelPathEntry $Entry
+    if ([string]::IsNullOrWhiteSpace($ent)) { return $false }
+    if ($norm -eq $ent) { return $true }
+    if ($norm.StartsWith(($ent + '\'), [StringComparison]::OrdinalIgnoreCase)) { return $true }
+    return $false
+}
+
+function Read-IgnoreDeleteList {
+    param([string]$ListFile)
+    $ignore = New-Object 'System.Collections.Generic.List[string]'
+    $delete = New-Object 'System.Collections.Generic.List[string]'
+    if ([string]::IsNullOrWhiteSpace($ListFile) -or -not (Test-Path -LiteralPath $ListFile -PathType Leaf)) {
+        return [pscustomobject]@{ Ignore = @(); Delete = @(); Loaded = $false }
+    }
+
+    # UTF-8 (with or without BOM)
+    $raw = [System.IO.File]::ReadAllText($ListFile, [System.Text.UTF8Encoding]::new($false))
+    if ($raw.Length -gt 0 -and [int][char]$raw[0] -eq 0xFEFF) { $raw = $raw.Substring(1) }
+
+    function Read-TaggedBlock([string]$Text, [string]$Tag) {
+        $out = New-Object 'System.Collections.Generic.List[string]'
+        # Tags must start a line (avoids matching mentions inside # comments).
+        $pattern = '(?ims)^\s*<{0}\s*>\s*$(.*?)^\s*</{0}\s*>\s*$' -f [regex]::Escape($Tag)
+        foreach ($m in [regex]::Matches($Text, $pattern)) {
+            $body = $m.Groups[1].Value
+            foreach ($line in ($body -split "`r?`n")) {
+                $n = Normalize-RelPathEntry $line
+                if ($null -ne $n) { [void]$out.Add($n) }
+            }
+        }
+        return @($out)
+    }
+
+    foreach ($p in @(Read-TaggedBlock $raw 'Ignore')) { [void]$ignore.Add($p) }
+    foreach ($p in @(Read-TaggedBlock $raw 'Delete')) { [void]$delete.Add($p) }
+
+    return [pscustomobject]@{
+        Ignore = @($ignore | Select-Object -Unique)
+        Delete = @($delete | Select-Object -Unique)
+        Loaded = $true
+    }
+}
+
 function Get-EffectiveIgnoreFolders {
     # Relative folder paths (Windows '\') that should be fully ignored
     $set = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
 
     foreach ($f in @($Config.IgnoreFolders)) {
         if ($null -eq $f) { continue }
-        $s = ([string]$f).Trim().Trim('"').Replace('/', '\').TrimEnd('\')
+        $s = Normalize-RelPathEntry ([string]$f)
         if (-not [string]::IsNullOrWhiteSpace($s)) { [void]$set.Add($s) }
     }
 
@@ -284,6 +345,24 @@ function Get-EffectiveIgnoreFolders {
     return @($set)
 }
 
+function Test-ListIgnoredPath {
+    param([string]$RelativePath)
+    foreach ($ent in @($script:ListIgnorePaths)) {
+        if (Test-PathCoveredByEntry -RelativePath $RelativePath -Entry $ent) { return $true }
+    }
+    return $false
+}
+
+function Test-ListDeletePath {
+    param([string]$RelativePath)
+    # Ignore wins over Delete
+    if (Test-ListIgnoredPath -RelativePath $RelativePath) { return $false }
+    foreach ($ent in @($script:ListDeletePaths)) {
+        if (Test-PathCoveredByEntry -RelativePath $RelativePath -Entry $ent) { return $true }
+    }
+    return $false
+}
+
 function Test-IgnoredPath {
     param([string]$RelativePath)
     $norm = ($RelativePath -replace '/', '\').TrimStart('\')
@@ -298,13 +377,19 @@ function Test-IgnoredPath {
 
     foreach ($ig in @($Config.IgnoreNames)) {
         if ($null -eq $ig) { continue }
-        $igNorm = ([string]$ig).Replace('/', '\').TrimEnd('\')
+        $igNorm = Normalize-RelPathEntry ([string]$ig)
         if ([string]::IsNullOrWhiteSpace($igNorm)) { continue }
         if ($norm -eq $igNorm) { return $true }
         if ($norm.StartsWith(($igNorm + '\'), [StringComparison]::OrdinalIgnoreCase)) { return $true }
         $parts = $norm.Split('\')
         if ($parts -contains $igNorm) { return $true }
     }
+
+    # From Sync-GitHub-Ignore_and_Delete.txt: Ignore entries, and Delete entries
+    # (Delete paths are excluded from pull/push so they are not re-synced after remote removal).
+    if (Test-ListIgnoredPath -RelativePath $norm) { return $true }
+    if (Test-ListDeletePath -RelativePath $norm) { return $true }
+
     return $false
 }
 
@@ -335,11 +420,31 @@ function Get-FileUnixTime {
 $script:LogDir  = $Config.LogDir
 $script:LogFile = Join-Path $Config.LogDir ('sync-{0}.log' -f (Get-Date -Format 'yyyyMMdd'))
 $script:GitExe  = $null
+$script:ListIgnorePaths = @()
+$script:ListDeletePaths = @()
 
 try {
     Write-Log '========== sync start =========='
     Write-Log ('LocalFolder: {0}' -f $Config.LocalFolder)
     Write-Log ('RepoUrl: {0}' -f $Config.RepoUrl)
+
+    $listInfo = Read-IgnoreDeleteList -ListFile $Config.IgnoreDeleteListFile
+    $script:ListIgnorePaths = @($listInfo.Ignore)
+    $script:ListDeletePaths = @($listInfo.Delete)
+    if ($listInfo.Loaded) {
+        Write-Log ('IgnoreDeleteList: {0}' -f $Config.IgnoreDeleteListFile)
+        Write-Log ('  <Ignore> entries: {0}' -f $script:ListIgnorePaths.Count)
+        if ($script:ListIgnorePaths.Count -gt 0) {
+            Write-Log (('    ' + ($script:ListIgnorePaths -join '; '))) -Level DEBUG
+        }
+        Write-Log ('  <Delete> entries: {0}' -f $script:ListDeletePaths.Count)
+        if ($script:ListDeletePaths.Count -gt 0) {
+            Write-Log (('    ' + ($script:ListDeletePaths -join '; '))) -Level DEBUG
+        }
+    } else {
+        Write-Log ('IgnoreDeleteList not found (optional): {0}' -f $Config.IgnoreDeleteListFile) -Level DEBUG
+    }
+
     Write-Log ('IgnoreFolders: {0}' -f ((@(Get-EffectiveIgnoreFolders) -join ', ')))
     Write-Log ('Force={0} WhatIf={1}' -f $Force, $WhatIf)
 
@@ -565,15 +670,65 @@ try {
     }
 
     $ls = Invoke-Git -GitArgs @('ls-tree', '-r', '--name-only', $remoteRef)
-    $remoteFiles = @()
+    $remoteFilesAll = @()
     if (-not [string]::IsNullOrWhiteSpace($ls.Output)) {
-        $remoteFiles = @(
+        $remoteFilesAll = @(
             $ls.Output -split "`r?`n" |
             ForEach-Object { ConvertFrom-GitQuotedPath $_ } |
-            Where-Object { $_ -and -not (Test-IgnoredPath $_) }
+            Where-Object { $_ }
         )
     }
-    Write-Log ('Remote file count: {0}' -f $remoteFiles.Count)
+    Write-Log ('Remote file count (raw): {0}' -f $remoteFilesAll.Count)
+
+    # Apply <Delete> list: remove matching paths from GitHub index (Ignore wins).
+    # Missing remote paths are skipped. Use --cached so a still-present local copy is kept.
+    $deleteRmCount = 0
+    $deleteSkipMissing = 0
+    if ($script:ListDeletePaths.Count -gt 0) {
+        $toRemove = New-Object 'System.Collections.Generic.List[string]'
+        foreach ($ent in @($script:ListDeletePaths)) {
+            if (Test-ListIgnoredPath -RelativePath $ent) {
+                Write-Log ('Delete skipped (also in Ignore): {0}' -f $ent) -Level DEBUG
+                continue
+            }
+            $matched = @(
+                $remoteFilesAll | Where-Object { Test-PathCoveredByEntry -RelativePath $_ -Entry $ent }
+            )
+            if ($matched.Count -eq 0) {
+                $deleteSkipMissing++
+                Write-Log ('Delete skip (not on GitHub): {0}' -f $ent) -Level DEBUG
+                continue
+            }
+            foreach ($m in $matched) {
+                if (Test-ListIgnoredPath -RelativePath $m) { continue }
+                if (-not ($toRemove -contains $m)) { [void]$toRemove.Add($m) }
+            }
+        }
+        if ($toRemove.Count -gt 0) {
+            Write-Log ('Staging GitHub deletes from list: {0} file(s)...' -f $toRemove.Count)
+            if ($WhatIf) {
+                Write-Log ('[WhatIf] would git rm --cached: {0}' -f (($toRemove | Select-Object -First 20) -join '; '))
+            } else {
+                foreach ($relDel in $toRemove) {
+                    $rm = Invoke-Git -GitArgs @('rm', '--cached', '-f', '--', $relDel) -AllowFail
+                    if ($rm.ExitCode -eq 0) {
+                        $deleteRmCount++
+                        Write-Log ('git rm --cached: {0}' -f $relDel)
+                    } else {
+                        Write-Log ('git rm failed: {0} :: {1}' -f $relDel, $rm.Output) -Level WARN
+                    }
+                }
+            }
+        } else {
+            Write-Log 'No <Delete> targets present on GitHub (nothing to remove).'
+        }
+        Write-Log ('Delete list stats: removed={0}, missingEntries={1}' -f $deleteRmCount, $deleteSkipMissing)
+    }
+
+    $remoteFiles = @(
+        $remoteFilesAll | Where-Object { $_ -and -not (Test-IgnoredPath $_) }
+    )
+    Write-Log ('Remote file count (sync): {0}' -f $remoteFiles.Count)
 
     $localFiles = New-Object 'System.Collections.Generic.List[string]'
     Get-ChildItem -LiteralPath $Config.LocalFolder -Recurse -File -Force -ErrorAction SilentlyContinue | ForEach-Object {
@@ -667,8 +822,8 @@ try {
         Write-Log 'SyncDeletions=true: full bidirectional delete is limited in this version; overwrite sync only.' -Level WARN
     }
 
-    Write-Log ('Stats: pull/overwrite={0}, pushCandidates={1}, skipped~={2}, pathErrors={3}' -f `
-        $pullCount, $pushCandidates.Count, $skipCount, $errorCount)
+    Write-Log ('Stats: pull/overwrite={0}, pushCandidates={1}, skipped~={2}, pathErrors={3}, listDeletes={4}' -f `
+        $pullCount, $pushCandidates.Count, $skipCount, $errorCount, $deleteRmCount)
 
     $pushOk = $true
     if ($pushCandidates.Count -gt 0) {

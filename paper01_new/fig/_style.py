@@ -24,6 +24,7 @@ import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.ticker as mticker  # noqa: E402
 import pandas as pd  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -57,16 +58,19 @@ plt.rcParams.update({
 
 # Order of the progressive ablation chain; every figure uses it so that the
 # reading order of the arms never changes between figures.
-ARM_ORDER = ["rule", "twostage", "nofeedback", "opendispatch", "nostagger",
-             "closed", "priced"]
+# 顺序按每次评价的成本从低到高:论文的核心观察是质量大体随成本递减,
+# 图上按成本排序才能让这件事直接被看见,而不必读者自己去对照成本表。
+ARM_ORDER = ["rule", "twostage", "opendispatch_nols", "opendispatch",
+             "nofeedback", "nostagger", "closed", "priced"]
 
 ARM_LABEL = {
     "rule": "Dispatch\nrule",
     "twostage": "Two-stage\nopen loop",
-    "nofeedback": "Evaluation\nloop only",
-    "opendispatch": "+ certificates\n(open dispatch)",
-    "nostagger": "+ closed\ndispatch",
-    "closed": "Full\n(this paper)",
+    "opendispatch_nols": "Evaluation loop\n(this paper)",
+    "opendispatch": "+ guided\nsearch",
+    "nofeedback": "+ exact\ndispatch",
+    "nostagger": "+ both, no\nstaggering",
+    "closed": "+ both\n(full loop)",
     "priced": "+ pricing\n(negative)",
 }
 
@@ -74,20 +78,22 @@ ARM_LABEL = {
 ARM_SHORT = {
     "rule": "rule",
     "twostage": "two-stage",
-    "nofeedback": "eval-only",
-    "opendispatch": "open-disp.",
-    "nostagger": "no-stagger",
-    "closed": "full",
-    "priced": "priced",
+    "opendispatch_nols": "eval. loop",
+    "opendispatch": "+ search",
+    "nofeedback": "+ dispatch",
+    "nostagger": "+ no stagger",
+    "closed": "+ full loop",
+    "priced": "+ pricing",
 }
 
 ARM_COLOR = {
     "rule": "#9e9e9e",
     "twostage": "#8c8c8c",
-    "nofeedback": "#a6cee3",
-    "opendispatch": "#6baed6",
-    "nostagger": "#3182bd",
-    "closed": "#08519c",
+    "opendispatch_nols": "#08519c",   # 主方法:最深,与消融档区分
+    "opendispatch": "#a6cee3",
+    "nofeedback": "#6baed6",
+    "nostagger": "#4292c6",
+    "closed": "#2171b5",
     "priced": "#d62728",
 }
 
@@ -137,6 +143,22 @@ def require_seeds(min_seeds=10):
         "refusing to plot: the exported data has %d seed(s), fewer than the %d "
         "the protocol requires.\n  set CLBS_FIG_DRAFT=1 to draft anyway."
         % (n, min_seeds))
+
+
+def meta_protocols():
+    """Metadata for the dual-protocol comparison (its own instance/seed scope).
+
+    The equal-generation run covers a subset of the instances of the
+    wall-clock run, so the two protocols are compared only on what they share
+    and the figure must quote that scope rather than the global one.
+    """
+    path = os.path.join(DATA, "protocols_meta.json")
+    if not os.path.exists(path):
+        raise SystemExit(
+            "missing %s; run: py -m tools.export_experiments --runs p3 "
+            "--gen-runs gen100" % path)
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
 
 
 def stars(p):
