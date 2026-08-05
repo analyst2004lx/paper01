@@ -16,6 +16,7 @@ cursor_document_conversion_request.md
 <Delete>
 # Entire obsolete figures tree under paper01_new
 paper01_new/figures
+汇报稿_应用场景介绍.files
 
 # Recently deleted unused graphics / scripts under paper01_new/fig
 paper01_new/fig/fig_comprehensive_comparison.pdf
