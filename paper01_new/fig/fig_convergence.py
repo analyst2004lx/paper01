@@ -36,7 +36,13 @@ def step_median(sub, grid):
         curves.append(np.interp(grid, s["sec"].values, s["best_makespan"].values,
                                 left=np.nan,
                                 right=s["best_makespan"].values[-1]))
-    return np.nanmedian(np.vstack(curves), axis=0)
+    stack = np.vstack(curves)
+    # 预算起点到某档第一代完成之间没有任何数据,该列整列为 NaN。直接 nanmedian
+    # 会对空切片告警,而那些时刻本就不该画线:留成 NaN 让 matplotlib 断开即可。
+    out = np.full(stack.shape[1], np.nan)
+    have = ~np.all(np.isnan(stack), axis=0)
+    out[have] = np.nanmedian(stack[:, have], axis=0)
+    return out
 
 
 def main():
