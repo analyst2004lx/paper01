@@ -14,13 +14,14 @@
 
 <Delete>
 # Entire obsolete
-paper01_new/figures
+paper01_new
 汇报稿_应用场景介绍.files
 cursor_document_conversion_request.md
 cursor_export_transaction.md
 创新方向设计方案_闭环双层框架深化.md
 汇报稿_应用场景介绍+路线考虑.docx
 汇报稿_应用场景介绍.html
+md_to_word_html.py
 
 # Recently deleted unused graphics / scripts under paper01_new/fig
 paper01_new/fig/fig_comprehensive_comparison.pdf

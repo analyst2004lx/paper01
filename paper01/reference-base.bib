@@ -1210,4 +1210,149 @@
   doi={10.1287/opre.45.1.129}
 }
 
+% ---------- FJSP WITH TRANSPORT AND CONFLICT-FREE AGV ROUTING ----------
+
+@article{bilge1995time,
+  title={A Time Window Approach to Simultaneous Scheduling of Machines and Material Handling System in an {FMS}},
+  author={Bilge, {\"U}mit and Ulusoy, G{\"u}nd{\"u}z},
+  journal={Operations Research},
+  volume={43},
+  number={6},
+  pages={1058--1070},
+  year={1995},
+  publisher={INFORMS},
+  doi={10.1287/opre.43.6.1058}
+}
+
+% The reference survey of FJSP_PT (literature through 2023). Source of the
+% quoted open problems: over-strong assumptions, operator design not derived
+% from problem features, and instances that differ only in scale.
+% Classical complexity result: J3 || Cmax is strongly NP-hard. Cited in the
+% Problem Formulation to anchor the restriction argument.
+@article{garey1976complexity,
+  title={The Complexity of Flowshop and Jobshop Scheduling},
+  author={Garey, M. R. and Johnson, D. S. and Sethi, Ravi},
+  journal={Mathematics of Operations Research},
+  volume={1},
+  number={2},
+  pages={117--129},
+  year={1976},
+  publisher={INFORMS},
+  doi={10.1287/moor.1.2.117}
+}
+
+@article{xin2025review,
+  title={A Review of Flexible Job Shop Scheduling Problems Considering Transportation Vehicles},
+  author={Xin, Bin and Lu, Sai and Wang, Qing and Deng, Fang},
+  journal={Frontiers of Information Technology \& Electronic Engineering},
+  volume={26},
+  number={3},
+  pages={332--353},
+  year={2025},
+  publisher={Zhejiang University Press},
+  doi={10.1631/FITEE.2300795}
+}
+
+% CP models for FJSP with multiple AGVs plus a CP-assisted dual-population GA;
+% closes 29 open benchmark instances. Transport time from a constant matrix.
+@article{meng2025cp,
+  title={Novel {CP} Models and {CP}-Assisted Meta-Heuristic Algorithm for Flexible Job Shop Scheduling Benchmark Problem with Multi-{AGV}},
+  author={Meng, Leilei and Cheng, Weiyao and Zhang, Chaoyong and Gao, Kaizhou and Zhang, Biao and Ren, Yaping},
+  journal={IEEE Transactions on Systems, Man, and Cybernetics: Systems},
+  volume={55},
+  number={11},
+  pages={8455--8468},
+  year={2025},
+  publisher={IEEE},
+  doi={10.1109/TSMC.2025.3604355}
+}
+
+% Exact LBBD (CP + ILP) for the CFTFJSSP: flexible machine eligibility with
+% location-dependent processing times AND conflict-free vehicle routing. Defines
+% the problem class we adopt, and supplies proven-optimal makespans on small
+% benchmark instances (Lyu et al. 2019, Liu et al. 2023 instance sets).
+@article{vanos2026exact,
+  title={An Exact Decomposition-Based Approach to the Conflict-Free-Transportation-Constrained Flexible Job-Shop Scheduling Problem},
+  author={van Os, Roel W. M. and Basten, Twan},
+  journal={Computers \& Operations Research},
+  volume={187},
+  pages={107342},
+  year={2026},
+  publisher={Elsevier},
+  doi={10.1016/j.cor.2025.107342}
+}
+
+% Two-stage scheme: hybrid GA for scheduling, then AGV-encoded GA with
+% time-window Dijkstra for conflict resolution. No feedback to stage one.
+% This is the method family that `two_stage_baseline` targets.
+@article{sun2023integrated,
+  title={An Approach to Integrated Scheduling of Flexible Job-Shop Considering Conflict-Free Routing Problems},
+  author={Sun, Jiachen and Xu, Zifeng and Yan, Zhenhao and Liu, Lilan and Zhang, Yixiang},
+  journal={Sensors},
+  volume={23},
+  number={9},
+  pages={4526},
+  year={2023},
+  publisher={MDPI},
+  doi={10.3390/s23094526}
+}
+
+% Closest competitor. Three-layer framework: RL (DQN/D3QPN) scheduling layer,
+% gantt-derived task allocation, PBS + space-time A* path layer. Source of the
+% "two-stage sequential ... one-time feedback adjustment" self-assessment quoted
+% in the introduction; VERIFY the exact wording against the published
+% limitations section before submission.
+@article{li2026framework,
+  title={A New Framework for Job Shop Integrated Scheduling and Vehicle Path Planning Problem},
+  author={Li, Ruiqi and Mao, Jianlin and Wu, Xing and Zhou, Wenna and Qian, Chengze and Du, Haoshuang},
+  journal={Sensors},
+  volume={26},
+  number={2},
+  pages={543},
+  year={2026},
+  publisher={MDPI},
+  doi={10.3390/s26020543}
+}
+
+% Congestion-aware AGV scheduling: congestion functions, congestion penalties
+% and congestion-aware dispatching rules, evaluated in a DES model. Congestion
+% is measured as local vehicle density, and it drives vehicle/task dispatching
+% only -- not machine assignment.
+@article{kim2026congestion,
+  title={Congestion-Aware Scheduling for Large Fleets of {AGVs} Using Discrete Event Simulation},
+  author={Kim, Jeonghyeon and Kim, Junwoo},
+  journal={Electronics},
+  volume={15},
+  number={1},
+  pages={139},
+  year={2026},
+  publisher={MDPI},
+  doi={10.3390/electronics15010139}
+}
+
+% Recent FJSP-AGV metaheuristic (quality-diversity + Q-learning region
+% selection, AGV/critical-path-guided local search) under a constant
+% travel-time matrix.
+@article{qin2026knowledge,
+  title={A Knowledge Region Selection Enhanced Quality-Diversity Algorithm for Real-World Flexible Job Shop Scheduling with Automated Guided Vehicles Transportation},
+  author={Qin, Haoxiang and Xiang, Yi and Han, Yuyan and Wang, Yuting and Li, Junqing and Pan, Quanke},
+  journal={Engineering Applications of Artificial Intelligence},
+  volume={164},
+  pages={113352},
+  year={2026},
+  publisher={Elsevier},
+  doi={10.1016/j.engappai.2025.113352}
+}
+
+% Lifelong MAPF with optimized guidance-graph edge weights. Important contrast
+% for our negative result on pricing: biasing routing costs DOES help when no
+% outer objective already internalizes contention.
+% TODO(pages): add IJCAI-2024 proceedings page range.
+@inproceedings{zhang2024guidance,
+  title={Guidance Graph Optimization for Lifelong Multi-Agent Path Finding},
+  author={Zhang, Yulun and Jiang, He and Bhatt, Varun and Nikolaidis, Stefanos and Li, Jiaoyang},
+  booktitle={Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence (IJCAI)},
+  year={2024}
+}
+
 % ==================== END OF REFERENCES ====================
