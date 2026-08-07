@@ -46,6 +46,7 @@ class GAConfig:
     fd_calibrate: bool = False  # 是否用有限差分定义式价格校准(代价高,报告用)
     fd_slots: int = 8         # 有限差分探测的槽位数上限
     use_conflict_ops: bool = True  # 是否启用冲突凭证制导的错峰算子
+    ls_exhaustive: bool = False  # 改派算子是否穷举全部候选(见 _reassign_neighbors)
     dispatch: str = "exact"   # 'rule' = 理想最短路估算(开环);'exact' = 预约表试探(闭环)
 
     # ---- 同算力预算(规格 8.2 协议 1) ----
@@ -185,8 +186,20 @@ def _reassign_neighbors(inst: Instance, net: Network, chrom: Chromosome,
     评分三项同为时间量纲:接近程度、加工时长、以及为进出该 RA 要买的通行权价格。
     价格项取代了原先的 lam * 累计让行等待——后者是随算例规模增长的全局量,与前两项
     量纲不符,在大算例上会支配评分。
+
+    cfg.ls_exhaustive 打开后不再只发出评分最优的那台,而是按评分把**全部**候选发出。
+    动机见 tools/regime_curve.py --attrib(约 1000 个收敛期情形):随机挑一个候选命中
+    7.0%,本函数的评分命中 9.8%,而"存在可改进候选"达 17.4%——评分只捕获了随机到
+    上限之间的四分之一,后悔口径给出同一个比例。剩下的四分之三预测不出来,只有真解码
+    才拿得到。候选按"每道工序的第 k 优"交错排列,k=0 一轮与现行算子逐个邻居完全一致,
+    其后各轮才是穷举多出来的部分——两档搜索顺序严格嵌套,同挂钟下的差异才能归因给
+    穷举本身。
+
+    实测结论是这笔钱不值得花:同挂钟 20 秒下穷举反而差 2.49%(3 胜 10 负 2 平,
+    tools/exhaustive_ab.py),因为它把代数从 53 压到 27。故默认关闭,保留开关备查。
     """
     out: List[Chromosome] = []
+    ranked: List[Tuple[OpKey, List[int]]] = []
     chain = critical_real_ops(result)
     for op in chain[: cfg.L_ls]:
         j, i = op
@@ -205,10 +218,15 @@ def _reassign_neighbors(inst: Instance, net: Network, chrom: Chromosome,
                 s += cfg.theta * prices.node_price(net, node, t_query) * approach
             return s
 
-        best_m = min(candidates, key=lambda m: (score(m), m))
-        nb = clone(chrom)
-        nb["ma"][op] = best_m  # type: ignore
-        out.append(nb)
+        order = sorted(candidates, key=lambda m: (score(m), m))
+        ranked.append((op, order if cfg.ls_exhaustive else order[:1]))
+
+    for k in range(max((len(o) for _op, o in ranked), default=0)):
+        for op, order in ranked:
+            if k < len(order):
+                nb = clone(chrom)
+                nb["ma"][op] = order[k]  # type: ignore
+                out.append(nb)
     return out
 
 

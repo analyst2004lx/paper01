@@ -1,0 +1,28 @@
+{
+ "wallclock_runs": [
+  "p3",
+  "lowmid"
+ ],
+ "generation_runs": [
+  "gen100"
+ ],
+ "instances": [
+  "S8x4x4-LD11-H0-F0.6-A4-s42",
+  "S8x4x4-LD11-H0.3-F0.6-A4-s42",
+  "S8x4x4-LD21-H0-F0.6-A4-s42",
+  "S8x4x4-LD21-H0.3-F0.6-A4-s42"
+ ],
+ "seeds": [
+  3,
+  7,
+  11,
+  19,
+  23,
+  31,
+  42,
+  47,
+  53,
+  2024
+ ],
+ "num_seeds": 10
+}
