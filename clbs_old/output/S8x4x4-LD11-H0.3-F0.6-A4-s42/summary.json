@@ -1,0 +1,184 @@
+{
+  "instance": "S8x4x4-LD11-H0.3-F0.6-A4-s42",
+  "delta_return": 1,
+  "features": {
+    "Tt_over_Tp": 0.9991,
+    "heterogeneity": 0.2879,
+    "flexibility": 0.5833,
+    "NA_over_NM": 1.0,
+    "num_jobs": 8,
+    "num_machines": 4,
+    "num_agvs": 4,
+    "num_real_ops": 24,
+    "num_nodes": 9,
+    "num_corridors": 8,
+    "funnel_share": 0.2857,
+    "lu_min_cut": 1,
+    "lu_cut_corridors": [
+      "e1|v0"
+    ],
+    "far_group_cut": 1,
+    "corridors_per_node": 0.8889
+  },
+  "ga_config": {
+    "pop": 40,
+    "max_gen": 30,
+    "stall_gen": 12,
+    "seed": 42,
+    "theta": 0.0,
+    "max_entry_options": 3,
+    "price_top_k": 24,
+    "price_refresh": 5,
+    "fd_calibrate": false,
+    "dispatch": "exact",
+    "use_conflict_ops": true
+  },
+  "results": {
+    "closed": {
+      "makespan": 80.0,
+      "runtime_sec": 11.61,
+      "valid": true,
+      "validation_errors": [],
+      "bucket_width": 7.6071,
+      "price_slots": 0,
+      "price_cost_total": 0.0,
+      "generations": 28,
+      "evaluations": 1120,
+      "convergence_history": [
+        96.0,
+        87.0,
+        87.0,
+        87.0,
+        87.0,
+        87.0,
+        87.0,
+        87.0,
+        85.0,
+        85.0,
+        85.0,
+        85.0,
+        85.0,
+        82.0,
+        82.0,
+        80.0,
+        80.0,
+        80.0,
+        80.0,
+        80.0,
+        80.0,
+        80.0,
+        80.0,
+        80.0,
+        80.0,
+        80.0,
+        80.0,
+        80.0
+      ],
+      "occupancy": {
+        "bucket_width": 7.6071,
+        "num_buckets": 11,
+        "bottleneck_corridor": "g1|h1",
+        "by_corridor": {
+          "g1|h1": {
+            "mean": 0.5019,
+            "peak": 0.8685,
+            "busy_buckets": 11
+          },
+          "g1|h2": {
+            "mean": 0.5019,
+            "peak": 0.9249,
+            "busy_buckets": 10
+          },
+          "h1|r2": {
+            "mean": 0.3824,
+            "peak": 0.8216,
+            "busy_buckets": 10
+          },
+          "h1|r1": {
+            "mean": 0.3346,
+            "peak": 0.6103,
+            "busy_buckets": 10
+          },
+          "e1|v0": {
+            "mean": 0.2868,
+            "peak": 0.5258,
+            "busy_buckets": 10
+          },
+          "e1|h1": {
+            "mean": 0.2868,
+            "peak": 0.5258,
+            "busy_buckets": 11
+          },
+          "h2|r4": {
+            "mean": 0.239,
+            "peak": 0.7136,
+            "busy_buckets": 6
+          },
+          "h2|r3": {
+            "mean": 0.239,
+            "peak": 0.6619,
+            "busy_buckets": 7
+          }
+        },
+        "hottest_slots": [
+          {
+            "corridor": "g1|h2",
+            "bucket": 4,
+            "t_from": 30.43,
+            "t_to": 38.04,
+            "util": 0.9249
+          },
+          {
+            "corridor": "g1|h1",
+            "bucket": 2,
+            "t_from": 15.21,
+            "t_to": 22.82,
+            "util": 0.8685
+          },
+          {
+            "corridor": "g1|h2",
+            "bucket": 1,
+            "t_from": 7.61,
+            "t_to": 15.21,
+            "util": 0.8404
+          },
+          {
+            "corridor": "h1|r2",
+            "bucket": 6,
+            "t_from": 45.64,
+            "t_to": 53.25,
+            "util": 0.8216
+          },
+          {
+            "corridor": "g1|h2",
+            "bucket": 2,
+            "t_from": 15.21,
+            "t_to": 22.82,
+            "util": 0.7887
+          },
+          {
+            "corridor": "g1|h1",
+            "bucket": 5,
+            "t_from": 38.04,
+            "t_to": 45.64,
+            "util": 0.7418
+          },
+          {
+            "corridor": "h1|r2",
+            "bucket": 7,
+            "t_from": 53.25,
+            "t_to": 60.86,
+            "util": 0.7371
+          },
+          {
+            "corridor": "g1|h1",
+            "bucket": 0,
+            "t_from": 0.0,
+            "t_to": 7.61,
+            "util": 0.7371
+          }
+        ]
+      }
+    }
+  }
+}

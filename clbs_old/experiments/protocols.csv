@@ -1,0 +1,11 @@
+protocol,baseline,kind,n_pairs,n_eff,baseline_mean,closed_mean,rel_gain,p_value,baseline_sec,closed_sec,baseline_evals,closed_evals
+wallclock,twostage,integration,40,38,79.625,72.475,0.08507,0.0,48.56,48.94,120117,3244
+wallclock,nofeedback,mechanism,40,37,71.5,72.475,-0.01502,0.40504,48.79,48.94,5460,3244
+wallclock,opendispatch,mechanism,40,37,72.775,72.475,0.00026,0.87989,48.65,48.94,15567,3244
+wallclock,opendispatch_nols,mechanism,40,37,71.175,72.475,-0.02008,0.14016,48.6,48.94,24708,3244
+wallclock,nostagger,mechanism,40,33,73.075,72.475,0.00599,0.41923,48.95,48.94,3523,3244
+wallclock,priced,mechanism,40,38,78.575,72.475,0.07503,0.0,50.65,48.94,685,3244
+generations,twostage,integration,40,39,82.5,71.5,0.13082,0.0,2.45,88.73,6060,6060
+generations,nofeedback,mechanism,40,35,71.4,71.5,-0.00283,0.68701,54.08,88.73,6060,6060
+generations,opendispatch,mechanism,40,37,73.975,71.5,0.02904,0.02688,19.36,88.73,6060,6060
+generations,nostagger,mechanism,40,34,72.075,71.5,0.00541,0.40451,82.6,88.73,6060,6060

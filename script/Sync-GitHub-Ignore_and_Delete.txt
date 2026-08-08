@@ -1,0 +1,55 @@
+# Sync-GitHub ignore / delete list
+# Paths are relative to the repo root (LocalFolder). Use / or \.
+# One path per line. Lines starting with # are comments.
+# Folder entries also cover all nested files/subfolders.
+#
+# Ignore block: skip sync (neither pull nor push).
+# Delete block: remove from GitHub (git rm --cached) when present on remote.
+# If a path appears in BOTH, Ignore wins (do not delete).
+# If a listed path does not exist on GitHub, skip it.
+
+<Ignore>
+
+</Ignore>
+
+<Delete>
+# Entire obsolete
+paper01_new/figures
+汇报稿_应用场景介绍.files
+cursor_document_conversion_request.md
+cursor_export_transaction.md
+创新方向设计方案_闭环双层框架深化.md
+
+# Recently deleted unused graphics / scripts under paper01_new/fig
+paper01_new/fig/fig_comprehensive_comparison.pdf
+paper01_new/fig/fig_comprehensive_comparison.py
+paper01_new/fig/fig_convergence.pdf
+paper01_new/fig/fig_convergence_time_axis.pdf
+paper01_new/fig/fig_convergence_time_axis.png
+paper01_new/fig/fig_convergence_time_axis.py
+paper01_new/fig/fig_grid_sensitivity.pdf
+paper01_new/fig/fig_grid_sensitivity.py
+paper01_new/fig/fig_hdp_arc.pdf
+paper01_new/fig/fig_hdp_architecture.pdf
+paper01_new/fig/fig_hdp_architecture.py
+paper01_new/fig/fig_hdp_architecture_new.pdf
+paper01_new/fig/fig_hdp_architecture_new.py
+paper01_new/fig/fig_hdp_methodology.py
+paper01_new/fig/fig_intro_problem.pdf
+paper01_new/fig/fig_intro_problem.py
+paper01_new/fig/fig_intro_problem_new.pdf
+paper01_new/fig/fig_intro_problem_new.py
+paper01_new/fig/fig_intro_solution.pdf
+paper01_new/fig/fig_intro_solution.py
+paper01_new/fig/fig_motivating_example.pdf
+paper01_new/fig/fig_motivating_example.py
+paper01_new/fig/fig_robustness.pdf
+paper01_new/fig/fig_robustness.py
+paper01_new/fig/fig_scalability.pdf
+paper01_new/fig/fig_scalability.py
+paper01_new/fig/fig_workspace_layout.png
+
+# Recently deleted unused scripts
+clbs/tools/_an_gen100.py
+clbs/tools/diagnose_ls.py
+</Delete>

@@ -135,7 +135,58 @@ def _grid(spec: InstanceSpec) -> Tuple[List[str], List[dict], List[str]]:
     return nodes, corridors, machine_nodes
 
 
-_LAYOUTS = {"dumbbell": _dumbbell, "grid": _grid}
+def _mesh(spec: InstanceSpec) -> Tuple[List[str], List[dict], List[str]]:
+    """错落布局:LU 置于一条边的中点,RA 用最远点采样散布到整片网格。
+
+    另两种布局都让"换一台 RA"几乎换不掉任何**会被争用**的走廊,改派算子因而
+    先天无从缓解拥堵:
+
+      dumbbell  每台 RA 由一条专属支线挂在枢纽上,而所有运输必经 LU->近端枢纽。
+                同挂一个枢纽的两台 RA 之间改派,变动的只有那条只有它自己会走的
+                支线,争用暴露分毫不变(M8 时 43% 的 RA 对如此)。
+      grid      按到 LU 的距离**降序**取点,实际把 RA 聚在远离 LU 的一角,通往
+                它们的路径共享同一段主干。
+
+    本布局改为最远点采样:每次选离已选点集(含 LU)最远的节点,使 RA 在各个方向
+    上铺开,让"换一台臂"真正对应"换一条走廊"。诊断见 tools.layout_diag。
+
+    LU 仍置于角点、网格尺寸与边权也与 grid 一致,故 grid 与 mesh 之间**只差
+    RA 选点**一个因素,两者之差可干净地归因给摆放方式。LU 出口容量是另一个旋钮
+    (哑铃布局的 lu_exits),不在此处混入。
+    """
+    rows, cols = spec.grid_rows, spec.grid_cols
+    if rows * cols < spec.num_machines + 1:
+        raise ValueError(f"网格 {rows}x{cols} 容纳不下 {spec.num_machines} 台 RA 与 LU")
+
+    def gid(r: int, c: int) -> str:
+        return f"n{r}_{c}"
+
+    coord = {gid(r, c): (r, c) for r in range(rows) for c in range(cols)}
+    corridors: List[dict] = []
+    for r in range(rows):
+        for c in range(cols):
+            if c + 1 < cols:
+                corridors.append({"u": gid(r, c), "v": gid(r, c + 1),
+                                  "time": spec.grid_time})
+            if r + 1 < rows:
+                corridors.append({"u": gid(r, c), "v": gid(r + 1, c),
+                                  "time": spec.grid_time})
+
+    lu = gid(0, 0)                               # 与 grid 对齐,保证只差 RA 选点
+    chosen: List[str] = []
+    for _ in range(spec.num_machines):
+        anchor = [lu] + chosen
+        best = max((n for n in coord if n != lu and n not in chosen),
+                   key=lambda n: (min(abs(coord[n][0] - coord[a][0])
+                                      + abs(coord[n][1] - coord[a][1])
+                                      for a in anchor), n))
+        chosen.append(best)
+
+    nodes = [lu] + [n for n in coord if n != lu]
+    return nodes, corridors, chosen
+
+
+_LAYOUTS = {"dumbbell": _dumbbell, "grid": _grid, "mesh": _mesh}
 
 
 # --------------------------------------------------------------------------
@@ -237,7 +288,7 @@ def build_instance(spec: InstanceSpec) -> dict:
     rng = random.Random(spec.seed)
 
     nodes, corridors, machine_nodes = _LAYOUTS[spec.layout](spec)
-    lu = nodes[0] if spec.layout == "grid" else "v0"
+    lu = "v0" if spec.layout == "dumbbell" else nodes[0]
     proc = gen_proc_time(spec, rng)
     _calibrate_tt_tp(proc, _mean_pairwise_travel(nodes, corridors, lu, machine_nodes),
                      spec.tt_tp_target)
@@ -285,15 +336,20 @@ def measure(data: dict) -> dict:
 # 拥堵度档位预设
 # --------------------------------------------------------------------------
 
-# 四档拥堵度。关键在于 high 与 funnel **只差 LU 出口容量**:
+# 拥堵度档位。关键在于 high 与 funnel **只差 LU 出口容量**:
 # 两者的中段争用完全相同(mid_lanes=1),但 funnel 额外把 LU 出口收成单点漏斗。
 # 若各机制只在 high 上显示增益而在 funnel 上消失,即直接证明"决策无关拥堵
 # 稀释机制信号"这一诊断(规格 3.1 实测修正)。
+#
+# 前四档存在一个盲区:mid/high/funnel 全是哑铃布局,改派换不掉争用走廊;唯一的
+# 网格布局 low 又按设计是低拥堵对照。于是"高争用"与"路径多样"在前四档里从未
+# 同时出现,而这恰是改派算子唯一可能奏效的区间。scatter 档补上这一格。
 CONGESTION_PRESETS: Dict[str, dict] = {
-    "low":    {"layout": "grid", "grid_rows": 3, "grid_cols": 3, "grid_time": 3.0},
-    "mid":    {"layout": "dumbbell", "lu_exits": 2, "mid_lanes": 2, "mid_time": 6.0},
-    "high":   {"layout": "dumbbell", "lu_exits": 2, "mid_lanes": 1, "mid_time": 6.0},
-    "funnel": {"layout": "dumbbell", "lu_exits": 1, "mid_lanes": 1, "mid_time": 6.0},
+    "low":     {"layout": "grid", "grid_rows": 3, "grid_cols": 3, "grid_time": 3.0},
+    "mid":     {"layout": "dumbbell", "lu_exits": 2, "mid_lanes": 2, "mid_time": 6.0},
+    "high":    {"layout": "dumbbell", "lu_exits": 2, "mid_lanes": 1, "mid_time": 6.0},
+    "funnel":  {"layout": "dumbbell", "lu_exits": 1, "mid_lanes": 1, "mid_time": 6.0},
+    "scatter": {"layout": "mesh", "grid_rows": 4, "grid_cols": 4, "grid_time": 3.0},
 }
 
 

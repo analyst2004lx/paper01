@@ -49,7 +49,14 @@ $Config = @{
         'Thumbs.db'
         '.DS_Store'
     )
+    # Optional list file: <Ignore>...</Ignore> skip sync; <Delete>...</Delete> remove from GitHub.
+    # If a path is in both, Ignore wins. Missing paths are skipped.
+    IgnoreDeleteListFile = (Join-Path $PSScriptRoot 'Sync-GitHub-Ignore_and_Delete.txt')
     GitPath       = ''
+    # GitHub fetch often stalls on flaky links: retry + hard timeout (seconds)
+    FetchRetries     = 5
+    FetchRetrySec    = 6
+    FetchTimeoutSec  = 90
 }
 # =============================================================
 
@@ -142,7 +149,9 @@ function Invoke-Git {
         [switch]$AllowFail,
         [switch]$WithCommitIdentity,
         # Print "still running" every N seconds (0 = silent wait)
-        [int]$HeartbeatSec = 15
+        [int]$HeartbeatSec = 15,
+        # Kill git if it exceeds this many seconds (0 = wait forever)
+        [int]$TimeoutSec = 0
     )
     $git = $script:GitExe
 
@@ -156,20 +165,17 @@ function Invoke-Git {
     $cmdLabel = ($GitArgs -join ' ')
     Write-Log ('git {0}  (cwd={1})' -f $cmdLabel, $WorkDir) -Level DEBUG
 
-    # UTF-8 capture via temp files + heartbeat (avoids stdout/stderr pipe deadlock)
-    $outFile = [System.IO.Path]::GetTempFileName()
-    $errFile = [System.IO.Path]::GetTempFileName()
     $argList = @()
     foreach ($a in $allArgs) { $argList += [string]$a }
 
     $code = 1
     $stdout = ''
     $stderr = ''
+    $timedOut = $false
     $proc = $null
     try {
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = $git
-        # ArgumentList not available on older ProcessStartInfo in all hosts; build safely
         $psi.Arguments = (($argList | ForEach-Object {
             $a = $_
             if ($a -match '[\s"]') { '"' + ($a -replace '"', '\"') + '"' } else { $a }
@@ -194,15 +200,38 @@ function Invoke-Git {
         $lastBeat = 0
         while (-not $proc.HasExited) {
             Start-Sleep -Milliseconds 500
+            if ($TimeoutSec -gt 0 -and $sw.Elapsed.TotalSeconds -ge $TimeoutSec) {
+                $timedOut = $true
+                Write-Log ('TIMEOUT after {0}s — killing git: {1}' -f $TimeoutSec, $cmdLabel) -Level WARN
+                try { $proc.Kill() } catch {}
+                # Also kill helper (git-remote-https) that may keep the pack download hung
+                Get-Process -Name 'git-remote-https','git' -ErrorAction SilentlyContinue |
+                    Where-Object { $_.Id -ne $PID } |
+                    ForEach-Object {
+                        try {
+                            # Only kill children started around this command window
+                            if ($_.StartTime -ge $sw.StartTime.AddSeconds(-2)) {
+                                Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+                            }
+                        } catch {}
+                    }
+                break
+            }
             if ($HeartbeatSec -gt 0 -and $sw.Elapsed.TotalSeconds -ge ($lastBeat + $HeartbeatSec)) {
                 $lastBeat = [int]$sw.Elapsed.TotalSeconds
                 Write-Log ('... git still running ({0}s): {1}' -f $lastBeat, $cmdLabel) -Level INFO
             }
         }
-        # Ensure async readers finish
-        $stdout = $outTask.Result
-        $stderr = $errTask.Result
-        $code = $proc.ExitCode
+        try { $stdout = $outTask.Result } catch { $stdout = '' }
+        try { $stderr = $errTask.Result } catch { $stderr = '' }
+        if ($timedOut) {
+            $code = 124
+            if ([string]::IsNullOrWhiteSpace($stderr)) {
+                $stderr = ("Timed out after {0}s (likely stalled GitHub download)." -f $TimeoutSec)
+            }
+        } else {
+            $code = $proc.ExitCode
+        }
         if ($sw.Elapsed.TotalSeconds -ge 3) {
             Write-Log ('git finished in {0:N1}s (exit={1}): {2}' -f $sw.Elapsed.TotalSeconds, $code, $cmdLabel) -Level DEBUG
         }
@@ -211,7 +240,6 @@ function Invoke-Git {
         $stderr = $_.Exception.Message
     } finally {
         if ($null -ne $proc) { $proc.Dispose() }
-        Remove-Item -LiteralPath $outFile, $errFile -Force -ErrorAction SilentlyContinue
     }
 
     $parts = @()
@@ -256,13 +284,71 @@ function Test-InTimeWindow {
     return ($nowMin -ge $startMin -or $nowMin -le $endMin)
 }
 
+function Normalize-RelPathEntry {
+    param([string]$Path)
+    if ([string]::IsNullOrWhiteSpace($Path)) { return $null }
+    $s = $Path.Trim().Trim('"').Replace('/', '\').TrimStart('\').TrimEnd('\')
+    if ([string]::IsNullOrWhiteSpace($s)) { return $null }
+    if ($s.StartsWith('#')) { return $null }
+    return $s
+}
+
+function Test-PathCoveredByEntry {
+    param(
+        [Parameter(Mandatory = $true)][string]$RelativePath,
+        [Parameter(Mandatory = $true)][string]$Entry
+    )
+    $norm = ($RelativePath -replace '/', '\').TrimStart('\').TrimEnd('\')
+    $ent  = Normalize-RelPathEntry $Entry
+    if ([string]::IsNullOrWhiteSpace($ent)) { return $false }
+    if ($norm -eq $ent) { return $true }
+    if ($norm.StartsWith(($ent + '\'), [StringComparison]::OrdinalIgnoreCase)) { return $true }
+    return $false
+}
+
+function Read-IgnoreDeleteList {
+    param([string]$ListFile)
+    $ignore = New-Object 'System.Collections.Generic.List[string]'
+    $delete = New-Object 'System.Collections.Generic.List[string]'
+    if ([string]::IsNullOrWhiteSpace($ListFile) -or -not (Test-Path -LiteralPath $ListFile -PathType Leaf)) {
+        return [pscustomobject]@{ Ignore = @(); Delete = @(); Loaded = $false }
+    }
+
+    # UTF-8 (with or without BOM)
+    $raw = [System.IO.File]::ReadAllText($ListFile, [System.Text.UTF8Encoding]::new($false))
+    if ($raw.Length -gt 0 -and [int][char]$raw[0] -eq 0xFEFF) { $raw = $raw.Substring(1) }
+
+    function Read-TaggedBlock([string]$Text, [string]$Tag) {
+        $out = New-Object 'System.Collections.Generic.List[string]'
+        # Tags must start a line (avoids matching mentions inside # comments).
+        $pattern = '(?ims)^\s*<{0}\s*>\s*$(.*?)^\s*</{0}\s*>\s*$' -f [regex]::Escape($Tag)
+        foreach ($m in [regex]::Matches($Text, $pattern)) {
+            $body = $m.Groups[1].Value
+            foreach ($line in ($body -split "`r?`n")) {
+                $n = Normalize-RelPathEntry $line
+                if ($null -ne $n) { [void]$out.Add($n) }
+            }
+        }
+        return @($out)
+    }
+
+    foreach ($p in @(Read-TaggedBlock $raw 'Ignore')) { [void]$ignore.Add($p) }
+    foreach ($p in @(Read-TaggedBlock $raw 'Delete')) { [void]$delete.Add($p) }
+
+    return [pscustomobject]@{
+        Ignore = @($ignore | Select-Object -Unique)
+        Delete = @($delete | Select-Object -Unique)
+        Loaded = $true
+    }
+}
+
 function Get-EffectiveIgnoreFolders {
     # Relative folder paths (Windows '\') that should be fully ignored
     $set = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::OrdinalIgnoreCase)
 
     foreach ($f in @($Config.IgnoreFolders)) {
         if ($null -eq $f) { continue }
-        $s = ([string]$f).Trim().Trim('"').Replace('/', '\').TrimEnd('\')
+        $s = Normalize-RelPathEntry ([string]$f)
         if (-not [string]::IsNullOrWhiteSpace($s)) { [void]$set.Add($s) }
     }
 
@@ -284,6 +370,24 @@ function Get-EffectiveIgnoreFolders {
     return @($set)
 }
 
+function Test-ListIgnoredPath {
+    param([string]$RelativePath)
+    foreach ($ent in @($script:ListIgnorePaths)) {
+        if (Test-PathCoveredByEntry -RelativePath $RelativePath -Entry $ent) { return $true }
+    }
+    return $false
+}
+
+function Test-ListDeletePath {
+    param([string]$RelativePath)
+    # Ignore wins over Delete
+    if (Test-ListIgnoredPath -RelativePath $RelativePath) { return $false }
+    foreach ($ent in @($script:ListDeletePaths)) {
+        if (Test-PathCoveredByEntry -RelativePath $RelativePath -Entry $ent) { return $true }
+    }
+    return $false
+}
+
 function Test-IgnoredPath {
     param([string]$RelativePath)
     $norm = ($RelativePath -replace '/', '\').TrimStart('\')
@@ -298,13 +402,19 @@ function Test-IgnoredPath {
 
     foreach ($ig in @($Config.IgnoreNames)) {
         if ($null -eq $ig) { continue }
-        $igNorm = ([string]$ig).Replace('/', '\').TrimEnd('\')
+        $igNorm = Normalize-RelPathEntry ([string]$ig)
         if ([string]::IsNullOrWhiteSpace($igNorm)) { continue }
         if ($norm -eq $igNorm) { return $true }
         if ($norm.StartsWith(($igNorm + '\'), [StringComparison]::OrdinalIgnoreCase)) { return $true }
         $parts = $norm.Split('\')
         if ($parts -contains $igNorm) { return $true }
     }
+
+    # From Sync-GitHub-Ignore_and_Delete.txt: Ignore entries, and Delete entries
+    # (Delete paths are excluded from pull/push so they are not re-synced after remote removal).
+    if (Test-ListIgnoredPath -RelativePath $norm) { return $true }
+    if (Test-ListDeletePath -RelativePath $norm) { return $true }
+
     return $false
 }
 
@@ -335,11 +445,31 @@ function Get-FileUnixTime {
 $script:LogDir  = $Config.LogDir
 $script:LogFile = Join-Path $Config.LogDir ('sync-{0}.log' -f (Get-Date -Format 'yyyyMMdd'))
 $script:GitExe  = $null
+$script:ListIgnorePaths = @()
+$script:ListDeletePaths = @()
 
 try {
     Write-Log '========== sync start =========='
     Write-Log ('LocalFolder: {0}' -f $Config.LocalFolder)
     Write-Log ('RepoUrl: {0}' -f $Config.RepoUrl)
+
+    $listInfo = Read-IgnoreDeleteList -ListFile $Config.IgnoreDeleteListFile
+    $script:ListIgnorePaths = @($listInfo.Ignore)
+    $script:ListDeletePaths = @($listInfo.Delete)
+    if ($listInfo.Loaded) {
+        Write-Log ('IgnoreDeleteList: {0}' -f $Config.IgnoreDeleteListFile)
+        Write-Log ('  <Ignore> entries: {0}' -f $script:ListIgnorePaths.Count)
+        if ($script:ListIgnorePaths.Count -gt 0) {
+            Write-Log (('    ' + ($script:ListIgnorePaths -join '; '))) -Level DEBUG
+        }
+        Write-Log ('  <Delete> entries: {0}' -f $script:ListDeletePaths.Count)
+        if ($script:ListDeletePaths.Count -gt 0) {
+            Write-Log (('    ' + ($script:ListDeletePaths -join '; '))) -Level DEBUG
+        }
+    } else {
+        Write-Log ('IgnoreDeleteList not found (optional): {0}' -f $Config.IgnoreDeleteListFile) -Level DEBUG
+    }
+
     Write-Log ('IgnoreFolders: {0}' -f ((@(Get-EffectiveIgnoreFolders) -join ', ')))
     Write-Log ('Force={0} WhatIf={1}' -f $Force, $WhatIf)
 
@@ -471,10 +601,44 @@ try {
     }
 
     Write-Log 'fetch origin...'
-    $fetch = Invoke-Git -GitArgs @('fetch', 'origin', '--prune') -AllowFail
-    if ($fetch.ExitCode -ne 0) {
-        Write-Log ('fetch failed. Check network/credentials.{0}{1}' -f [Environment]::NewLine, $fetch.Output) -Level ERROR
-        Write-Log 'Hints: 1) Open WireGuard/VPN then retry  2) Browser open github.com  3) Test: git ls-remote origin  4) Configure git http.proxy if needed' -Level ERROR
+    # HTTP/1.1 + larger buffer helps when HTTPS pack download stalls mid-way
+    $httpHardening = @(
+        '-c', 'http.version=HTTP/1.1'
+        '-c', 'http.postBuffer=524288000'
+        '-c', 'http.lowSpeedLimit=1000'
+        '-c', 'http.lowSpeedTime=60'
+    )
+    $fetchOk = $false
+    $fetch = $null
+    $maxTry = [Math]::Max(1, [int]$Config.FetchRetries)
+    $fetchTimeout = [Math]::Max(30, [int]$Config.FetchTimeoutSec)
+    for ($i = 1; $i -le $maxTry; $i++) {
+        Write-Log ('fetch attempt {0}/{1} (timeout={2}s)...' -f $i, $maxTry, $fetchTimeout)
+        if ($i -le 2) {
+            $fetchArgs = $httpHardening + @('fetch', 'origin', '--prune')
+        } else {
+            Write-Log 'Using shallow fetch fallback (depth=1; smaller download)...' -Level WARN
+            $fetchArgs = $httpHardening + @('fetch', 'origin', '--prune', '--depth', '1')
+        }
+        $fetch = Invoke-Git -GitArgs $fetchArgs -AllowFail -HeartbeatSec 15 -TimeoutSec $fetchTimeout
+        if ($fetch.ExitCode -eq 0) {
+            $fetchOk = $true
+            Write-Log ('fetch ok on attempt {0}' -f $i)
+            break
+        }
+        Write-Log ('fetch attempt {0} failed (exit={1}): {2}' -f $i, $fetch.ExitCode, $fetch.Output) -Level WARN
+        # Clear locks left by killed/stalled fetch
+        Clear-StaleGitLocks -RepoRoot $Config.LocalFolder -MinAgeSec 0
+        if ($i -lt $maxTry) {
+            $wait = [int]$Config.FetchRetrySec * $i
+            Write-Log ('Wait {0}s then retry (WireGuard/VPN recommended)...' -f $wait) -Level WARN
+            Start-Sleep -Seconds $wait
+        }
+    }
+    if (-not $fetchOk) {
+        Write-Log ('fetch failed after {0} attempts.{1}{2}' -f $maxTry, [Environment]::NewLine, $fetch.Output) -Level ERROR
+        Write-Log 'This usually means GitHub pack download stalled (not a script logic bug).' -Level ERROR
+        Write-Log 'Hints: 1) Connect WireGuard/VPN  2) Open https://github.com  3) git -c http.version=HTTP/1.1 ls-remote origin  4) Retry later' -Level ERROR
         exit 2
     }
 
@@ -565,15 +729,65 @@ try {
     }
 
     $ls = Invoke-Git -GitArgs @('ls-tree', '-r', '--name-only', $remoteRef)
-    $remoteFiles = @()
+    $remoteFilesAll = @()
     if (-not [string]::IsNullOrWhiteSpace($ls.Output)) {
-        $remoteFiles = @(
+        $remoteFilesAll = @(
             $ls.Output -split "`r?`n" |
             ForEach-Object { ConvertFrom-GitQuotedPath $_ } |
-            Where-Object { $_ -and -not (Test-IgnoredPath $_) }
+            Where-Object { $_ }
         )
     }
-    Write-Log ('Remote file count: {0}' -f $remoteFiles.Count)
+    Write-Log ('Remote file count (raw): {0}' -f $remoteFilesAll.Count)
+
+    # Apply <Delete> list: remove matching paths from GitHub index (Ignore wins).
+    # Missing remote paths are skipped. Use --cached so a still-present local copy is kept.
+    $deleteRmCount = 0
+    $deleteSkipMissing = 0
+    if ($script:ListDeletePaths.Count -gt 0) {
+        $toRemove = New-Object 'System.Collections.Generic.List[string]'
+        foreach ($ent in @($script:ListDeletePaths)) {
+            if (Test-ListIgnoredPath -RelativePath $ent) {
+                Write-Log ('Delete skipped (also in Ignore): {0}' -f $ent) -Level DEBUG
+                continue
+            }
+            $matched = @(
+                $remoteFilesAll | Where-Object { Test-PathCoveredByEntry -RelativePath $_ -Entry $ent }
+            )
+            if ($matched.Count -eq 0) {
+                $deleteSkipMissing++
+                Write-Log ('Delete skip (not on GitHub): {0}' -f $ent) -Level DEBUG
+                continue
+            }
+            foreach ($m in $matched) {
+                if (Test-ListIgnoredPath -RelativePath $m) { continue }
+                if (-not ($toRemove -contains $m)) { [void]$toRemove.Add($m) }
+            }
+        }
+        if ($toRemove.Count -gt 0) {
+            Write-Log ('Staging GitHub deletes from list: {0} file(s)...' -f $toRemove.Count)
+            if ($WhatIf) {
+                Write-Log ('[WhatIf] would git rm --cached: {0}' -f (($toRemove | Select-Object -First 20) -join '; '))
+            } else {
+                foreach ($relDel in $toRemove) {
+                    $rm = Invoke-Git -GitArgs @('rm', '--cached', '-f', '--', $relDel) -AllowFail
+                    if ($rm.ExitCode -eq 0) {
+                        $deleteRmCount++
+                        Write-Log ('git rm --cached: {0}' -f $relDel)
+                    } else {
+                        Write-Log ('git rm failed: {0} :: {1}' -f $relDel, $rm.Output) -Level WARN
+                    }
+                }
+            }
+        } else {
+            Write-Log 'No <Delete> targets present on GitHub (nothing to remove).'
+        }
+        Write-Log ('Delete list stats: removed={0}, missingEntries={1}' -f $deleteRmCount, $deleteSkipMissing)
+    }
+
+    $remoteFiles = @(
+        $remoteFilesAll | Where-Object { $_ -and -not (Test-IgnoredPath $_) }
+    )
+    Write-Log ('Remote file count (sync): {0}' -f $remoteFiles.Count)
 
     $localFiles = New-Object 'System.Collections.Generic.List[string]'
     Get-ChildItem -LiteralPath $Config.LocalFolder -Recurse -File -Force -ErrorAction SilentlyContinue | ForEach-Object {
@@ -667,8 +881,8 @@ try {
         Write-Log 'SyncDeletions=true: full bidirectional delete is limited in this version; overwrite sync only.' -Level WARN
     }
 
-    Write-Log ('Stats: pull/overwrite={0}, pushCandidates={1}, skipped~={2}, pathErrors={3}' -f `
-        $pullCount, $pushCandidates.Count, $skipCount, $errorCount)
+    Write-Log ('Stats: pull/overwrite={0}, pushCandidates={1}, skipped~={2}, pathErrors={3}, listDeletes={4}' -f `
+        $pullCount, $pushCandidates.Count, $skipCount, $errorCount, $deleteRmCount)
 
     $pushOk = $true
     if ($pushCandidates.Count -gt 0) {
