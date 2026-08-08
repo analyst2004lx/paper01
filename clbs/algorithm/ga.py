@@ -46,6 +46,7 @@ class GAConfig:
     fd_calibrate: bool = False  # 是否用有限差分定义式价格校准(代价高,报告用)
     fd_slots: int = 8         # 有限差分探测的槽位数上限
     use_conflict_ops: bool = True  # 是否启用冲突凭证制导的错峰算子
+    ls_exhaustive: bool = False  # 改派算子是否穷举全部候选(见 _reassign_neighbors)
     dispatch: str = "exact"   # 'rule' = 理想最短路估算(开环);'exact' = 预约表试探(闭环)
 
     # ---- 同算力预算(规格 8.2 协议 1) ----
@@ -185,8 +186,20 @@ def _reassign_neighbors(inst: Instance, net: Network, chrom: Chromosome,
     评分三项同为时间量纲:接近程度、加工时长、以及为进出该 RA 要买的通行权价格。
     价格项取代了原先的 lam * 累计让行等待——后者是随算例规模增长的全局量,与前两项
     量纲不符,在大算例上会支配评分。
+
+    cfg.ls_exhaustive 打开后不再只发出评分最优的那台,而是按评分把**全部**候选发出。
+    动机见 tools/regime_curve.py --attrib(约 1000 个收敛期情形):随机挑一个候选命中
+    7.0%,本函数的评分命中 9.8%,而"存在可改进候选"达 17.4%——评分只捕获了随机到
+    上限之间的四分之一,后悔口径给出同一个比例。剩下的四分之三预测不出来,只有真解码
+    才拿得到。候选按"每道工序的第 k 优"交错排列,k=0 一轮与现行算子逐个邻居完全一致,
+    其后各轮才是穷举多出来的部分——两档搜索顺序严格嵌套,同挂钟下的差异才能归因给
+    穷举本身。
+
+    实测结论是这笔钱不值得花:同挂钟 20 秒下穷举反而差 2.49%(3 胜 10 负 2 平,
+    tools/exhaustive_ab.py),因为它把代数从 53 压到 27。故默认关闭,保留开关备查。
     """
     out: List[Chromosome] = []
+    ranked: List[Tuple[OpKey, List[int]]] = []
     chain = critical_real_ops(result)
     for op in chain[: cfg.L_ls]:
         j, i = op
@@ -205,10 +218,15 @@ def _reassign_neighbors(inst: Instance, net: Network, chrom: Chromosome,
                 s += cfg.theta * prices.node_price(net, node, t_query) * approach
             return s
 
-        best_m = min(candidates, key=lambda m: (score(m), m))
-        nb = clone(chrom)
-        nb["ma"][op] = best_m  # type: ignore
-        out.append(nb)
+        order = sorted(candidates, key=lambda m: (score(m), m))
+        ranked.append((op, order if cfg.ls_exhaustive else order[:1]))
+
+    for k in range(max((len(o) for _op, o in ranked), default=0)):
+        for op, order in ranked:
+            if k < len(order):
+                nb = clone(chrom)
+                nb["ma"][op] = order[k]  # type: ignore
+                out.append(nb)
     return out
 
 
@@ -254,25 +272,45 @@ def _stagger_neighbors(inst: Instance, chrom: Chromosome, result: DecodeResult,
 def local_search(inst: Instance, net: Network, chrom: Chromosome,
                  result: DecodeResult, cfg: GAConfig,
                  conflict_free: bool,
-                 prices: Optional[PriceTable] = None) -> Tuple[Chromosome, DecodeResult]:
+                 prices: Optional[PriceTable] = None
+                 ) -> Tuple[Chromosome, DecodeResult, Dict[str, int]]:
+    """返回 (个体, 解码结果, 本次的算子统计)。
+
+    统计不是可有可无的装饰。其一,每个邻居都要走一遍完整的下层路由,代价与一次
+    种群评价同量级:不把它计入算力,同挂钟比较就会把"局部搜索偷跑的解码"记成免费,
+    从而高估决策级闭环(规格 8.2 协议 1)。其二,两族算子按"生成数/命中数"分开记账,
+    才能回答"凭证到底有没有带来信号"——若错峰族极少被触发或极少命中,那么所谓
+    冲突制导实际上退化成了普通的关键路径改派。
+    """
     bw = prices.bucket_width if prices is not None else 0.0
+    st = {"decodes": 0, "rounds": 0, "chain_corridor": 0,
+          "reassign_tried": 0, "reassign_hit": 0,
+          "stagger_tried": 0, "stagger_hit": 0}
     for _ in range(cfg.ls_rounds):
+        st["rounds"] += 1
         improved = False
-        neighbors = (_reassign_neighbors(inst, net, chrom, result, cfg, prices)
-                     + _stagger_neighbors(inst, chrom, result, cfg))
-        for nb in neighbors:
+        reassign = _reassign_neighbors(inst, net, chrom, result, cfg, prices)
+        stagger = _stagger_neighbors(inst, chrom, result, cfg)
+        if stagger:
+            st["chain_corridor"] += 1
+        neighbors = ([("reassign", nb) for nb in reassign]
+                     + [("stagger", nb) for nb in stagger])
+        for family, nb in neighbors:
             res2 = decode(inst, net, nb["ma"], nb["os"],  # type: ignore
                           conflict_free=conflict_free, prices=prices,
                           theta=cfg.theta, bucket_width=bw,
                           max_entry_options=cfg.max_entry_options,
                           dispatch=cfg.dispatch)
+            st["decodes"] += 1
+            st[family + "_tried"] += 1
             if res2.makespan < result.makespan - 1e-9:
                 chrom, result = nb, res2
+                st[family + "_hit"] += 1
                 improved = True
                 break              # 首改进:重新提取关键链
         if not improved:
             break
-    return chrom, result
+    return chrom, result, st
 
 
 # ---------------- 主循环 ----------------
@@ -324,6 +362,8 @@ def run_ga(inst: Instance, net: Network, cfg: GAConfig,
     refresh_prices(best_chrom, best_result)
     stall = 0
     n_eval = len(population)
+    n_ls_eval = 0
+    ls_stats: Dict[str, int] = {}
     stopped_by = "max_gen"
 
     for gen in range(1, cfg.max_gen + 1):
@@ -333,8 +373,11 @@ def run_ga(inst: Instance, net: Network, cfg: GAConfig,
         if use_ls:
             n_ls = max(1, math.ceil(cfg.top_ls * cfg.pop))
             for idx in order[:n_ls]:
-                ch2, res2 = local_search(inst, net, population[idx], results[idx],
-                                         cfg, conflict_free, prices)
+                ch2, res2, st = local_search(inst, net, population[idx], results[idx],
+                                             cfg, conflict_free, prices)
+                n_ls_eval += st["decodes"]
+                for k, v in st.items():
+                    ls_stats[k] = ls_stats.get(k, 0) + v
                 if res2.makespan < results[idx].makespan - 1e-9:
                     population[idx], results[idx] = ch2, res2
             order = sorted(range(len(population)), key=lambda x: results[x].makespan)
@@ -393,6 +436,10 @@ def run_ga(inst: Instance, net: Network, cfg: GAConfig,
         "history_sec": history_sec,
         "generations": len(history),
         "evaluations": n_eval,
+        "ls_evaluations": n_ls_eval,
+        # 真实算力口径:种群评价 + 局部搜索邻居,两者都是一次完整的下层路由
+        "decodes": n_eval + n_ls_eval,
+        "ls_stats": ls_stats,
         "stopped_by": stopped_by,
         "runtime_sec": round(time.time() - t_start, 2),
         "config": asdict(cfg),
