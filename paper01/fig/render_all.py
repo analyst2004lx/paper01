@@ -27,6 +27,8 @@ JOBS = [
     ("fig_convergence.py", "fig_convergence_closedloop",
      ["ladder_convergence.csv", "ladder_cost.csv"]),
     ("fig_protocol.py", "fig_protocol", ["ladder_cost.csv"]),
+    ("fig_protocols.py", "fig_protocols", []),  # reads clbs/experiments/protocols.csv
+    ("fig_theta.py", "fig_theta", []),          # reads theta_sweep CSVs under experiments/
     ("fig_case_gantt.py", "fig_case_gantt", ["case_study"]),
     ("fig_case_chain.py", "fig_case_chain", ["case_study"]),
 ]
