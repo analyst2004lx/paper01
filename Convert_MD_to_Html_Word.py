@@ -1,8 +1,8 @@
 """把汇报稿 Markdown 转成 Word 可直接打开的 HTML。
 
 用法:
-    py md_to_word_html.py                          # 默认转换同目录 汇报稿_应用场景介绍.md
-    py md_to_word_html.py 汇报稿_应用场景介绍.md
+    py Convert_MD_to_Html_Word.py                          # 默认转换同目录 汇报稿_应用场景介绍.md
+    py Convert_MD_to_Html_Word.py 汇报稿_应用场景介绍.md
 
 生成同名 .html 文件。用 Word 打开该文件,再"另存为"→"Word 文档(*.docx)"即可。
 正文用宋体、字符图用新宋体(NSimSun,中文全角/英文半角等宽,能保持 ASCII 图对齐)。

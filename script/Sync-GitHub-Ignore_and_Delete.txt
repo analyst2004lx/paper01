@@ -22,8 +22,7 @@ cursor_export_transaction.md
 汇报稿_应用场景介绍+路线考虑.docx
 汇报稿_应用场景介绍.html
 md_to_word_html.py
-paper04
-paper04/figures
+Convert_MD_to_Html(open_and_save_in_Word).py
 
 # Recently deleted unused graphics / scripts under paper01_new/fig
 paper01_new/fig/fig_comprehensive_comparison.pdf
