@@ -17,6 +17,8 @@ Data contract (see clbs/experiments/):
 """
 from __future__ import annotations
 
+import collections
+import csv
 import json
 import os
 
@@ -25,10 +27,13 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import matplotlib.ticker as mticker  # noqa: E402
-import pandas as pd  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.abspath(os.path.join(HERE, "..", "..", "clbs", "experiments"))
+# The ladder batch writes here directly, without going through the older
+# export step; these CSVs are read with the stdlib so that a machine carrying
+# only matplotlib can still draw the figures.
+OUTPUT = os.path.abspath(os.path.join(HERE, "..", "..", "clbs", "output"))
 
 # ACM two-column: a single column is about 3.33in, the full width about 7.0in.
 COL = 3.33
@@ -111,13 +116,78 @@ BASELINE_LABEL = {
 
 
 def load(name):
-    """Read one of the exported CSVs, failing loudly if it is absent."""
+    """Read one of the exported CSVs, failing loudly if it is absent.
+
+    pandas is imported here rather than at module scope so that the figures
+    which only need the stdlib reader below can be drawn on a machine that has
+    matplotlib but no scientific stack.
+    """
+    import pandas as pd
+
     path = os.path.join(DATA, name)
     if not os.path.exists(path):
         raise SystemExit(
             "missing %s\n  run:  py -m tools.export_experiments --runs p3\n"
             "  (from the clbs/ directory)" % path)
     return pd.read_csv(path)
+
+
+def load_output(name, hint=""):
+    """Read a CSV written directly by the ladder tools, as a list of dicts.
+
+    Numeric-looking fields are converted; everything else stays a string.  The
+    error message names the tool that produces the file, because the usual way
+    to hit it is to draw a figure before its experiment has finished.
+    """
+    path = os.path.join(OUTPUT, name)
+    if not os.path.exists(path):
+        raise SystemExit("缺少 %s\n  在 clbs/ 目录下运行:%s" % (path, hint))
+    rows = []
+    with open(path, encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            out = {}
+            for k, v in r.items():
+                if v is None or v == "":
+                    out[k] = None
+                    continue
+                try:
+                    out[k] = float(v) if ("." in v or "e" in v.lower()) else int(v)
+                except ValueError:
+                    out[k] = v
+            rows.append(out)
+    if not rows:
+        raise SystemExit("%s 是空的,不画图" % path)
+    return rows
+
+
+def by(rows, *keys):
+    """Group rows by a tuple of column values, preserving insertion order."""
+    out = collections.OrderedDict()
+    for r in rows:
+        out.setdefault(tuple(r[k] for k in keys), []).append(r)
+    return out
+
+
+def mean(xs):
+    xs = [x for x in xs if x is not None]
+    return sum(xs) / len(xs) if xs else float("nan")
+
+
+# ---- the four ladder arms -------------------------------------------------
+# One vocabulary for every ladder figure: the 2x2 factorial read row-major, so
+# that colour carries "closed loop or not" and lightness carries the dispatch
+# rule.  Keeping this in one place is what stops figure 3 and figure 7 from
+# disagreeing about which blue is B1.
+LADDER = ["B0", "B0+", "B1", "B2"]
+LADDER_LABEL = {
+    "B0": "B0\nopen loop,\nrule dispatch",
+    "B0+": "B0$^+$\nopen loop,\nprobing dispatch",
+    "B1": "B1\nclosed loop,\nrule dispatch",
+    "B2": "B2 (proposed)\nclosed loop,\nprobing dispatch",
+}
+LADDER_SHORT = {"B0": "B0", "B0+": "B0$^+$", "B1": "B1", "B2": "B2"}
+LADDER_COLOR = {"B0": "#bdbdbd", "B0+": "#737373",
+                "B1": "#6baed6", "B2": "#08519c"}
 
 
 def meta():
@@ -163,7 +233,7 @@ def meta_protocols():
 
 def stars(p):
     """Significance markers; blank when the test could not reject anything."""
-    if p is None or pd.isna(p):
+    if p is None or p != p:          # NaN compares unequal to itself
         return ""
     if p < 0.001:
         return "***"
@@ -174,15 +244,36 @@ def stars(p):
     return ""
 
 
+_DRAFT_REASONS = []
+
+
+def mark_draft(reason):
+    """Record that this figure is not publication-ready, and why.
+
+    The env-var switch below relies on whoever runs the script remembering to
+    set it; this one does not, because the script checks its own input.  A
+    figure built from an under-powered run is the single easiest thing to leave
+    in a manuscript by accident, so the guard is on by default and the reason
+    is stamped on the artwork where a reader cannot miss it.
+    """
+    _DRAFT_REASONS.append(str(reason))
+
+
 def save(fig, stem):
     # A figure drawn from an under-powered run must never be mistaken for a
-    # final one, so draft mode stamps the seed count across the artwork itself
+    # final one, so draft mode stamps the reason across the artwork itself
     # rather than relying on anyone remembering to regenerate it.
-    if os.environ.get("CLBS_FIG_DRAFT") == "1":
-        n = meta().get("num_seeds", "?")
-        fig.text(0.5, 0.5, "DRAFT  %s seed(s)" % n, transform=fig.transFigure,
-                 fontsize=26, color="red", alpha=0.16, ha="center",
-                 va="center", rotation=22, zorder=100, fontweight="bold")
+    reasons = list(_DRAFT_REASONS)
+    # CLBS_FIG_DRAFT only unlocks require_seeds(); the watermark itself must
+    # come from mark_draft() with a reason taken from *this* figure's input.
+    # Quoting meta.json's seed count here used to stamp the wrong batch's size
+    # on a draft built from a different CSV.
+    if reasons:
+        fig.text(0.5, 0.5, "DRAFT\n" + "\n".join(reasons),
+                 transform=fig.transFigure, fontsize=20, color="red",
+                 alpha=0.16, ha="center", va="center", rotation=22,
+                 zorder=100, fontweight="bold", linespacing=1.2)
+        print("  !! 草稿:%s" % "; ".join(reasons))
     out = os.path.join(HERE, stem + ".pdf")
     fig.savefig(out)
     if os.environ.get("CLBS_FIG_PNG") == "1":

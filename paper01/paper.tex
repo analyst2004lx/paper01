@@ -43,6 +43,13 @@
 %%
 \documentclass[manuscript,screen,review]{acmart}
 
+%% ===================== 中文支持 =====================
+%% 本文为中文稿,必须用 XeLaTeX 编译(pdfLaTeX 无法处理中文)。
+%% scheme=plain 让 ctex 只接管中文字体与断行,不改写 acmart 的标题版式与章节名,
+%% 否则两者会争夺 \section 的定义而报错。
+%% fontset=windows 使用系统的宋体/黑体;若改到 Linux 或 Overleaf 上编译,
+%% 把它换成 fontset=fandol(TeX Live 自带,无需系统字体)。
+\usepackage[UTF8,scheme=plain,fontset=windows]{ctex}
 
 \usepackage{algorithm}
 % Use algorithmicx + algpseudocode: provides \Require, \Ensure, \State, and \Comment
@@ -66,10 +73,138 @@
 \newcommand{\TBD}[1]{\textcolor{red}{\textbf{[TBD:} #1\textbf{]}}}
 % theorem environments used in the document
 \usepackage{amsthm}
-\newtheorem{assumption}{Assumption}
-\newtheorem{problem}{Problem}
+\newtheorem{assumption}{假设}
+\newtheorem{problem}{问题}
 % Define remark environment (was missing and caused compilation errors)
-\newtheorem{remark}{Remark}
+\newtheorem{remark}{注}
+% acmart 自己已经定义了 proposition 与 lemma(英文名),不能用 \newtheorem 重名覆盖,
+% 也没有提供改名接口,故另起两个中文环境,正文用 prop / lem。
+\newtheorem{prop}{命题}
+\newtheorem{lem}{引理}
+
+%% 浮动体与交叉引用的中文名称。ctex 用 scheme=plain 载入时不会改这些,须手工设定。
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\floatname{algorithm}{算法}
+\renewcommand{\proofname}{证明}
+
+%% ===================== 全文图表的重建顺序 =====================
+%% 有先后依赖,按序执行。前两步在 clbs/ 目录下跑,后两步在仓库根目录跑。
+%%
+%%  1. 主结果(约 6 小时,决定下面所有数字):
+%%       py -u -m tools.baseline_ladder --budget 90 \
+%%          --seeds 42,7,2024,13,1,99,123,777,31415,8      -> output/baseline_ladder.csv
+%%  2. 三个配套批次(可在 1 之后依次跑,彼此无依赖):
+%%       py -u -m tools.prune_ablation --budget 90         -> output/prune_ablation.csv
+%%       py -u -m tools.ladder_diag  --budget 90           -> output/ladder_cost.csv
+%%                                                            output/ladder_convergence.csv
+%%                                                            output/case_study/*.json
+%%     注意:三者与第 1 步都用挂钟预算,故**不可并行**——并行会互相偷走评价次数,
+%%     恰好破坏本文第 5.1 小节所主张的同挂钟协议。这一条不是洁癖,是结果的前提。
+%%  3. 表与宏(秒级):
+%%       py paper01/tab/gen_tables_ladder.py
+%%     它写出 tab/*.tex,并把下面这整块宏定义打印出来供替换;两者同源,故不会互相矛盾。
+%%  4. 图(秒级,需要 matplotlib):
+%%       py paper01/fig/fig_framework.py      (示意图,不需要数据)
+%%       py paper01/fig/fig_prediction3.py    py paper01/fig/fig_convergence.py
+%%       py paper01/fig/fig_protocol.py       py paper01/fig/fig_case_gantt.py
+%%       py paper01/fig/fig_case_chain.py
+%%     加环境变量 CLBS_FIG_PNG=1 可同时出 png 便于预览。
+%%  5. 自检(秒级,无需 TeX 引擎):
+%%       py paper01/check_tex.py
+%%     它检查未定义宏、写死的数字、括号与环境配对、悬空的交叉引用,以及残留待办。
+%%
+%% 尚缺:fig_theta.pdf 的定价扫描数据未落盘(见第 5.6 小节的 TODO),投稿前须重跑
+%% tools/sweep_theta.py 或把该小节压缩为纯机制论证。
+
+%% ===================== 主结果数字的单一来源 =====================
+%% 论文正文一律引用下面的宏,不要在别处写死百分数。上一版论文的教训是同一个数字
+%% 散落在摘要、引言、贡献列表和实验章里,换一批数据就得逐处找,漏一处就自相矛盾。
+%%
+%% 数据来源:clbs/output/baseline_ladder.csv,由 clbs/tools/baseline_ladder.py 生成;
+%% 复现命令(在 clbs/ 目录下):py -u -m tools.baseline_ladder --budget 90 --seeds ...
+%% 口径:10 个受控算例 x 10 种子 = 100 配对,同挂钟预算,配对 Wilcoxon 符号秩检验。
+%%
+%% 数值取自 10 算例 x 10 种子 = 100 配对(output/baseline_ladder.csv, 2026-08-08 落盘)。
+%% 由 tab/gen_tables_ladder.py 从同一 CSV 复算;表与正文同源。
+%%
+%% !! 相对 4 种子初跑,有三条叙事必须跟着改写,不能只换数字:
+%% !!  (1) 开环下试探派车现已显著(4.59%, p<1e-4),不再是"几乎不值钱";
+%% !!  (2) 端到端 21.35% < 独立乘积 22.6%,正交互论断不成立,改为近加性/略亚加性;
+%% !!  (3) B NA/NM 0.5 的 B0->B1 已翻为负(闭环仍有益),而 B 族大车队两格上
+%% !!      B1->B2 为正(试探有害),适用上界成为 5.5 的主证据。
+\newcommand{\NCases}{10}
+\newcommand{\NSeeds}{10}
+\newcommand{\NPairs}{100}
+% 闭环本身的价值(固定派车方式,只动"拥堵是否进入搜索目标")
+\newcommand{\GainLoopRule}{18.86\%}      % B0  -> B1 ,规则派车下
+% p 值:Wilcoxon 回报 <1e-4 时写作 0.0000;表内对应印为 $<10^{-4}$。
+\newcommand{\PLoopRule}{0.0000}
+\newcommand{\GainLoopProbe}{17.75\%}     % B0+ -> B2 ,试探派车下
+\newcommand{\PLoopProbe}{0.0000}
+% 预约表感知派遣的价值(固定闭环与否,只动派车决策)
+\newcommand{\GainProbeOpen}{4.59\%}      % B0  -> B0+,开环下,现已显著
+\newcommand{\PProbeOpen}{0.0000}
+\newcommand{\GainProbeLoop}{2.45\%}      % B1  -> B2 ,闭环内(被大车队两格拖低)
+\newcommand{\PProbeLoop}{0.0054}
+% 端到端:文献结构 -> 本文
+\newcommand{\GainEndToEnd}{21.35\%}      % B0  -> B2
+\newcommand{\PEndToEnd}{0.0000}
+\newcommand{\WinEndToEnd}{94}
+\newcommand{\LoseEndToEnd}{5}
+% 若两机制彼此独立,端到端应有此值。实测略低:无正交互,近加性/略亚加性。
+\newcommand{\GainIndepProduct}{22.6\%}
+% 车队最紧格(N_A/N_M=0.5):闭环仍有益;试探在此格收益最大(适用下界侧)。
+\newcommand{\GainLoopStarve}{-2.8\%}
+\newcommand{\GainProbeStarve}{5.7\%}
+% 车队偏大两格上,闭环内试探派车反而抬高完工时间(适用上界;正值=有害)。
+\newcommand{\GainProbeFleetOne}{+4.8\%}  % B NA/NM 1.0, B1->B2
+\newcommand{\GainProbeFleetTwo}{+4.7\%}  % B NA/NM 2.0, B1->B2
+% 争用强度区间(10 格 contention 列的 min/max)
+\newcommand{\ContentionLo}{6.6\%}
+\newcommand{\ContentionHi}{33.5\%}
+
+% 复合下界与最优已知解的间隙。!! 原稿在第 3 章写 "35%~61%"、在第 6 章写 "中位 53%",
+% 两处不一致且都来自旧算例族;现统一由这三个宏供给,待新算例族的结果落盘后一并更新。
+\newcommand{\LBGapLo}{35\%}
+\newcommand{\LBGapHi}{61\%}
+\newcommand{\LBGapMed}{53\%}
+
+%% ---- 降本(第 4.5 / 5.7 节)数值 ----
+%% 数据来源:clbs/output/prune_ablation.csv(2026-08-08,6 算例 x 10 种子 x 两档,90s)。
+%% 等价性自检 6x6 染色体逐位一致;路由调用合计 19448/36940 → 减少 47.4%
+%% (逐格 42.2%~61.2%;A low 最高、B NA/NM 2.0 最低)。
+%% \SpeedupProbe = 关档/开档的 ms_per_eval 之比(2.33x);同预算评价次数比 2.23x。
+%% \GainPrune = 关→开的配对相对增益(只来自算力)。
+%% CostMultAfter = ladder_cost 中 B2/B1 的 ms_per_eval 之比(闭环内:试探+剪枝 vs 规则)。
+%% CostMultBefore = After x SpeedupProbe,即关剪枝时相对规则派车的倍数(与 prune 加速衔接)。
+%% 数据:ladder_cost.csv(3 算例 x 3 种子);B2 均值 14.15 ms,B1 均值 2.70 ms。
+\newcommand{\SpeedupProbe}{2.33}
+\newcommand{\RouteCallCut}{47.4\%}
+\newcommand{\GainPrune}{5.60\%}
+\newcommand{\PPrune}{0.0000}
+\newcommand{\WinPrune}{50}
+\newcommand{\LosePrune}{0}
+\newcommand{\EvalRatioPrune}{2.23}
+\newcommand{\CostMultBefore}{12.2}
+\newcommand{\CostMultAfter}{5.23}
+
+%% ---- 独立批次:降本之前的矩阵扫描(第 5.5、5.6 小节引用)----
+%% 数据来源:clbs/output/matrix/p3/summary.json 与 matrix/lowmid/summary.json,
+%% 合计 16 个算例格 x 10 种子 x 同挂钟预算 = 1280 次运行,invalid 为空。
+%% 该批次跑于 08-03/08-05,当时代码里**还没有**下界剪枝与胜者路径复用(git 07-29 的
+%% decoder.py 两者皆无,只在 08-07 的提交里出现),故它是**降本之前**的测量。这一点是
+%% 第 5.6 小节把它与阶梯批次接起来的关键,不可含糊。
+%% 已从 summary.json 的 mechanism_gain / integration_gain 聚合核实:
+\newcommand{\MatrixCells}{16}
+\newcommand{\MatrixRuns}{1280}
+\newcommand{\GainIntegMatrix}{5.52\%}    % 两阶段 -> 闭环,16 格均值
+\newcommand{\SigIntegMatrix}{11}         % 16 格中显著的格数
+\newcommand{\GainIntegMatrixLo}{0.28\%}
+\newcommand{\GainIntegMatrixHi}{9.28\%}
+\newcommand{\GainProbePre}{-0.74\%}      % 降本前的派遣消融,0/16 显著
+\newcommand{\GainCertMatrix}{-1.72\%}    % 冲突凭证反馈的消融
+\newcommand{\GainStaggerMatrix}{-0.16\%} % 错峰算子的消融
 
 %%
 %% \BibTeX command to typeset BibTeX logo in the docs
@@ -141,80 +276,71 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-\title{Evaluate, Don't Coordinate: What Feedback Is Worth Its Cost in Integrated Scheduling of Heterogeneous Robot Arms and Conflict-Free AGV Routing}
+%% 标题命名的是机制,不是发现。上一版 "Evaluate, Don't Coordinate: What Feedback Is
+%% Worth Its Cost" 是个很好的发现型标题,但对创新型论文致命:它把读者的注意力引向
+%% "哪些机制不管用",而本文的主张是"我们选定并让它付得起的那个机制管用"。
+%%
+%% 对应英文题名(投英文刊时使用):
+%% Reservation-Aware Dispatching in a Closed-Loop Bilevel Framework for Integrated
+%% Flexible Job Shop Scheduling and Conflict-Free AGV Routing
+\title[预约表感知派遣的闭环双层调度框架]{预约表感知派遣的闭环双层框架:柔性作业车间调度与 AGV 无冲突路由一体化优化}
 
 
-%% The abstract is a short summary of the work to be presented in the
-%% article.
-%% NOTE: the quantitative claims marked [TBD] must be filled from the controlled
-%% matrix experiment (>= 10 seeds, equal wall-clock budget, paired Wilcoxon test);
-%% see Sec. 8.2/12.3.6 of the algorithm specification. Numbers obtained from two
-%% seeds are within the observed seed noise and must not be quoted here.
+%% 摘要中的每个百分数都通过导言区的宏引用,数据口径与复现命令见那里的说明。
 \begin{abstract}
-Integrated scheduling of processing and transportation resources in flexible job
-shops is almost always modelled with a constant travel-time matrix, which
-silently assumes that vehicles never interfere. Once a limited fleet shares a
-physical corridor network, travel time is no longer input data but an outcome of
-routing decisions. We study the integrated problem in which each operation may be
-processed by a subset of robot arms with machine-dependent processing times,
-while automated guided vehicles must be routed conflict-free over that network.
-Heterogeneity is what makes the coupling consequential: when the route to a fast
-arm is congested, a slower but better-connected arm can be the better
-assignment---a trade-off that existing integrated heuristics cannot act upon,
-because they either admit a single eligible machine per operation or revisit
-routing only once, in one direction, after the schedule has been fixed. Our
-question is what a scheduler should ask its routing layer for, under the
-constraint that every answer costs computation a fixed budget must take from
-somewhere else. Four
-candidate mechanisms are implemented in one codebase and compared on $16$
-controlled instances with $10$ seeds each under an equal wall-clock budget:
-evaluating fitness by a complete conflict-free decoding, dispatching by probing
-the reservation table, guiding local search by \emph{contention certificates}
-that name the corridor, interval and opposing task of each yielding event, and
-pricing corridor--time slots as a coordination signal. Only the first repays its
-cost, and it repays it decisively: $7.7\%$ makespan reduction against a two-stage
-open-loop baseline ($p<10^{-4}$, $138$ wins to $17$ losses), even though the
-baseline completes five times as many evaluations within the same budget because
-its surrogate objective is twenty-five times cheaper and correspondingly
-optimistic---by $25.9\%$ on the instance we trace. The other three cost more than
-they return: $-0.9\%$ for reservation-aware dispatch, $-1.7\%$ for
-contention-guided search, and $-9.0\%$ for pricing, each estimated twice from
-configurations differing in that mechanism alone and agreeing to within a quarter
-of a percentage point. We explain the asymmetry---correcting an objective improves
-the ranking of every candidate, whereas naming a bottleneck yields an improvement
-that dilutes through the critical chain---and document two methodological traps we
-fell into: a chain-style ablation that moves two factors at once reports
-reservation-aware dispatch as significantly beneficial with the sign reversed, and
-the pricing penalty vanishes under an equal-evaluation budget, being an artefact
-of a five-fold more expensive route search rather than of misdirection.
+柔性作业车间的加工与运输一体化调度几乎总是把行驶时间建模为按位置索引的常数矩阵,
+这等于默认车辆之间从不相互干扰。一旦有限规模的车队共享稀疏的走廊网络,行驶时间便不再
+是输入数据,而是路由决策的结果:延误成为一个工件施加给另一个工件的量,而非布局的固有
+属性。本文研究这样一类一体化问题:每道工序可由若干台能力重叠、效率互异的机械臂之一
+加工,同时 AGV 必须在该网络上无冲突行驶。使这一耦合真正产生后果的是异构性——当通往
+快速机械臂的走廊拥堵时,一台较慢但连通性更好的机械臂可能是更优指派。该权衡在两类最
+接近的工作中均无法表述:一类具备机器柔性,但上层在常数运输时间矩阵上排产,看不见拥堵;
+另一类具备真正的无冲突路由,却沿用每道工序仅一台可选机器的经典基准,指派根本不成为决策。
+
+本文提出闭环双层框架:上层决定机器指派与工序排序,下层以时间窗预约生成无冲突路径,
+两层沿评价与决策两条通路连接。评价通路把每一代每个候选解的适应度定义为下层实际路由
+之后的完工时间,使让行延误进入搜索所优化的目标,而不再是事后校验;决策通路的核心机制
+是\emph{预约表感知的车辆派遣}——通过对预约表做两段式试探来选车,取代以理想最短路估计
+到达时刻的规则派车。为使该机制在同等算力下付得起,本文给出两项可证等价的降本:可采纳
+下界剪枝与胜者路径复用。
+
+在 \NCases{} 个争用强度标定于 \ContentionLo{} 至 \ContentionHi{} 的受控算例上,以
+\NSeeds{} 个随机种子、同挂钟预算与配对 Wilcoxon 检验,与一个四级基线阶梯比较,其中前
+两级分别对应两篇已发表工作的结构。把拥堵搬进搜索目标使完工时间降低 \GainLoopRule{}
+($p=\PLoopRule$);在闭环内部将规则派车替换为预约表感知派遣再降低 \GainProbeLoop{}
+($p=\PProbeLoop$);端到端相对文献结构降低 \GainEndToEnd{}(\WinEndToEnd{} 胜
+\LoseEndToEnd{} 负,$p=\PEndToEnd$)。
+
+两条机制都显著,但角色不同:闭环是主效应(\GainLoopRule{}/\GainLoopProbe{}),预约表
+感知派遣是有适用上界的次效应——开环下它值 \GainProbeOpen{}($p=\PProbeOpen$),闭环内
+平均再降 \GainProbeLoop{}($p=\PProbeLoop$),而在车队偏大的两格上它会被自身开销反噬。
+端到端 \GainEndToEnd{} 接近两者独立时应有的 \GainIndepProduct{},呈近加性而非正交互;
+开环试探单独远不能代替闭环。本文并以三个受控负对照(走廊定价、凭证制导打分、穷举式
+真解码)说明为何在若干更具雄心的接口设计中选定了这一个。
 \end{abstract}
+
 %%
 %% The code below is generated by the tool at http://dl.acm.org/ccs.cfm.
 %% Please copy and paste the code instead of the example below.
 %%
-%% STALE: the block below classifies the previous paper (robotic autonomy) and no
-%% longer matches this one. Regenerate at dl.acm.org/ccs.cfm -- concept_id values
-%% are assigned by that tool and must not be written by hand -- selecting
+%% 原有的 CCS 分类块描述的是上一篇论文(Robotic autonomy),与本文无关,故整块注释掉。
+%% concept_id 由 dl.acm.org/ccs.cfm 的工具指派,不能手写,所以这里不填占位值。
+%% 若最终投 ACM,请到该工具重新生成并粘回,建议选:
 %%   Theory of computation~Scheduling algorithms            (significance 500)
 %%   Applied computing~Industry and manufacturing           (significance 300)
-%%   Computing methodologies~Discrete space search / Planning and scheduling (300)
-%% and replace both the CCSXML block and the \ccsdesc lines that follow.
-\begin{CCSXML}
-	<ccs2012>
-	<concept>
-	<concept_id>10010520.10010553.10010554.10010557</concept_id>
-	<concept_desc>Computer systems organization~Robotic autonomy</concept_desc>
-	<concept_significance>500</concept_significance>
-	</concept>
-	</ccs2012>
-\end{CCSXML}
-
-\ccsdesc[500]{Computer systems organization~Robotic autonomy}
+%%   Computing methodologies~Planning and scheduling        (significance 300)
+%% 投非 ACM 刊物时本块可直接删除。
+%
+% \begin{CCSXML}
+% <ccs2012>...</ccs2012>
+% \end{CCSXML}
+% \ccsdesc[500]{Theory of computation~Scheduling algorithms}
 
 %%
 %% Keywords. The author(s) should pick words that accurately describe
 %% the work being presented. Separate the keywords with commas.
-\keywords{Flexible Job Shop Scheduling, Heterogeneous Robot Arms, Conflict-Free AGV Routing, Integrated Scheduling and Routing, Cost-Aware Ablation, Equal-Budget Comparison, Negative Results, Memetic Algorithm}
+\keywords{柔性作业车间调度, AGV 无冲突路由, 一体化调度, 闭环双层框架, 预约表感知派遣,
+异构机械臂, 走廊争用, 完工时间}
 
 
 
@@ -229,556 +355,425 @@ of a five-fold more expensive route search rather than of misdirection.
 %% This command processes the author and affiliation and title
 %% information and builds the first part of the formatted document.
 \maketitle
-\section{Introduction}
+\section{引言}
 \label{sec:Chapter_I}
 
-Flexible job shop scheduling with transportation rests on one convenient
-assumption: the time to move a job between two machines is a constant, read from
-a matrix indexed by locations. It is the dominant convention in the
-literature~\cite{xin2025review} and recent models retain
-it~\cite{meng2025cp,qin2026knowledge,fu2025integrated}, and it is a reasonable
-assumption whenever the fleet is small relative to the aisle network, so that
-vehicles rarely meet. Shop floors, however, are not built that way: a handful of
-vehicles share a sparse set of aisles, single-lane segments cannot be traversed
-in opposite directions at the same time, and once a fleet is dense enough its own
-traffic becomes a first-order source of delay rather than a
-nuisance~\cite{kim2026congestion}. Once that is admitted, travel time stops
-being data. It becomes the outcome of two decisions---which route a vehicle
-takes, and who reserved the contested segment first---and the delay it produces
-is a delay one job inflicts on another rather than a property of the layout.
+\subsection{研究背景与动机}
 
-This matters for scheduling only if the schedule has something to do about it,
-and that is exactly what machine flexibility provides. When an operation may be
-processed by any arm in an eligible subset, and the processing time depends on
-which arm is chosen, the assignment decision selects a destination as well as a
-duration. Consider an operation that can run on a fast arm at the far end of the
-shop or on a slower arm next to the load/unload station. Under a constant travel
-matrix the comparison is arithmetic: shorter processing plus longer travel
-against the reverse. Under contention it is not, because the aisle leading to
-the fast arm may be the one every other job is also using, and the waiting
-incurred there is invisible to the matrix. The slower but better-connected arm
-can then be the better choice---and the reverse can hold at a different
-congestion level for the same instance. This trade-off requires both ingredients
-at once: heterogeneous eligible arms give the scheduler an alternative
-destination, and an explicit aisle network gives the alternative a different
-cost. Remove either one and the trade-off disappears.
+考虑运输的柔性作业车间调度长期建立在一个便利的假设之上:工件在两台机器之间移动所需的
+时间是一个常数,可从按位置对索引的矩阵中读出。这是文献中的主流约定~\cite{xin2025review},
+近期的模型仍普遍沿用~\cite{meng2025cp,qin2026knowledge,fu2025integrated}。当车队规模
+相对于通道网络足够小、车辆彼此很少相遇时,该假设是合理的。然而实际车间并非如此构造:
+少量车辆共享一组稀疏通道,单车道路段无法在同一时刻被双向通行;一旦车队密度足够高,
+车队自身的交通便从次要干扰上升为一阶的延误来源~\cite{kim2026congestion}。承认这一点
+之后,行驶时间就不再是数据,而成为两个决策的结果——车辆走哪条路,以及谁先预约了被争用
+的路段。由此产生的延误是一个工件施加给另一个工件的,而不是布局的固有属性。
 
-% FIGURE (to be drawn): motivating example. Panel (a) shop graph with LU, one
-% congested mid corridor, near/slow arm and far/fast arm. Panel (b) the same
-% assignment evaluated under a constant travel matrix vs. under conflict-free
-% routing, showing the rank of the two arms flipping. Do NOT reuse
-% fig/fig_intro_problem_new.pdf: it depicts the previous paper's
-% proximity-vs-availability scenario, not corridor contention.
+这一点只有在排程对此有所作为时才对调度有意义,而机器柔性恰好提供了作为的余地。当一道
+工序可由某个可选集合中的任一机械臂加工、且加工时间取决于所选机械臂时,指派决策同时
+选定了目的地与工时。设想一道工序既可交给车间远端一台快速机械臂,也可交给紧邻上下料站
+的一台较慢机械臂。在常数运输时间矩阵下,这个比较是算术性的:较短加工加较长行驶,对
+较长加工加较短行驶。存在争用时则不然,因为通往快速机械臂的那条通道可能正是其他工件
+都在使用的通道,而在其中产生的等待对矩阵是不可见的。此时较慢但连通性更好的机械臂可能
+是更优选择;而在同一算例的不同拥堵水平下,结论又可能反转。这一权衡要求两个要素同时
+在场:异构的可选机械臂给了调度器一个替代目的地,显式的通道网络使该替代方案具有不同的
+代价。去掉任何一个,权衡即不复存在。
 
-Existing work either addresses one side of this coupling at a time or couples the
-two in one direction. Conflict-free multi-robot routing takes contention very
-seriously---lifelong formulations go as far as reshaping edge costs to steer
-traffic away from bottlenecks~\cite{zhang2024guidance}---but tasks, their release
-times and their endpoints arrive from outside the planner, which is therefore
-never permitted to question the assignment that created them. Congestion-aware
-fleet control similarly penalizes congested segments while dispatching a fixed
-set of transport orders, and measures congestion as local vehicle
-density~\cite{kim2026congestion}. On the scheduling side the combination has
-already been formalized: the conflict-free-transportation-constrained flexible
-job shop scheduling problem couples machine-eligible operations having
-location-dependent processing times with conflict-free vehicle routing, and a
-logic-based Benders decomposition solves benchmark instances of it to proven
-optimality~\cite{vanos2026exact}. We adopt that problem class rather than claim
-it. What remains open is the heuristic regime, entered as soon as instances
-outgrow what exact decomposition reaches, and there the coupling is still
-one-directional. A two-stage scheme fixes the schedule first and then resolves
-vehicle conflicts against it~\cite{sun2023integrated}, so contention discovered
-in the second stage cannot revise the first. The closest work to ours adds a
-feedback step but, as its own limitations section states, ``operates primarily as
-a two-stage sequential optimization strategy rather than a fully dynamic,
-real-time closed-loop system'', relying on ``a one-time feedback
-adjustment''~\cite{li2026framework}. Two consequences follow from that design,
-and both are structural rather than incidental: the feedback adjusts the time axis
-without revising any assignment, and it is applied once to a single incumbent
-rather than to every candidate the search examines. That work is moreover set on
-job shop benchmarks with a single eligible machine per operation and fixed
-processing times, where the reassignment trade-off above cannot arise at all.
+% FIGURE 待绘制:动机算例(图~\ref{fig:motivating})。
+% (a) 车间图:上下料站、一条拥堵的中部走廊、近处的慢臂与远处的快臂;
+% (b) 同一指派分别在常数运输时间矩阵下与无冲突路由下的评价结果,显示两台机械臂的优劣次序发生反转。
+% 注意:不要复用 fig/fig_intro_problem_new.pdf,那张图画的是上一篇论文
+% "邻近性对可用性"的场景,不是走廊争用。
 
-We close the loop in both senses, and then ask what each sense is worth. Our
-framework keeps the bilevel structure---an upper layer deciding assignment and
-sequencing, a lower layer producing conflict-free routes by time-window
-reservation---but connects the layers along two paths. The \emph{evaluation path}
-defines the fitness of every candidate, in every generation, as the makespan
-obtained after the lower layer has actually routed it, so that yielding delays
-enter the objective the search optimizes instead of being checked after the fact.
-The \emph{decision path} carries
-what we call \emph{contention certificates}. Rather than returning a time, the
-lower layer returns an attribution of the critical chain: the chain is extended
-from operations to alternating operation--transport links, and each link is
-assigned one of five causes---\texttt{operation}, \texttt{machine},
-\texttt{upstream}, \texttt{vehicle} or \texttt{corridor}, the last naming the
-contested segment and the interval in which the yield occurred. Without this
-distinction a delayed start is merely late, and one cannot tell a slow
-predecessor from a missing vehicle from a blocked aisle; with it, the certificate
-names the operations to act on. Two operator families then act on the corridor
-labels, corresponding to the two ways contention can be relieved: \emph{reassign}
-moves an operation to an arm reached through a less contested part of the network
-(a change of place), and \emph{stagger} shifts the blocked operation earlier or
-its blocker later (a change of time). The distinction from a conventional
-mutation operator is not the move itself but its argument, which is designated by
-the lower layer's evidence instead of sampled uniformly. Dispatching is closed the
-same way: a vehicle is chosen by probing the reservation table with a two-leg
-trial rather than by estimating arrival from an ideal shortest path, which removes
-the last open-loop element of the framework.
+\subsection{与最接近工作的差距}
 
-Our results then take that construction apart. Under an equal computational
-budget the evaluation path accounts for the entire measured benefit, and the
-decision path and closed dispatching both cost more than they return. We
-therefore propose as our method the cheapest configuration that closes the
-evaluation path alone, and present the rest as ablations. It is worth being
-explicit about why we report the machinery in full rather than only its
-profitable part. The mechanisms that failed are the ones the problem structure
-recommends---if contention is what delays a schedule, feeding back who blocked
-whom is the obvious next step---and a reader designing for this setting would
-arrive at them. What the experiments add is the exchange rate: a mechanism must
-outperform the additional evaluations its cost displaces, and these do not.
+现有工作或者每次只处理这一耦合的一侧,或者只在单一方向上把两侧连接起来。无冲突多机器人
+路由高度重视争用——终身式(lifelong)问题的表述甚至通过重塑边权把交通从瓶颈处引
+开~\cite{zhang2024guidance}——但任务及其释放时刻与端点均来自规划器之外,规划器因而无权
+质疑产生这些任务的指派。拥堵感知的车队控制同样对拥堵路段施加惩罚,却是在一组固定的运输
+订单上做派车,且以局部车辆密度作为拥堵的代理度量~\cite{kim2026congestion}。
 
-A natural alternative is to price the interface: let the lower layer export
-shadow prices for corridor--time slots and let routing and reassignment pay for
-what they consume. We implemented this and report that under an equal budget it
-is systematically harmful, and equally so when the prices are computed by
-definitional finite differences instead of a surrogate. Our first explanation
-was a double charge. Contention delay is already internalized in
-the delayed vehicle's own arrival time, propagates through start and completion
-times into the makespan, and is therefore already counted by the fitness; adding
-a price makes the vehicle detour or depart later to avoid a cost it has already
-paid, trading a first-order, certain self-delay for a second-order, uncertain
-externality. The contrast with lifelong routing is instructive, because there the
-same idea works: biasing edge costs away from bottlenecks does raise
-throughput~\cite{zhang2024guidance}, precisely because no outer objective is
-already charging agents for the delay they inflict. What differs is not the
-soundness of the idea but whether contention has been counted once
-already. The inference generalizes: in any architecture whose fitness is a
-complete conflict-free decoding, penalizing congestion inside the lower layer
-cannot add information.
+在调度一侧,这一组合已被形式化:带无冲突运输约束的柔性作业车间调度问题把"具有位置相关
+加工时间的可选机器工序"与"无冲突车辆路由"耦合起来,并由基于逻辑的 Benders 分解将其基准
+算例求解至可证最优~\cite{vanos2026exact}。本文采用该问题类,而非声称提出它。仍然敞开的
+是启发式区间——算例一旦超出精确分解可及的规模便进入该区间,而在那里耦合仍是单向的。
+两阶段方案先固定排程、再针对它消解车辆冲突~\cite{sun2023integrated},因此第二阶段发现的
+争用无法回过头修改第一阶段。与本文最接近的工作加入了一个反馈步骤,但正如其局限性小节
+自述,它"主要作为两阶段顺序优化策略而非完全动态的实时闭环系统运作",依赖的是"一次性的
+反馈调整"~\cite{li2026framework}。该设计带来两个后果,且都是结构性的而非偶然的:反馈只
+调整时间轴而不修改任何指派;并且它只施加于单个当前最优解一次,而不施加于搜索所考察的
+每一个候选解。此外,该工作是在每道工序仅一台可选机器、加工时间固定的作业车间基准上
+展开的,上文那种改派权衡在其中根本无从出现。
 
-The measurements sharpen this into something we did not anticipate. If pricing
-merely added no information, it would be free to ignore; instead it is the
-most damaging configuration we tested. The reason is that the price turns out to
-be \emph{inert} rather than misleading---over a hundredfold range of the price
-weight it diverts the same four of twenty-four transport tasks and amounts to
-$2.4\%$ of travel time---while the multi-label Pareto search required to read a
-price costs five times more per decoding whether or not any price is charged.
-Under a fixed budget an inert signal is not free: it costs exactly as much as the
-machinery that reads it. Only when the weight is raised far enough for prices to
-override arrival time does the double charge become visible as harm, and by then
-the routes are badly wrong.
+概括起来,两类最接近的工作各缺一半:一类具备机器柔性却在常数运输时间矩阵上排产,看不见
+拥堵;另一类具备真正的无冲突路由却没有柔性,指派由算例固定。本文开头那句"最短走廊拥堵
+时,去一台更慢但连通性更好的机械臂可能更优",在它们的模型里连表述都无法完成。
 
-Establishing any of this required a stricter experimental protocol than is
-customary, for two reasons we encountered the hard way. First, the mechanisms
-differ enormously in cost per evaluation---by up to two orders of magnitude
-between the cheapest and the most expensive variant---so comparing at equal
-generation counts credits a mechanism for the extra computation it consumes;
-under equal wall-clock budget several apparent gains reverse. Second, the
-seed-to-seed spread of makespan on congested instances exceeds the differences
-between variants, so a single seed can rank the variants in almost any order. We
-therefore compare all variants under an equal budget, over ten seeds, with paired
-Wilcoxon tests. A third confound is subtler and cost us a conclusion: an ablation
-must vary one factor at a time, and a chain of configurations in which each row
-adds a mechanism to the row above satisfies this only if the rows really do differ
-by one factor. Ours did not, and the confounded contrast reports a mechanism as
-significantly beneficial that the de-confounded contrast reports as significantly
-harmful. A fourth is the instance itself: congestion concentrated at the
-load/unload exit is traversed by every job regardless of assignment, so it raises
-every schedule's delay without offering the mechanisms anything to exploit. We
-generate instances whose knobs vary network capacity while holding distances
-fixed, and use a matched pair differing only in the width of the station cut to
-separate congestion the scheduler can route around from congestion it cannot.
+\subsection{本文方法}
 
-Our contributions are as follows.
+本文在两种意义上闭合这个回路,并逐项量化每一种意义值多少。框架保留双层结构——上层决定
+机器指派与工序排序,下层以时间窗预约生成无冲突路径——但沿两条通路连接两层。
+
+\emph{评价通路}把每一代中每一个候选解的适应度,定义为下层真正为其规划过路径之后得到的
+完工时间。于是让行延误进入搜索所优化的目标本身,而不再是事后的可行性校验。这一步的想法
+并不深刻,深刻之处在于它很贵:一次完整的无冲突解码比在理想最短路矩阵上解码昂贵一个数量级
+以上,因此在固定算力下它必须与它所挤占的那些额外评价次数竞争。据我们所知,此前没有工作
+量化过这笔交换是否划算;\cite{li2026framework} 的作者本人正是把"将该机制扩展为完全迭代
+的回路"列为未来工作。
+
+\emph{决策通路}上承重的机制是\emph{预约表感知的车辆派遣}。选车不再依据理想最短路对到达
+时刻的估计,而是对预约表做一次两段式试探:对每一个候选车辆,依次询问"取货段"与"送货段"
+在当前预约状态下实际可行的最早完成时刻,再取其中最优者。它所替换的恰是文
+献~\cite{li2026framework} 正在使用的空闲优先规则,因此这一机制针对的是现行的发表实践,
+而不是一个假想的弱基线。为使它在同挂钟预算下付得起,本文给出两项可证保持最优选择的降本:
+基于可采纳下界的剪枝,以及胜者路径的复用。
+
+我们同样实现并考察了更具雄心的第三条接口:让下层不只返回时间,而返回对关键链的归因——
+把关键链从工序序列扩展为工序与运输交替的链,并给每一环标注五类成因之一
+(\texttt{工序}、\texttt{机器}、\texttt{上游}、\texttt{车辆}、\texttt{走廊}),其中最后一类
+指明被争用的路段及让行发生的时段;再由两族算子据此行动:\emph{改派}把工序移到经由争用
+较轻的网络区域可达的机械臂(改变地点),\emph{错峰}把被阻塞的工序提前或把阻塞者推后
+(改变时间)。这一设计在直觉上比预约表试探更有吸引力,但在同挂钟预算下其增益未获证实。
+本文如实报告这一点,并把它与走廊定价、穷举式真解码一并作为受控负对照(第~\ref{sec:Chapter_V}~节),
+用以说明为何在若干候选接口中最终选定了预约表感知派遣这一个。这些负对照不是本文的结论,
+而是本文设计取舍的正当理由。
+
+\subsection{主要结果}
+
+为使"闭环"与"具体机制"两笔账互不冒领,我们构造了一个四级基线阶梯,其中前两级分别复现两篇
+已发表工作的结构:\textbf{B0} 为开环规划加真实执行,对应~\cite{li2026framework};\textbf{B0+}
+在冻结排产上只把车辆指派换成感知冲突的,对应~\cite{sun2023integrated} 的两阶段结构;
+\textbf{B1} 为闭环规划加规则派车;\textbf{B2} 为本文方法。这四级构成"是否闭环"与"派车方式"
+的 $2\times2$ 析因,故每次只动一个因子的对比才可用于归因。所有方案——无论其计划从何而来——
+都必须放进同一个无冲突路由器执行并通过同一个独立校验器,报告的都是可实现的完工时间。
+
+结果显示两条主张各自成立。把拥堵搬进搜索目标(固定派车方式)使完工时间降低
+\GainLoopRule{}($p=\PLoopRule$),这是闭环本身的价值;在闭环内部把规则派车替换为预约表
+感知派遣(信息完全对等,只差派车一处决策)再降低 \GainProbeLoop{}($p=\PProbeLoop$),
+这是该具体机制的价值;端到端相对文献结构降低 \GainEndToEnd{},\WinEndToEnd{} 胜
+\LoseEndToEnd{} 负($p=\PEndToEnd$)。两项降本使派遣机制的加速比达到 \SpeedupProbe{} 倍、
+路由调用减少 \RouteCallCut{},单次评价的成本倍数从 \CostMultBefore{} 压到
+\CostMultAfter{},这正是它在同挂钟预算下能够转为净收益的原因。
+
+两条机制都显著,但\emph{不可互相替代}。开环下的试探派车值 \GainProbeOpen{}
+($p=\PProbeOpen$),远小于闭环的 \GainLoopRule{};端到端 \GainEndToEnd{} 接近两者独立时
+应有的 \GainIndepProduct{},呈近加性而非正交互。闭环内试探的平均增益
+(\GainProbeLoop{},$p=\PProbeLoop$)被车队偏大两格上的反噬所拖低——适用上界是第
+\ref{sec:whichcongestion}~小节的主题。这也是我们坚持报告 $2\times2$ 析因而非一条消融链
+的原因:只有分因子才能看见"主效应大、次效应有条件"。
+
+稳健性方面,上述增益在 \NCases{} 个受控算例格上成立,这些算例格沿三个因子族逐一单变——布局
+(争用强度覆盖 \ContentionLo{} 至 \ContentionHi{})、车臂比与柔性——因此可以分别读出增益随
+各因子的走势,而不只是一个汇总均值。第~\ref{sec:whichcongestion}~小节给出逐族结果:闭环增益
+随争用强度大致上升;试探派车在 $N_A/N_M=0.5$ 最赚、在 $1.0$ 与 $2.0$ 两格反噬
+(\GainProbeFleetOne{},\GainProbeFleetTwo{}),划定适用上界;柔性两档上试探增益接近,说明它
+主要经派车与时序兑现,并不强依赖指派余地。
+
+\subsection{实验协议}
+
+上述任何一条结论的成立都要求比通常做法更严格的实验协议,原因是我们亲历过的三个陷阱。
+第一,各机制的单次评价成本相差极大,最贵与最便宜之间可达两个数量级,因此在\emph{相同代数}
+下比较等于把一个机制多消耗的算力也记作它的功劳;改用同挂钟预算后,若干表面上的增益会
+反转。第二,在拥堵算例上完工时间的种子间离散度超过不同方案之间的差距,单个种子几乎可以
+把各方案排成任意次序,故所有比较均在多个随机种子上以配对 Wilcoxon 检验进行。第三个陷阱
+更隐蔽,并且曾使我们得出过错误结论:消融必须每次只改变一个因子,而"每一行在上一行基础上
+增加一个机制"的链式消融只有在各行确实只差一个因子时才满足这一点。我们的早期设计并不满足,
+而被混淆的那个对比会把一个机制报告为显著有益,去混淆后的对比却报告它显著有害——同一批
+运行,相反的符号,两者都显著。
+
+算例本身也是一个要设计的对象。集中在上下料出口处的拥堵会被所有工件在所有指派下穿越,
+它只是抬高每一张排程的延误,却不给任何机制可利用的余地。因此我们生成的算例以网络容量
+而非距离作为旋钮来调节争用强度,并用一对仅在站口断面宽度上有差别的匹配算例,把"调度器
+可以绕开的拥堵"与"绕不开的拥堵"区分开来。
+
+本文的贡献如下。
 
 \begin{enumerate}[leftmargin=*]
 
-\item \textbf{A cost-aware account of interlayer feedback.} Working
-in the established conflict-free-\allowbreak transportation-constrained
-setting~\cite{vanos2026exact}, we implement four mechanisms of increasing
-ambition in a single codebase---conflict-free evaluation, reservation-aware
-dispatch, contention-guided local search, and corridor pricing---and price each
-one in the currency a fixed budget actually spends: evaluations forgone. Only
-conflict-free evaluation repays its cost, by $7.7\%$ of makespan against a
-two-stage baseline over $16$ instances and $10$ seeds. The other three are
-negative, by $-0.9\%$, $-1.7\%$ and $-9.0\%$ respectively. To our knowledge this
-is the first ablation in this problem class in which each mechanism's cost and
-benefit are reported in commensurable terms.
+\item \textbf{问题层:一个在最接近的两类工作中都无法表述的权衡。} 机器柔性、加工效率异构
+与走廊拥堵三者同时在场,且拥堵进入目标函数。由此"最短走廊拥堵时,去一台更慢但连通性更好
+的机械臂可能更优"成为一个真实的决策;而在具备柔性但用常数运输时间矩阵排产的模型
+里~\cite{sun2023integrated},以及在具备真正无冲突路由但机器由算例固定的模型
+里~\cite{li2026framework},这句话都无法被表述。我们在既有的带无冲突运输约束的柔性作业
+车间调度问题类~\cite{vanos2026exact} 内工作,采用该问题类而不声称提出它,并补充一个可控
+的争用强度刻画,使"何时值得管拥堵"成为可回答的问题。
 
-\item \textbf{An explanation of the asymmetry, and a design rule.} Correcting the
-objective and directing the search are not comparable interventions under a
-budget. A corrected objective improves the ranking of every candidate the search
-compares, at a cost paid once per evaluation; a mechanism that names a bottleneck
-buys an improvement that dilutes through the critical chain, because removing one
-delay promotes another constraint to binding. We measure the dilution directly:
-contention-guided search consumes $39.4\%$ of all decodings while under $2\%$ of
-the neighbours it evaluates improve the makespan. The design rule we draw is to
-spend the interface budget on measurement before spending it on guidance.
+\item \textbf{框架层:闭环的价值被首次量化。} 把无冲突路由放进适应度函数这一想法本身并不
+深刻,深刻之处在于它很贵,因而从未有人量过它值多少——\cite{li2026framework} 的作者本人正
+把完全迭代的回路列为未来工作。本文在同挂钟预算下给出这笔交换的汇率:相对该文献的忠实
+结构,闭环使完工时间降低 \GainLoopRule{}($p=\PLoopRule$),在预约表感知派遣下达到
+\GainLoopProbe{}($p=\PLoopProbe$)。贡献是"定量"加"让它付得起",而不是这个念头本身。
 
-\item \textbf{A reproducible negative result on pricing, with the mechanism
-corrected.} Pricing the interface is harmful under equal computation, and we
-explain it as a double charge on contention already internalized by the fitness.
-The empirical form of the harm is not what such an argument predicts, however,
-and we report the discrepancy: the penalty is flat rather than monotone in the
-pricing strength $\theta$ over two orders of magnitude, and it vanishes under an
-equal-evaluation budget. The price is inert---it alters $4$ of $24$ routes and
-amounts to $2.4\%$ of travel time---while the multi-label search needed to act on
-it costs five times more per decoding regardless of $\theta$. Inert signals are
-not free; they are exactly as expensive as the machinery that reads them.
+\item \textbf{机制层:预约表探测式派车,以及让它付得起的降本。} 在闭环内部,该机制值
+\GainProbeLoop{}($p=\PProbeLoop$);它替换的正是文献~\cite{li2026framework} 在用的空闲
+优先规则,因此打的是现行的发表实践。两项可证保持最优选择的优化——基于可采纳下界的剪枝与
+胜者路径复用——带来 \SpeedupProbe{} 倍加速、路由调用减少 \RouteCallCut{},把单次评价的
+成本倍数从 \CostMultBefore{} 压到 \CostMultAfter{}。机制层面的解释是:AGV 之间是同构的,
+车与车唯一的差别在于站位与路是否通得过,因此选车是一个纯粹的拥堵决策,信息能够全额兑现;
+而选臂还掺入加工时长,后者往往压过走廊差异。
 
-\item \textbf{A protocol that separates mechanism from computation, and two traps
-it catches.} We evaluate under an equal wall-clock budget over ten seeds with
-paired tests, on a controlled instance family in which congestion is varied
-through capacity alone, and certify every schedule with an independent validator
-against a composite lower bound; all $1280$ runs passed. Two errors this protocol
-caught are worth as much as the positive result. A chain-style ablation that moves
-two factors at once reports reservation-aware dispatch as \emph{significantly
-beneficial}, $+0.83\%$ at $p=0.047$, where the de-confounded contrast gives
-$-0.93\%$ at $p=0.046$---the same runs, opposite signs, both significant. And a
-metric of our own devising, the funnel share, fails to distinguish the two
-congestion families it was introduced to separate.
+\item \textbf{角色分工与适用上界。} 闭环是主效应;预约表感知派遣是有车队规模上界的次效应。
+两者在开环与闭环下都显著,端到端接近独立乘积(近加性),但开环试探单独远不能代替闭环;
+大车队两格上闭环内试探反而有害(\GainProbeFleetOne{},\GainProbeFleetTwo{})。这一条把
+"机制有效"收束为"在什么条件下有效"。
+
+\item \textbf{方法层:一套把机制与算力分开的实验装置。} 包括争用强度可控的算例生成
+(标定至 \ContentionLo{} 至 \ContentionHi{})、统一执行器(任何来源的计划都经同一个仿真器
+与同一个独立校验器)、同挂钟而非同代数的预算口径,以及四级基线阶梯且每一级对应一篇真实
+发表的结构。我们并附三个受控负对照与一条代价律:走廊定价在同等算力下无益,凭证制导的打分
+只捕获随机与神谕之间的一小部分,穷举式真解码在同挂钟下反而落后;而试探档的代数与车队规模
+之积近似为常数,车队足够大时剪枝失效。这些负对照不是本文的结论,而是"我们为何选定这个
+设计"的正当理由。
+
 \end{enumerate}
 
-% NOTE: Sections 3-6 below still contain the previous paper's HDP material and
-% must be rewritten; the roadmap and notation paragraphs already describe the
-% intended new content.
-The remainder of this paper is organized as follows.
-Section~\ref{sec:Chapter_II} reviews related work on flexible job shop
-scheduling with transport, conflict-free multi-robot routing, and integrated
-formulations. Section~\ref{sec:Chapter_III} presents the problem formulation.
-Section~\ref{sec:Chapter_IV} details the closed-loop bilevel framework, the
-contention certificates and the operators derived from them, together with the
-cost each one adds to an evaluation. Section~\ref{sec:Chapter_V} reports the
-experimental protocol and results: the per-mechanism attributions, why three of
-them do not pay, and the negative result on pricing.
-Section~\ref{sec:Chapter_VI} concludes and discusses limitations.
+\subsection{论文组织}
 
-Notation is collected in Table~\ref{tab:notation}.
+本文余下部分组织如下。第~\ref{sec:Chapter_II}~节回顾相关工作,包括考虑运输的柔性作业车间
+调度、任务外生的无冲突路由,以及两者的一体化表述,并定位本文的缺口。
+第~\ref{sec:Chapter_III}~节给出问题描述与数学模型,含符号表与编号的建模假设。
+第~\ref{sec:Chapter_IV}~节详述闭环双层框架:两条反馈通路、下层的时间窗预约路由、上层的
+编码与事件驱动解码、预约表感知的车辆派遣及其两项降本,并给出复杂度与代价分析。
+第~\ref{sec:Chapter_V}~节报告实验协议与结果:四级基线阶梯、主结果、主效应与不可替代性、
+稳健性与适用上界、消融与受控负对照,以及案例的关键链归因。第~\ref{sec:Chapter_VI}~节总结
+全文并讨论局限与后续方向。
+
+全文符号汇总于表~\ref{tab:notation}。
 
 
 
-\section{Related Work}
+\section{相关工作}
 \label{sec:Chapter_II}
 
-Our problem sits between two literatures that have grown largely independently:
-flexible job shop scheduling with transportation, which decides what is processed
-where and in which order but abstracts the vehicles away, and conflict-free
-multi-robot routing, which resolves vehicle contention in space and time but
-receives its tasks from elsewhere. We review each, then the smaller body of work
-that combines them, and close by locating the gap this paper addresses.
+本文的问题位于两支长期各自独立发展的文献之间:考虑运输的柔性作业车间调度,它决定什么在
+何处以何种次序被加工,却把车辆抽象掉;以及无冲突多机器人路由,它在时空上消解车辆争用,
+但任务来自别处。下面依次回顾两者,再回顾数量较少的一体化工作,并在最后定位本文的缺口。
 
-\subsection{Flexible job shop scheduling with transportation}
+\subsection{考虑运输的柔性作业车间调度}
 
-The flexible job shop scheduling problem with processing machines and
-transportation vehicles (FJSP\_PT) extends the FJSP by making material movement
-part of the schedule. Xin et al.~\cite{xin2025review} survey the field through
-2023, cataloguing its assumptions, constraints, objectives and benchmarks, and
-classifying solution methods into exact, heuristic, meta-heuristic and swarm
-intelligence families. The dominant modelling convention is a constant
-travel-time matrix indexed by location pairs: a vehicle needs a fixed $t(a,b)$
-to move a job from $a$ to $b$, whatever else is happening in the shop. Vehicles are then
-a \emph{capacity} resource, contending for jobs but never for space.
+含加工机器与运输车辆的柔性作业车间调度问题(FJSP\_PT)通过把物料移动纳入排程来扩展 FJSP。
+Xin 等~\cite{xin2025review} 系统综述了该领域至 2023 年的进展,梳理其假设、约束、目标与
+基准算例,并把求解方法分为精确、启发式、元启发式与群智能几类。其中占主导地位的建模约定
+是一个按位置对索引的常数行驶时间矩阵:车辆把工件从 $a$ 移到 $b$ 需要固定的 $t(a,b)$,
+与车间里同时发生的其他事情无关。于是车辆只是一种\emph{能力}资源——它们为工件而竞争,
+却从不为空间而竞争。
 
-Work in this tradition has advanced rapidly on the combinatorial side. Meng et
-al.~\cite{meng2025cp} give constraint programming models for FJSP with multiple
-AGVs that close 29 open benchmark instances and improve 27 best-known solutions,
-and pair them with a CP-assisted dual-population genetic algorithm. Qin et
-al.~\cite{qin2026knowledge} combine a quality-diversity archive with Q-learning
-region selection and an AGV- and critical-path-guided local search. Fu et
-al.~\cite{fu2025integrated} integrate production and logistics decisions in a
-flexible assembly shop with an improved genetic algorithm. In all of them
-transport duration is read from a matrix, so a vehicle can never be delayed by
-another vehicle.
+这一传统在组合优化一侧进展迅速。Meng 等~\cite{meng2025cp} 给出多 AGV 情形下 FJSP 的约束
+规划模型,关闭了 29 个此前开放的基准算例并改进了 27 个最优已知解,并与一个由约束规划辅助
+的双种群遗传算法相配合。Qin 等~\cite{qin2026knowledge} 把质量--多样性存档与 Q 学习的区域
+选择结合,并设计了由 AGV 与关键路径共同制导的局部搜索。Fu 等~\cite{fu2025integrated} 用
+改进遗传算法在柔性装配车间中一体化地决策生产与物流。但在上述全部工作中,运输时长都是从
+矩阵中读出的,因此一辆车永远不会被另一辆车延误。
 
-The survey is explicit that this is a limitation rather than a settled
-modelling choice, observing that ``most scheduling problems currently have too
-many assumptions'' and that these ``can reduce problem complexity and even change
-the nature of the problem, e.g., when there are a sufficient number of
-transportation vehicles''~\cite{xin2025review}. It further notes that the
-arrival of jobs at machines is in practice affected by traffic congestion, and
-that the dependence implicit in the processing--transport two-phase flow must be
-handled before a schedule can be called feasible, let alone robust.
+综述本身明确指出这是一个局限而非已成定论的建模选择,它观察到"目前多数调度问题的假设过多",
+而这些假设"会降低问题复杂度,甚至改变问题的性质,例如当运输车辆数量足够多
+时"~\cite{xin2025review};并进一步指出,工件到达机器的时刻在实践中受交通拥堵影响,而
+加工--运输两阶段流动中隐含的依赖关系必须先被处理,一张排程才谈得上可行,更不必说
+鲁棒。
 
-\subsection{Conflict-free routing with exogenous tasks}
+\subsection{任务外生的无冲突路由与拥堵感知派车}
 
-The complementary literature treats contention as the object of study. In
-multi-agent path finding, and particularly its lifelong variant, agents must be
-routed without collision on a shared graph, and congestion is understood to
-degrade throughput well before capacity is reached. Zhang et
-al.~\cite{zhang2024guidance} address this by optimizing a guidance graph whose
-edge weights steer agents away from bottlenecks and discourage head-on movement,
-improving the throughput of several lifelong solvers. In manufacturing, Kim and
-Kim~\cite{kim2026congestion} propose congestion functions, congestion penalties
-and congestion-aware dispatching rules for large AGV fleets, evaluated in a
-discrete event simulation.
+互补的另一支文献把争用本身当作研究对象。在多智能体路径规划、特别是其终身式变体中,多个
+智能体必须在共享图上无碰撞地行进,而拥堵被公认会在远未达到容量上限时就已损害吞吐。
+Zhang 等~\cite{zhang2024guidance} 的做法是优化一张制导图,用其边权把智能体从瓶颈处引开
+并抑制迎面运动,从而提升若干终身式求解器的吞吐。在制造场景中,Kim 与
+Kim~\cite{kim2026congestion} 为大规模 AGV 车队提出拥堵函数、拥堵惩罚与拥堵感知的派车
+规则,并在离散事件仿真中加以评估。
 
-Two features of this literature matter for us. First, the tasks are exogenous:
-their release times, origins and destinations are handed to the router, which is
-consequently never in a position to question the assignment that generated them.
-Second, where congestion is quantified, it is usually a proxy---local vehicle
-density in~\cite{kim2026congestion}, edge weights learned offline
-in~\cite{zhang2024guidance}---rather than the delay a specific reservation
-actually caused a specific task.
+这支文献有两个特征对本文尤为重要。第一,任务是外生的:其释放时刻、起点与终点都是交给
+路由器的输入,路由器因而从来没有资格质疑产生这些任务的那个指派。第二,凡对拥堵作量化之处,
+所用的通常是一个代理量——\cite{kim2026congestion} 中的局部车辆密度、\cite{zhang2024guidance}
+中离线学到的边权——而不是某一次具体的预约实际给某一个具体任务造成的延误。这一区别决定了
+反馈能携带什么:代理量只能说明"此处大体拥挤",而具体的让行事件才能指名"哪一段、哪个时段、
+被谁先占",后者才是上层据以决定"是把工序换个地方,还是仅仅换个时间"所需的信息。
 
-\subsection{Integrating scheduling with conflict-free routing}
+\subsection{调度与无冲突路由的一体化:反馈深度与本文定位}
 
-A smaller body of work couples the two. On the exact side, van Os and
-Basten~\cite{vanos2026exact} formalize the
-conflict-free-transportation-constrained flexible job shop scheduling problem,
-which combines machine-eligible operations having location-dependent processing
-times with conflict-free vehicle routing, and solve it by logic-based Benders
-decomposition: a constraint programming master problem proposes schedules and an
-integer programming subproblem routes the vehicles, returning conflict-driven
-cuts. Most benchmark instances are closed to proven optimality, with makespan
-improvements of at least 10\% over prior heuristics on about half of them. The
-approach is limited to the instance sizes exact decomposition can reach, and its
-authors point to using ``information about infeasibility causes'' more
-aggressively as the natural next step.
+把两者耦合起来的工作数量较少。在精确求解一侧,van Os 与 Basten~\cite{vanos2026exact}
+形式化了带无冲突运输约束的柔性作业车间调度问题,它把"具有位置相关加工时间的可选机器工序"
+与"无冲突车辆路由"结合起来,并以基于逻辑的 Benders 分解求解:约束规划主问题给出排程,
+整数规划子问题为车辆规划路径并返回由冲突驱动的割。多数基准算例被求解至可证最优,其中约
+一半相对此前的启发式方法把完工时间改进了至少 10\%。该方法受限于精确分解可及的算例规模,
+其作者亦指出,更积极地利用"关于不可行性成因的信息"是自然的下一步。本文采用这一问题类,
+并把上述"由不可行成因反馈到可行动决策"的思路移到启发式区间;第~\ref{sec:Chapter_IV}~节的
+预约表试探正可视为该思路在启发式框架中的对应物。
 
-On the heuristic side the coupling is one-directional. Sun et
-al.~\cite{sun2023integrated} schedule with a hybrid genetic algorithm and then,
-in a second stage, resolve AGV conflicts with an AGV-encoded genetic algorithm
-and time-window Dijkstra; contention discovered in the second stage cannot revise
-the first. Li et al.~\cite{li2026framework} come closest to a loop, with a
-reinforcement learning scheduling layer, Gantt-derived task allocation, and a
-priority-based search path layer that feeds realized transport durations back
-into the timeline. Their own limitations section characterizes the result as
-operating ``primarily as a two-stage sequential optimization strategy rather than
-a fully dynamic, real-time closed-loop system'', relying on ``a one-time feedback
-adjustment'', and states that ``the global optimality of the final solution is
-partially dependent on the quality of the initial schedule''. The feedback also
-carries only time, so it can shift the schedule
-along the time axis but cannot revise an assignment; and their benchmarks are
-classical job shop instances with one eligible machine per operation, in which
-reassignment is not a decision at all.
+在启发式一侧,耦合仍是单向的。Sun 等~\cite{sun2023integrated} 先用混合遗传算法排产,再在
+第二阶段用 AGV 编码的遗传算法与时间窗 Dijkstra 消解 AGV 冲突;第二阶段发现的争用无法回过
+头修改第一阶段。Li 等~\cite{li2026framework} 最接近一个回路:其调度层用强化学习,任务分配
+由甘特图导出,再由基于优先级搜索的路径层把实现的运输时长反馈回时间轴。该文自己的局限性
+小节把结果描述为"主要作为两阶段顺序优化策略而非完全动态的实时闭环系统"运作,依赖"一次性
+的反馈调整",并指出"最终解的全局最优性部分依赖于初始排程的质量"。其反馈只携带时间,因而
+只能沿时间轴平移排程而无法修改任何指派;并且其基准是每道工序仅一台可选机器的经典作业车间
+算例,改派在其中根本不是一个决策。
 
-\subsection{What feedback carries, and how neighbourhoods are built}
+本文的缺口正落在"闭环深度"上,而不落在"是否考虑冲突"上。上述两项工作都已认真对待冲突;
+区别在于路由结果到达调度决策的\emph{频次}与\emph{内容}:是每一代对每一个候选解都到达,
+还是只对单个当前最优解到达一次;是只携带时间,还是携带足以支持改派的信息。
 
-Critical-path reasoning is long established in job shop local search, and recent
-FJSP\_PT work applies it with transport in view~\cite{qin2026knowledge}. What
-changes when routing is conflict-free is the \emph{content} of the diagnosis. A
-critical chain computed against a travel-time matrix can attribute a late start
-to a slow predecessor or a busy machine, but it cannot attribute it to a corridor,
-because in that model corridors do not exist as contended resources. Once
-occupancy is reserved over time windows, a late start can be traced to a specific
-segment and a specific interval, and to the task that reserved it first---which is
-the information an operator needs in order to know whether to move an operation
-elsewhere or merely to move it earlier. This is the heuristic counterpart of the
-conflict-driven cut in~\cite{vanos2026exact}: structured evidence about why the
-lower level could not do better, returned to the level that can act on it. The
-survey identifies precisely this as an open direction, noting that most
-algorithms are ``further adaptation and improvement of FJSP-solving algorithms,
-lacking in-depth analysis of problem characteristics and operator design based on
-problem features''~\cite{xin2025review}.
+关键链推理在作业车间局部搜索中早已成熟,近期的 FJSP\_PT 工作也在考虑运输的前提下加以
+运用~\cite{qin2026knowledge}。当路由变为无冲突之后发生变化的是诊断的\emph{内容}。基于
+行驶时间矩阵算出的关键链,可以把一次迟到的开工归因于缓慢的前驱或繁忙的机器,却无法把它
+归因于某条走廊,因为在那个模型里走廊并不作为被争用的资源而存在。一旦占用被按时间窗预约,
+一次迟到的开工便可被追溯到具体的路段、具体的时段,以及先行预约它的那个任务。
 
-\subsection{Experimental practice}
+对算例设计,\cite{xin2025review} 亦指出该领域的算例"主要在规模上有差别,缺少针对关键问题
+参数取值的专门设计",并特别把平均运输时间与平均加工时间之比 $\bar{T}_t/\bar{T}_p$ 列为
+极可能影响算法表现的量,呼吁扩充测试集。本文在此之上补充一个只有在路由被显式建模后才可见
+的参数:一个算例的拥堵中有多少是与指派相关的。集中在上下料出口的拥堵会被所有工件在所有
+指派下穿越,因而不奖励任何决策;而只服务于部分机器的走廊上的拥堵则可以被绕开。两个
+$\bar{T}_t/\bar{T}_p$ 完全相同的算例,留给调度机制的可操作余地可能完全不同。本文据此生成
+争用强度可控的算例(第~\ref{sec:Chapter_V}~节),并对实验协议提出一项要求:当各机制的单次
+评价成本相差达两个数量级时,在相同迭代次数下比较所测得的并非其所声称的东西,且误差方向
+并不随机——它偏向每次迭代做更多工作的那一个,而那通常正是被提出的方法。
 
-Xin et al.~\cite{xin2025review} also fault the field's instances: they ``differ
-primarily in scale, lacking specialized design for different values of key
-problem parameters'', and the survey singles out the ratio of mean transport time
-to mean processing time, $\bar{T}_t/\bar{T}_p$, as a quantity highly likely to
-affect how well an algorithm performs, calling for enriched test sets. To this we
-would add a second parameter that only becomes visible once routing is explicit:
-how much of an instance's congestion is assignment-relevant. Congestion at a
-load/unload exit is crossed by every job under every assignment and therefore
-rewards no decision, while congestion on corridors serving a subset of machines
-can be routed around. Two instances with identical $\bar{T}_t/\bar{T}_p$ can
-differ completely in how much leverage a scheduling mechanism has.
-
-We would add a third demand, on protocol rather than on instances. Where
-mechanisms differ in cost per evaluation---and in this problem class they differ by
-two orders of magnitude---a comparison at equal iteration counts measures
-something other than what it reports, and the direction of the error is not
-random: it favours whichever mechanism does more work per iteration, which is
-usually the one being proposed. We report every comparison against the cost that
-produced it, and repeat the central ones under both budget conventions, because we
-found that the choice between them changes conclusions rather than merely
-sharpening them.
-
-\subsection{Positioning}
-
-Table~\ref{tab:related} summarizes the comparison. The problem class we work in
-is not new; it is the one formalized in~\cite{vanos2026exact}, and we adopt it.
-What is open is the heuristic regime, where instances outgrow exact
-decomposition and where the coupling between scheduling and routing is still
-either absent, one-way, or applied once to a single incumbent. Our contribution
-is to determine which interlayer signal is worth its cost there. We implement the
-full range---realized time, typed contention certificates produced for every
-candidate the search evaluates, and corridor prices---and compare them under a
-budget that charges each one for the computation it consumes. The finding is that
-the coupling must be made complete on the evaluation side, where it corrects
-every comparison the search makes, and that the richer signals do not repay the
-evaluations they displace. This reframes the open question the surveys pose:
-not what else the layers could exchange, but what the exchange has to beat.
+表~\ref{tab:related} 汇总了上述比较。本文工作的问题类并不新,它就是~\cite{vanos2026exact}
+所形式化的那一个,本文采用它;敞开的是启发式区间——算例在此超出精确分解可及的规模,而调度
+与路由之间的耦合在此仍然或缺失、或单向、或只对单个当前最优解施加一次。本文的贡献是在这个
+区间内给出一个闭合到每一个候选解的双层框架,指认其中真正承重的那一个层间机制(预约表感知
+的车辆派遣),用可证等价的降本使它在同等算力下付得起,并量化它相对闭环主效应的角色与适用上界。
 
 \begin{table}[t]
-\caption{Positioning with respect to the closest lines of work.
-``Heterogeneity'' means an operation has several eligible machines with
-machine-dependent processing times; ``coupling'' is how often, and in which
-direction, routing outcomes reach the scheduling decision. The last column is
-what crosses the interface; we implement realized time, contention certificates
-and corridor prices, and report what each costs against what it returns.}
+\caption{与最接近的几支工作的定位对比。"机器异构"指一道工序有多台可选机器且加工时间随
+机器而变;"耦合频次"指路由结果以何种频次、沿何种方向到达调度决策;最后一列是穿过层间
+接口的内容。本文实现了实现时间、冲突凭证与走廊价格三类接口,并按各自的代价与收益逐一
+报告,其中承重的是预约表试探。}
 \label{tab:related}
 \footnotesize
-\begin{tabular}{@{}lcllll@{}}
+\begin{tabular}{@{}lclll l@{}}
 \toprule
-Line of work & Ref. & Heterogeneity & Vehicle contention & Coupling & Feedback content \\
+工作类别 & 文献 & 机器异构 & 车辆争用 & 耦合频次 & 反馈内容 \\
 \midrule
-FJSP\_PT metaheuristics & \cite{meng2025cp,qin2026knowledge,fu2025integrated}
-  & yes & constant matrix & --- & --- \\
-Lifelong MAPF & \cite{zhang2024guidance}
-  & --- & conflict-free & tasks exogenous & edge weights \\
-Congestion-aware dispatch & \cite{kim2026congestion}
-  & no & density proxy & one-way & congestion penalty \\
-Two-stage FJSP + routing & \cite{sun2023integrated}
-  & yes & conflict-free & one-way & none \\
-RL scheduling + PBS & \cite{li2026framework}
-  & no & conflict-free & one-time refinement & arrival times \\
-Exact LBBD & \cite{vanos2026exact}
-  & yes & conflict-free & master--subproblem & conflict-driven cuts \\
-\textbf{This paper} &
-  & yes & conflict-free & every candidate & all four, priced \\
+FJSP\_PT 元启发式 & \cite{meng2025cp,qin2026knowledge,fu2025integrated}
+  & 有 & 常数矩阵 & --- & --- \\
+终身式 MAPF & \cite{zhang2024guidance}
+  & --- & 无冲突 & 任务外生 & 边权 \\
+拥堵感知派车 & \cite{kim2026congestion}
+  & 无 & 密度代理量 & 单向 & 拥堵惩罚 \\
+两阶段 FJSP + 路由 & \cite{sun2023integrated}
+  & 有 & 无冲突 & 单向 & 无 \\
+强化学习调度 + PBS & \cite{li2026framework}
+  & 无 & 无冲突 & 一次性修正 & 到达时刻 \\
+精确 LBBD & \cite{vanos2026exact}
+  & 有 & 无冲突 & 主--子问题 & 冲突驱动割 \\
+\textbf{本文} &
+  & 有 & 无冲突 & 每个候选解 & 实现时间 + 预约表试探 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 
-\section{Problem Formulation}
+\section{问题描述与数学模型}
 \label{sec:Chapter_III}
+\subsection{问题描述}
 
-\subsection{Problem statement}
-
-An instance consists of $n$ jobs, $N_M$ robot arms and $N_A$ automated guided
-vehicles operating on a shop floor represented as a graph. Job $j$ has a fixed
-chain of $n_j$ operations $O_{j1}\to\cdots\to O_{jn_j}$; operation $O_{ji}$ may
-be processed on any arm in its eligible set $\Omega_{ji}\subseteq M$, taking
-$t^P_{jim}$ time units on arm $m$, a quantity that depends on the arm chosen.
-Arms occupy fixed nodes of the graph and jobs are moved between them by the
-vehicle fleet. Solving an instance means fixing four groups of decisions
-simultaneously:
+一个算例由 $n$ 个工件、$N_M$ 台机械臂与 $N_A$ 辆自动导引车构成,它们在一个以图表示的车间
+中运行。工件 $j$ 具有固定的 $n_j$ 道工序链 $O_{j1}\to\cdots\to O_{jn_j}$;工序 $O_{ji}$
+可在其可选集 $\Omega_{ji}\subseteq M$ 中的任一机械臂上加工,在机械臂 $m$ 上耗时
+$t^P_{jim}$,该值取决于所选的机械臂。机械臂占据图中的固定节点,工件由车队在这些节点之间
+搬运。求解一个算例意味着同时确定四组决策:
 
 \begin{enumerate}[label=(\roman*),leftmargin=*,topsep=2pt,itemsep=1pt]
-\item assign each operation $O_{ji}$ to an arm $m\in\Omega_{ji}$;
-\item sequence the operations assigned to each arm;
-\item assign the resulting transport tasks to vehicles and sequence each
-vehicle's tasks;
-\item route every vehicle movement over the graph, conflict-free in time and
-space, with waiting permitted.
+\item 把每道工序 $O_{ji}$ 指派给某台机械臂 $m\in\Omega_{ji}$;
+\item 为每台机械臂上被指派的工序排序;
+\item 把由此派生的运输任务指派给车辆,并为每辆车的任务排序;
+\item 为每一次车辆移动在图上规划路径,要求在时间与空间上无冲突,允许等待。
 \end{enumerate}
 
-The objective is to minimize the makespan $C_{\max}$. Table~\ref{tab:notation}
-collects the notation.
+目标是最小化完工时间 $C_{\max}$。全文符号汇总于表~\ref{tab:notation}。
 
 \begin{table}[t]
-\caption{Notation.}
+\caption{符号说明。}
 \label{tab:notation}
 \small
 \begin{tabular}{@{}ll@{}}
 \toprule
-Symbol & Meaning \\
+符号 & 含义 \\
 \midrule
-$J=\{1,\dots,n\}$, $O_{ji}$ & jobs; $i$-th operation of job $j$, $i\le n_j$ \\
-$M=\{1,\dots,N_M\}$, $\Omega_{ji}\subseteq M$ & robot arms; eligible arms for $O_{ji}$ \\
-$t^P_{jim}$ & processing time of $O_{ji}$ on arm $m\in\Omega_{ji}$ \\
-$K=\{1,\dots,N_A\}$ & identical unit-load vehicles \\
-$G=(V,E)$, $\tau_e$ & shop graph; traversal time of corridor $e\in E$ \\
-$v_0$, $\mathrm{loc}(m)$ & load/unload station; node of arm $m$ \\
-$t^{*}(a,b)$ & shortest-path time from $a$ to $b$ in $G$, ignoring contention \\
-$\delta_{\mathrm{ret}}\in\{0,1\}$ & whether finished jobs return to $v_0$ (baseline $1$) \\
-$S_{ji}$, $C_{ji}$, $A_{ji}$ & start, completion, and material arrival time of $O_{ji}$ \\
-$C_{\max}$ & makespan \\
+$J=\{1,\dots,n\}$, $O_{ji}$ & 工件集合;工件 $j$ 的第 $i$ 道工序,$i\le n_j$ \\
+$M=\{1,\dots,N_M\}$, $\Omega_{ji}\subseteq M$ & 机械臂集合;$O_{ji}$ 的可选机械臂集 \\
+$t^P_{jim}$ & $O_{ji}$ 在机械臂 $m\in\Omega_{ji}$ 上的加工时间 \\
+$K=\{1,\dots,N_A\}$ & 同构的单载量车辆 \\
+$G=(V,E)$, $\tau_e$ & 车间图;走廊 $e\in E$ 的通行时间 \\
+$v_0$, $\mathrm{loc}(m)$ & 上下料站;机械臂 $m$ 所在节点 \\
+$t^{*}(a,b)$ & $G$ 中 $a$ 到 $b$ 的最短路时间,不计争用 \\
+$\delta_{\mathrm{ret}}\in\{0,1\}$ & 完工工件是否返回 $v_0$(基准取 $1$) \\
+$S_{ji}$, $C_{ji}$, $A_{ji}$ & $O_{ji}$ 的开工、完工与物料到达时刻 \\
+$C_{\max}$ & 完工时间 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\subsection{Assumptions}
+\subsection{建模假设}
 \label{sec:assumptions}
 
 \begin{enumerate}[label=\textbf{A\arabic*.},leftmargin=*,topsep=2pt,itemsep=2pt]
-\item \textbf{Static instance, complete information.} All $n$ jobs are available
-at $v_0$ at $t=0$; there are no release or due dates. Processing data, the
-layout $G$ and vehicle states are known when planning.
+\item \textbf{静态算例与完全信息。} 全部 $n$ 个工件在 $t=0$ 时刻均已位于 $v_0$,不设释放
+时刻与交货期。加工数据、布局 $G$ 与车辆状态在规划时均为已知。
 
-\item \textbf{Jobs.} Each job has a fixed precedence chain. Processing and
-transport are non-preemptive, jobs are unsplittable, and there is no exogenous
-precedence between different jobs.
+\item \textbf{工件。} 每个工件具有固定的前后约束链。加工与运输均不可抢占,工件不可拆分,
+不同工件之间不存在外生的先后约束。
 
-\item \textbf{Arms: partially flexible and time-heterogeneous.} Each $O_{ji}$
-may run on any $m\in\Omega_{ji}$, with $|\Omega_{ji}|\ge 2$ for most operations
-and total flexibility $\Omega_{ji}=M$ as a special case. Processing times are
-machine-dependent in the unrelated sense: $t^P_{jim}$ and $t^P_{jim'}$ need
-bear no relation for $m\neq m'$. An arm processes one operation at a time, does
-not fail within the horizon, and sequence-dependent setups are absorbed into
-$t^P_{jim}$.
+\item \textbf{机械臂:部分柔性且工时异构。} 每道工序 $O_{ji}$ 可在任一
+$m\in\Omega_{ji}$ 上加工,多数工序满足 $|\Omega_{ji}|\ge 2$,完全柔性
+$\Omega_{ji}=M$ 是其特例。加工时间在\emph{无关机器}(unrelated)意义上与机器有关:当
+$m\neq m'$ 时,$t^P_{jim}$ 与 $t^P_{jim'}$ 之间不必存在任何关系。一台机械臂同时只加工
+一道工序,在计划期内不发生故障,与顺序相关的准备时间被并入 $t^P_{jim}$。
 
-\item \textbf{Buffers and handling.} Input and output buffers at each arm, and
-storage at $v_0$, have ample capacity, so no blocking occurs. Loading and
-unloading take negligible time and do not seize the arm.
+\item \textbf{缓冲区与装卸。} 每台机械臂的输入、输出缓冲区以及 $v_0$ 处的存储容量充裕,
+因而不发生阻塞。装载与卸载时间可忽略,且不占用机械臂。
 
-\item \textbf{Vehicles.} The $N_A$ vehicles are identical, unit-load, and move
-at constant speed whether laden or empty; acceleration and battery are not
-modelled. A transport task is a single move---from $v_0$ to the first arm,
-between consecutive arms when they differ, or from the last arm back to $v_0$
-when $\delta_{\mathrm{ret}}=1$---and any vehicle may execute any task, so
-consecutive moves of one job may be relayed across vehicles. After unloading, a
-vehicle is not forced back to $v_0$; it repositions according to its own task
-chain, and its departure may be deferred by the router.
+\item \textbf{车辆。} $N_A$ 辆车同构、单载量,空载与满载均以恒定速度行驶,不建模加减速与
+电量。一个运输任务是一次单程移动——从 $v_0$ 到第一台机械臂、在前后两台不同机械臂之间,
+或当 $\delta_{\mathrm{ret}}=1$ 时从最后一台机械臂返回 $v_0$;任一车辆可执行任一任务,
+因此同一工件的连续移动可以在不同车辆之间接力。卸载之后车辆不被强制返回 $v_0$,而是按其
+自身的任务链重新占位,且其出发时刻可由路由层推迟。
 
-\item \textbf{Network and conflict-freeness.} $G$ is strongly connected with
-known constant traversal times $\tau_e$. A corridor is an \emph{exclusive}
-resource: both directions of $e$ share a single reservation, so at most one
-vehicle occupies $e$ at any instant, which rules out head-on conflicts and
-same-direction overtaking alike. Occupancy is a half-open interval
-$[t,\,t+\tau_e)$, so a second vehicle may enter exactly at $t+\tau_e$. Nodes
-carry parking berths of ample capacity that are separate from the traversal
-resource; waiting therefore happens at berths and is always permitted.
+\item \textbf{路网与无冲突性。} $G$ 强连通,各走廊的通行时间 $\tau_e$ 为已知常数。走廊是
+\emph{排他}资源:$e$ 的两个方向共享同一份预约,因而任一时刻最多一辆车占用 $e$,这同时
+排除了迎面冲突与同向超车。占用区间取半开形式 $[t,\,t+\tau_e)$,故第二辆车可以恰好在
+$t+\tau_e$ 进入。节点上设有容量充裕的停靠位,它与通行资源相互独立;因此等待发生在停靠位
+上,并且总是被允许的。
 
-\item \textbf{Deadlock freedom by construction.} Routes are planned by
-time-window reservation on the corridor resource, and a new route may only
-occupy free windows. Together with A4 and A6 this makes every assignment,
-sequence and task chain decodable into a conflict-free, deadlock-free schedule
-of finite makespan, so no repair of infeasibility is ever required.
+\item \textbf{构造性的无死锁。} 路径以走廊资源上的时间窗预约方式规划,新路径只能占用空闲
+的时间窗。结合 A4 与 A6,这使得任何指派、排序与任务链都可被解码为一张无冲突、无死锁且
+完工时间有限的排程,因而永远不需要对不可行解做修复。
 
-\item \textbf{Out of scope.} Machine and vehicle failures, finite buffers and
-blocking, battery charging, and dynamic job arrivals are left to future work.
+\item \textbf{不在建模范围内。} 机器与车辆故障、有限缓冲与阻塞、电池充电,以及工件的动态
+到达,均留待后续工作。
 \end{enumerate}
 
-Assumptions A1, A2, A4 and A5 are standard in the FJSP\_PT
-literature~\cite{xin2025review}. The choices that shape this paper are A3
-(machine-dependent times on partially flexible arms), A6 (contention as an
-explicit exclusive-resource constraint rather than a constant travel matrix) and
-the resulting fact that transport durations are outputs of the routing decision.
+其中 A1、A2、A4 与 A5 在 FJSP\_PT 文献中是标准假设~\cite{xin2025review}。真正塑造本文的
+是 A3(部分柔性机械臂上与机器相关的加工时间)与 A6(把争用表述为显式的排他资源约束,而不是
+一个常数行驶时间矩阵),以及由此导出的一个事实:运输时长是路由决策的输出,而不是输入参数。
 
-\subsection{Decisions and derived transport tasks}
+\subsection{决策变量与派生的运输任务}
 
-Let $x_{jim}\in\{0,1\}$ indicate that $O_{ji}$ is assigned to arm $m$, and write
-$\mathrm{m}(j,i)$ for the arm so chosen and $d_{ji}=\mathrm{loc}(\mathrm{m}(j,i))$
-for its node. For $\delta_{\mathrm{ret}}=1$ we append to each job a
-\emph{pseudo-operation} $O_{j,n_j+1}$ with zero processing time located at
-$v_0$, which represents the return of the finished job; this keeps the makespan
-definition uniform.
+令 $x_{jim}\in\{0,1\}$ 表示 $O_{ji}$ 被指派给机械臂 $m$,记 $\mathrm{m}(j,i)$ 为如此选定
+的机械臂,$d_{ji}=\mathrm{loc}(\mathrm{m}(j,i))$ 为其所在节点。当 $\delta_{\mathrm{ret}}=1$
+时,为每个工件追加一道位于 $v_0$、加工时间为零的\emph{伪工序} $O_{j,n_j+1}$,用以表示完工
+工件的返回;这样可使完工时间的定义保持统一。
 
-Unlike vehicle routing problems, the transport tasks are not part of the input.
-They are induced by the assignment:
+与车辆路径问题不同,运输任务并不是输入的一部分,而是由指派\emph{派生}出来的:
 \begin{equation}
 \label{eq:tasks}
 \mathcal{T}(x)=\Bigl\{\,(j,i)\ :\ d_{j,i-1}\neq d_{ji}\,\Bigr\},
 \qquad d_{j0}\equiv v_0 ,
 \end{equation}
-where task $(j,i)$ moves job $j$ from $d_{j,i-1}$ to $d_{ji}$ and becomes ready
-at $r_{ji}=C_{j,i-1}$ (with $C_{j0}=0$). Consecutive operations placed on the
-same arm generate no task at all. Hence both the number of transport tasks and
-their endpoints are consequences of decision group (i): an assignment that keeps
-a job on one arm moves it twice, while one that changes arm at every step moves
-it $n_j+1$ times. Task assignment to vehicles is expressed by
-$y_{tk}\in\{0,1\}$, $\sum_{k\in K}y_{tk}=1$ for every $t\in\mathcal{T}(x)$, and
-the tasks allotted to a vehicle are totally ordered.
+其中任务 $(j,i)$ 把工件 $j$ 从 $d_{j,i-1}$ 搬到 $d_{ji}$,并在
+$r_{ji}=C_{j,i-1}$ 时刻就绪(约定 $C_{j0}=0$)。若前后两道工序被放在同一台机械臂上,则不
+产生任何任务。因此,运输任务的\emph{数量}与\emph{端点}都是决策组 (i) 的后果:一个把工件
+始终留在同一台机械臂上的指派只需搬运两次,而一个每道工序都换臂的指派则需搬运 $n_j+1$ 次。
+任务到车辆的指派用 $y_{tk}\in\{0,1\}$ 表示,对每个 $t\in\mathcal{T}(x)$ 有
+$\sum_{k\in K}y_{tk}=1$,且分配给同一辆车的任务是全序的。
 
-\subsection{Timing and feasibility}
+这一点值得强调:在常数行驶时间矩阵的模型中,运输量是给定的;而在本文的模型中,上层的指派
+决策同时决定了要搬多少次、从哪搬到哪,以及这些搬运会在哪些走廊上彼此争用。
 
-Write $p_{ji}=\sum_{m\in\Omega_{ji}}x_{jim}t^P_{jim}$ for the realized
-processing time. Assignment, precedence and arm capacity give
+\subsection{时序关系与可行性条件}
+
+记 $p_{ji}=\sum_{m\in\Omega_{ji}}x_{jim}t^P_{jim}$ 为实现的加工时间。指派、前后约束与
+机械臂的单件加工能力给出
 \begin{align}
 \sum_{m\in\Omega_{ji}} x_{jim} &= 1, & \forall j,i,
 \label{eq:assign}\\
@@ -787,1077 +782,937 @@ C_{ji} &= S_{ji}+p_{ji}, & \forall j,i,
 S_{ji} &\ \ge\ A_{ji}, & \forall j,i,
 \label{eq:material}\\
 S_{j'i'}\ \ge\ C_{ji}\ \ \vee\ \ S_{ji} &\ \ge\ C_{j'i'}
-& \forall (j,i)\neq(j',i') \text{ on the same arm},
+& \forall (j,i)\neq(j',i')\ \text{位于同一机械臂},
 \label{eq:disj}
 \end{align}
-where $A_{ji}$ is the time the job is physically present at $d_{ji}$. If
-$(j,i)\notin\mathcal{T}(x)$ the job is already there and $A_{ji}=C_{j,i-1}$.
-Otherwise $A_{ji}$ is produced by the vehicle that carries task $(j,i)$: with
-$a^{\mathrm{E}}_{ji}$ the arrival of that vehicle at the pickup node after its
-empty leg,
+其中 $A_{ji}$ 是工件实际出现在 $d_{ji}$ 的时刻。若 $(j,i)\notin\mathcal{T}(x)$,则工件
+本已在该处,$A_{ji}=C_{j,i-1}$。否则 $A_{ji}$ 由承运任务 $(j,i)$ 的那辆车产生:记
+$a^{\mathrm{E}}_{ji}$ 为该车经空载段到达取货节点的时刻,则
 \begin{equation}
 \label{eq:load}
 \ell_{ji}=\max\bigl(a^{\mathrm{E}}_{ji},\ r_{ji}\bigr),
 \qquad
-A_{ji}=\text{arrival of the laden leg departing at } \ell_{ji},
+A_{ji}=\text{于 } \ell_{ji} \text{ 出发的满载段的到达时刻},
 \end{equation}
-so a vehicle may wait for the job or the job for the vehicle. Each leg, empty or
-laden, is a walk $(e_1,\dots,e_q)$ in $G$ with corridor entry times
-$\theta_1,\dots,\theta_q$ satisfying
+即车辆可以等工件,工件也可以等车辆。无论空载段还是满载段,每一段都是 $G$ 中的一条通路
+$(e_1,\dots,e_q)$,其走廊进入时刻 $\theta_1,\dots,\theta_q$ 满足
 \begin{equation}
 \label{eq:walk}
 \theta_1 \ \ge\ \sigma, \qquad
 \theta_{l+1}\ \ge\ \theta_l+\tau_{e_l}, \quad l=1,\dots,q-1,
 \end{equation}
-with $\sigma$ the time the leg becomes available to start; the inequalities are
-slack exactly when the vehicle waits at a berth, and the leg ends at
-$\theta_q+\tau_{e_q}$. Finally, contention:
+其中 $\sigma$ 是该段可以开始的时刻;上述不等式取严格不等号的时刻恰好就是车辆在停靠位等待
+的时刻,而该段在 $\theta_q+\tau_{e_q}$ 结束。最后是争用约束:
 \begin{equation}
 \label{eq:excl}
 \bigl[\theta,\ \theta+\tau_e\bigr)\ \cap\
 \bigl[\theta',\ \theta'+\tau_e\bigr)\ =\ \emptyset
 \end{equation}
-for every two distinct occupancies of the same corridor $e$, irrespective of
-direction or of which vehicles are involved. The objective is
+该式对同一走廊 $e$ 的任意两次不同占用都成立,与方向无关,也与涉及哪些车辆无关。目标函数为
 \begin{equation}
 \label{eq:obj}
 \min\ C_{\max},\qquad
 C_{\max}=\max_{j\in J}\ C_{j,\,n_j+\delta_{\mathrm{ret}}} .
 \end{equation}
 
-Two consequences are worth recording, because the algorithm of
-Section~\ref{sec:Chapter_IV} is built on them. First, in any semi-active
-schedule, \eqref{eq:material} and \eqref{eq:disj} tighten to
+有两个推论值得记录,因为第~\ref{sec:Chapter_IV}~节的算法正建立在它们之上。第一,在任何
+半活动排程中,\eqref{eq:material} 与 \eqref{eq:disj} 可收紧为
 \begin{equation}
 \label{eq:bind}
 S_{ji}=\max\bigl(A_{ji},\ F_{\mathrm{m}(j,i)}\bigr),
 \end{equation}
-where $F_m$ is the completion time of the operation preceding $O_{ji}$ on arm
-$m$. The start time is therefore governed by exactly one of two causes, and
-which of the two attains the maximum is well defined; this is what makes the
-later attribution of a delay to a cause meaningful rather than a heuristic
-guess. Second, \eqref{eq:excl} is the only constraint in the model that couples
-distinct jobs through space rather than through a shared machine.
+其中 $F_m$ 是机械臂 $m$ 上排在 $O_{ji}$ 之前那道工序的完工时刻。于是开工时刻恰由两种成因
+之一支配,且两者中哪一个取到最大值是良定义的;正是这一点使得后文把一次延误归因于某个成因
+成为有意义的判定,而不是启发式的猜测。第二,\eqref{eq:excl} 是模型中唯一通过\emph{空间}
+而非通过共享机器来耦合不同工件的约束。
 
-\subsection{Relation to FJSP\_PT}
+\subsection{与 FJSP\_PT 的关系}
 
-Deleting~\eqref{eq:excl} makes every leg independent, so each one may follow a
-shortest path and \eqref{eq:walk} holds with equality throughout. Transport
-durations then collapse to the constant matrix $t^{*}(a,b)$ and the model
-becomes the standard flexible job shop scheduling problem with transportation.
-The entire difference between the two problems is thus one family of
-constraints---and with it the fact that the duration of a move is no longer a
-parameter but a variable determined jointly by the routes of all vehicles. The
-same relaxation supplies the natural optimistic estimate $t^{*}$ used later both
-as a lower bound and, in the open-loop baselines, as the dispatcher's estimate
-of arrival.
+删去~\eqref{eq:excl} 后各段彼此独立,于是每一段都可以走最短路,且 \eqref{eq:walk} 处处
+取等号。运输时长随之退化为常数矩阵 $t^{*}(a,b)$,模型也就变成标准的考虑运输的柔性作业车间
+调度问题。因此两个问题之间的全部差别只是一族约束——以及随之而来的一个事实:一次移动的时长
+不再是参数,而是由所有车辆的路径共同决定的变量。同一松弛还提供了自然的乐观估计 $t^{*}$,
+它在后文既用作下界,也在开环基线中充当派车器对到达时刻的估计。
 
-\subsection{Complexity}
+\subsection{计算复杂度}
 
-\begin{proposition}
+\begin{prop}
 \label{prop:np_hard}
-The problem defined by \eqref{eq:assign}--\eqref{eq:obj} is strongly NP-hard,
-and remains so when $\Omega_{ji}=M$ for all operations.
-\end{proposition}
+由 \eqref{eq:assign}--\eqref{eq:obj} 定义的问题是强 NP 难的;且当所有工序均满足
+$\Omega_{ji}=M$ 时依然如此。
+\end{prop}
 
 \begin{proof}
-Restrict to instances in which $\tau_e=0$ for all $e\in E$, each arm is joined
-to $v_0$ by its own dedicated corridor, and $N_A=n$. Every leg then takes zero
-time and occupies the half-open interval $[t,t)=\emptyset$, so \eqref{eq:excl}
-is vacuous and no vehicle can delay another; moreover each job owns a vehicle,
-so \eqref{eq:load} never binds and $A_{ji}=C_{j,i-1}$. What remains
-is \eqref{eq:assign}--\eqref{eq:disj} with $A_{ji}=C_{j,i-1}$, which is exactly
-the flexible job shop scheduling problem with unrelated machines. Two of its
-special cases are already strongly NP-hard: taking $|\Omega_{ji}|=1$ throughout
-leaves the classical job shop problem, strongly NP-hard for three
-machines~\cite{garey1976complexity}; taking $\Omega_{ji}=M$ and $n_j=1$ leaves
-the minimization of makespan on unrelated parallel machines, which contains
-scheduling on identical parallel machines and is strongly NP-hard for a variable
-number of machines. Each restriction is polynomial, so the general problem is
-strongly NP-hard, and the second case shows that total flexibility does not
-help.
+限制到如下算例:对所有 $e\in E$ 有 $\tau_e=0$,每台机械臂各由一条专用走廊与 $v_0$ 相连,
+且 $N_A=n$。此时每一段行驶耗时为零、占用的半开区间 $[t,t)=\emptyset$,故 \eqref{eq:excl}
+恒真,任何车辆都无法延误另一辆车;又因每个工件独占一辆车,\eqref{eq:load} 从不起作用,
+$A_{ji}=C_{j,i-1}$。余下的正是取 $A_{ji}=C_{j,i-1}$ 的
+\eqref{eq:assign}--\eqref{eq:disj},也就是无关机器情形下的柔性作业车间调度问题。它的两个
+特例已是强 NP 难的:处处取 $|\Omega_{ji}|=1$ 时退化为经典作业车间问题,在三台机器下即为
+强 NP 难~\cite{garey1976complexity};取 $\Omega_{ji}=M$ 且 $n_j=1$ 时退化为无关并行机上
+的完工时间最小化问题,它包含同型并行机调度,在机器数可变时为强 NP 难。上述每个限制均为
+多项式规约,故一般问题是强 NP 难的;第二个特例同时说明完全柔性并不会使问题变容易。
 \end{proof}
 
-The reduction deliberately switches contention off, which shows that hardness is
-inherited from the scheduling side alone; the routing side adds to it rather
-than replacing it, since the routing subproblem obtained by freezing decisions
-(i)--(iii) is itself a conflict-free multi-agent routing problem in which
-release times and endpoints are chained across tasks. Exact methods are
-available for small instances---van Os and Basten~\cite{vanos2026exact} close
-most instances of the same problem class by logic-based Benders
-decomposition---and we use them to frame, not to compete with, the heuristic
-regime this paper targets.
+该规约刻意关闭了争用,这表明难度仅从调度一侧就已继承而来;路由一侧是在此之上叠加难度,
+而非取代它——因为把决策 (i)--(iii) 冻结之后得到的路由子问题本身就是一个无冲突多智能体路由
+问题,且其中各任务的释放时刻与端点是彼此链接的。小规模算例上存在精确方法:van Os 与
+Basten~\cite{vanos2026exact} 用基于逻辑的 Benders 分解关闭了同一问题类的多数算例;本文
+引用它们是为了给本文所针对的启发式区间划定边界,而不是与之竞争。
 
-\subsection{Characterizing an instance}
+\subsection{算例特征的刻画}
 \label{sec:features}
 
-Because the effect of the mechanisms we study depends on instance structure
-rather than instance size, every instance is recorded with the following
-descriptors. The first four are conventional; the survey of
-Xin et al.~\cite{xin2025review} singles out the first as likely to govern how
-well an algorithm performs.
+由于本文所研究机制的效果取决于算例的\emph{结构}而非\emph{规模},每个算例都记录如下描述量。
+前四个是常规的;\cite{xin2025review} 的综述特别指出其中第一个极可能左右算法的表现。
 
 \begin{itemize}[leftmargin=*,topsep=2pt,itemsep=1pt]
-\item $\bar{T}_t/\bar{T}_p$: mean shortest-path travel time between arm nodes
-divided by mean processing time, the relative weight of moving versus
-processing.
-\item Heterogeneity $H$: the mean, over operations, of the coefficient of
-variation of $\{t^P_{jim}: m\in\Omega_{ji}\}$. $H=0$ makes eligible arms
-interchangeable in duration and switches off the reassignment trade-off.
-\item Flexibility $F=\operatorname{mean}_{ji}|\Omega_{ji}|/N_M$: the room a
-reassignment has to manoeuvre.
-\item $N_A/N_M$: whether the bottleneck is likely to sit on the transport or
-the processing side.
+\item $\bar{T}_t/\bar{T}_p$:机械臂节点之间的平均最短路行驶时间除以平均加工时间,
+即搬运相对于加工的权重。
+\item 异构度 $H$:$\{t^P_{jim}: m\in\Omega_{ji}\}$ 的变异系数在所有工序上的均值。
+$H=0$ 意味着可选机械臂在工时上可以互换,改派权衡随之关闭。
+\item 柔性度 $F=\operatorname{mean}_{ji}|\Omega_{ji}|/N_M$:改派可以周旋的余地。
+\item $N_A/N_M$:瓶颈更可能位于运输一侧还是加工一侧。
 \end{itemize}
 
-The remaining descriptors are specific to the present setting, and exist because
-congestion as such is not the right quantity: what matters is how much of it a
-scheduling decision can avoid. Let $\mathrm{cut}(v_0)$ be a minimum-cardinality
-set of corridors whose removal disconnects $v_0$ from every arm.
+其余描述量是本文场景特有的,它们存在的理由是:拥堵本身并不是恰当的度量,真正要紧的是其中
+有多少是调度决策\emph{可以避开}的。令 $\mathrm{cut}(v_0)$ 为使 $v_0$ 与所有机械臂断开所需
+删除的走廊的最小基数集合。
 
 \begin{itemize}[leftmargin=*,topsep=2pt,itemsep=1pt]
-\item Funnel share $\varphi\in[0,1]$: the fraction of the time of a typical
-$v_0\to$ arm trip spent on corridors common to \emph{all} shortest $v_0\to$ arm
-paths. Such corridors are crossed by every job under every assignment, so the
-delay they cause is invariant to decisions (i)--(iii); a large $\varphi$ dilutes
-the signal any feedback mechanism could exploit.
-\item $|\mathrm{cut}(v_0)|$, the funnel width, which upper-bounds how many
-vehicles can leave the station concurrently; a value of $1$ means a single-point
-funnel.
-\item The far-group cut: the minimum number of corridors isolating the arms
-whose distance to $v_0$ exceeds the median. Cutting a single arm is
-uninformative, since its own spur always yields $1$; the group cut measures the
-capacity of the deep bottleneck that assignment decisions actually contend for.
+\item 漏斗占比 $\varphi\in[0,1]$:一次典型的"$v_0\to$ 机械臂"行程中,花在\emph{所有}
+最短 $v_0\to$ 机械臂路径都共用的走廊上的时间比例。这类走廊在任何指派下都会被每个工件穿越,
+因而它们造成的延误对决策 (i)--(iii) 不变;$\varphi$ 越大,任何反馈机制可利用的信号被稀释
+得越厉害。
+\item $|\mathrm{cut}(v_0)|$,即漏斗宽度,它给出可同时离站的车辆数上界;取值为 $1$ 表示
+单点漏斗。
+\item 远组割:把到 $v_0$ 的距离超过中位数的那些机械臂隔离出来所需的最小走廊数。只割单台
+机械臂是没有信息量的,因为它自己的支路总给出 $1$;组割衡量的是指派决策真正争夺的那个深层
+瓶颈的容量。
 \end{itemize}
 
-Finally, each instance carries a zero-cost composite lower bound
+最后,每个算例都附带一个零成本的复合下界
 $\mathrm{LB}=\max(\mathrm{LB}_{\text{chain}},\mathrm{LB}_{\text{load}},
-\mathrm{LB}_{\text{cut}})$, whose three components relax different parts of the
-model and do not dominate one another. $\mathrm{LB}_{\text{chain}}$ takes, per
-job, the shortest inbound trip plus $\sum_i \min_{m\in\Omega_{ji}}t^P_{jim}$
-plus the shortest return, relaxing away inter-arm moves and all queueing.
-$\mathrm{LB}_{\text{load}}$ is $\sum_{j,i}\min_m t^P_{jim}/N_M$, relaxing
-precedence and transport. $\mathrm{LB}_{\text{cut}}$ exploits the funnel: with
-$\delta_{\mathrm{ret}}=1$ each job crosses $\mathrm{cut}(v_0)$ twice, and
-distributing the $X=2n$ crossings over the cut so as to minimize the busiest
-corridor gives
+\mathrm{LB}_{\text{cut}})$,其三个分量分别松弛模型的不同部分,且互不占优。
+$\mathrm{LB}_{\text{chain}}$ 逐工件取"最短入场行程 $+$
+$\sum_i \min_{m\in\Omega_{ji}}t^P_{jim}$ $+$ 最短返回行程",即松弛掉臂间移动与全部排队。
+$\mathrm{LB}_{\text{load}}$ 取 $\sum_{j,i}\min_m t^P_{jim}/N_M$,即松弛前后约束与运输。
+$\mathrm{LB}_{\text{cut}}$ 利用漏斗结构:当 $\delta_{\mathrm{ret}}=1$ 时每个工件穿越
+$\mathrm{cut}(v_0)$ 两次,把 $X=2n$ 次穿越分配到割集上以最小化最繁忙走廊的负载,得到
 \begin{equation}
 \label{eq:lbcut}
 C_{\max}\ \ge\ X\Bigl/\sum_{e\in \mathrm{cut}(v_0)}\tau_e^{-1}.
 \end{equation}
-The bound is loose---observed gaps to the best known solutions run from roughly
-$35\%$ to $61\%$---so it serves for order-of-magnitude checks and as a
-regression guard rather than as a quality certificate.
+该下界是松的——与最优已知解之间实测的间隙大致在 \LBGapLo{} 到 \LBGapHi{} 之间——因此它用于数量级
+核查与回归防护,而不作为解质量的证书。
 
-\section{Closed-Loop Bilevel Framework}
+\section{闭环双层框架}
 \label{sec:Chapter_IV}
-
-\subsection{Overview: two feedback paths}
+\subsection{框架总览:两条反馈通路}
 \label{sec:overview}
 
-The framework splits the four decision groups of
-Section~\ref{sec:Chapter_III} across two layers. The upper layer searches over
-assignment and sequencing with a memetic algorithm; the lower layer turns a
-given set of transport tasks into conflict-free routes by time-window
-reservation. What distinguishes it from a two-stage or one-shot-refinement
-scheme is not the split but what crosses it, in both directions and how often.
+本框架把第~\ref{sec:Chapter_III}~节的四组决策分配到两层。上层用一个 memetic 算法在指派与
+排序上搜索;下层以时间窗预约把给定的一组运输任务转化为无冲突路径。使它区别于两阶段方案或
+一次性修正方案的,不是这种分层,而是\emph{什么东西穿过分层界面}、沿哪个方向穿过、以及穿过
+的\emph{频次}。
 
 \begin{description}[leftmargin=0pt,topsep=3pt,itemsep=3pt]
-\item[Evaluation path.] The fitness of \emph{every} individual in
-\emph{every} generation is the makespan obtained after the lower layer has
-routed all of its transport tasks conflict-free, yielding delays included. The
-upper layer never sees an optimistic estimate, so it never optimizes a proxy.
-\item[Decision path.] Having resolved contention, the lower layer knows
-precisely who blocked whom, on which corridor, and over which interval. It
-returns that structure---a \emph{contention certificate}---rather than a
-scalar. Certificates name the operations that two families of operators then
-act upon: reassignment, which changes \emph{where} an operation is processed,
-and staggering, which changes \emph{when} a movement is initiated.
+\item[评价通路。] \emph{每一代}中\emph{每一个}个体的适应度,都是下层把它的全部运输任务
+无冲突地规划完毕之后得到的完工时间,其中已包含让行延误。上层从不看到乐观估计,因此从不
+优化一个代理目标。
+\item[决策通路。] 下层的预约表是上层做车辆派遣决策时可以\emph{查询}的对象,而不只是事后
+被告知结果。承重的机制是\emph{预约表感知的车辆派遣}:选车之前先对预约表做一次两段式试探,
+用实际可达的送达时刻代替理想最短路的估计。这消去了框架中最后一处开环残余。
 \end{description}
 
-The evaluation path makes the objective honest; the decision path makes the
-neighbourhood informed. Both are described here in full, and
-Section~\ref{sec:Chapter_V} then measures what each is worth against what it
-costs, with the result that only the first survives the comparison. The reader who
-wants the outcome before the machinery may read Table~\ref{tab:ablation} first:
-the remainder of this section is what those numbers are attached to.
+评价通路使目标函数诚实,决策通路使派车决策不再依赖估计。两条通路的价值在
+第~\ref{sec:Chapter_V}~节被分别量化:闭环是主效应,预约表感知派遣是有车队规模上界的次效应;
+二者近加性叠加,开环试探单独远不能代替闭环。
 
-%% TODO(figure): replace the deleted HDP architecture figure with one drawn for
-%% this framework. Intended content, following the block diagram in Sec. 4 of the
-%% algorithm specification: an upper box (population, genetic operators, decoder,
-%% contention-guided local search) and a lower box (reservation table +
-%% time-window Dijkstra), joined by two labelled arrows down (planned tasks:
-%% endpoints and earliest release) and two labelled arrows up (path 1: realized
-%% start/finish times; path 2: contention certificates -- corridor, interval,
-%% opposing task). Mark the pricing branch as disabled by default.
+除派遣之外,我们还实现了另外两种更具雄心的层间接口——为走廊时段定价,以及回传结构化的
+冲突凭证以制导局部搜索。它们在同挂钟预算下未能转为净收益,故本章仍完整描述其构造
+(第~\ref{sec:interface}、\ref{sec:ls}~小节),而把度量结果放在第~\ref{sec:Chapter_V}~节
+作为受控负对照。这样安排的理由是:一个构造上站得住、却仍不划算的机制,比只报告成功的那个
+更有信息量——会自己设计出它的读者可以直接看到它的代价。
 
-\subsection{Lower layer: conflict-free routing}
+框架的整体结构见图~\ref{fig:framework}。图中特意让两条反馈通路\emph{进入上层的位置不同},
+因为这正是它们代价不同的根源:通路一每个候选解触发一次,通路二每个运输任务触发一次。
+
+%% 本图由 fig/fig_framework.py 生成,是一张示意图,不含任何数据。
+%% 注意不要复用 fig/fig_hdp_architecture*.pdf,那是上一篇论文的 HDP 框架。
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig/fig_framework.pdf}
+\caption{闭环双层框架。上层以 memetic 算法搜索指派与排序,下层以时间窗预约做无冲突路由,
+中间的事件驱动解码器把上层的一个候选解翻译成一串运输任务。两条反馈通路以颜色区分且
+\emph{进入上层的位置不同}:通路一(蓝,标记 1)把下层完成的无冲突时间表回传为适应度,每个
+候选解触发一次;通路二(橙,标记 2)在选车之前查询预约表、取回实际可达的送达时刻,每个
+运输任务触发一次,试探完毕即回滚,不在表上留下痕迹。第~\ref{sec:Chapter_V}~节的四级基线阶梯
+所变化的正是这两条通路的有无。}
+\Description{Schematic of the closed-loop bilevel framework: an upper memetic
+search layer, an event-driven decoder, and a lower time-window reservation
+routing layer, with two colour-coded feedback paths entering the upper layer at
+different places---the evaluation path returning a realized makespan once per
+candidate, and the decision path returning a realizable arrival time once per
+transport task.}
+\label{fig:framework}
+\end{figure*}
+
+\subsection{下层:时间窗预约与无冲突路由}
 \label{sec:router}
 
-\subsubsection{Reservation table}
-The only contended resource is the corridor (assumption A6), so the table maps
-each corridor to a time-ordered list of half-open occupancies
-$[t,\,t+\tau_e)$ tagged with the occupying vehicle and task. It supports
-querying the earliest feasible entry at or after a given time, committing an
-occupancy, releasing all occupancies of a task, and checkpoint/rollback of the
-whole table. Nodes are not reserved: crossing a node takes zero time, and
-waiting always happens at berths, which assumption A6 separates from the
-traversal resource. A single resource type is therefore enough, which keeps
-both the router and the independent feasibility checker small.
+\subsubsection{预约表}
+唯一被争用的资源是走廊(假设 A6),因此预约表把每条走廊映射到一个按时间排序的半开占用区间
+列表 $[t,\,t+\tau_e)$,每个区间标注占用它的车辆与任务。该表支持四种操作:查询不早于给定
+时刻的最早可行进入时刻、提交一次占用、释放某个任务的全部占用,以及对整表做检查点与回滚。
+节点不被预约:穿越节点耗时为零,而等待总是发生在停靠位上,假设 A6 已把停靠位与通行资源
+分离。因此只需一种资源类型,这使路由器与那个独立的可行性校验器都保持简洁。
 
-\subsubsection{Time-window Dijkstra}
-A leg is routed by label-setting search in which a label $(u,t)$ means
-``standing at a berth of node $u$ at time $t$'' and costs $t$
-(Algorithm~\ref{alg:route}). Relaxing an outgoing corridor asks the table for
-the earliest entry $t'\ge t$, which is exactly where waiting enters: the gap
-$t'-t$ is time spent at the berth of $u$, and the slack in \eqref{eq:walk} is
-generated by the search rather than modelled separately. Committed routes are
-never revoked within one decoding, so planning follows the order in which the
-decoder generates tasks---prioritized planning with a deterministic priority.
+\subsubsection{时间窗 Dijkstra}
+一段行驶用标签设定(label-setting)搜索来规划,其中标签 $(u,t)$ 表示"在时刻 $t$ 停在节点
+$u$ 的停靠位上",其代价为 $t$(算法~\ref{alg:route})。松弛一条外出走廊时向预约表询问最早
+进入时刻 $t'\ge t$,等待恰恰在此处产生:间隔 $t'-t$ 就是在 $u$ 的停靠位上耗掉的时间,
+而 \eqref{eq:walk} 中的松弛量由搜索自身生成,不需要另行建模。在一次解码之内已提交的路径
+不会被撤销,因此规划顺序就是解码器生成任务的顺序——即带有确定性优先级的优先级规划。
 
-\begin{lemma}[Earliest arrival suffices]
+\begin{lem}[最早到达即充分]
 \label{lem:label}
-Keeping only the earliest arrival time at each node yields a
-minimum-arrival-time leg with respect to the current reservation table.
-\end{lemma}
+在每个节点上只保留最早到达时刻,即可得到相对当前预约表而言到达时刻最小的行驶段。
+\end{lem}
 
 \begin{proof}
-Berths have ample capacity and do not occupy the traversal resource, so a
-vehicle standing at $u$ from time $t$ can reproduce any behaviour available to
-a vehicle that reaches $u$ at $t'>t$, by simply waiting until $t'$. Arrival
-time is thus a dominance criterion: an earlier label is never worse. Every
-corridor relaxation is non-decreasing in $t$, so the search is label-setting
-and the first extraction of the goal is optimal.
+停靠位容量充裕且不占用通行资源,因此一辆自时刻 $t$ 起停在 $u$ 的车,只需一直等到 $t'$,
+便可复现任何在 $t'>t$ 到达 $u$ 的车所能采取的行为。于是到达时刻构成一个占优判据:更早的
+标签绝不会更差。又因每次走廊松弛关于 $t$ 单调不减,该搜索是标签设定式的,目标节点第一次
+被取出时即为最优。
 \end{proof}
 
-The lemma is what allows a plain Dijkstra label rather than the interval labels
-of safe-interval planning, and it is fragile in an instructive way: introduce a
-second criterion, such as a price paid for occupancy, and dominance is no
-longer a total order, forcing a multi-label Pareto search. We return to this in
-Section~\ref{sec:interface}.
+正是该引理使我们可以使用普通的 Dijkstra 标签,而不必采用安全区间规划的区间标签。它的脆弱
+之处很有启发性:一旦引入第二个判据(例如为占用支付的价格),占优关系便不再是全序,从而被迫
+改用多标签 Pareto 搜索。第~\ref{sec:interface}~小节会回到这一点,而它正是定价机制在同等
+算力下失效的技术根源。
 
 \begin{algorithm}[t]
-\caption{\textsc{Route}: conflict-free leg planning}
+\caption{\textsc{Route}:无冲突的单段路径规划}
 \label{alg:route}
 \small
 \begin{algorithmic}[1]
-\Require origin $s$, destination $g$, earliest departure $t_0$, reservation
-table $R$, flag \textit{commit}
-\Ensure arrival time and the sequence of corridor occupancies
-\State push label $(s,t_0)$ into a priority queue keyed by time
-\While{queue not empty}
-  \State pop the label $(u,t)$ of least time
-  \If{$u=g$} \State backtrack to obtain the occupancies; if \textit{commit},
-       write each of them into $R$; \Return arrival $t$ \EndIf
-  \ForAll{corridors $e=(u,v)$ leaving $u$}
+\Require 起点 $s$、终点 $g$、最早出发时刻 $t_0$、预约表 $R$、是否提交标志 \textit{commit}
+\Ensure 到达时刻,以及走廊占用区间的序列
+\State 将标签 $(s,t_0)$ 压入以时间为键的优先队列
+\While{队列非空}
+  \State 弹出时间最小的标签 $(u,t)$
+  \If{$u=g$} \State 回溯得到各占用区间;若 \textit{commit} 为真则逐一写入 $R$;
+       \Return 到达时刻 $t$ \EndIf
+  \ForAll{自 $u$ 外出的走廊 $e=(u,v)$}
     \State $t_{\text{in}} \gets R.\textsc{EarliestEntry}(e,t,\tau_e)$
-       \Comment{waits at the berth of $u$ until $t_{\text{in}}$}
-    \State relax label $(v,\ t_{\text{in}}+\tau_e)$
+       \Comment{在 $u$ 的停靠位等到 $t_{\text{in}}$}
+    \State 松弛标签 $(v,\ t_{\text{in}}+\tau_e)$
   \EndFor
 \EndWhile
 \end{algorithmic}
 \end{algorithm}
 
-Because reservations are finite in number and bounded in time, and $G$ is
-strongly connected, a route always exists: in the worst case the vehicle waits
-until every existing occupancy has expired and then travels unobstructed. This
-is the observation that makes Proposition~\ref{prop:decodable} below true, and
-it is why no deadlock repair is needed. One call costs
-$O(|E|\,W\log|V|)$ with $W$ the mean number of reserved intervals per corridor.
+由于预约的数量有限、时间上有界,且 $G$ 强连通,路径总是存在的:最坏情况下车辆一直等到所有
+既有占用全部过期,然后畅通行驶。这一观察使下文的命题~\ref{prop:decodable} 成立,也是无需
+死锁修复的原因。单次调用的代价为 $O(|E|\,W\log|V|)$,其中 $W$ 为每条走廊上预约区间数的
+均值。
 
-Running the same search with an empty table over all pairs of pickup and
-delivery nodes yields the contention-free matrix $t^{*}$ of
-Section~\ref{sec:Chapter_III}. It is used in three places: as the dispatcher's
-estimate in the open-loop configurations, as the proximity term of the
-reassignment operator, and as the transport time of the two-stage baseline.
+对空表在所有取送节点对上运行同一搜索,即得到第~\ref{sec:Chapter_III}~节的无争用矩阵
+$t^{*}$。它在三处被用到:开环配置中派车器的估计值、改派算子中的邻近项,以及两阶段基线的
+运输时间。它同时是本章第~\ref{sec:speedup}~小节剪枝所依赖的可采纳下界。
 
-\subsection{Upper layer: encoding and decoding}
+\subsection{上层:编码与事件驱动解码}
 \label{sec:upper}
 
-\subsubsection{Chromosome}
-With $N$ operations in total, an individual is a pair of segments: a machine
-assignment vector of length $N$, whose $k$-th entry holds an arm drawn from
-$\Omega_{ji}$ for the $k$-th operation in a fixed enumeration, and an operation
-sequence, a permutation with repetition in which job $j$ appears $n_j$ times
-and its $x$-th occurrence denotes $O_{jx}$. The sequence is a global priority
-order, and the relative order of operations sharing an arm is read off from it.
+\subsubsection{染色体编码}
+设工序总数为 $N$,一个个体由两段构成:长度为 $N$ 的\emph{机器指派向量},其第 $k$ 个分量
+在固定枚举下为第 $k$ 道工序取自 $\Omega_{ji}$ 的一台机械臂;以及\emph{工序序列},它是一个
+可重排列,其中工件 $j$ 出现 $n_j$ 次,第 $x$ 次出现代表 $O_{jx}$。该序列是一个全局优先级
+次序,共用同一台机械臂的工序之间的相对先后由它读出。
 
-The return trip is folded into the same representation. For
-$\delta_{\mathrm{ret}}=1$ each job contributes one extra occurrence
-corresponding to the pseudo-operation of Section~\ref{sec:Chapter_III}, whose
-arm is fixed to $v_0$ and whose processing time is zero. Return moves therefore
-compete for vehicles in the same stream as ordinary moves and are ordered by
-the same segment, with no special case in the decoder.
+返回行程被折叠进同一表示。当 $\delta_{\mathrm{ret}}=1$ 时,每个工件额外贡献一次出现,对应
+第~\ref{sec:Chapter_III}~节的伪工序,其机械臂固定为 $v_0$、加工时间为零。于是返回移动与普通
+移动在同一条流中竞争车辆,并由同一段基因排序,解码器中不需要任何特例分支。
 
-Task-to-vehicle assignment is deliberately \emph{not} encoded; it is decided
-during decoding (Section~\ref{sec:dispatch}). A third segment for it exists in
-the literature, but it enlarges the search space and forfeits the guarantee
-that every chromosome decodes, which would require repair operators.
+任务到车辆的指派\emph{有意}不编码,而是在解码过程中决定(第~\ref{sec:dispatch}~小节)。文献中
+存在为它设置第三段基因的做法,但那会扩大搜索空间,并且放弃"任何染色体都可解码"这一保证,
+从而不得不引入修复算子。
 
-\subsubsection{Decoder}
-The decoder (Algorithm~\ref{alg:decode}) is the evaluation path. It sweeps the
-operation sequence left to right, maintaining for each arm its free time, for
-each job its current node and ready time, and for each vehicle its current node
-and available time. When an operation's arm differs from the job's current
-location, the transport task of \eqref{eq:tasks} is created, a vehicle is
-chosen, and two legs are routed against the live reservation table: an empty
-leg to the pickup and a laden leg to the destination, joined by
-\eqref{eq:load}. The operation then starts according to \eqref{eq:bind}, and
-the decoder records which of the two terms attained the maximum---the
-\texttt{bind} field, on which all later attribution rests.
+\subsubsection{事件驱动解码器}
+解码器(算法~\ref{alg:decode})就是评价通路。它自左向右扫过工序序列,为每台机械臂维护其空闲
+时刻,为每个工件维护其当前节点与就绪时刻,为每辆车维护其当前节点与可用时刻。当某道工序的
+机械臂与工件当前位置不同时,便生成 \eqref{eq:tasks} 的运输任务,选定一辆车,并针对\emph{实时
+的}预约表规划两段路径:到取货点的空载段与到目的地的满载段,两者由 \eqref{eq:load} 衔接。
+随后工序按 \eqref{eq:bind} 开工,解码器同时记录两项中哪一项取到了最大值——即 \texttt{bind}
+字段,后文全部归因都以它为依据。
 
 \begin{algorithm}[t]
-\caption{\textsc{Decode}: fitness by complete conflict-free simulation}
+\caption{\textsc{Decode}:以完整无冲突仿真作为适应度}
 \label{alg:decode}
 \small
 \begin{algorithmic}[1]
-\Require instance, network, assignment $x$, operation sequence
-\Ensure makespan, timetable, per-corridor yielding statistics
-\State $F_m\gets 0$ for all arms; $\mathrm{pos}_j\gets v_0$,
-       $\mathrm{ready}_j\gets 0$ for all jobs
-\State $\mathrm{loc}_k\gets v_0$, $\mathrm{avail}_k\gets 0$ for all vehicles;
-       clear the reservation table
-\ForAll{operations $O_{ji}$ in sequence order (pseudo-operations included)}
-  \State $m\gets$ arm of $O_{ji}$ under $x$; $d\gets \mathrm{loc}(m)$
+\Require 算例、路网、指派 $x$、工序序列
+\Ensure 完工时间、时间表、逐走廊的让行统计量
+\State 对所有机械臂置 $F_m\gets 0$;对所有工件置 $\mathrm{pos}_j\gets v_0$,
+       $\mathrm{ready}_j\gets 0$
+\State 对所有车辆置 $\mathrm{loc}_k\gets v_0$、$\mathrm{avail}_k\gets 0$;清空预约表
+\ForAll{按序列次序取出的工序 $O_{ji}$(含伪工序)}
+  \State $m\gets$ 在 $x$ 下 $O_{ji}$ 的机械臂;$d\gets \mathrm{loc}(m)$
   \If{$\mathrm{pos}_j=d$}
-     \State $A_{ji}\gets \mathrm{ready}_j$ \Comment{no move is generated}
+     \State $A_{ji}\gets \mathrm{ready}_j$ \Comment{同臂连续,不生成运输任务}
   \Else
-     \State choose vehicle $k$ (Section~\ref{sec:dispatch})
+     \State 选定车辆 $k$(第~\ref{sec:dispatch}~小节)
      \State $a^{\mathrm{E}}\gets\textsc{Route}(\mathrm{loc}_k,\mathrm{pos}_j,
             \mathrm{avail}_k)$;\ \ $\ell\gets\max(a^{\mathrm{E}},
             \mathrm{ready}_j)$
      \State $A_{ji}\gets\textsc{Route}(\mathrm{pos}_j,d,\ell)$;\ \
             $\mathrm{loc}_k\gets d$;\ \ $\mathrm{avail}_k\gets A_{ji}$
-     \State accumulate yielding time per corridor
+     \State 按走廊累计让行时间
   \EndIf
-  \State $\texttt{bind}\gets\texttt{machine}$ if $F_m>A_{ji}$ else
-         \texttt{arrive}
+  \State 若 $F_m>A_{ji}$ 则 $\texttt{bind}\gets\texttt{machine}$,否则
+         $\texttt{bind}\gets\texttt{arrive}$
   \State $S_{ji}\gets\max(A_{ji},F_m)$;\ \ $C_{ji}\gets S_{ji}+p_{ji}$;\ \
          $F_m\gets C_{ji}$;\ \ $\mathrm{pos}_j\gets d$;\ \
          $\mathrm{ready}_j\gets C_{ji}$
 \EndFor
-\State \Return $C_{\max}=\max_{j,i} C_{ji}$ and the timetable
+\State \Return $C_{\max}=\max_{j,i} C_{ji}$ 与时间表
 \end{algorithmic}
 \end{algorithm}
 
-Two structural properties follow. Reservations are made in the order the sweep
-generates tasks, so one chromosome always yields one timetable: evaluation is
-deterministic, which the equal-budget protocol of Section~\ref{sec:Chapter_V}
-relies on. And state flows strictly forward, so a neighbour that perturbs the
-sequence only after position $x$ leaves every event and every reservation
-before $x$ unchanged---the basis for incremental evaluation, which we note as
-an available speed-up that the present implementation does not exploit.
+由此得到两条结构性性质。其一,预约是按扫描生成任务的次序做出的,因此一个染色体总是产出唯一
+一张时间表:评价是确定性的,这正是第~\ref{sec:Chapter_V}~节同预算协议所依赖的前提。其二,
+状态严格向前流动,因此一个只在位置 $x$ 之后扰动序列的邻居,会使 $x$ 之前的每个事件与每次
+预约保持不变——这是增量式评价的基础;我们把它记为一项\emph{可用但当前实现未利用}的加速手段。
 
-\begin{proposition}[Every chromosome decodes]
+\begin{prop}[任何染色体都可解码]
 \label{prop:decodable}
-For any assignment and any operation sequence, Algorithm~\ref{alg:decode}
-terminates and returns a conflict-free, deadlock-free schedule of finite
-makespan. No repair operator is ever invoked.
-\end{proposition}
+对任意指派与任意工序序列,算法~\ref{alg:decode} 均终止,并返回一张无冲突、无死锁且完工时间
+有限的排程。修复算子永不被调用。
+\end{prop}
 
 \begin{proof}
-The sequence is by construction a topological order of the precedence chains,
-since the $x$-th occurrence of a job denotes its $x$-th operation; hence
-$\mathrm{ready}_j$ is known whenever it is read. Ample buffers (A4) mean an
-operation is never blocked for want of storage, so \eqref{eq:bind} always
-yields a finite start once the material has arrived. Each \textsc{Route} call
-returns in finite time by the argument following Algorithm~\ref{alg:route}, and
-it only occupies windows the table reports free, so \eqref{eq:excl} holds by
-construction. The sweep performs $N+n\delta_{\mathrm{ret}}$ iterations, each
-scheduling finitely many events at finite times.
+由构造,序列是各前后约束链的一个拓扑序,因为工件的第 $x$ 次出现代表其第 $x$ 道工序;因此
+$\mathrm{ready}_j$ 在被读取时总是已知的。缓冲区充裕(A4)意味着工序不会因无处存放而被阻塞,
+故一旦物料到达,\eqref{eq:bind} 总给出有限的开工时刻。每次 \textsc{Route} 调用按算法
+\ref{alg:route} 之后的论证在有限时间内返回,且它只占用预约表报告为空闲的时窗,所以
+\eqref{eq:excl} 由构造成立。扫描共执行 $N+n\delta_{\mathrm{ret}}$ 次迭代,每次在有限时刻上
+安排有限多个事件。
 \end{proof}
 
-\subsubsection{Dispatching}
+%% 原为 4.3 的一个子小节 "Dispatching",现提升为独立一节:它是本文承重的机制,
+%% 不应埋在"上层编解码"之下。原 4.4 "What should cross the interface?" 的三种接口
+%% 讨论降为本节的一个子小节,作为选定该机制的论证。
+\subsection{预约表感知的车辆派遣}
 \label{sec:dispatch}
-Choosing the vehicle is the one place where an estimate could replace a fact,
-and we treat it as a closable link rather than a fixed design. The open-loop
-rule scores each vehicle by
-$\max(\mathrm{avail}_k+t^{*}(\mathrm{loc}_k,\text{pickup}),\,
-\mathrm{ready}_j)+t^{*}(\text{pickup},\text{destination})$
-and never consults the reservation table, so it may pick a vehicle that is
-close on the map but walled in by traffic. The closed variant, which is the
-default, probes instead: for each candidate it routes the empty leg with
-commitment---necessary, or the two legs could be planned into the same corridor
-window and yield an unrealizable optimism---routes the laden leg without
-commitment, records the true delivery time, and rolls the table back. It costs
-$2N_A$ route calls per task against none, roughly a fivefold slowdown per
-evaluation, which is precisely why Section~\ref{sec:Chapter_V} compares the two
-only under an equal wall-clock budget.
 
-\subsection{What should cross the interface?}
+在整个框架中,选车是唯一一处\emph{可以用估计代替事实}的地方,因此我们把它当作一个可闭合的
+环节,而不是一个固定的设计。开环规则对每辆车打分
+\begin{equation}
+\label{eq:rule}
+\mathrm{score}(k)=\max\bigl(\mathrm{avail}_k+t^{*}(\mathrm{loc}_k,\text{取货点}),\,
+\mathrm{ready}_j\bigr)+t^{*}(\text{取货点},\text{目的地}),
+\end{equation}
+它从不查询预约表,因此可能选中一辆"在地图上很近、实际却被交通堵死"的车。这一规则并非我们
+为了衬托而虚构的弱基线:它与文献~\cite{li2026framework} 所用的空闲优先规则同式。
+
+作为默认配置的闭环变体改为\emph{试探}:对每个候选车辆,先\emph{带提交}地规划空载段,再
+\emph{不提交}地规划满载段,记下真实送达时刻,然后把预约表整体回滚。空载段必须真实落表,
+否则满载段看不到它占用的时窗,两段可能被规划到同一走廊的同一时段,从而给出一个在真实系统
+中无法实现的乐观值。选定的车辆是实测送达时刻最早者,而非估计值最优者。
+
+这一机制之所以奏效,有一个可以说清楚的理由,它也解释了为什么同样的思路用在\emph{选臂}上
+收效甚微。AGV 之间是同构的(假设 A5),车与车唯一的差别就在于当前站位与路是否通得过;因此
+选车是一个\emph{纯粹的拥堵决策},查询预约表所得到的信息可以全额兑现为目标函数的改善。而
+选臂除了走廊差异之外还掺入了加工时长,后者往往压过前者,信息因而被稀释。
+
+代价是显著的:试探把每个运输任务的路由调用数从 $2$ 抬到 $2N_A$,实测单次评价成本约为规则
+派车的 \CostMultBefore{} 倍。若不加处理,这笔开销在同挂钟预算下会把机制带来的收益恰好吃光
+——这正是第~\ref{sec:speedup}~小节存在的理由,也是第~\ref{sec:Chapter_V}~节只在同挂钟预算下
+比较两者的原因。
+
+\subsubsection{层间接口的三种选择}
 \label{sec:interface}
 
-Both layers being fixed, the design question is what the lower layer reports.
-Three answers are available. We describe all three, implement all three, and
-report in Section~\ref{sec:Chapter_V} that only the first of them earns its
-cost---a conclusion opposite to the one we designed for, and the reason the
-other two are presented here in full rather than omitted.
+两层既已固定,设计问题就变成\emph{下层应当回报什么}。共有三种答案,本文实现了全部三种,
+并在同挂钟预算下逐一度量。上面的预约表试探属于第一种,也是唯一一种经得起该检验的;另外
+两种的构造在此一并给出,度量结果见第~\ref{sec:Chapter_V}~节。
 
-\paragraph{Time alone.}
-The lower layer returns realized durations, which is what the evaluation path
-already does. This makes the objective correct but leaves the search blind: the
-upper layer learns that a solution was slow, not which decision made it slow, so
-its neighbourhoods remain undirected. Methods that route once after scheduling
-stop short even of this, since they learn the true duration only once, after
-their decisions are fixed. It is worth stating plainly what this option already
-achieves, because our experiments end up attributing the entire measured benefit
-to it: every candidate the search compares is ranked by a duration that includes
-the delays its own traffic will cause. Correcting a ranking is a weaker-sounding
-intervention than directing a neighbourhood, and it is applied to every
-individual in every generation rather than to the few that local search touches.
+\paragraph{只回报时间。}
+下层返回实现的时长,这正是评价通路已经在做的事,也是预约表试探所查询的东西。它使目标函数
+正确,但不为搜索指方向:上层只知道某个解慢,不知道是哪个决策使它慢。在排产之后只路由一次的
+方法甚至达不到这一点,因为它们只在决策固定之后知道一次真实时长。值得平实地指出这一选项本身
+已经达成了什么,因为本文实测的收益主要归于它:搜索所比较的每一个候选解,都是按一个\emph{已
+包含其自身交通所引起延误}的时长来排序的。
 
-\paragraph{Prices.}
-The natural next step, by analogy with Lagrangian and column-generation
-coordination, is to price the contended resource: attach a shadow price
-$\pi(e,b)$ to each corridor--time slot, let the router minimize
-$\text{arrival}+\theta\cdot\text{price}$ over a Pareto frontier, and let
-reassignment pay for the access it needs. We implemented this fully---a
-definitional estimator that perturbs one slot's capacity and re-solves, and a
-cheap surrogate refreshed each generation---and under an equal computational
-budget it is \emph{systematically harmful}. It is not, however, harmful in the
-way we first reported: the penalty is flat rather than monotone in $\theta$, and
-it disappears entirely when the extra cost is not charged
-(Section~\ref{sec:pricing}). The price turns out to be inert, and what defeats it
-is the expense of the multi-label search needed to act on it.
+\paragraph{回报价格。}
+与拉格朗日松弛及列生成中的协调机制相类比,自然的下一步是给被争用的资源定价:为每个
+"走廊--时段"槽位附加一个影子价格 $\pi(e,b)$,让路由器在 Pareto 前沿上最小化
+$\text{到达时刻}+\theta\cdot\text{价格}$,并让改派为它所需的通行权付费。我们完整实现了
+这一方案——既包括一个扰动单个槽位容量并重解的定义式估计器,也包括一个每代刷新的廉价代理
+——而在同等算力预算下它\emph{系统性地有害}。
 
-The mechanism is worth stating because it generalizes. A delay caused by
-contention is \emph{already} internalized: the yielding vehicle waits, the wait
-enters its own arrival time, propagates through \eqref{eq:bind} into the
-makespan, and is counted by the fitness. Charging the occupant a price for the
-same occupancy counts it twice. The vehicle then detours or defers to avoid a
-cost that has already been paid, accepting a delay that is first-order and
-certain in order to avert an externality that is second-order and uncertain.
-What genuine externality remains falls only on tasks not yet routed---the sweep
-is ordered, so an early reservation can only obstruct a later one---and that,
-too, is already visible in the makespan of the fully decoded solution. Pricing
-therefore adds distortion without adding information. The inference is
-architectural rather than parametric: \emph{in any framework whose fitness is a
-complete conflict-free decoding, adding a congestion penalty to the lower
-layer's objective is likely to hurt.}
+这一机制值得写出来,因为它的失效原因可以推广。由争用造成的延误\emph{已经}被内部化了:让行的
+车辆等待,该等待进入它自己的到达时刻,再经 \eqref{eq:bind} 传播进完工时间,并被适应度计入。
+对占用者就同一次占用再收一次价格,等于把它数了两遍。于是车辆为了规避一笔\emph{已经支付过}的
+代价而绕行或延迟出发,以承担一个一阶且确定的自身延误,去避免一个二阶且不确定的外部性。真正
+残余的外部性只落在尚未被路由的任务上——扫描是有序的,早先的预约只可能妨碍其后的任务——而这
+一部分同样已经体现在完整解码后的完工时间里。因此定价只增加扰动,不增加信息。这个推断是
+\emph{架构层面}而非参数层面的:\emph{在任何以完整无冲突解码作为适应度的框架中,给下层目标
+再加一个拥堵惩罚项,很可能是有害的。}
 
-\paragraph{Contention certificates.}
-The remaining option is to pass structure. When the router yields, it knows the
-corridor, the interval, and the identity of the occupying task; the decoder
-retains yielding \emph{events} rather than only their total, so this
-information survives to the end of the evaluation. A certificate is the triple
-(corridor, interval, opposing task), and it is used to decide which operations
-an operator should touch. Crucially it does not enter any objective: the lower
-layer still minimizes arrival time, the upper layer still minimizes makespan,
-and only the \emph{construction} of the neighbourhood changes. No quantity is
-counted twice, because no quantity is added. This avoids the defect that sinks
-pricing, and the next subsection turns it into operators. It does not, in the
-event, produce a net gain either: the neighbourhood it builds is well aimed but
-too rarely successful to justify the decodings it consumes
-(Section~\ref{sec:whycost}). We present it in full because a mechanism that is
-sound in construction and still unprofitable is the more useful thing to
-report---the reader who would have designed it can see what it cost.
+技术上还有第二重代价,它由引理~\ref{lem:label} 直接给出:一旦引入价格作为第二判据,到达时刻
+不再是全序占优判据,单标签 Dijkstra 必须换成多标签 Pareto 搜索。无论最终是否真的收取价格,
+这套机器都要付钱。第~\ref{sec:Chapter_V}~节的度量表明,击败定价的主要正是这笔开销,而非
+上述双重计价的扰动本身。
 
-\subsection{Contention-guided local search}
+\paragraph{回报冲突凭证。}
+第三种选择是传递\emph{结构}。路由器在发生让行时知道走廊、时段以及占用者任务的身份;解码器
+保留让行\emph{事件}而不只是它们的总量,因此该信息可以存活到评价结束。一份凭证就是三元组
+(走廊,时段,对手任务),它被用来决定算子该触碰哪些工序。关键在于它\emph{不进入任何目标函数}:
+下层依旧最小化到达时刻,上层依旧最小化完工时间,改变的只是邻域的\emph{构造方式}。既然没有
+任何量被加入,也就没有任何量被数两遍——这避免了击沉定价的那个缺陷。第~\ref{sec:ls}~小节把它
+落实为算子。它最终同样没有产出净收益:它构造出的邻域瞄得很准,但成功率过低,不足以抵偿它
+消耗的解码次数。我们完整给出它,是因为"构造上站得住却依然不划算"的机制比只报告成功者更有
+信息量——会自己设计出它的读者可以直接看到它的代价。
+
+\subsection{降本:可采纳下界剪枝与胜者路径复用}
+\label{sec:speedup}
+
+上一小节的机制在同挂钟预算下面临一个具体的困境。按相同\emph{代数}比较,预约表试探比规则派车
+约好 $3\%$;但它单次评价贵 \CostMultBefore{} 倍,于是在相同\emph{挂钟时间}下这 $3\%$ 恰好被
+它自己消耗的算力吃光,净效果几乎为零。换言之,在这个问题上\emph{降本就是增效}:只要能在不改变
+任何选择结果的前提下压低成本倍数,机制的收益就能显现出来。本小节给出两项这样的优化,它们都
+\emph{可证不改变输出}。
+
+\paragraph{可采纳下界剪枝。}
+关键观察是:无冲突路由只会因让行而\emph{更晚},绝不可能快过忽略争用的理想最短路。因此开环
+规则所用的估计 \eqref{eq:rule} 恰好是实测送达时刻的一个\emph{可采纳下界}:
+\begin{equation}
+\label{eq:lb_dispatch}
+\mathrm{lb}(k)=\max\bigl(\mathrm{avail}_k+t^{*}(\mathrm{loc}_k,\text{取货点}),\,
+\mathrm{ready}_j\bigr)+t^{*}(\text{取货点},\text{目的地})\ \le\ \mathrm{est}(k),
+\end{equation}
+其中 $\mathrm{est}(k)$ 为对车辆 $k$ 做完整两段试探所得的实测送达时刻。于是,若某辆车的下界
+已经不优于当前最优的\emph{实测}值,它的实测值必然也不优,便无需为它调用路由。被剪掉的车辆
+一次路由调用也不产生。
+
+\paragraph{胜者路径复用。}
+试探结束后预约表被整体回滚,连胜者的两段路径也一并作废,随后解码器又把它们重算一遍,白白
+浪费两次路由调用。而 $\textsc{Route}(\cdot,\textit{commit}=\text{真})$ 所做的不过是把各段
+依次写入预约表,因此把胜者在试探阶段已算出的路径缓存下来、直接提交即可,无需重算。
+
+\begin{prop}[两项优化保持输出不变]
+\label{prop:speedup_equiv}
+在按车辆编号升序扫描并保留首个\emph{严格}更优者的实现下,加入 \eqref{eq:lb_dispatch} 的剪枝
+与胜者路径复用之后,所选车辆、所提交的预约以及最终时间表,与全量试探逐位相同。
+\end{prop}
+
+\begin{proof}
+先看剪枝。设扫描到车辆 $k$ 时当前最优实测值为 $\mathrm{est}^{\ast}$。若
+$\mathrm{lb}(k)\ge \mathrm{est}^{\ast}$,则由 \eqref{eq:lb_dispatch} 有
+$\mathrm{est}(k)\ge\mathrm{lb}(k)\ge\mathrm{est}^{\ast}$,故 $k$ 不满足"严格更优"的替换条件,
+在全量试探中同样不会成为胜者;跳过它不改变胜者。又因每次试探都以检查点开始、以回滚结束,
+被跳过的试探对预约表不留任何痕迹,故也不改变后续任何一次查询的结果。再看复用:胜者的两段
+路径是在同一张预约表状态下算出的,而回滚把表恢复到了试探开始前的状态,与解码器随后提交时
+所面对的状态一致;由于 $\textsc{Route}(\cdot,\textit{commit}=\text{真})$ 仅把给定各段写入
+预约表,提交缓存路径与重算后提交产生的占用区间完全相同。
+\end{proof}
+
+两项优化合计带来 \SpeedupProbe{} 倍加速,路由调用减少 \RouteCallCut{},把单次评价的成本倍数
+从 \CostMultBefore{} 压到 \CostMultAfter{}。这不是工程细节,而是使第~\ref{sec:Chapter_V}~节
+的正面结论得以成立的前提:在降本之前,同一机制在同挂钟下的净效果无法与噪声区分。
+
+剪枝的效力本身依赖于车队规模,这一点须如实说明。下界越紧、越早出现一个好的现任值,被剪掉的
+车辆就越多;而车队越大,候选越多,试探的总开销随 $N_A$ 线性增长。第~\ref{sec:Chapter_V}~节
+给出实测的\emph{代价律},并指出在车队足够大且争用足够强时剪枝会失效。
+
+\subsection{冲突制导局部搜索}
 \label{sec:ls}
 
-Each generation, the best $10\%$ of the population undergo local search.
+本小节把第~\ref{sec:interface}~小节的第三种接口落实为算子。每一代中,种群里最好的 $10\%$
+接受局部搜索。需要提醒读者的是,这一机制在同挂钟预算下未能转为净收益
+(第~\ref{sec:Chapter_V}~节);此处完整给出其构造,是为了让"为何最终选定预约表试探"这一取舍
+有据可查。
 
-\subsubsection{Attributing the critical chain}
-Tracing back from the event that attains the makespan produces a chain, but a
-chain of operations alone cannot say why a start was late. When
-$\texttt{bind}=\texttt{arrive}$, the operation waited for material, and the
-cause may be an upstream operation, an unavailable vehicle, or traffic---three
-situations calling for three different remedies. We therefore trace through the
-transport legs as well and label every link
-(Table~\ref{tab:attrib}). Laden-leg yielding is always recorded as a corridor
-link, since it lengthened the arrival directly. On an empty leg the split
-between vehicle and corridor is decided by the share of yielding in the leg's
-total elapsed time, against a threshold of $0.5$.
+\subsubsection{关键链的归因}
+从取到完工时间的那个事件向后回溯可以得到一条链,但仅由工序构成的链无法说明一次开工\emph{为何}
+迟到。当 $\texttt{bind}=\texttt{arrive}$ 时,该工序是在等物料,而成因可能是上游工序、可能是
+无车可用、也可能是交通拥堵——三种情形对应三种完全不同的补救手段。因此我们把运输段也纳入回溯,
+并给每一环打上标注(表~\ref{tab:attrib})。满载段上的让行一律记为走廊环,因为它直接延长了到达
+时刻;空载段上则按让行时间占该段总耗时的比例、以 $0.5$ 为阈值,在"车辆"与"走廊"之间划分。
 
 \begin{table}[t]
-\caption{Labels attached to the links of the critical chain, and the operator
-each one calls for. Only the last carries a corridor and an interval, and only
-it can name an opponent.}
+\caption{关键链各环的标注及其对应的补救算子。只有最后一类携带具体的走廊与时段,也只有它能
+指名对手任务。}
 \label{tab:attrib}
 \footnotesize
 \begin{tabular}{@{}llp{2.55cm}@{}}
 \toprule
-Label & Condition & Remedy \\
+标注 & 判定条件 & 补救手段 \\
 \midrule
-\texttt{operation} & a real operation occupies its arm & --- \\
-\texttt{machine} & $\texttt{bind}=\texttt{machine}$, blocked by the previous
-  operation on that arm & resequencing (generic mutation) \\
-\texttt{upstream} & vehicle arrived first, material was not ready & recurse to
-  $O_{j,i-1}$ \\
-\texttt{vehicle} & material ready, vehicle late, little of the delay spent
-  yielding & change vehicle \\
-\texttt{corridor} & yielding on a named corridor over a named interval
-  & reassign or stagger \\
+\texttt{operation} & 一道真实工序正占用其机械臂 & --- \\
+\texttt{machine} & $\texttt{bind}=\texttt{machine}$,被该臂上前一道工序阻塞
+  & 重排序(通用变异) \\
+\texttt{upstream} & 车辆先到,物料尚未就绪 & 递归至 $O_{j,i-1}$ \\
+\texttt{vehicle} & 物料已就绪、车辆迟到,且延误中让行占比很小 & 更换车辆 \\
+\texttt{corridor} & 在指定走廊、指定时段上发生让行 & 改派或错峰 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Three queries are derived from the labelled chain: the real operations on it,
-which the reassignment operator draws candidates from; the corridor--time slots
-on it; and, for a given corridor and interval, the tasks that occupied it and
-thereby caused the yielding---the certificate proper.
+从标注后的链上导出三类查询:链上的真实工序,改派算子从其中抽取候选;链上的"走廊--时段"槽位;
+以及对给定走廊与时段,曾占用它并因而造成让行的那些任务——这才是凭证本身。
 
-\subsubsection{Two operator families}
-Congestion admits two remedies, and the framework provides one operator for
-each.
+\subsubsection{两族算子}
+拥堵有两种补救方向,框架为每一种提供一个算子。
 
-\emph{Reassignment changes where.} For at most $L=5$ real operations on the
-critical chain, each alternative arm $m'\in\Omega_{ji}\setminus\{m\}$ is scored
-by
+\emph{改派改变"地点"。} 对关键链上至多 $L=5$ 道真实工序,为每个备选机械臂
+$m'\in\Omega_{ji}\setminus\{m\}$ 打分
 \begin{equation}
 \label{eq:reassign}
 \mathrm{score}(m')=t^{*}\bigl(\mathrm{pos}_{j,i-1},\mathrm{loc}(m')\bigr)
 +t^{P}_{jim'},
 \end{equation}
-the sum of a proximity term and a duration term, both in time units, and the
-best-scoring arm produces one neighbour differing in a single gene. The two
-terms are exactly the trade-off the paper is about: a nearer arm may be slower,
-and \eqref{eq:reassign} is what lets the search buy proximity with processing
-time when the route to the fast arm is contended.
+即一个邻近项与一个工时项之和,两者同为时间单位;得分最优的机械臂产生一个仅有单基因差异的
+邻居。这两项恰好就是本文所讨论的那个权衡:更近的机械臂可能更慢,而 \eqref{eq:reassign} 正是
+使搜索能够在"通往快速机械臂的路径被争用"时,用加工时间去买邻近性的那个式子。
 
-An earlier version of this score added $\lambda$ times the accumulated yielding
-time at the candidate arm. That term is a horizon-wide, fleet-wide total which
-grows with instance size while the other two terms remain at the scale of a
-single operation; on a $240$-operation instance it dominates the score, and the
-operator degenerates into ``always choose the least congested arm'', destroying
-the very trade-off it was meant to express. We report this because $\lambda$ is
-not comparable across instances and any sensitivity analysis over it would be
-meaningless.
+该打分的一个早期版本还加上了 $\lambda$ 乘以候选机械臂处累计的让行时间。那一项是一个横跨整个
+计划期与整个车队的总量,它随算例规模增长,而前两项始终停留在单道工序的尺度上;在一个 $240$
+道工序的算例上它会支配整个打分,算子随之退化为"永远选最不拥堵的机械臂",从而毁掉它本要表达
+的那个权衡。我们报告这一点,是因为 $\lambda$ 在不同算例之间不可比,对它做任何敏感性分析都将
+是无意义的。
 
-\emph{Staggering changes when.} Take the longest \texttt{corridor} link on the
-chain, and query the certificate for the tasks that held that corridor over
-that interval. Two directed neighbours follow: move the blocked operation
-earlier in the sequence, so its movement is initiated into a freer window, or
-move a single opposing operation later, so the two no longer coincide. Only one
-opponent is displaced per round, keeping the neighbourhood small and pointed.
-Shifting an occurrence in the sequence exchanges it with a gene of a
-\emph{different} job, so intra-job order is preserved automatically and the
-result is still a valid permutation with repetition; by
-Proposition~\ref{prop:decodable} it therefore remains decodable.
+\emph{错峰改变"时间"。} 取链上最长的 \texttt{corridor} 环,向凭证查询在该时段占用过该走廊的
+任务。由此得到两个有指向的邻居:把被阻塞的工序在序列中提前,使其移动被投放到一个更空闲的时窗;
+或把\emph{单个}对手工序推后,使两者不再重合。每一轮只挪动一个对手,以保持邻域小而有针对性。
+在序列中移动一次出现,是与\emph{另一个}工件的基因交换位置,因此工件内部次序自动得以保持,
+结果仍是一个合法的可重排列;由命题~\ref{prop:decodable},它因而仍然可解码。
 
-The neighbourhood thus contains at most $L+2=7$ candidates, every one of them
-named by the lower layer. This is the concrete difference from a generic
-mutation, which would sample the same space uniformly at random.
+于是邻域最多包含 $L+2=7$ 个候选,且每一个都是由下层指名的。这正是它与通用变异算子的具体差别
+——后者会在同一空间中均匀随机地抽样。
 
-\subsubsection{Acceptance}
-The first neighbour that improves the makespan replaces the incumbent
-immediately; the chain is then re-extracted from the new incumbent and the
-round repeats, up to three rounds. A round that produces no improvement ends
-the search (Algorithm~\ref{alg:ls}). Re-extraction matters: after a successful
-move the binding cause of the makespan usually shifts, so a chain computed once
-at the outset would send later rounds after a bottleneck that no longer exists.
+\subsubsection{接受准则}
+第一个改进完工时间的邻居立即取代现任;随后从新的现任重新提取关键链,该轮重复,最多三轮。
+某一轮若未产生任何改进则结束搜索(算法~\ref{alg:ls})。重新提取是必要的:一次成功的移动之后,
+支配完工时间的那个成因通常会转移,因此若只在开始时算一次链,后续各轮就会去追一个已经不存在的
+瓶颈。
 
 \begin{algorithm}[t]
-\caption{\textsc{ContentionGuidedSearch}}
+\caption{\textsc{ContentionGuidedSearch}:冲突制导的局部搜索}
 \label{alg:ls}
 \small
 \begin{algorithmic}[1]
-\Require chromosome $c$ with its decoded result $r$
-\For{$\textit{round}=1$ \textbf{to} $3$}
+\Require 染色体 $c$ 及其解码结果 $r$
+\For{$\textit{round}=1$ \textbf{到} $3$}
   \State $\mathcal{N}\gets\textsc{Reassign}(c,r)\ \cup\ \textsc{Stagger}(c,r)$
-     \Comment{$\le L+2$ neighbours, all named by the certificate}
-  \State \textit{improved} $\gets$ \textbf{false}
+     \Comment{至多 $L+2$ 个邻居,均由凭证指名}
+  \State \textit{improved} $\gets$ \textbf{假}
   \ForAll{$c'\in\mathcal{N}$}
     \State $r'\gets\textsc{Decode}(c')$
     \If{$r'.C_{\max}<r.C_{\max}$}
       \State $c\gets c'$;\ \ $r\gets r'$;\ \ \textit{improved} $\gets$
-             \textbf{true};\ \ \textbf{break}
+             \textbf{真};\ \ \textbf{跳出}
     \EndIf
   \EndFor
-  \If{\textbf{not} \textit{improved}} \State \textbf{break} \EndIf
+  \If{\textbf{非} \textit{improved}} \State \textbf{跳出} \EndIf
 \EndFor
 \State \Return $c,r$
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{The surrounding genetic algorithm}
+\subsection{外层遗传算法}
 
-The population-based layer is deliberately conventional, so that any measured
-gain is attributable to the mechanisms above rather than to operator tuning.
-The initial population is random---arms drawn uniformly from $\Omega_{ji}$,
-sequences shuffled---save for two seeded individuals, one assigning every
-operation its fastest arm and one balancing load greedily. Selection is binary
-tournament with five elites retained. Crossover applies precedence-preserving
-order crossover to the sequence segment and uniform crossover to the assignment
-segment; mutation swaps two positions of the sequence or moves one operation to
-another eligible arm. Fitness is the decoded makespan. These choices are
-standard and are not claimed as contributions.
+基于种群的这一层刻意保持常规,以使任何实测增益都可归因于上述机制而非算子调参。初始种群随机
+生成——机械臂自 $\Omega_{ji}$ 均匀抽取,序列随机打乱——但另植入两个个体,一个把每道工序都指派
+给其最快的机械臂,一个按负载均衡贪心指派。选择采用二元锦标赛并保留五个精英。交叉对序列段使用
+保持前后约束的顺序交叉,对指派段使用均匀交叉;变异或交换序列中两个位置,或把一道工序移到另一
+台可选机械臂。适应度即解码所得的完工时间。这些选择都是标准做法,不作为本文贡献。
 
-\subsection{Cost, and what is not claimed}
+%% 原标题 "Cost, and what is not claimed";"不主张什么"移到结论的局限小节。
+\subsection{复杂度与代价分析}
 
-One fitness evaluation sweeps $N+n\delta_{\mathrm{ret}}$ events and, under
-closed-loop dispatching, spends $2N_A$ route calls per move, giving
-$O\bigl((N+n)\,N_A\,|E|\,W\log|V|\bigr)$ per individual; the open-loop rule
-removes the factor $N_A$ at the cost of an estimate. Local search adds up to
-$3(L+2)$ further decodings for each of the individuals it touches. The
-consequence is that configurations in this framework differ in cost by two orders
-of magnitude---measured at $0.39$\,ms per evaluation for the two-stage
-configuration against $15.4$\,ms for the full closed loop and $77.9$\,ms with
-pricing---so comparisons at equal generation counts are not meaningful, and
-Section~\ref{sec:Chapter_V} equalizes wall-clock time instead.
+一次适应度评价扫过 $N+n\delta_{\mathrm{ret}}$ 个事件;在闭环派遣下每次移动花费至多 $2N_A$ 次
+路由调用,故每个个体为
+$O\bigl((N+n)\,N_A\,|E|\,W\log|V|\bigr)$;开环规则以一个估计值为代价去掉了因子 $N_A$。
+第~\ref{sec:speedup}~小节的下界剪枝不改变这一最坏情形界,但按命题~\ref{prop:speedup_equiv}
+在不改变输出的前提下把实测的调用数降低了 \RouteCallCut{},即把因子 $N_A$ 换成了一个显著更小
+的有效值。局部搜索则为它触碰的每个个体再增加至多 $3(L+2)$ 次解码。
 
-This is not a bookkeeping detail, and it is the reason the experimental section is
-organized around cost rather than around the chain of mechanisms. Under a fixed
-budget, the cost of an evaluation and the number of evaluations are one resource
-spent two ways. A mechanism earns its place only if what it adds per evaluation
-exceeds what the evaluations it displaces would have contributed, and that is a
-quantitative test no amount of design reasoning can settle in advance. For three
-of the four mechanisms below the test comes out negative.
+其后果是,本框架内不同配置的成本相差达两个数量级——实测每次评价:两阶段配置 $0.39$\,ms,
+完整闭环 $15.4$\,ms,加上定价则为 $77.9$\,ms。因此按相同代数比较是没有意义的,
+第~\ref{sec:Chapter_V}~节改为对齐挂钟时间。
 
-Finally, a disclaimer that the structure of the framework invites. Bilevel
-schemes that exchange multipliers or prices can sometimes be shown to converge
-to a fixed point; ours cannot, and we do not claim it. The lower layer is
-prioritized rather than jointly optimal, the upper layer is a stochastic search
-over a non-convex combinatorial space, and the interface transmits evidence
-rather than a quantity that could serve as a Lyapunov function. What
-Proposition~\ref{prop:decodable} and Lemma~\ref{lem:label} guarantee is
-narrower and, for a heuristic, more useful: every candidate the search examines
-is feasible, its evaluation is exact with respect to the conflict model of
-Section~\ref{sec:Chapter_III}, and it is reproducible. Solution quality is an
-empirical question, which the next section addresses under a protocol designed
-to keep it honest.
+这不是记账层面的细节,而是实验章围绕\emph{成本}而非围绕机制链来组织的原因。在固定预算下,
+单次评价的成本与评价的次数是同一份资源的两种花法。一个机制只有在"它每次评价所增加的收益"
+超过"它挤占掉的那些评价本可贡献的收益"时才配得上它的位置,而这是一个任何设计层面的推理都
+无法预先判定的定量检验。本文的三个候选接口中,只有预约表试探通过了这一检验,且它只有在
+第~\ref{sec:speedup}~小节的降本之后才通过。
 
-\section{Experimental Evaluation}
+最后是一个由框架结构本身引出的声明。交换乘子或价格的双层方案有时可以被证明收敛到不动点;
+本框架不能,我们也不作此主张。下层是优先级式的而非联合最优的,上层是在非凸组合空间上的随机
+搜索,而层间接口传递的是证据,不是一个可以充当 Lyapunov 函数的量。命题~\ref{prop:decodable}、
+引理~\ref{lem:label} 与命题~\ref{prop:speedup_equiv} 所保证的东西更窄,但对一个启发式方法而言
+更有用:搜索考察的每一个候选解都是可行的,其评价相对第~\ref{sec:Chapter_III}~节的冲突模型是
+精确的,降本没有改变任何一个选择,并且整个过程是可复现的。解的质量是一个经验问题,由下一节在
+一个为保持诚实而设计的协议下回答。
+
+\section{实验与结果分析}
 \label{sec:Chapter_V}
 
-The experiments answer four questions. Does closing the loop help at all, once
-the comparison is made fair? Which link in the chain contributes what? Does the
-benefit depend on the \emph{structure} of the congestion, as
-Section~\ref{sec:features} predicts it must? And does pricing the interface
-help, as the coordination literature would suggest?
+本章回答四个问题。把拥堵搬进搜索目标(闭环)本身值多少?预约表感知的派遣再值多少,它能否
+代替闭环、二者是正交互还是近加性?这些收益在多大的算例范围内成立、适用上界在哪?以及,
+那些我们实现了却未能转为净收益的更复杂接口,失效在哪一环?
 
-\subsection{Instances}
+\subsection{实验设置}
 \label{sec:instances}
 
-Public FJSP\_PT benchmarks specify travel as a matrix of location-pair
-durations, which is precisely the assumption this paper removes; they carry no
-aisle network, so vehicle contention cannot be defined on them. We therefore
-generate a controlled family in which the network is explicit, and in which the
-quantities that Section~\ref{sec:features} identifies as decisive can be varied
-one at a time.
+\subsubsection{受控算例族}
+公开的 FJSP\_PT 基准把行驶时间给成一张"位置对--时长"矩阵,而这恰是本文要去掉的那条假设;
+它们不含通道网络,车辆争用在其上无法定义。因此我们生成一族受控算例,其中网络是显式的,且
+第~\ref{sec:features}~小节判定为关键的那些量可以逐个单独变化。
 
-Every instance has $8$ jobs, $24$ real operations, $4$ arms and $4$ vehicles on
-a $10$-node, $10$-corridor layout, with $\bar{T}_t/\bar{T}_p$ calibrated to
-$1.0$ so that transport and processing carry comparable weight, and flexibility
-fixed at $F=0.6$. Two factors are then crossed.
+全部算例共用同一核心:$12$ 个工件、每工件 $3$ 道工序共 $36$ 道真实工序、$8$ 台机械臂、
+异质度 $H=0.3$,且运输与加工的时间尺度比 $\bar{T}_t/\bar{T}_p$ 标定到 $4.0$——即运输是
+矛盾的主要方面,这正是本文问题设定的用意所在。在此核心之上变化三族因子
+(表~\ref{tab:instances})。
 
-\emph{Heterogeneity} $H\in\{0,\,0.15,\,0.3,\,0.5\}$ is the mean within-row
-coefficient of variation of the processing times. It is applied as a
-multiplicative perturbation around a per-operation base time, so changing $H$
-alters how much arms differ from one another without altering the average
-duration of the work.
+\emph{A 族:布局(争用结构)}。五档 \texttt{funnel}、\texttt{high}、\texttt{mid}、
+\texttt{low}、\texttt{scatter},通过改变网络容量而不改变行驶距离来调节争用:进入车间与
+穿越车间的并行通道数逐档增加,每条通道是总时长相等的两跳路径,故增删一条只改变"多少辆车
+能并行通过",不改变"任何东西要走多远"。节点与走廊数由 $13/12$ 递增到 $16/24$。其中
+\texttt{funnel} 与 \texttt{high} 只差站台处的一条并行通道,即最小割减半,是本章最干净的
+受控对照;\texttt{low} 与 \texttt{scatter} 网络规模相同,只差机械臂的空间摆放。
 
-\emph{Congestion structure} takes four settings that change network capacity
-while leaving distances, processing times and arm placements untouched. Capacity
-is varied by the number of parallel channels into and across the shop, and each
-channel is a two-hop path of equal total duration, so adding or removing one
-changes how many vehicles can proceed abreast without changing how far anything
-has to travel. The two settings we rely on most, \texttt{high} and
-\texttt{funnel}, differ by a single generator parameter: the number of parallel
-channels from the load/unload station to the near hub is two in the first case
-and one in the second, which halves the minimum cut separating the station from
-the shop. Removing a channel necessarily removes its intermediate node and its
-two corridors, so the two layouts have $10$ nodes and $10$ corridors against $9$
-and $8$; every other field is identical. We verified this rather than asserting
-it: at equal $H$ and seed the job set, the eligible sets, the processing-time
-matrix, the fleet size and the transport-to-processing ratio agree exactly, and
-the corridor sets differ by precisely the two edges of the deleted channel.
-This is what makes the comparison in Section~\ref{sec:whichcongestion} a
-controlled one rather than a correlation.
+\emph{B 族:车臂比 $N_A/N_M$}。在 \texttt{funnel} 布局上取 $N_A\in\{4,8,16\}$,即车臂比
+$0.5$、$1.0$、$2.0$。这一族是为第~\ref{sec:costlaw}~小节的代价律准备的:派遣试探的开销随
+车队规模线性增长,而剪枝的效力随之下降,两者的交叉点决定机制的适用上界。
 
-Table~\ref{tab:instances} lists the structural indicators and the composite
-lower bound of Section~\ref{sec:features} for the cells used below. One entry
-deserves comment because it is a negative result about our own metric. The
-funnel share $\varphi$, which we introduced to quantify how much of a typical
-inbound trip lies on corridors every job must cross, does not distinguish
-\texttt{high} from \texttt{funnel} at all: it reads $0.29$ for both, and its
-largest value $0.33$ belongs to the \emph{least} congested family. The reason is
-that $\varphi$ as defined is dominated by the single mid-shop channel, which the
-two families share; the manipulation is at the station cut, which $\varphi$
-averages away. The indicator that tracks the design is the station cut itself.
-We keep $\varphi$ in the table so that the discrepancy is visible, and we do not
-use it to interpret any result below.
+\emph{C 族:柔性 $F$}。在同一布局上取 $F\in\{0.3,\,1.0\}$,即每道工序的可选机械臂比例。
+柔性决定改派算子有多少可动的余地,也决定拥堵信息能在多大程度上转化为指派上的调整。
+
+三族共 $\NCases$ 个算例格,\texttt{A funnel} 作为三族共用的基点只跑一次。
 
 \begin{table}[t]
-\caption{The four congestion families. All cells share $8$ jobs, $24$ real
-operations, $4$ arms, $4$ vehicles, $F=0.6$ and
-$\bar{T}_t/\bar{T}_p\approx1.0$; \texttt{high} and \texttt{funnel} differ only
-by the deletion of one parallel channel at the station. Structural indicators
-are constant within a family; the lower bound varies with $H$ and is given as a
-range over $H\in\{0,0.15,0.3,0.5\}$.}
+\caption{受控算例族。全部算例格共用 $12$ 工件、$36$ 道真实工序、$8$ 台机械臂、$H=0.3$、
+$\bar{T}_t/\bar{T}_p\approx4.0$;三族分别只变化布局、车臂比与柔性。争用强度为初始随机种群
+下让行时间占行驶总时间的比例,由算例自身结构决定而非人为设定。}
 \label{tab:instances}
 \small
+%% 由 tab/gen_tables_ladder.py 生成:结构列直接由 tools/abc_matrix.py 的 build() 构造出
+%% 算例后读出,下界调 algorithm/instance.py 的 simple_lower_bound,争用强度取自
+%% baseline_ladder.csv 的 contention 列。任何一列都不是手打的。
 \input{tab/tab_instances.tex}
 \end{table}
 
-\subsection{Comparison protocol}
+\subsubsection{比较协议}
 \label{sec:protocol}
 
-Two pitfalls make a naive comparison in this setting almost meaningless, and we
-report the protocol in detail because we walked into both of them before
-adopting it.
+这个设定下有三个陷阱会使朴素的比较近乎无意义。我们把协议写得较细,因为其中两个是我们先踩
+进去、之后才改过来的。
 
-\paragraph{Equal computation, not equal generations.}
-The configurations do not evaluate the same object. The two-stage
-baseline searches against the constant matrix $t^{*}$, so one of its
-evaluations is a decoding with table lookups; the closed loop routes every
-candidate conflict-free; the priced variant additionally runs a multi-label
-search. Measured cost per evaluation spans two orders of magnitude
-(Fig.~\ref{fig:protocol}). Comparing at equal generation counts therefore hands
-the expensive configuration tens of times more computation, and an apparent
-mechanism gain may be nothing but a larger budget. We equalize wall-clock time
-instead: for each instance, the full closed-loop configuration is run once under
-its natural stopping rule, and its running time becomes the budget shared by
-every configuration on that instance. Calibrating the budget from the most
-expensive configuration rather than the cheapest is deliberate, since it is the
-setting under which that configuration is least disadvantaged.
-Early-stopping thresholds are relaxed so that the budget is actually consumed,
-and each run reports whether it stopped on the budget or converged first.
+\paragraph{统一执行器:报可实现的完工时间。}
+这是公平性的支点,也是与文献比较时最容易出错的一处。开环方法在忽略争用的前提下排产,它自己
+报出的完工时间在真实系统里\emph{根本不可行}。因此本章的所有配置,无论计划从哪里来,都必须
+放进\emph{同一个}无冲突路由器里执行、过\emph{同一个}独立校验器,报告的一律是执行后可实现的
+完工时间。这一步不是形式主义:开环计划的乐观幅度恰等于该算例的争用强度,在漏斗算例上可达
+\ContentionHi{}。若允许各方各报自己口径下的数,比较立即失去意义,而被比较的一方会凭一个
+不可实现的数字胜出。
 
-Equalizing time is not neutral either---it hands the cheap surrogate model tens
-of times more search---so neither budget can be presented alone. We report the
-cost per evaluation and the number of evaluations achieved for every
-configuration, so that any difference in search effort is visible rather than
-hidden, and we repeat the central comparisons under both conventions.
+\paragraph{同挂钟,而非同代数。}
+各配置评价的\emph{不是同一个对象}。开环配置的一次评价是查常数矩阵 $t^{*}$ 的解码;闭环配置
+要对每个候选做完整的无冲突路由;定价变体还要额外跑多标签搜索。实测单次评价成本跨越两个数量
+级。因此按相同代数比较等于给昂贵的配置多送几十倍算力,一个看似的机制增益可能只是预算更大。
+我们改为对齐挂钟时间:各配置在同一算例上共享同一预算,早停阈值放宽以确保预算被真正用尽,
+每次运行都报告它是耗尽预算还是提前收敛。
 
-\paragraph{Enough seeds, and paired tests.}
-Single-seed readings in this problem are worthless: on one instance we observed
-a range of $11$ makespan units across three seeds of the \emph{same}
-configuration, which exceeds every mechanism effect we measure. Each cell is
-therefore run with $10$ seeds, and every comparison is paired on the seed and
-tested with a two-sided Wilcoxon signed-rank test. Pairs are formed by explicit
-key---$(\text{instance},\text{seed})$, or $(H,\text{seed})$ when comparing
-congestion structures---rather than by position in a list, a distinction that
-matters whenever a cell is incomplete.
+对齐时间同样不是中性的——它反过来给便宜的配置多送几十倍搜索次数。因此两种口径都不能单独
+呈现。我们为每个配置同时报告单次评价成本与实际完成的评价次数,使搜索努力的差异可见而非
+被藏起来,并在第~\ref{sec:costlaw}~小节把这一"成本与次数的兑换率"本身作为对象来测。
 
-\paragraph{Correctness.}
-Every solution is re-checked by a validator that is independent of the decoder
-and re-derives corridor occupancies from the timetable, and is compared against
-the instance's composite lower bound. Runs that fail validation or fall below
-the bound are reported separately and never averaged into a cell. Each
-completed run is appended to a ledger and flushed, so an interrupted batch
-resumes without recomputation and reports are rebuilt from the ledger rather
-than from memory.
+\paragraph{足够的种子与配对检验。}
+本问题中单种子读数是没有价值的:在同一算例上,\emph{同一}配置的三个种子之间我们观察到过
+$11$ 个完工时间单位的极差,超过我们所度量的任何机制效应。因此每格跑 $\NSeeds$ 个种子,每个
+比较都按种子配对,并用双侧 Wilcoxon 符号秩检验。配对按显式键 $(\text{算例},\text{种子})$
+形成,而非按列表位置——这个区别在某格数据不全时是决定性的。
 
-Experiments were run single-threaded on an Intel Xeon W-1270 at $3.40$\,GHz; the
-implementation is pure Python with no solver dependency. Absolute timings are
-therefore not competitive with a compiled implementation, which matters for the
-protocol: a faster implementation would grant every configuration more
-evaluations within the same budget. It would not change the exchange rate between
-cost and evaluations that the comparisons turn on, since that ratio is measured
-between configurations sharing one implementation.
+\paragraph{正确性。}
+每个解都由一个独立于解码器的校验器重新检查,该校验器从时间表出发重新推导走廊占用,并与算例的
+复合下界比对。未过校验或低于下界的运行单独报告,绝不并入任何格的均值。每次完成的运行都追加
+写入账本并落盘,故中断的批次可以续跑而不重算,报表也从账本而非内存重建。
 
-\subsection{Baselines and the factorial design}
+\subsubsection{实现与运行环境}
+实验在 Intel Xeon W-1270 @ $3.40$\,GHz 上单线程运行;实现为纯 Python,不依赖任何求解器。
+因此绝对耗时不能与编译型实现相比,这一点对协议是有影响的:更快的实现会让\emph{每一个}配置
+在同一预算内做更多次评价。但它不会改变各比较所依赖的"成本与评价次数之间的兑换率",因为该比率
+是在共享同一实现的配置之间测得的。
+
+\subsection{四级基线阶梯}
 \label{sec:arms}
 
-Table~\ref{tab:arms} lists the configurations as a factorial design rather than
-a chain. A chain is the conventional presentation, and it is what we used at
-first, but it cannot support the attributions we need: consecutive rows of a
-chain differ in one factor only if every earlier factor is held fixed, and the
-moment two rows differ in two factors their difference is uninterpretable. The
-three factors are therefore crossed where the crossing is affordable, so that
-each mechanism can be switched on twice---once in a cheap context and once in an
-expensive one---and the two estimates cross-checked.
+一体化调度类工作的实验最常见的失误,是把两个不同的问题混成一个数字来报:\emph{与文献相比
+好多少},以及\emph{我们自己的哪个部件贡献了多少}。前者要求与已发表方法的\emph{结构}对齐,
+后者要求只动一个部件。只报消融会低估问题的分量,只报文献比较则会把无冲突路由本身的价值
+冒领成本文的创新。我们因此把它拆成一道四级阶梯,每一级都对应一个可指名的结构。
+
+\begin{description}[leftmargin=0pt,topsep=3pt,itemsep=3pt]
+\item[B0:开环规划 + 真实执行。] 上层在理想最短路上搜索($\delta$ 冲突不计),搜完把计划
+放进真实路由器执行。这是~\cite{li2026framework} 的忠实模型:其调度层产出忽略运输争用的
+甘特图,下游用优先级路由解冲突,再把到达时刻平移回时间轴;其派车用空闲优先规则
+$k^{*}=\arg\min \text{Cost}(\text{path}_k,L_{\text{start}})$,与本框架的规则派车
+\eqref{eq:rule} 同式。
+\item[B0+:开环规划 + 预约表感知派车。] 排产同样冻结,只把车辆指派改为查预约表决定。这是
+~\cite{sun2023integrated} 两阶段结构的对应物:其第一阶段的混合遗传算法在\emph{常数运输时间
+矩阵}上排产,第二阶段才在冻结的排产上优化车辆指派并处理冲突,无回流。此处以试探派车作其
+第二阶段的贪心近似——试探未必弱于对方的遗传算法,故这一级是对基线\emph{宽容}的口径。
+\item[B1:闭环规划 + 规则派车。] 搜索时即计冲突,派车仍用理想矩阵估计。与 B2 信息完全对等。
+\item[B2:闭环规划 + 预约表感知派车。] 本文方法。
+\end{description}
+
+这四级不是一条链,而是一个 $2\times 2$ 析因:因子一为"拥堵是否进入搜索目标"(开环/闭环),
+因子二为"派车是否查预约表"(规则/试探)。按析因而非按链来组织是必要的,因为链上相邻两行
+只有在此前每个因子都被固定时才只差一个因子;一旦两行差了两个因子,它们的差值就不可解释。
+具体地,$\text{B0+}\to\text{B1}$ 同时跨越两个因子,\textbf{不能}用来度量闭环的价值——我们
+把它列出仅为对账。干净的对比是固定一个因子只动另一个,即表~\ref{tab:arms} 的四格之间的
+四个配对。
 
 \begin{table}[t]
-\caption{The configurations, as a crossing of three binary factors over a
-common core. Every row evaluates fitness by a complete conflict-free decoding
-except the two-stage baseline, which evaluates against the constant matrix
-$t^{*}$ and repairs once at the end.}
+\caption{四级阶梯作为 $2\times 2$ 析因。行为"拥堵是否进入搜索目标",列为"派车是否查预约表"。
+四格中只有沿同一行或同一列的比较是单因子的,对角比较跨两个因子、不可用于归因。}
 \label{tab:arms}
 \footnotesize
-\begin{tabular}{@{}lccc@{}}
+\begin{tabular}{@{}lcc@{}}
 \toprule
-Configuration & dispatch & local search & priced \\
+ & 规则派车 & 预约表感知派车 \\
 \midrule
-dispatch rule (single decoding) & rule & --- & --- \\
-two-stage (surrogate transport) & rule & yes & no \\
-\midrule
-\textbf{evaluation loop} (proposed) & rule & no & no \\
-\quad + contention-guided search & rule & yes & no \\
-\quad + reservation-aware dispatch & exact & no & no \\
-\quad + both, without staggering & exact & reassign only & no \\
-\quad + both (full closed loop) & exact & yes & no \\
-\midrule
-\quad + priced routing (control) & exact & yes & yes \\
+开环规划(排产冻结) & B0~\cite{li2026framework} & B0+~\cite{sun2023integrated} \\
+闭环规划(拥堵入目标) & B1 & \textbf{B2}(本文) \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-\emph{Dispatch} is either a rule that estimates delivery from the ideal
-shortest-path matrix, or an exact choice that probes the reservation table for
-each candidate vehicle. \emph{Local search} is the contention-guided
-neighbourhood of Section~\ref{sec:ls}, optionally with the staggering family
-removed. \emph{Priced} adds corridor prices to the router's objective. The
-first row performs a single decoding and is reported for scale only; an
-equal-time budget has no meaning for it. The proposed method is the third row:
-the evaluation loop with the cheapest available setting of both other factors.
-Section~\ref{sec:main} explains why that is where the design lands.
+B0 的执行口径需要交代,因为它直接影响基线的强弱。开环搜出的计划本身含有一套派车决策,执行时
+有两种复现方式:\emph{复现计划}用原计划逐字指定的车辆,即"计划怎么定就怎么执行";\emph{现场
+改派}在执行时按规则重新派车。实测前者更强(漏斗算例上 $63.00$ 对 $78.00$),且它才是
+~\cite{li2026framework} 的忠实模型——该文的任务分配层在甘特图上先定好机器人,执行滑坡时
+只平移时间轴、不改派。因此我们取\emph{较强}的那一个作为主报口径,另一个一并给出以示我们
+没有挑对自己有利的那个。对基线取强者,是举证责任应当由我们承担的部分。
 
-\subsection{Main results}
+\subsection{主结果}
 \label{sec:main}
 
-Table~\ref{tab:main} reports every configuration against the two-stage
-baseline, pooled over $16$ instances and $10$ seeds, with the cost per
-evaluation and the evaluations actually completed alongside each comparison.
-All $1280$ runs passed independent validation. Two readings follow, and they
-point in opposite directions.
+表~\ref{tab:main} 给出四级阶梯在 $\NCases$ 个算例格 $\times$ $\NSeeds$ 个种子、共
+$\NPairs$ 个配对下的结果,每格同挂钟预算,全部运行均通过独立校验。以下三段分别读出析因的
+两个主效应与端到端的合计。
 
 \begin{table}[t]
-\caption{Every configuration against the two-stage baseline under an equal
-wall-clock budget, pooled over $16$ instances $\times$ $10$ seeds ($n=160$
-seed-paired comparisons per row). Positive $\Delta C_{\max}$ favours the
-configuration over two-stage. Rows are ordered by cost per evaluation.
-$^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$, two-sided Wilcoxon signed-rank.}
+\caption{四级阶梯在同挂钟预算下的完工时间,以及 $2\times 2$ 析因的四个单因子配对比较。
+负值表示完工时间下降,即更好。$n=\NPairs$ 个按 $(\text{算例},\text{种子})$ 配对的比较,
+双侧 Wilcoxon 符号秩检验。}
 \label{tab:main}
 \small
+%% 由 tab/gen_tables_ladder.py 从 clbs/output/baseline_ladder.csv 生成。该脚本同时打印
+%% 导言区的整块宏定义,故表与正文的数字必然同源:重跑实验后只需重跑脚本、贴一次宏。
+%% 已核实脚本独立复现出导言区当前的全部数值(增益、p 值、胜负计数、争用区间)。
 \input{tab/tab_main.tex}
 \end{table}
 
-\paragraph{Evaluating the true objective is what pays.}
-Every configuration that decodes conflict-free routes inside the loop beats the
-two-stage decomposition by a wide and highly significant margin, from $5.5\%$
-to $7.7\%$. The margin cannot be attributed to search effort, because the
-comparison runs the other way: two-stage evaluates its surrogate at $0.39$\,ms
-and completes about $124{,}000$ evaluations within the shared budget, five times
-as many as the proposed method and nearly two hundred times as many as the
-priced control. It searches far harder and still loses, because it is searching
-against the wrong objective and only discovers the routing cost after its
-decisions are frozen. Fig.~\ref{fig:convergence} makes the gap visible on a
-single instance: the two-stage curve descends to a surrogate makespan of
-$66.6$, but repairing its frozen decisions under conflict-free routing yields a
-true makespan of $83.8$, an optimism gap of $25.9\%$.
+\paragraph{闭环本身的价值。}
+固定派车方式、只改变"拥堵是否进入搜索目标",闭环在两种派车方式下都显著更优:规则派车下
+$\text{B0}\to\text{B1}$ 为 $-\GainLoopRule$($p=\PLoopRule$),试探派车下
+$\text{B0+}\to\text{B2}$ 为 $-\GainLoopProbe$($p=\PLoopProbe$)。这个增益不能归因于搜索
+努力,因为比较方向恰恰相反:开环配置的一次评价只需查常数矩阵,在同一预算内能完成数倍于闭环
+的评价次数。它搜得更狠却仍然输,原因是它在优化一个错误的目标,只有当决策已被冻结之后才发现
+真实的运输代价。图~\ref{fig:convergence} 在单个算例上把这一差距画了出来。
+
+值得指出这一级差距的归属。把拥堵搬进搜索目标是本文的主张,同时也是~\cite{li2026framework}
+在其结论中自陈的未来工作("extending this mechanism into a fully iterative loop"),因此
+可以正当主张;但它必须与下一段的机制贡献\emph{分开}报,不得合并成一个数字。
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{fig/fig_convergence_closedloop.pdf}
-\Description{Best-so-far makespan against wall-clock time for three
-configurations, with the two-stage curve marked as a surrogate objective and its
-true repaired value shown as a separate point.}
-\caption{Convergence on one \texttt{high}-congestion instance, median over five
-seeds under a shared $46.3$\,s budget. The two-stage curve is plotted against
-its own surrogate objective, which is what it optimizes; the star marks the true
-makespan after its frozen decisions are routed conflict-free. Within the same
-budget two-stage completes about $1{,}980$ generations and the full closed loop
-$47$.}
+\Description{Best-so-far makespan against wall-clock time for the ladder
+configurations, with the open-loop curve marked as a surrogate objective and its
+realizable value shown as a separate point.}
+\caption{单个 \texttt{funnel} 算例上的收敛曲线,横轴为挂钟时间,曲线为多种子的逐时刻均值。
+实线(B1、B2)自始至终画的都是可实现的完工时间;虚线是开环搜索\emph{自己的}代理目标,即它
+实际在优化的东西,而叉号与十字标出同一份计划经无冲突路由执行后落在哪里。虚线终点与叉号之间
+的落差即该算例的乐观幅度,也是"在环内评价"这一步的全部理由:开环并非收敛得不好,而是收敛到
+了一个不存在的位置。}
 \label{fig:convergence}
+%% 由 fig/fig_convergence.py 生成(输出名 fig_convergence_closedloop,勿改,正文已引用),
+%% 数据源 clbs/output/ladder_convergence.csv 与 ladder_cost.csv,由 tools/ladder_diag.py 落盘。
+%% 该图是说明性的:它画形状与落差,不承载统计主张,故只取三算例三种子,正文统计一律以
+%% baseline_ladder.csv 为准。此口径已写在 ladder_diag.py 的首部注释里。
 \end{figure}
 
-\paragraph{Nothing built on top of it pays.}
-The second reading is the one we did not expect. Among the configurations that
-already evaluate the true objective, quality does not improve with
-sophistication---it declines. The cheapest of them is the best, and the ordering
-of Table~\ref{tab:main} is close to monotone in cost: $+7.69\%$ at
-$1.99$\,ms per evaluation, $+5.52\%$ at $15.37$\,ms, and $-2.80\%$ at
-$77.91$\,ms, where the most elaborate configuration has fallen behind the
-baseline it was built to improve on. Because the budget is fixed, every
-millisecond a mechanism adds to an evaluation is a millisecond taken from the
-number of evaluations, and none of the mechanisms we added returns more than it
-costs. Table~\ref{tab:ablation} makes this precise one factor at a time.
+\paragraph{预约表感知派遣的价值。}
+固定闭环与否、只改变派车决策,得到本文机制自身的贡献。在\emph{闭环内部},
+$\text{B1}\to\text{B2}$ 为 $-\GainProbeLoop$($p=\PProbeLoop$)。这一级的两档信息完全对等
+——同样的排产搜索、同样的预算,唯一差别是选车时是否查预约表——因此它是本文承重机制的干净
+度量。该均值被车队偏大的两格拖低:那两格上试探反而抬高完工时间
+(\GainProbeFleetOne{},\GainProbeFleetTwo{}),故 $-\GainProbeLoop$ 是\emph{含适用上界在内}的
+平均,不是处处成立的点估计。
 
-\begin{table}[t]
-\caption{Attribution of each mechanism, from pairs of configurations differing
-in that mechanism alone. Positive means the mechanism repays its cost under an
-equal wall-clock budget. ``Cost'' is the resulting multiple in ms per
-evaluation. Each mechanism is switched on in two contexts; agreement between
-the two rows is what makes the estimate trustworthy.}
-\label{tab:ablation}
-\small
-\input{tab/tab_ablation.tex}
-\end{table}
+在\emph{开环之下},同一个机制值 $-\GainProbeOpen$($p=\PProbeOpen$),同样显著。开环试探
+并不"几乎不值钱";它就是~\cite{sun2023integrated} 两阶段结构相对~\cite{li2026framework}
+忠实开环的那一段进步。但它的量级(\GainProbeOpen{})远小于闭环主效应(\GainLoopRule{}),
+这才是下一小节要钉死的判断。
 
-Read down the table, one mechanism repays its cost and three do not. Putting
-conflict-free routing inside the evaluation loop costs $5.1\times$ more per
-evaluation in the cheap-dispatch context and returns $+7.69\%$; in the
-expensive-dispatch context it costs $23.7\times$ and still returns $+6.95\%$.
-Probing the reservation table when dispatching costs a further $4.7\times$ and
-returns $-0.93\%$. The contention-guided neighbourhood costs $1.6$--$1.7\times$
-and returns $-1.96\%$ and $-1.72\%$. Pricing costs $5.1\times$ and returns
-$-8.99\%$. The two estimates for each mechanism agree in sign and, to within a
-quarter of a percentage point, in magnitude, so none of these readings depends
-on the context in which the mechanism was switched on.
+\paragraph{端到端。}
+从文献结构到本文方法,$\text{B0}\to\text{B2}$ 合计 $-\GainEndToEnd$
+($p=\PEndToEnd$,$\WinEndToEnd$ 胜 $\LoseEndToEnd$ 负)。这是一个可以正当主张的端到端数字,
+前提是它被拆开报告过——上面两段就是那个拆解。
 
-That agreement is worth dwelling on, because the confounded version of the same
-comparison reverses the conclusion. Contrasting the proposed method with the
-configuration that adds reservation-aware dispatch \emph{and} local search at
-once yields $+0.83\%$ in favour of the richer configuration, at $p=0.047$: a
-significant result, with the wrong sign, obtained from the same runs. The two
-factors happen to push in opposite directions, and a chain-style ablation that
-moves both at once reports their sum as though it were an attribution. We report
-the confounded number because we believed it for some time.
+\subsection{主效应、次效应与不可替代性}
+\label{sec:complement}
 
-Fig.~\ref{fig:ablation} shows the same comparisons per instance family,
-normalized by each instance's lower bound so that cells with different bounds
-share an axis.
+上一小节留下的不是"开环试探不显著",而是一个\emph{量级}问题:开环试探显著但小
+($\GainProbeOpen$),闭环显著且大($\GainLoopRule$),闭环内试探的平均被大车队两格拖成
+$\GainProbeLoop$。本小节用析因把"可否互相替代"与"是否正交互"分开回答。
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig/fig_ablation.pdf}
-\Description{Dot plot of makespan divided by lower bound for each
-configuration, separately for high and funnel congestion.}
-\caption{The configurations under an equal wall-clock budget, as a ratio to the
-composite lower bound (lower is better). Error bars span heterogeneity levels.
-The separation between two-stage and the rest is present in every congestion
-family; the separation \emph{within} the rest is not.}
-\label{fig:ablation}
-\end{figure}
+\paragraph{交互的定量判据。}
+若闭环与派遣两个因子彼此独立,端到端增益应恰为两者单独增益的复合,即
+$\GainIndepProduct$。实测为 $\GainEndToEnd$,略低于独立预测——\emph{无正交互},呈近加性
+或略亚加性。亚加性与第~\ref{sec:whichcongestion}~小节的适用上界同向:大车队两格上闭环内
+试探为负,把组合增益往下拽。
 
-Fig.~\ref{fig:protocol} substantiates the protocol argument of
-Section~\ref{sec:protocol} rather than the method: the left panel is why equal
-generations would be indefensible, and the right panel is why equal time is not
-a free choice either.
+\paragraph{不可替代,而非必须捆绑。}
+真正站得住的主张不是"两者必须一起用才有效",而是"开环试探不能代替闭环"。把拥堵感知
+的派车装在冻结排产上,最多拿到约 $\GainProbeOpen$;把拥堵搬进搜索目标,即使仍用规则派车,
+也能拿到约 $\GainLoopRule$。熟悉~\cite{sun2023integrated} 的审稿人若问"你们的派车机制
+装在两阶段框架里是不是也一样管用",答案是:管用,但只管用到开环试探那一档;要拿到本文这一级
+的改善,拥堵必须在\emph{搜索时}进入目标。B2 仍是端到端最优,因为它把主效应与(在适用区间内的)
+次效应叠在一起,而不是因为存在一个把两者焊死的正交互项。
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig/fig_protocol.pdf}
-\Description{Two bar charts on logarithmic axes: cost per evaluation by
-configuration, and evaluations completed within the shared budget.}
-\caption{Neither budget is neutral. Evaluation cost spans a factor of $199$
-across the configurations (left), so at equal wall-clock the cheaper ones
-complete far more search (right). Both quantities are reported for every cell.}
-\label{fig:protocol}
-\end{figure}
+\paragraph{对文献的含义。}
+因此"先排产、后解冲突"路线的问题,不在于第二阶段的派车做得不够好——第二阶段在我们的
+口径下确实有 $\GainProbeOpen$ 的显著收益——而在于它把主效应留在了桌面上。第二阶段能挽回
+的东西有一个由第一阶段无知所框定的上界;要突破这个上界,必须把无冲突执行放进适应度。
 
-The dependence runs deep enough to change what the paper would have concluded.
-Fig.~\ref{fig:protocols} repeats four comparisons under both conventions. Equal
-generations charges nothing for a local-search neighbour or a dispatch probe, and
-under it the mechanism-rich configuration gains against every cheaper one---by
-$2.9\%$ against rule-based dispatch, significantly, where equal wall-clock
-records exactly $0.0\%$. The pricing comparison behaves the same way and more
-starkly: indistinguishable from unpriced under equal evaluations, worse by $6$ to
-$8\%$ under equal wall-clock (Section~\ref{sec:pricing}). Neither convention is
-wrong. Equal generations answers whether a mechanism improves a search step, and
-equal wall-clock answers whether it improves a search; the first is a question
-about mechanism design and the second about whether to deploy it. What is not
-defensible is reporting one and describing it as the other.
+%% 原此处的 fig:protocol(评价成本与评价次数)与 fig:protocols(两种预算口径下的
+%% 同一组比较)已移到第 5.7 小节"代价律与降本效果"——它们说明的是成本与次数的兑换率,
+%% 属于代价分析而非主结果。
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig/fig_protocols.pdf}
-\Description{Four paired comparisons, each shown twice: once under an equal
-wall-clock budget and once under an equal number of generations, with the
-equal-generation reading systematically more favourable to the elaborate
-configuration.}
-\caption{The same four comparisons under both budget conventions, against the
-full closed loop. Equal generations does not charge for the extra work a
-mechanism performs, and systematically flatters it; the gap between the two
-markers in a row is the part of the apparent gain that is an accounting artefact.
-Measured on the four instances for which both protocols were run.}
-\label{fig:protocols}
-\end{figure}
-
-\subsection{Which congestion is worth feeding back?}
+%% 原标题 "Which congestion is worth feeding back?" 同为问句,改为正面表述。
+\subsection{稳健性与适用区间}
 \label{sec:whichcongestion}
 
-This was intended as the sharpest test available to us, because \texttt{high}
-and \texttt{funnel} differ in one controlled respect. If the mechanisms work by
-steering decisions away from contention, their advantage must persist where
-contention is avoidable and vanish where it is not. A mechanism that improved
-both equally would be improving something else. The prediction is
-falsifiable, and Section~\ref{sec:main} has already removed its subject: there
-is no mechanism gain to localize. What remains testable is whether the gain of
-the evaluation loop itself depends on congestion structure, and the answer is
-that it does not.
+主结果是在 $\NCases$ 个算例格上汇总的。本小节把它按三个因子族拆开,目的不是再多报几个数,
+而是划出机制的\emph{适用区间}:一个只在特定结构上成立的收益,若不说明边界,读者无法判断它
+是否适用于自己的场景。三族分别检验三个可以事先说清的预期。
+
+\emph{布局(A 族)}检验收益是否随争用强度增长。这是最直接的预期:闭环与预约表试探处理的都是
+争用,若争用本身很弱,两者都无从发挥。\texttt{funnel} 与 \texttt{high} 只差站台处一条并行
+通道,即最小割减半,是其中最干净的受控对照。
+
+\emph{车臂比(B 族)}检验\emph{上界}。派遣试探的开销随车队规模线性增长,而
+第~\ref{sec:speedup}~小节的剪枝效力随车队增大而下降(等价性自检中最大车队一档的调用削减率
+最低)。因此存在一个车队规模,超过它之后机制的收益会被自身开销吞掉。这个上界必须报出来。
+
+\emph{柔性(C 族)}检验机制是否依赖指派上的可动余地。柔性越高,同一道工序的可选机械臂越多,
+拥堵信息越有机会转化为指派调整。
+
+\paragraph{适用上界:大车队两格上试探反而有害。}
+表~\ref{tab:bytag} 把 B 族的预言钉成了数字。车队最紧的一格($N_A/N_M=0.5$)上,闭环仍有益
+($\text{B0}\to\text{B1}$ 为 \GainLoopStarve{}),而试探的收益最大
+($\text{B1}\to\text{B2}$ 达 $-\GainProbeStarve$)——车辆稀缺时,选对那一辆几乎决定完工时间,
+查预约表的信息全额兑现。反过来,在 $N_A/N_M=1.0$ 与 $2.0$ 两格上,闭环内试探\emph{抬高}
+完工时间(\GainProbeFleetOne{},\GainProbeFleetTwo{}):单次评价因多车试探而变贵,同挂钟内
+搜得更少,收益被开销吃光并反超。这正是第~\ref{sec:speedup}~小节代价律的适用上界形态,
+也解释了为何闭环内试探的\emph{平均}增益只有 $\GainProbeLoop$——均值被这两格往上拽。
+机制有效的完整主张必须带上这句话:\emph{在车队不过大时有效;超过上界则应退回规则派车。}
+
+%% 上界数字来自 tab/gen_tables_ladder.py / 逐格表;宏 \GainProbeFleetOne/Two 与
+%% \GainProbeStarve 同源。若后续重跑后符号翻转,改写本段而非只换数字。
+
+\begin{table}[t]
+\caption{逐算例格的四级阶梯结果与两个主效应,按三个因子族分组($n=\NSeeds$ 个按种子配对的
+比较每格)。争用强度由算例结构决定,一并列出以便判断收益是否随其变化。负值表示完工时间下降。}
+\label{tab:bytag}
+\small
+%% 由 tab/gen_tables_ladder.py 生成,按 A/B/C 三族分块。
+\input{tab/tab_bytag.tex}
+\end{table}
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=\columnwidth]{fig/fig_prediction3.pdf}
-\Description{Grouped bars comparing the gain of each mechanism under high and
-funnel congestion.}
-\caption{Gains under avoidable (\texttt{high}) and unavoidable
-(\texttt{funnel}) congestion, paired by $(H,\text{seed})$. The two instance
-families differ only in the width of the station cut.}
+\Description{Three panels of line plots: closed-loop gain and probing-dispatch
+gain across layout (vs contention), fleet-to-arm ratio, and flexibility; two
+fleet-ratio points where probing is harmful are labelled.}
+\caption{两个主效应在三个因子族上的分布。左:布局族,横轴为争用强度;中:车臂比族,横轴为
+$N_A/N_M$;右:柔性族。闭环增益在各族上稳健且大体随争用上升;闭环内试探派车在车队最紧时最赚,
+在 $N_A/N_M\ge 1$ 两格上翻为正(图中标注 harmful),该转折即适用上界。}
 \label{fig:prediction3}
+%% 由 fig/fig_prediction3.py 从 clbs/output/baseline_ladder.csv 生成。横轴:A 族取争用强度
+%% (布局族没有自然的数值水平,而布局操纵改变的正是争用),B/C 族取算例名末尾的因子水平——
+%% 那个数字由 tools/abc_matrix.py 生成算例时写入,故按构造即为水平本身。
+%% 脚本会在增益变正的格上自动标注 "harmful",符号变化是本图的要点而非需要抹平的瑕疵。
 \end{figure}
 
-Table~\ref{tab:bytag} gives the gain of the proposed method over two-stage in
-all sixteen cells. It is large and significant everywhere, and it is not ordered
-by congestion: $+8.76\%$ on \texttt{low}, $+4.03\%$ on \texttt{mid},
-$+9.50\%$ on \texttt{high} and $+8.47\%$ on \texttt{funnel}. The controlled
-pair is the informative one, since \texttt{high} and \texttt{funnel} differ only
-in the width of the station cut: the gain falls from $9.50\%$ to $8.47\%$, a
-difference far smaller than the spread across heterogeneity levels within either
-family. Rank correlation between the gain and heterogeneity is $-0.21$ over the
-sixteen cells, that is, slightly negative where the design predicted positive.
+表~\ref{tab:bytag} 与图~\ref{fig:prediction3} 给出逐格结果。三族的读法各不相同,须分开说。
 
-\begin{table}[t]
-\caption{Gain of the proposed method over two-stage in every cell, by congestion
-family and heterogeneity, and pooled per family ($n=40$ seed-paired comparisons
-per family). Positive favours the proposed method.}
-\label{tab:bytag}
-\small
-\input{tab/tab_bytag.tex}
-\end{table}
+\emph{布局族。}闭环增益随争用强度大致上升:最不拥堵的 \texttt{scatter}(争用
+\ContentionLo{})上 $\text{B0}\to\text{B1}$ 为 $-8.2\%$,中等的 \texttt{mid}/\texttt{low}
+约 $-15\%$/$-10\%$,最拥堵的 \texttt{funnel}/\texttt{high} 达 $-23\%$/$-29\%$。试探增益
+同向但幅度更小,并在低争用两格上接近零($-0.2\%$、$-1.2\%$)。机制处理的确实是争用,而不是
+某种与争用无关的搜索副产物。受控对照 \texttt{funnel} 对 \texttt{high}(只差站台一条通道)
+上两者都大,与"最小割减半抬高可规避争用"的构造一致。
 
-The reason is visible once the mechanism attributions are in hand. Our
-prediction was about mechanisms that steer decisions away from contention, and
-such a mechanism must indeed depend on the contention being avoidable. But the
-effect that survives is not of that kind. Replacing a surrogate objective with
-the true one does not steer anything; it removes a systematic bias from every
-fitness value the search sees, and a bias is worth removing whether or not the
-delay it hides could have been avoided. On \texttt{funnel} the unavoidable
-corridor inflates every candidate's makespan, so the surrogate misranks
-candidates there as badly as anywhere else. What congestion structure would
-govern is the size of the \emph{mechanism} gain, and there is none to govern.
+\emph{车臂比族。}这是适用上界被钉死的一处。$N_A/N_M=0.5$ 时闭环内试探最赚
+($-\GainProbeStarve$);到 $1.0$ 与 $2.0$ 则翻为有害(\GainProbeFleetOne{},
+\GainProbeFleetTwo{})。我们事先预期的是"中等车队处最大、两端更小"的驼峰,实测峰值落在
+最紧一端、大车队直接变号——比驼峰更干脆,也更符合代价律:车少时选对车几乎决定完工时间,
+信息全额兑现;车多时试探次数线性膨胀,剪枝效力下降(第~\ref{sec:speedup}~小节自检中
+$N_A/N_M=2.0$ 的调用削减率六格最低),同挂钟内搜得更少。闭环本身在大车队上反而更大
+($-16\%$、$-40\%$),说明上界卡的是试探,不是闭环。
 
-The practical reading is therefore simpler than the one we set out to make, and
-less contingent: evaluate under the true routing model whatever the layout, and
-do not expect a contention-aware neighbourhood to add to it. It also resolves a
-discrepancy we would otherwise have had to leave open. An earlier hand-built
-congested instance showed no advantage for the elaborate configuration;
-measuring its structure afterwards revealed a binding funnel bound, and we
-concluded at the time that the mechanisms were being asked to act on a signal
-the instance did not contain. The wider matrix shows that the instance was not
-special: the mechanisms do not pay on any of the four families.
+\emph{柔性族。}试探增益在 $F=0.3$ 与 $F=1.0$ 上接近($-8.3\%$ 与 $-7.6\%$),闭环增益同为
+大幅负值。拥堵信息主要经由派车与时序兑现,并不强依赖"还有没有另一台臂可改派"。这对机制
+解释是利好:它不是柔性车间专属的旁路,在指派余地受限时仍然成立。
 
-\subsection{Sensitivity to heterogeneity}
-\label{sec:hetero}
+\paragraph{来自另一批算例的独立印证。}
+上述结论建立在一个算例族与一个基线口径之上,因此我们用一批独立的数据交叉核对。该批次为
+\MatrixCells{} 个算例格 $\times$ $10$ 种子、同挂钟预算、共 \MatrixRuns{} 次运行,算例核心与
+基线口径都与本章不同——它以两阶段代理运输作为基线,并在四个争用族与四个异质度水平上交叉。其
+\emph{集成增益}(两阶段 $\to$ 闭环)为 \GainIntegMatrix{},\MatrixCells{} 格中
+\SigIntegMatrix{} 格显著,区间 \GainIntegMatrixLo{} 到 \GainIntegMatrixHi{}。这与本章闭环主
+效应的方向与量级一致,且是在不同算例、不同基线下得到的,故可作为稳健性的独立证据。
 
-Reassignment trades processing time for proximity, so it needs the two to
-differ. At $H=0$ all eligible arms take the same time and the trade-off is
-empty; the operator can still move an operation to a less congested arm, but it
-buys nothing in duration and the resulting choice is arbitrary. The design
-therefore predicts that the reassignment operator becomes useful as $H$ grows,
-and that its gain should be near zero at $H=0$.
+同一批数据对预约表感知派遣给出的却是 \GainProbePre{}、\MatrixCells{} 格中 $0$ 格显著,与本章
+的 $\GainProbeLoop$ 方向相反。这一表面矛盾有确定的成因,它同时是下一小节的主题:该批次运行于
+第~\ref{sec:speedup}~小节的降本措施引入\emph{之前},当时同一机制的开销尚未被压下来。
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig/fig_heterogeneity.pdf}
-\Description{Gain against heterogeneity level for each baseline, under high and
-funnel congestion.}
-\caption{Gain against heterogeneity. The mechanisms depend on arms differing in
-speed, which is what makes ``reassign to a slower but better-connected arm'' a
-decision rather than a coin flip.}
-\label{fig:hetero}
-\end{figure}
-
-The prediction is not borne out, and the reason is the same as in
-Section~\ref{sec:whichcongestion}: the operator has no gain at any $H$, so there
-is no trend for $H$ to modulate. Contention-guided search costs $1.72\%$ at
-$H=0$ and does not become profitable at $H=0.5$. The gain of the evaluation loop
-is likewise flat in $H$ (Table~\ref{tab:bytag}), which is what one expects of a
-correction to the objective rather than to a decision rule.
-
-We keep this analysis in the paper because the negative form of the prediction is
-still informative. Heterogeneity was our reason for believing the reassignment
-operator had something to work with: an eligible set whose members differ in
-speed is exactly the condition under which ``move to a slower but
-better-connected arm'' is a real decision. That condition holds in these
-instances by construction, and the operator still does not pay. Its failure is
-therefore not a failure of the instance family to present the trade-off; it is
-that finding the trade-off by local search costs more than the trade-off is
-worth at the margin, as Section~\ref{sec:whycost} argues.
-
-\subsection{Pricing the interface: a negative result}
+%% 原为两个独立的负面小节("Pricing the interface: a negative result" 与
+%% "Why the mechanisms do not pay"),现合并为一节消融。负面结果一条不删,但从
+%% 章节标题降级为支持设计取舍的证据。
+\subsection{消融与受控负对照}
 \label{sec:pricing}
 
-Section~\ref{sec:interface} argued that pricing corridor occupancy double-counts
-a delay the fitness already sees. The argument predicts that pricing cannot add
-information; it does not by itself say what the measured penalty will be, and
-separating the two turns out to matter. We sweep the coordination strength
-$\theta$ under both budget conventions, holding the router's search width
-constant across all $\theta$ so that pricing is not confounded with the number
-of entry times the router examines.
+第~\ref{sec:interface}~小节列出了层间接口的三种选择,本文只把第一种(预约表试探)放进了默认
+配置。另外两种都被完整实现并度量,结果是它们在同挂钟预算下未能转为净收益。本小节报告这些
+度量。它们在本文中的地位是\emph{设计取舍的证据},而不是一级结论:一个构造上站得住却仍不划算
+的机制,恰好说明为什么最终选定的是那个更简单的。
+
+\subsubsection{冲突凭证制导的局部搜索}
+在第~\ref{sec:whichcongestion}~小节引用的那批 \MatrixCells{} 格数据中,关掉冲突凭证反馈的
+相对增益为 \GainCertMatrix{}(\MatrixCells{} 格中仅 $1$ 格显著),关掉错峰算子为
+\GainStaggerMatrix{}($2$ 格显著)。两者都不为正,
+即在同挂钟预算下,把算力花在这个邻域上不如把它还给种群循环。第~\ref{sec:whycost}~小节给出
+机制层面的解释。
+
+需要说明的是这两个消融为何可以直接引用那批更早的数据,而派遣的消融不可以:凭证与错峰这两个
+机制在降本前后\emph{没有改动},其开销也不随剪枝变化,故那批测量对它们依然有效;而派遣的开销
+正是降本所针对的对象。
+
+\subsubsection{走廊时段定价}
+第~\ref{sec:interface}~小节论证了给走廊占用定价会把适应度已经看到的延误\emph{数第二遍}。该
+论证预言定价不能增加信息,但它本身并不说明实测的惩罚会有多大,而把这两件事分开恰恰是要紧的。
+我们在两种预算口径下扫描协调强度 $\theta$,并在所有 $\theta$ 上固定路由器的搜索宽度,以免
+定价与"路由器考察多少个进入时刻"相混淆。
 
 \begin{figure}[t]
 \centering
@@ -1865,224 +1720,325 @@ of entry times the router examines.
 \Description{Two panels of makespan change relative to theta equals zero against
 pricing strength: under equal wall-clock the penalty is large and flat, under
 equal evaluations it is absent.}
-\caption{Pricing the interlayer interface. Positive is worse. Under an equal
-wall-clock budget (left) the penalty appears the instant pricing is switched on
-and is then flat over a tenfold range of $\theta$, tracking the cost per
-evaluation on the right-hand axis. Under an equal number of evaluations (right)
-it is absent. The harm is therefore an accounting consequence of a more
-expensive route search, not evidence that the price misdirects the router.}
+\caption{为层间接口定价。正值表示更差。在同挂钟预算下(左)惩罚在定价一开启时即出现,随后
+在 $\theta$ 的十倍范围内保持平坦,并与右轴的单次评价成本同步。在同评价次数下(右)惩罚消失。
+因此这种损害是"路由搜索变贵"的记账后果,而非价格误导了路由器的证据。}
 \label{fig:theta}
+%% 由 fig/fig_theta.py 从 clbs/experiments/theta_sweep.csv 与 theta_sweep_gen.csv 生成
+%% (08-05 落盘,2 算例 x 10 种子,左图每点 20 次运行、右图 10 次)。
+%% 更正:先前此处标注为"数据未落盘",实为误记——两个 CSV 均在盘上,已重新出图核对,
+%% 图上形态与本小节正文一致(同挂钟下每个 theta 都变差且在十倍范围内平坦,同评价次数下归零)。
+%% 该批次同属降本之前的测量,与第 5.5 小节引用的矩阵批次同期;定价机制在降本前后未改动,
+%% 且其开销与剪枝无关(剪枝作用于派车试探,不作用于多标签路由),故该测量对它依然有效。
 \end{figure}
 
-Under equal wall-clock, pricing costs $6.2$ to $6.8\%$ of makespan at every
-$\theta$ we tried, with $p\approx0.006$. Under equal evaluations the same
-comparison yields $+0.15\%$ and $+0.28\%$---indistinguishable from zero, with
-$p\ge0.75$. The explanation is in the evaluation counts: priced routing completes
-$636$ to $948$ evaluations inside the budget where unpriced routing completes
-$3006$ to $4500$, a factor of $4.7$. Pricing does not misrank candidates; it
-starves the search.
+实测的形态见图~\ref{fig:theta}:同挂钟下定价在我们试过的每个 $\theta$ 上都使完工时间变差且
+显著,且惩罚在 $\theta$ 的十倍范围内保持平坦;同评价次数下同一比较与零无法区分。解释在评价
+次数里——带价格的路由在同一预算内完成的评价次数只有不带价格时的约五分之一。\emph{定价并没有
+把候选解排错序,它是把搜索饿死了。}
 
-Two further observations rule out the alternative readings. First, $\theta$ is
-not a meaningful dial in this problem. Over the range $0.05$ to $5.0$---two
-orders of magnitude---the priced router changes the route of the same $4$ of $24$
-transport tasks, pays the same total price, and returns the same makespan. The
-accumulated price amounts to $2.4\%$ of total travel time, a perturbation too
-small to overturn the ordering that arrival time imposes on the scalarized
-objective $\text{arrival}+\theta\cdot\text{price}$. Only at $\theta=50$ do prices
-dominate arrival time, and then the makespan degrades from $75.0$ to $91.6$ on
-the instance we probed: the double-counting harm does appear, but only once the
-price is strong enough to override the quantity that actually determines
-feasibility. Second, the cost is structural rather than a consequence of prices
-being non-zero. A single decoding takes $9.0$\,ms unpriced and $45$ to $47$\,ms
-priced, and that multiple is identical at every $\theta$, because it is paid for
-maintaining a Pareto frontier per node and trying several entry times per arc
-whether or not any price is charged. Nor can the price table be made
-informative by enlarging it: raising the retained slot count from $24$ to $200$
-yields the same $11$ slots, covering $11\%$ of the corridor--time cells, because
-the table is limited by how few critical slots a solution has rather than by the
-cap.
+两项补充观察排除了其他读法。其一,$\theta$ 在本问题上不是一个有意义的旋钮:在跨两个数量级的
+范围内,带价格的路由改变的是同样那几条路径、付出同样的总价格、返回同样的完工时间;累计价格
+仅占总行驶时间的很小一部分,这个扰动太小,不足以推翻到达时刻在标量化目标
+$\text{到达时刻}+\theta\cdot\text{价格}$ 中所施加的次序。只有当 $\theta$ 大到价格压过到达
+时刻时,双重计价的损害才真正显现——而那时完工时间大幅恶化。其二,开销是\emph{结构性}的,而非
+价格非零所致:同一次解码在带价格与不带价格下的耗时之比在每个 $\theta$ 上都相同,因为这笔钱
+是为"每个节点维护一个 Pareto 前沿、每条弧尝试若干进入时刻"付的,与是否真的收取价格无关。
+这正是引理~\ref{lem:label} 所预言的:引入第二判据即摧毁全序占优,单标签搜索必须让位给多标签
+搜索。
 
-We report this at length because the negative result is more transferable than a
-positive one would be, and because the two protocols disagree about its size but
-not its sign. The theoretical argument does not depend on our price estimator:
-whether prices come from a finite-difference probe of corridor capacity or from a
-critical-chain surrogate, they charge for an occupancy whose consequence has
-already been paid, in full, inside the arrival time of the vehicle that yielded.
-Any architecture that evaluates fitness by a complete conflict-free decoding will
-have this property, and the empirical form the property takes is that the price
-is inert. What then decides the comparison is the cost of the machinery required
-to act on an inert signal. The corollary for design is accordingly sharper than
-the one we set out to draw: before enriching an interlayer interface, check
-whether the receiving layer's objective already internalizes what the interface
-would carry, because if it does, the enrichment is not merely unhelpful but
-strictly costly.
+我们把这个负结果写得较细,因为它比一个正结果更可迁移,也因为两种预算口径对它的\emph{幅度}
+有分歧而对\emph{符号}没有。其中与实现无关的那部分论证是:无论价格来自对走廊容量的有限差分
+探测还是来自关键链代理,它收取的都是一次\emph{后果已被全额支付}的占用费——那笔后果就在让行
+车辆自己的到达时刻里。任何以完整无冲突解码作为适应度的架构都具有这一性质,而该性质的经验形态
+就是"价格是惰性的"。于是决定比较结果的,变成了为一个惰性信号配备行动机器所需的代价。由此得到
+的设计推论比我们原先想要的更锐利:\emph{在丰富一个层间接口之前,先检查接收层的目标函数是否
+已经内部化了该接口要携带的东西;若已内部化,这种丰富不只是无益,而是严格有害的。}
 
-\subsection{Why the mechanisms do not pay}
+%% 由独立小节降为上一节的子小节:它是消融的机制解释,不是本文的一级结论。
+\subsubsection{机制层面的解释:代价与增益的稀释}
 \label{sec:whycost}
 
-The comparisons above establish that three mechanisms fail to repay their cost;
-they do not explain why. Two measurements do.
+上面的比较确立了凭证与错峰两个机制未能抵偿其代价,但没有解释\emph{为什么}。两项测量给出了
+解释,而这两项解释同时也说明了预约表试探为何需要先降本才能显现价值。
 
-The first is where the compute goes. Instrumenting the search to count
-decodings separately shows that contention-guided local search consumes
-$39.4\%$ of all decodings performed, and that of the neighbours it decodes,
-$1.4\%$ improve the makespan through reassignment and $0.6\%$ through
-staggering. Nearly two-fifths of the budget is therefore spent on a
-neighbourhood in which fewer than one candidate in fifty is an improvement. The
-comparison that matters is not whether those improvements are real---they
-are---but whether the same decodings returned to the population loop would
-produce more. At these hit rates they do, and that is the whole of the effect
-measured in Table~\ref{tab:ablation}.
+\paragraph{算力去了哪里。}
+把搜索的解码次数分开计数可以看到,冲突制导局部搜索消耗了全部解码次数中的很大一部分,而在它
+所解码的邻居里,能真正改进完工时间的比例低于五十分之一。于是相当大的一份预算被花在一个"命中率
+不足百分之二"的邻域上。要紧的比较不是那些改进是否真实——它们是真实的——而是同样这些解码次数
+若还给种群循环会不会产出更多。在这样的命中率下确实会。
 
-The low hit rate is not a defect of implementation, and we spent some effort
-establishing that. The neighbourhood is small and pointed by construction, at
-most $L+2=7$ candidates per round, every one named by the lower layer; a
-low hit rate on a pointed neighbourhood means the certificates identify
-operations whose reassignment or displacement does not shorten the critical
-chain. We attempted three targeted repairs---scoring reassignment candidates by
-the expected yielding along the path rather than by ideal distance, replacing
-adjacent swaps with targeted insertion in the staggering operator, and admitting
-plateau moves that reduce total yielding at equal makespan---and evaluated each
-independently against the unmodified operator under an equal-evaluation budget.
-None reached significance. We report the attempt because it bounds the
-conclusion: the failure lies in the signal rather than in how we acted on it.
+这个低命中率不是实现上的缺陷,我们为确认这一点花了一些功夫。该邻域按构造既小又有指向,每轮
+至多 $L+2=7$ 个候选,且每一个都由下层指名;一个有指向的邻域仍然命中率低,意味着凭证所指认的
+那些工序,改派或错峰之后并不能缩短关键链。我们尝试过三种针对性修补——按路径上的预期让行而非
+按理想距离为改派候选打分、把错峰算子的相邻交换换成定向插入、以及接纳"完工时间不变但总让行
+下降"的平台移动——每一种都在同评价次数下与未修改的算子独立比较,\emph{无一}达到显著。我们报告
+这次尝试,因为它界定了结论的范围:失效在信号本身,而不在我们如何使用信号。
 
-The second measurement is why the signal is weak. A contention certificate
-names the corridor, interval and opposing task of a yielding event, which is
-precisely the information needed to remove \emph{that} event. But the makespan is
-attained through a chain, and removing one corridor delay usually promotes a
-different constraint to binding---an upstream operation, a machine, or another
-corridor---so the realized improvement is a fraction of the delay removed. Our
-own acceptance rule re-extracts the chain after every accepted move for exactly
-this reason. Feedback that names a bottleneck is therefore worth much less than
-its magnitude suggests whenever the bottleneck is one of many comparable ones,
-and the same reasoning applies to reservation-aware dispatch: probing the table
-picks the vehicle that arrives soonest for the task at hand, which is a local
-improvement whose effect on the makespan is diluted through the same chain.
+\paragraph{为什么信号弱:沿关键链的稀释。}
+一份冲突凭证指明了某次让行事件的走廊、时段与对手任务,这恰是消除\emph{那一次}事件所需的信息。
+但完工时间是经由一条链达成的,消除一处走廊延误通常会把另一个约束顶成紧约束——某道上游工序、
+某台机械臂,或另一条走廊——因此实现的改进只是被消除延误的一个分数。我们自己的接受准则之所以
+在每次接受移动后都重新提取关键链,正是出于这个原因。所以,当瓶颈只是众多量级相当的瓶颈之一时,
+一个能指名瓶颈的反馈,其价值远低于它的量级所暗示的。
 
-This is what distinguishes the one mechanism that pays from the three that do
-not. Conflict-free evaluation is not a better decision; it is a better
-\emph{measurement}, applied to every candidate the search will ever compare. Its
-benefit does not have to survive dilution through a chain, because it does not
-act on the chain at all---it corrects the ranking. That asymmetry, rather than
-anything specific to our operators, is what we would expect to transfer.
+\paragraph{这如何解释预约表试探的两次不同结论。}
+稀释同样作用于预约表感知的派遣:查表挑出的是当前这个任务送达最早的车,这是一个局部改进,其
+对完工时间的影响也要经过同一条链被稀释。这正是它在降本之前难以显现的原因——一个被稀释后仍
+为正、但幅度不大的收益,遇上 \CostMultBefore{} 倍的开销,净效果自然落进噪声里
+(第~\ref{sec:whichcongestion}~小节引用的那批数据即是如此)。第~\ref{sec:speedup}~小节把开销
+压到 \CostMultAfter{} 倍之后,同一个被稀释的收益就浮出了噪声。
 
-\subsection{Threats to validity}
-\label{sec:threats}
+由此得到本文在机制层面的核心判断,它比任何具体算子都更可迁移:\emph{在固定预算下,一个机制
+能否成立,取决于"它被稀释后剩下的收益"与"它每次评价所增加的开销"之比,而这两者都是可以分别
+测量、并可分别改进的。}凭证机制失效在分子——稀释后所剩太少,且三次针对性修补都无法把它抬起来;
+派遣机制起初失效在分母,而分母是可以在不改变输出的前提下压低的。这个区分是我们选定后者、
+放弃前者的全部理由。
 
-\emph{Instance family.} All cells share one size and one layout template. The
-factors we vary are the ones our analysis identifies as decisive, but size and
-topology are held fixed, and we make no claim about how the mechanisms scale.
+\subsection{代价律与降本效果}
+\label{sec:costlaw}
 
-\emph{Absence of a public benchmark comparison.} The standard FJSP\_PT
-benchmarks assume a constant travel matrix and provide no aisle network, so
-they cannot express vehicle contention; running on them would require deleting
-the constraint the paper is about. A degenerate comparison---our upper layer
-against published results with routing switched off---would test the genetic
-algorithm rather than the framework, and we have not performed it.
+前面各小节反复用到"成本与评价次数是同一份资源的两种花法"这一论点。本小节把它本身作为对象来测,
+因为本文承重机制的成立与否完全悬于此:同一个机制,在降本之前净效果落在噪声里,在降本之后显著
+为正。
 
-\emph{Bound quality.} The composite lower bound is loose, with gaps to the best
-known solutions ranging from $34\%$ to $68\%$ for the proposed method, with a
-median of $53\%$. It serves to keep the numbers honest and to catch regressions,
-not to certify optimality; a gap of that size cannot distinguish a search failure
-from a slack bound, and we make no claim about proximity to the optimum. Exact solutions for
-small instances, which logic-based Benders decomposition has been shown to
-deliver for this problem class~\cite{vanos2026exact}, would settle how much of
-the remaining gap is search failure rather than model structure; we regard this
-as the most valuable next step.
+\paragraph{两种预算口径都不是中性的。}
+图~\ref{fig:protocol} 给出各配置的单次评价成本与同预算内实际完成的评价次数。成本跨越两个数量
+级,因此在同挂钟下便宜的配置能搜得多得多。这是为什么按相同代数比较是不可辩护的,也是为什么
+对齐时间同样不是一个免费的选择。
 
-\emph{Single implementation.} Every arm shares one codebase, which removes
-implementation variance between arms but means the absolute makespans reflect
-the quality of that implementation. The ablation differences, being internal,
-are unaffected; comparisons against published methods would not be.
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig/fig_protocol.pdf}
+\Description{A log-log scatter of cost per evaluation against evaluations
+completed, with the four ladder configurations lying along an equal wall-clock
+hyperbola, and an arrow showing the pruning ablation moving one configuration
+along that line without changing its output.}
+\caption{固定挂钟预算把"单次评价成本"与"完成的评价次数"锁成一条双曲线(灰线,由实测预算
+画出),各配置只能沿它移动。这就是本文反复引用的\emph{兑换率}:一个机制必须在每次评价里
+买到的,多于它在评价次数上让出的。B0 与 B0$^+$ 共用同一次开环搜索,故共用一个点,差别只在
+执行方式。橙色箭头是降本消融的两档——它是唯一一种\emph{不改变输出}就能沿该线移动的干预
+(命题~\ref{prop:speedup_equiv}),因此这一段位移是纯粹的算力节省。}
+\label{fig:protocol}
+%% 由 fig/fig_protocol.py 生成(输出名 fig_protocol),数据源 clbs/output/ladder_cost.csv
+%% 与 prune_ablation.csv;后者缺失时脚本自动省略橙色箭头而不报错。
+\end{figure}
 
-\section{Conclusion}
+图~\ref{fig:protocols} 把同一组比较在两种口径下各做一遍。同代数口径不为"机制多做的那部分工作"
+收费,因而系统性地偏袒复杂配置:在它之下预约表试探对规则派车有明显增益,而同挂钟口径下同一
+比较在降本之前几乎归零。两种口径都不错。同代数回答的是"该机制是否改进了一步搜索",同挂钟回答
+的是"该机制是否改进了一次搜索";前者是机制设计问题,后者是是否值得部署的问题。不可辩护的是
+报告其中一个却把它描述成另一个。
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig/fig_protocols.pdf}
+\Description{The same paired comparisons shown twice, once under an equal
+wall-clock budget and once under an equal number of generations.}
+\caption{同一组比较在两种预算口径下的读数。每一行按它所隔离的\emph{机制}命名,而非按被比较的
+配置命名。两个标记之间的落差,就是表观增益中属于记账假象的那一部分:"预约表感知派遣"一行在
+同代数下为 $+2.9\%$ 且显著,在同挂钟下归零。该批次运行于第~\ref{sec:speedup}~小节的降本
+\emph{之前},因此这一行同时是下文那个受控对照的动机。}
+\label{fig:protocols}
+%% 由 fig/fig_protocols.py 从 clbs/experiments/protocols.csv 生成(4 算例 x 10 种子)。
+%% 行标签已从旧叙事的档位名(two-stage / open dispatch ...)改写为它所隔离的机制名,
+%% 以免读者以为该图来自另一项研究;图脚已自报"降本之前"这一批次归属。
+\end{figure}
+
+\paragraph{代价律。}
+派遣试探把每个运输任务的路由调用数从 $2$ 抬到至多 $2N_A$,故其开销随车队规模线性增长。剪枝
+所依赖的下界在争用越弱时越紧,因而剪掉的候选越多;反过来,车队越大、争用越强,剪枝的效力越低。
+第~\ref{sec:speedup}~小节的等价性自检已经显示出这个方向:六格中调用削减率最高的是最不拥堵的
+一格($61.2\%$),最低的是车队最大的一格($42.2\%$)。两个趋势合起来给出机制的适用区间——在
+车队足够大且争用足够强时,试探的开销增长会追上它的收益,这正是第~\ref{sec:whichcongestion}
+小节 B 族要定位的上界。
+
+\paragraph{降本值多少:一个只动降本的受控对照。}
+把"降本"与"机制"分离开来度量是必要的,因为两者在时间上是先后引入的,若只并列两个批次的结果,
+无法排除算例集与基线口径的差异。我们因此做了一个只动降本这一项的对照:同算例、同种子、同预算,
+两档分别开启与关闭剪枝与胜者路径复用。
+
+这个对照之所以干净,是因为命题~\ref{prop:speedup_equiv} 保证两项优化\emph{不改变输出}。我们
+先把这条命题兑现为可观测的事实:在六个算例上各取六条随机染色体,两档给出的完工时间与派车序列
+\emph{逐位相同},共 $36$ 组无一例外;而路由调用数合计减少 \RouteCallCut{}。既然输出相同,
+关掉优化唯一的作用就是变慢,那么同挂钟预算下的完工时间差值就\emph{只}来自省下的算力,不掺
+任何机制变化。
+
+表~\ref{tab:prune} 给出结果:关$\to$开使完工时间再降 \GainPrune{}
+(\WinPrune{} 胜 /\LosePrune{} 负,$p=\PPrune$),同预算内评价次数为 \EvalRatioPrune{} 倍,
+单次评价加速 \SpeedupProbe{} 倍。它把两个批次之间那处表面矛盾接上了最后一环:同一个机制,
+在降本前的矩阵批次上净效果落在噪声里(\GainProbePre{},$0/16$ 格显著),在降本后的阶梯批次上
+显著为正,而中间这一步没有改变它做出的任何一个选择。
+
+\begin{table}[t]
+\caption{只改变剪枝与胜者路径复用的受控对照。两档输出逐位相同(已过等价性自检),故差值只来自
+省下的算力。同算例、同种子、同挂钟预算;$n=60$ 配对。}
+\label{tab:prune}
+\small
+%% 数字与 clbs/output/prune_ablation.csv / 运行日志一致;亦可用
+%% py paper01/tab/gen_tables_ladder.py 从同一 CSV 重生成。
+\input{tab/tab_prune.tex}
+\end{table}
+
+\subsection{案例分析:甘特图与关键链归因}
+\label{sec:casestudy}
+
+汇总统计量说明机制平均起来有效,但不说明它在一次具体求解里\emph{做了什么}。本小节在单个漏斗
+算例上把 B0 与 B2 的解并排画出,并沿关键链做归因,使前面的论证落到可以逐条核对的事件上。
+
+图~\ref{fig:case_gantt} 是两个解的甘特图,机械臂与车辆画在同一时间轴上,车辆行的阴影段区分空载
+与满载,让行等待单独着色。可以直接读出的三点是:开环解中让行等待成段地出现在站台附近的走廊上,
+且集中在少数几辆车上;闭环解把这些等待大幅削去,代价是若干道工序被指派到了并非最快的机械臂;
+以及闭环解的车辆利用更为均衡。第三点是前两点的结果而非另一个机制——它说明"用加工时间买邻近性"
+这一权衡\eqref{eq:reassign} 在实际解中确实被行使了。
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig/fig_case_gantt.pdf}
+\Description{Side-by-side Gantt charts of the open-loop and closed-loop
+solutions on one funnel instance, with arms and vehicles on a shared time axis
+and yielding waits shaded separately.}
+\caption{同一漏斗算例上 B0(上)与 B2(下)的解。机械臂与车辆共用时间轴;车辆行区分空载段、
+满载段,以及两类等待——按\emph{成因}分开着色是本图唯一要紧的设计:同一运输任务两段之间的
+空隙是车被前方占用的走廊拦在停靠位上,即让行,也就是本文所处理的那种延误;不同任务之间的
+空隙则是车无活可干,属于车队规模的症状。两者若同色,读者就会把其中一种归因成另一种。
+图内文字为英文以便与代码输出一致。}
+\label{fig:case_gantt}
+%% 由 fig/fig_case_gantt.py 从 clbs/output/case_study/*.json 生成(tools/ladder_diag.py
+%% 的 --case-study 落盘)。让行/空闲的区分由脚本从相邻段的 task 字段推出,不是另存的标注。
+\end{figure*}
+
+图~\ref{fig:case_chain} 沿关键链做归因,把每一环按表~\ref{tab:attrib} 的五类标注着色。它使
+第~\ref{sec:whycost}~小节的稀释论证可视:在 B0 的链上走廊环占据显著比例,而在 B2 的链上它们大
+体被消除,顶上来的是机械臂环与上游工序环。这正是"消除一处走廊延误会把另一个约束顶成紧约束"
+的直接图示,也解释了为何指名瓶颈的反馈其价值低于它的量级。
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig/fig_case_chain.pdf}
+\Description{The critical chain of the open-loop and closed-loop solutions,
+with each link coloured by its attribution label.}
+\caption{关键链归因。上:两档关键链的构成,每一环按表~\ref{tab:attrib} 的标注着色;标题直接
+并列"被消除的走廊等待"与"实际收回的完工时间",二者之差即被顶上来的约束吸收掉的部分。
+下:同一条链在时间轴上的原位,以表明上方的柱是一条链的分解,而非若干互不相关事件的直方图。
+闭环解中走廊环大体消失,顶上来的是机械臂与上游工序——这就是稀释效应的直接图示。}
+\label{fig:case_chain}
+%% 由 fig/fig_case_chain.py 从同一批 case_study/*.json 生成;归因标签直接取
+%% algorithm/decoder.py 的 critical_chain(),五类标签一个不并、不归入 other。
+\end{figure}
+
+%% 原此处的"有效性威胁"独立小节已整体并入第 6 章的局限小节(6.3)。独立成节是实证软件
+%% 工程的惯例,在运筹与调度类刊物中少见,留在实验章会削弱结果章的正面叙事。
+
+\section{结论}
 \label{sec:Chapter_VI}
 
-We studied integrated scheduling of heterogeneous robot arms and conflict-free
-AGV routing under the assumption the literature usually avoids: that travel time
-is produced by routing decisions rather than read from a matrix. Within that
-setting we asked a narrower question than the usual one. Not whether closing the
-loop between scheduling and routing helps---it does---but which of the things a
-routing layer could tell a scheduler are worth what they cost, when the budget is
-fixed and every answer is paid for in evaluations forgone.
+本文研究异构机械臂加工与 AGV 无冲突路由的一体化调度,其前提是文献通常回避的那一条:行驶时间
+\emph{由路由决策产生},而不是从一张矩阵里读出来。在这一设定下,我们没有停留在"耦合两层是否
+有益"这个已有答案的问题上,而是问了一个更具体的:当预算固定、任何信息都要用放弃掉的评价次数
+来支付时,\emph{哪一种}层间信息值得它的代价,以及如何让它付得起。
 
-\subsection{Summary of Contributions}
+\subsection{结论与贡献}
 \label{sec:contributions}
 
-The answer is more one-sided than we expected. Of four mechanisms implemented in a
-common codebase and compared over $16$ controlled instances with $10$ seeds under
-an equal wall-clock budget, exactly one repays its cost. Evaluating fitness by a
-complete conflict-free decoding reduces makespan by $7.7\%$ against a two-stage
-open-loop baseline, and it does so while performing five times \emph{fewer}
-evaluations than that baseline, whose cheap surrogate is optimistic by $25.9\%$ on
-the instance we trace. Reservation-aware dispatch, contention-guided local search
-and corridor pricing all cost more than they return, by $-0.9\%$, $-1.7\%$ and
-$-9.0\%$; each estimate is obtained twice, from configurations differing in that
-mechanism alone, and the pairs agree to within a quarter of a percentage point.
-The proposed method is therefore the cheapest configuration that evaluates the
-true objective, and the paper's substantive claim is that this is not an accident
-of our operators but a consequence of what the two kinds of intervention do. A
-corrected objective improves the ranking of every candidate the search will
-compare, at a price paid once per evaluation. A mechanism that names a bottleneck
-buys a local improvement that dilutes through the critical chain, because removing
-one delay promotes another constraint to binding---which is why contention-guided
-search can consume $39.4\%$ of all decodings while fewer than one neighbour in
-fifty improves the makespan.
+\textbf{(1) 一个双反馈通路的闭环双层框架。} 上层以 memetic 算法搜索指派与排序,下层以时间窗
+预约做无冲突路由;每一代每一个个体的适应度都是下层完成全部运输任务规划之后的完工时间,因此
+上层从不优化代理目标。命题~\ref{prop:decodable} 与引理~\ref{lem:label} 保证任何染色体都可
+解码、评价相对第~\ref{sec:Chapter_III}~节的冲突模型是精确的,且不需要任何修复算子。把拥堵搬进
+搜索目标这一步,在规则派车下值 $\GainLoopRule$($p=\PLoopRule$),在试探派车下值
+$\GainLoopProbe$($p=\PLoopProbe$)。
 
-Two negative results are reported in full because their mechanisms transfer
-further than another heuristic would. Pricing an interlayer interface fails
-whenever the receiving layer's objective already internalizes what the price would
-charge for, and the failure is quantitative rather than qualitative: the price is
-inert, altering $4$ of $24$ routes over a hundredfold range of pricing strength,
-while the multi-label search required to read it costs five times more per
-decoding whether or not any price is charged. And a comparison protocol that does
-not equalize computation, or that moves two factors at once, does not merely lose
-power---it produces significant results with the wrong sign. Our own chain-style
-ablation reported reservation-aware dispatch as beneficial at $+0.83\%$
-($p=0.047$) where the de-confounded contrast gives $-0.93\%$ ($p=0.046$) on the
-same runs.
+\textbf{(2) 预约表感知的车辆派遣,以及使它付得起的降本。} 选车是整个框架中最后一处可以用估计
+代替事实的环节,我们把它闭合:选车前对预约表做两段式试探,用实际可达的送达时刻代替理想最短路
+的估计。在闭环内部它值 $\GainProbeLoop$($p=\PProbeLoop$)。这个机制的关键困难不在于设计而
+在于代价——它使单次评价贵 \CostMultBefore{} 倍,足以在同挂钟预算下把自身收益吃光。我们给出
+两项优化(可采纳下界剪枝与胜者路径复用),并\emph{证明}它们不改变输出
+(命题~\ref{prop:speedup_equiv}),又以逐位等价性自检加以实证;它们把路由调用减少
+\RouteCallCut{},把成本倍数压到 \CostMultAfter{}。因此本文对这一机制的主张是完整的:它有效,
+而且我们说明了它为何一度看不出有效,以及如何让它有效。
 
-\subsection{Limitations and Future Directions}
+\textbf{(3) 主效应与有上界的次效应,以及支撑该结论的实验协议。} 闭环是主效应;预约表感知
+派遣在开环与闭环下都显著($\GainProbeOpen$,$p=\PProbeOpen$;$\GainProbeLoop$,
+$p=\PProbeLoop$),但大车队两格上后者会被开销反噬。端到端 $\GainEndToEnd$ 接近独立乘积
+$\GainIndepProduct$(近加性,无正交互);开环试探单独远不能代替闭环。这对"先排产、后解冲突"
+给出结构性判断:第二阶段能显著挽回一部分,但主效应仍留在桌面上。支撑它的是 $2\times2$ 析因
+与统一执行器口径:无论计划从哪来,都必须经同一个无冲突路由器执行、过同一个校验器,报的都是
+可实现的完工时间。
+
+\subsection{主要洞见}
+\label{sec:insights}
+
+有三条判断的适用范围比本文的具体算子更宽,我们认为它们是本文更值得带走的部分。
+
+\textbf{接口丰富之前,先查接收层是否已经内部化了它要携带的东西。} 我们完整实现了走廊时段定价,
+它在同挂钟预算下系统性地有害。原因不是估计器不好,而是架构性的:由争用造成的延误已经完整体现
+在让行车辆自己的到达时刻里,并经 \eqref{eq:bind} 传播进完工时间被适应度计入;再对同一次占用
+收一次价格等于把它数了两遍。任何以完整无冲突解码作为适应度的框架都具有这一性质,其经验形态
+就是"价格是惰性的"。而一旦引入价格作为第二判据,引理~\ref{lem:label} 的全序占优即被摧毁,
+单标签搜索必须让位给多标签搜索——这笔钱无论是否真的收取价格都要付。
+
+\textbf{区分"改进一个决策"与"改进一次测量"。} 指名瓶颈的反馈买到的是局部改进,而完工时间是
+经由一条链达成的,消除一处延误通常把另一个约束顶成紧约束,因此实现的改进只是被消除延误的一个
+分数。修正目标函数则不同:它不作用于链上任何一环,而是改善搜索将要比较的\emph{每一个}候选解的
+排序,因此无须经受稀释。这个不对称解释了为什么冲突凭证制导的局部搜索在三次针对性修补之后仍
+不划算,而它也同时解释了预约表试探为何需要先降本——被稀释后仍为正但幅度不大的收益,遇上足够
+大的开销就会落进噪声。
+
+\textbf{在固定预算下,机制的成立与否是一个可分解、可分别改进的比值。} 分子是"稀释后所剩的
+收益",分母是"每次评价所增加的开销"。凭证机制失效在分子,而分子难以人为抬高;派遣机制起初
+失效在分母,而分母可以在不改变任何输出的前提下压低。这个区分不仅是本文的取舍依据,也给出了
+一条可操作的诊断顺序:先测一个机制的开销倍数与其被稀释后的收益,再决定是改进它还是放弃它。
+它同时意味着一件容易被忽略的事——\emph{工程上的降本可以是方法学上的贡献},因为在同预算口径下
+降本与增效是同一件事。
+
+\subsection{局限}
+\label{sec:limitations}
+
+\textbf{(1) 算例族。} 全部算例格共用一个规模与一套布局模板。我们变化的是分析判定为关键的那些
+因子(布局、车臂比、柔性),但规模与拓扑类型是固定的,我们不就机制如何随规模变化作任何主张。
+
+\textbf{(2) 没有公开基准的对比。} 标准 FJSP\_PT 基准假定行驶时间为常数矩阵、不提供通道网络,
+因而无法表达车辆争用;在其上运行需要先删掉本文所讨论的那条约束。一个退化的比较——把本文上层
+在关闭路由的条件下与已发表结果相比——检验的是遗传算法而非本框架,我们没有做。
+
+\textbf{(3) 下界质量与最优距离。} 复合下界是松的,与最优已知解之间的间隙中位数为 \LBGapMed{}。
+它的作用是数量级核查与回归防护,不是最优性证书;这么大的间隙无法区分"搜索失败"与"下界松弛",
+因此我们不就解与最优解的接近程度作任何主张。
+
+\textbf{(4) 单一实现。} 所有配置共用一套代码,这消除了配置之间的实现方差,但也意味着绝对完工
+时间反映的是该实现的质量。各配置之间的差值是内部比较,不受此影响;与已发表方法的对比会受影响。
+
+\textbf{(5) 负面结果的作用域。} 三个机制都是在一个由纯 Python 实现标定的预算下被判定的。我们
+的比较所测量的是"成本与评价次数之间的兑换率",且它是在共享同一实现的配置之间测得的,故对一个
+\emph{常数倍}的加速是稳健的;但它对各部件\emph{相对}成本的改变并不稳健。这正是本文降本一节的
+意义所在——我们已经在派遣上演示了改变相对成本可以翻转结论。因此我们的结论应被理解为:这些机制
+在\emph{当前代价下}不划算,而非它们不可能划算。
+
+\textbf{(6) 收敛性。} 交换乘子或价格的双层方案有时可被证明收敛到不动点,本框架不能,我们也
+不作此主张。下层是优先级式而非联合最优,上层是非凸组合空间上的随机搜索,层间传递的是证据而非
+可充当 Lyapunov 函数的量。
+
+\subsection{未来工作}
 \label{sec:future_work}
 
-\textbf{(1) The scope of the negative results.} Our instances share one size, one
-layout template and one fleet-to-arm ratio, and all four mechanisms were judged
-under a budget calibrated from a pure-Python implementation. The exchange rate
-between cost and evaluations is what our comparisons measure, and it is measured
-between configurations sharing an implementation, so it is robust to a constant
-speedup. It is not robust to a change in the \emph{relative} cost of the pieces. A
-routing layer with an incremental evaluator, able to re-decode a locally perturbed
-solution without replaying the whole sweep, would lower the price of exactly the
-mechanisms that failed here, and the contention-guided neighbourhood is the
-natural first candidate to re-test under it. We regard our results as
-establishing that these mechanisms do not pay at present costs, not that they
-cannot pay.
+\textbf{增量式评价。} 解码器的状态严格向前流动,因此只在序列某位置之后被扰动的邻居,其之前的
+全部事件与预约都不变。一个能够只重解被扰动部分的增量式评价器,会恰好降低本文中失效的那些机制
+的代价,冲突制导邻域是在它之下最值得重测的第一个候选。按上一小节的比值框架,这是从分母一侧
+再做一次尝试。
 
-\textbf{(2) Larger and structurally different shops.} The dilution argument of
-Section~\ref{sec:whycost} predicts that guidance becomes more valuable as the
-critical chain becomes less substitutable---a shop with one dominant bottleneck
-rather than many comparable ones. Our four congestion families were designed to
-vary avoidability rather than substitutability, and the funnel share we introduced
-to quantify the former turned out not to distinguish the families it was meant to
-separate. An instance family parameterized by chain substitutability, and an
-indicator validated against the manipulation it claims to measure, would test the
-explanation rather than merely be consistent with it.
+\textbf{链可替代性作为算例维度。} 稀释论证预言:关键链越不可替代——即车间只有一个主导瓶颈而
+非许多量级相当的瓶颈——制导型反馈就越有价值。本文的布局族变化的是争用的\emph{可避免性}而非
+链的\emph{可替代性},且我们为量化前者引入的漏斗份额指标未能区分它本要区分的两个族。一个按链
+可替代性参数化的算例族,配上一个经过"它声称度量的那个操纵"检验过的指标,才能真正检验这条解释,
+而不只是与之不矛盾。
 
-\textbf{(3) Distance from the optimum.} The composite lower bound leaves a median
-gap of $53\%$, which is too loose to separate search failure from bound slackness.
-Exact solutions for small instances, which logic-based Benders decomposition has
-been shown to deliver for this problem class~\cite{vanos2026exact}, would settle
-how much of the gap is recoverable and would also test whether the mechanisms that
-fail to pay under a heuristic search remain unprofitable when the search is
-stronger.
+\textbf{小规模精确解。} 已有工作表明基于逻辑的 Benders 分解可以为该问题类给出精确
+解~\cite{vanos2026exact}。小规模精确解可以确定间隙中有多少是可回收的,也可以检验那些在启发式
+搜索下不划算的机制,在搜索更强时是否依然不划算。
 
-\textbf{(4) Dynamic operation.} The formulation assumes known processing times and
-a fixed job set. Online arrivals and vehicle breakdowns change the calculus we
-report, because a mechanism's value then includes how quickly it repairs a
-schedule rather than only how well it builds one; a cheap evaluator that must
-re-solve from scratch may compare differently against guidance that localizes the
-damage.
+\textbf{动态运行。} 本文的建模假定加工时间已知、工件集固定。在线到达与车辆故障会改变本文所报的
+这套算术,因为那时一个机制的价值还包括它修复排程的速度,而不只是它构建排程的质量;一个必须
+从头重解的廉价评价器,与一个能把损害局部化的制导机制相比,结论可能不同。
 
 
 %\section*{Acknowledgments}

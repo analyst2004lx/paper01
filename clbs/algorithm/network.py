@@ -526,6 +526,10 @@ class Router:
     conflict_free=False 时退化为查理想最短路 t*(规格 12.2 第一层对标)。
     """
 
+    # 全局路由调用计数器,仅供诊断工具统计"降本减少了多少次路由"用,不参与任何决策。
+    # 用类属性而非实例属性,是因为 decode() 内部自建 Router 且不外露,实例计数取不到。
+    total_route_calls = 0
+
     def __init__(self, network: Network, conflict_free: bool = True,
                  prices: Optional[PriceTable] = None, theta: float = 0.0,
                  max_entry_options: int = 3, label_budget: int = 3000,
@@ -549,6 +553,7 @@ class Router:
 
     def route(self, start: str, goal: str, t0: float, agv: int, task: str,
               commit: bool = True) -> RoutePlan:
+        Router.total_route_calls += 1
         if start == goal:
             return RoutePlan(start, goal, t0, t0)
 

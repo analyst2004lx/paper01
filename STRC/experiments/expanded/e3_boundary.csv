@@ -1,0 +1,16 @@
+instance,seed,corridor,R1_release,R2_release,R1_feasible,R2_feasible,R1_makespan,R2_makespan,R1_wall_ms,R2_wall_ms,miss_on_B,quality_winner
+example_3x3x2,42,c1|v0,0,16,False,True,57.0,86.0,0.31,0.48,True,R2
+example_3x3x2,7,c2|r2,0,19,False,True,52.0,82.0,0.35,1.17,True,R2
+example_3x3x2,2024,c2|r2,0,15,False,True,62.0,108.0,0.37,0.54,True,R2
+example_3x3x2,99,c1|c2,0,16,False,True,48.0,61.0,0.38,0.54,True,R2
+example_3x3x2,123,c1|v0,0,16,False,True,51.0,90.0,0.36,0.57,True,R2
+congested_8x4x4,42,c1|c2,0,53,False,True,179.0,298.0,1.05,2.8,True,R2
+congested_8x4x4,7,c1|c2,0,51,False,True,180.0,300.0,1.08,2.09,True,R2
+congested_8x4x4,2024,c1|c2,0,48,False,True,181.0,299.0,1.02,1.6,True,R2
+congested_8x4x4,99,c1|c2,0,46,False,True,170.0,280.0,0.96,1.49,True,R2
+congested_8x4x4,123,c1|c2,0,48,False,True,177.0,294.0,1.14,1.68,True,R2
+S8x4x4_high,42,h1|r1,0,72,False,True,109.0,162.0,1.45,2.44,True,R2
+S8x4x4_high,7,h1|r1,0,83,False,True,126.0,175.0,1.75,3.29,True,R2
+S8x4x4_high,2024,h1|r1,0,90,False,True,120.0,184.0,1.71,2.94,True,R2
+S8x4x4_high,99,h1|r1,0,87,False,True,114.0,188.0,1.59,3.28,True,R2
+S8x4x4_high,123,h1|r1,0,82,False,True,115.0,165.0,1.59,2.64,True,R2

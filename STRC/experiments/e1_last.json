@@ -1,0 +1,46 @@
+{
+  "row": {
+    "instance": "example_3x3x2",
+    "seed": 42,
+    "mode": "heuristic",
+    "makespan": 57.0,
+    "disturb_type": "corridor_block",
+    "disturb_class": "B",
+    "corridor": "c1|c2",
+    "t_now": 40.0,
+    "t_start": 39.0,
+    "t_end": 55.0,
+    "n_reservations": 28,
+    "n_T_direct": 0,
+    "n_T_impact": 0,
+    "n_R1_release": 0,
+    "n_seeds": 2,
+    "n_closure": 4,
+    "closure_frac": 0.1429,
+    "feasible_after_block": false,
+    "lu_min_cut": 1,
+    "far_group_cut": 1,
+    "structural_leaks": 0,
+    "pass_C1": true
+  },
+  "T_direct": [],
+  "T_impact": [],
+  "seeds": [
+    {
+      "corridor": "c1|c2",
+      "t_start": 39.0,
+      "t_end": 42.0,
+      "agv": 2,
+      "task": "J2-3-loaded"
+    },
+    {
+      "corridor": "c1|c2",
+      "t_start": 52.0,
+      "t_end": 55.0,
+      "agv": 1,
+      "task": "J1-4-loaded"
+    }
+  ],
+  "closure_size": 4,
+  "leaks": []
+}

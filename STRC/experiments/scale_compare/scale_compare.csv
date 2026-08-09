@@ -1,0 +1,11 @@
+instance,seed,phi,n_future_ops,n_affected_ops,affected_frac_ops,n_micro_blocks,n_seed_res,n_closure,p04_scope_rounds,p04_final_release,p04_feasible,p04_makespan,p04_wall_ms,p04_res_changed,p01_feasible,p01_makespan,p01_wall_ms,p01_res_changed,p01_gens,ref_makespan,speedup_p01_over_p04,makespan_winner
+congested_8x4x4,42,0.1,15,2,0.1333,6,6,49,0,49,True,203.0,2.87,50,True,97.0,2058.7,86,13,179.0,716.1,paper01
+congested_8x4x4,42,0.25,15,4,0.2667,9,9,49,0,49,True,203.0,2.87,50,True,97.0,2056.47,86,13,179.0,716.6,paper01
+congested_8x4x4,42,0.5,15,8,0.5333,21,21,54,0,54,True,223.0,4.8,57,True,115.0,2072.96,85,12,179.0,432.1,paper01
+congested_8x4x4,42,0.75,15,12,0.8,36,36,54,0,54,True,250.0,7.21,57,True,108.0,2076.04,85,11,179.0,288.0,paper01
+congested_8x4x4,42,1.0,15,15,1.0,54,54,54,0,54,True,298.0,9.37,57,True,134.0,2030.49,86,9,179.0,216.8,paper01
+congested_8x4x4,7,0.1,14,2,0.1429,10,10,43,3,52,True,212.0,12.34,55,True,116.0,2127.27,91,13,180.0,172.3,paper01
+congested_8x4x4,7,0.25,14,4,0.2857,13,13,43,3,52,True,212.0,14.44,55,True,116.0,2107.28,91,13,180.0,145.9,paper01
+congested_8x4x4,7,0.5,14,7,0.5,19,19,52,0,52,True,218.0,5.43,55,True,116.0,2095.39,91,12,180.0,386.0,paper01
+congested_8x4x4,7,0.75,14,11,0.7857,37,37,52,0,52,True,256.0,6.56,55,True,134.0,2019.2,91,10,180.0,308.0,paper01
+congested_8x4x4,7,1.0,14,14,1.0,52,52,52,0,52,True,290.0,9.19,55,True,174.0,2020.22,90,9,180.0,219.9,paper01

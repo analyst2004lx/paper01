@@ -1,0 +1,16 @@
+instance,seed,corridor,n_reservations,n_T_impact,n_seeds,n_closure,closure_frac,feasible_after_block,structural_leaks,pass_C1,ref_makespan
+example_3x3x2,42,c1|v0,28,0,6,16,0.5714,False,0,True,57.0
+example_3x3x2,7,c2|r2,29,0,7,19,0.6552,False,0,True,52.0
+example_3x3x2,2024,c2|r2,30,0,5,15,0.5,False,0,True,62.0
+example_3x3x2,99,c1|c2,28,0,6,16,0.5714,False,0,True,48.0
+example_3x3x2,123,c1|v0,28,0,5,16,0.5714,False,0,True,51.0
+congested_8x4x4,42,c1|c2,86,0,16,53,0.6163,False,0,True,179.0
+congested_8x4x4,7,c1|c2,91,0,16,51,0.5604,False,0,True,180.0
+congested_8x4x4,2024,c1|c2,83,0,14,48,0.5783,False,0,True,181.0
+congested_8x4x4,99,c1|c2,81,0,14,46,0.5679,False,0,True,170.0
+congested_8x4x4,123,c1|c2,88,0,16,48,0.5455,False,0,True,177.0
+S8x4x4_high,42,h1|r1,140,0,15,72,0.5143,False,0,True,109.0
+S8x4x4_high,7,h1|r1,150,0,16,83,0.5533,False,0,True,126.0
+S8x4x4_high,2024,h1|r1,165,0,17,90,0.5455,False,0,True,120.0
+S8x4x4_high,99,h1|r1,147,0,16,87,0.5918,False,0,True,114.0
+S8x4x4_high,123,h1|r1,147,0,14,82,0.5578,False,0,True,115.0

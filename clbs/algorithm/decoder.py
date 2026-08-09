@@ -159,7 +159,8 @@ def dispatch_rule(inst: Instance, net: Network,
 
 def dispatch_exact(router: Router, net: Network,
                    loc: Dict[int, str], avail: Dict[int, float],
-                   pickup: str, dest: str, ready: float
+                   pickup: str, dest: str, ready: float,
+                   prune: bool = True, reuse: bool = True
                    ) -> Tuple[int, Optional[Tuple[RoutePlan, RoutePlan]]]:
     """派车试探:对每辆候选车做一次真实的两段路由,取实际送达最早者。
 
@@ -181,14 +182,19 @@ def dispatch_exact(router: Router, net: Network,
 
     另返回胜者的两段路径:原先胜者的路径在试探时已经算过一遍,回滚后又被 decode 重算,
     白费两次路由调用。route(commit=True) 不过是把各段 reserve 一遍,故缓存即可复用。
+
+    prune/reuse 两个开关默认为真,即上述两项优化都开。置假则退回未优化的全量试探,
+    专供 tools/prune_ablation.py 度量"降本值多少"——因为两项优化都不改变输出(见论文
+    命题 4.3),关掉它们唯一的作用就是变慢,故同挂钟下的差值即降本买到的解质量。
     """
     best_k, best_est = None, float("inf")
     best_plans: Optional[Tuple[RoutePlan, RoutePlan]] = None
     for k in sorted(loc.keys()):
-        lb = (max(avail[k] + net.ideal_dist[loc[k]][pickup], ready)
-              + net.ideal_dist[pickup][dest])
-        if lb >= best_est - 1e-12:
-            continue                    # 下界已不优于现任,实测值必然也不优
+        if prune:
+            lb = (max(avail[k] + net.ideal_dist[loc[k]][pickup], ready)
+                  + net.ideal_dist[pickup][dest])
+            if lb >= best_est - 1e-12:
+                continue                # 下界已不优于现任,实测值必然也不优
         token = router.table.checkpoint()
         try:
             empty = router.route(loc[k], pickup, avail[k], k, f"probe{k}-empty", commit=True)
@@ -199,7 +205,7 @@ def dispatch_exact(router: Router, net: Network,
             router.table.rollback(token)
         if est < best_est - 1e-12:
             best_k, best_est, best_plans = k, est, (empty, loaded)
-    return best_k, best_plans
+    return best_k, (best_plans if reuse else None)
 
 
 def decode(inst: Instance, net: Network, ma: Dict[OpKey, int], os_seq: List[int],
@@ -263,9 +269,13 @@ def decode(inst: Instance, net: Network, ma: Dict[OpKey, int], os_seq: List[int]
                         if rest:
                             allowed = rest     # 至少留一辆,保持可解码性
                 sub_avail = {kk: avail[kk] for kk in allowed}
-                if dispatch == "exact" and conflict_free:
+                if dispatch in ("exact", "exact_noopt") and conflict_free:
+                    # exact_noopt 关掉下界剪枝与胜者路径复用,选出的车与落表的预约
+                    # 与 exact 逐位相同,只是慢——专供降本对照使用
+                    opt = (dispatch == "exact")
                     k, probed = dispatch_exact(router, net, allowed, sub_avail,
-                                               pickup, dest, ready[j])
+                                               pickup, dest, ready[j],
+                                               prune=opt, reuse=opt)
                 else:
                     k = dispatch_rule(inst, net, allowed, sub_avail,
                                       pickup, dest, ready[j], prices, theta)
