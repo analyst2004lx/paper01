@@ -157,8 +157,11 @@ def dispatch_rule(inst: Instance, net: Network,
 # 解码(规格 6.2)
 # --------------------------------------------------------------------------
 
-def dispatch_exact(router: Router, loc: Dict[int, str], avail: Dict[int, float],
-                   pickup: str, dest: str, ready: float) -> int:
+def dispatch_exact(router: Router, net: Network,
+                   loc: Dict[int, str], avail: Dict[int, float],
+                   pickup: str, dest: str, ready: float,
+                   prune: bool = True, reuse: bool = True
+                   ) -> Tuple[int, Optional[Tuple[RoutePlan, RoutePlan]]]:
     """派车试探:对每辆候选车做一次真实的两段路由,取实际送达最早者。
 
     这是补上"全框架唯一开环残余"的直接做法——原规则用理想最短路矩阵估算送达时刻,
@@ -166,9 +169,32 @@ def dispatch_exact(router: Router, loc: Dict[int, str], avail: Dict[int, float],
 
     实现依赖预约表的检查点/回滚:空载段必须先真实落表,载货段才能看到它占用的时窗,
     否则两段可能被规划到同一走廊的同一时段;评估完毕后整体回滚,不留痕迹。
+
+    代价与剪枝。试探把每个运输任务的路由调用数从 2 抬到 2*NA,实测单次评价成本约为规则
+    派车的 4.6 倍(output/matrix/gen100:15.9 vs 3.5 毫秒)。而同代数下试探派车比规则派车
+    好约 3%,同挂钟下这 3% 恰好被算力吃光(output/matrix/p3:-0.12%)。故降本即增效。
+
+    这里用一个**可采纳下界**做剪枝:无冲突路由只会因让行而更晚,绝不会快过理想最短路,
+    所以 dispatch_rule 用的理想估算是实际送达时刻的下界。若某辆车的下界都赢不了当前最优
+    实测值,它的实测值必然也赢不了,于是无需为它跑路由。原实现按车号升序保留首个严格更优
+    者,被剪掉的车在原实现中同样不会成为最优者,故**输出与全量试探逐位相同**,只是省去
+    注定失败的试探。
+
+    另返回胜者的两段路径:原先胜者的路径在试探时已经算过一遍,回滚后又被 decode 重算,
+    白费两次路由调用。route(commit=True) 不过是把各段 reserve 一遍,故缓存即可复用。
+
+    prune/reuse 两个开关默认为真,即上述两项优化都开。置假则退回未优化的全量试探,
+    专供 tools/prune_ablation.py 度量"降本值多少"——因为两项优化都不改变输出(见论文
+    命题 4.3),关掉它们唯一的作用就是变慢,故同挂钟下的差值即降本买到的解质量。
     """
     best_k, best_est = None, float("inf")
+    best_plans: Optional[Tuple[RoutePlan, RoutePlan]] = None
     for k in sorted(loc.keys()):
+        if prune:
+            lb = (max(avail[k] + net.ideal_dist[loc[k]][pickup], ready)
+                  + net.ideal_dist[pickup][dest])
+            if lb >= best_est - 1e-12:
+                continue                # 下界已不优于现任,实测值必然也不优
         token = router.table.checkpoint()
         try:
             empty = router.route(loc[k], pickup, avail[k], k, f"probe{k}-empty", commit=True)
@@ -178,8 +204,8 @@ def dispatch_exact(router: Router, loc: Dict[int, str], avail: Dict[int, float],
         finally:
             router.table.rollback(token)
         if est < best_est - 1e-12:
-            best_k, best_est = k, est
-    return best_k
+            best_k, best_est, best_plans = k, est, (empty, loaded)
+    return best_k, (best_plans if reuse else None)
 
 
 def decode(inst: Instance, net: Network, ma: Dict[OpKey, int], os_seq: List[int],
@@ -231,6 +257,7 @@ def decode(inst: Instance, net: Network, ma: Dict[OpKey, int], os_seq: List[int]
             arrive = ready[j]          # 同机连续工序,无运输任务(C4)
         else:
             pickup = pos[j]
+            probed = None            # 仅派车试探会产出可复用的路径
             if forced_dispatch is not None:
                 k = forced_dispatch[len(dispatch_order)]
             else:
@@ -242,15 +269,28 @@ def decode(inst: Instance, net: Network, ma: Dict[OpKey, int], os_seq: List[int]
                         if rest:
                             allowed = rest     # 至少留一辆,保持可解码性
                 sub_avail = {kk: avail[kk] for kk in allowed}
-                if dispatch == "exact" and conflict_free:
-                    k = dispatch_exact(router, allowed, sub_avail, pickup, dest, ready[j])
+                if dispatch in ("exact", "exact_noopt") and conflict_free:
+                    # exact_noopt 关掉下界剪枝与胜者路径复用,选出的车与落表的预约
+                    # 与 exact 逐位相同,只是慢——专供降本对照使用
+                    opt = (dispatch == "exact")
+                    k, probed = dispatch_exact(router, net, allowed, sub_avail,
+                                               pickup, dest, ready[j],
+                                               prune=opt, reuse=opt)
                 else:
                     k = dispatch_rule(inst, net, allowed, sub_avail,
                                       pickup, dest, ready[j], prices, theta)
             dispatch_order.append(k)
-            empty = router.route(loc[k], pickup, avail[k], k, f"J{j}-{i}-empty")
-            t_load = max(empty.arrive, ready[j])          # 车等件或件等车(B4)
-            loaded = router.route(pickup, dest, t_load, k, f"J{j}-{i}-loaded")
+            if probed is not None:
+                # 试探时已在同一预约表状态下算过这两段,直接落表,省去两次重复路由
+                empty, loaded = probed
+                for plan, tag in ((empty, "empty"), (loaded, "loaded")):
+                    for s in plan.segments:
+                        router.table.reserve(s.corridor, s.enter, s.exit, k,
+                                             f"J{j}-{i}-{tag}")
+            else:
+                empty = router.route(loc[k], pickup, avail[k], k, f"J{j}-{i}-empty")
+                t_load = max(empty.arrive, ready[j])      # 车等件或件等车(B4)
+                loaded = router.route(pickup, dest, t_load, k, f"J{j}-{i}-loaded")
             arrive = loaded.arrive
             loc[k], avail[k] = dest, arrive               # 卸货即走/即空闲(B5、C5)
             transports.append(TransportRecord(j, i, k, pickup, dest, ready[j], empty, loaded))

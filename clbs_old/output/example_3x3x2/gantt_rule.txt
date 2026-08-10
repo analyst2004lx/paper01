@@ -1,0 +1,9 @@
+      |----+----|----+----|----+----|----+----|----+--
+      0         10        20        30        40      
+RA1   ····CCCAAAA·····································
+RA2   ·················BBBBCCCCAAAAABBBBBB············
+RA3   ··································AAAAA·········
+AGV1  CCCC··eeeeBBBBBBB········CCCCCCCeeeeeeeAAAAAAA··
+AGV2  ··AAAA·CCCCCCeeeeeeAAAAAA·····AAAAeeeeBBBBBBBBBB
+
+图例: 大写字母=对应工件加工/载运, e=空驶, w=途中等待, ·=空闲

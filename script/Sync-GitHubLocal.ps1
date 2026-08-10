@@ -53,6 +53,10 @@ $Config = @{
     # If a path is in both, Ignore wins. Missing paths are skipped.
     IgnoreDeleteListFile = (Join-Path $PSScriptRoot 'Sync-GitHub-Ignore_and_Delete.txt')
     GitPath       = ''
+    # GitHub fetch often stalls on flaky links: retry + hard timeout (seconds)
+    FetchRetries     = 5
+    FetchRetrySec    = 6
+    FetchTimeoutSec  = 90
 }
 # =============================================================
 
@@ -145,7 +149,9 @@ function Invoke-Git {
         [switch]$AllowFail,
         [switch]$WithCommitIdentity,
         # Print "still running" every N seconds (0 = silent wait)
-        [int]$HeartbeatSec = 15
+        [int]$HeartbeatSec = 15,
+        # Kill git if it exceeds this many seconds (0 = wait forever)
+        [int]$TimeoutSec = 0
     )
     $git = $script:GitExe
 
@@ -159,20 +165,17 @@ function Invoke-Git {
     $cmdLabel = ($GitArgs -join ' ')
     Write-Log ('git {0}  (cwd={1})' -f $cmdLabel, $WorkDir) -Level DEBUG
 
-    # UTF-8 capture via temp files + heartbeat (avoids stdout/stderr pipe deadlock)
-    $outFile = [System.IO.Path]::GetTempFileName()
-    $errFile = [System.IO.Path]::GetTempFileName()
     $argList = @()
     foreach ($a in $allArgs) { $argList += [string]$a }
 
     $code = 1
     $stdout = ''
     $stderr = ''
+    $timedOut = $false
     $proc = $null
     try {
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = $git
-        # ArgumentList not available on older ProcessStartInfo in all hosts; build safely
         $psi.Arguments = (($argList | ForEach-Object {
             $a = $_
             if ($a -match '[\s"]') { '"' + ($a -replace '"', '\"') + '"' } else { $a }
@@ -197,15 +200,38 @@ function Invoke-Git {
         $lastBeat = 0
         while (-not $proc.HasExited) {
             Start-Sleep -Milliseconds 500
+            if ($TimeoutSec -gt 0 -and $sw.Elapsed.TotalSeconds -ge $TimeoutSec) {
+                $timedOut = $true
+                Write-Log ('TIMEOUT after {0}s — killing git: {1}' -f $TimeoutSec, $cmdLabel) -Level WARN
+                try { $proc.Kill() } catch {}
+                # Also kill helper (git-remote-https) that may keep the pack download hung
+                Get-Process -Name 'git-remote-https','git' -ErrorAction SilentlyContinue |
+                    Where-Object { $_.Id -ne $PID } |
+                    ForEach-Object {
+                        try {
+                            # Only kill children started around this command window
+                            if ($_.StartTime -ge $sw.StartTime.AddSeconds(-2)) {
+                                Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+                            }
+                        } catch {}
+                    }
+                break
+            }
             if ($HeartbeatSec -gt 0 -and $sw.Elapsed.TotalSeconds -ge ($lastBeat + $HeartbeatSec)) {
                 $lastBeat = [int]$sw.Elapsed.TotalSeconds
                 Write-Log ('... git still running ({0}s): {1}' -f $lastBeat, $cmdLabel) -Level INFO
             }
         }
-        # Ensure async readers finish
-        $stdout = $outTask.Result
-        $stderr = $errTask.Result
-        $code = $proc.ExitCode
+        try { $stdout = $outTask.Result } catch { $stdout = '' }
+        try { $stderr = $errTask.Result } catch { $stderr = '' }
+        if ($timedOut) {
+            $code = 124
+            if ([string]::IsNullOrWhiteSpace($stderr)) {
+                $stderr = ("Timed out after {0}s (likely stalled GitHub download)." -f $TimeoutSec)
+            }
+        } else {
+            $code = $proc.ExitCode
+        }
         if ($sw.Elapsed.TotalSeconds -ge 3) {
             Write-Log ('git finished in {0:N1}s (exit={1}): {2}' -f $sw.Elapsed.TotalSeconds, $code, $cmdLabel) -Level DEBUG
         }
@@ -214,7 +240,6 @@ function Invoke-Git {
         $stderr = $_.Exception.Message
     } finally {
         if ($null -ne $proc) { $proc.Dispose() }
-        Remove-Item -LiteralPath $outFile, $errFile -Force -ErrorAction SilentlyContinue
     }
 
     $parts = @()
@@ -576,10 +601,44 @@ try {
     }
 
     Write-Log 'fetch origin...'
-    $fetch = Invoke-Git -GitArgs @('fetch', 'origin', '--prune') -AllowFail
-    if ($fetch.ExitCode -ne 0) {
-        Write-Log ('fetch failed. Check network/credentials.{0}{1}' -f [Environment]::NewLine, $fetch.Output) -Level ERROR
-        Write-Log 'Hints: 1) Open WireGuard/VPN then retry  2) Browser open github.com  3) Test: git ls-remote origin  4) Configure git http.proxy if needed' -Level ERROR
+    # HTTP/1.1 + larger buffer helps when HTTPS pack download stalls mid-way
+    $httpHardening = @(
+        '-c', 'http.version=HTTP/1.1'
+        '-c', 'http.postBuffer=524288000'
+        '-c', 'http.lowSpeedLimit=1000'
+        '-c', 'http.lowSpeedTime=60'
+    )
+    $fetchOk = $false
+    $fetch = $null
+    $maxTry = [Math]::Max(1, [int]$Config.FetchRetries)
+    $fetchTimeout = [Math]::Max(30, [int]$Config.FetchTimeoutSec)
+    for ($i = 1; $i -le $maxTry; $i++) {
+        Write-Log ('fetch attempt {0}/{1} (timeout={2}s)...' -f $i, $maxTry, $fetchTimeout)
+        if ($i -le 2) {
+            $fetchArgs = $httpHardening + @('fetch', 'origin', '--prune')
+        } else {
+            Write-Log 'Using shallow fetch fallback (depth=1; smaller download)...' -Level WARN
+            $fetchArgs = $httpHardening + @('fetch', 'origin', '--prune', '--depth', '1')
+        }
+        $fetch = Invoke-Git -GitArgs $fetchArgs -AllowFail -HeartbeatSec 15 -TimeoutSec $fetchTimeout
+        if ($fetch.ExitCode -eq 0) {
+            $fetchOk = $true
+            Write-Log ('fetch ok on attempt {0}' -f $i)
+            break
+        }
+        Write-Log ('fetch attempt {0} failed (exit={1}): {2}' -f $i, $fetch.ExitCode, $fetch.Output) -Level WARN
+        # Clear locks left by killed/stalled fetch
+        Clear-StaleGitLocks -RepoRoot $Config.LocalFolder -MinAgeSec 0
+        if ($i -lt $maxTry) {
+            $wait = [int]$Config.FetchRetrySec * $i
+            Write-Log ('Wait {0}s then retry (WireGuard/VPN recommended)...' -f $wait) -Level WARN
+            Start-Sleep -Seconds $wait
+        }
+    }
+    if (-not $fetchOk) {
+        Write-Log ('fetch failed after {0} attempts.{1}{2}' -f $maxTry, [Environment]::NewLine, $fetch.Output) -Level ERROR
+        Write-Log 'This usually means GitHub pack download stalled (not a script logic bug).' -Level ERROR
+        Write-Log 'Hints: 1) Connect WireGuard/VPN  2) Open https://github.com  3) git -c http.version=HTTP/1.1 ls-remote origin  4) Retry later' -Level ERROR
         exit 2
     }
 

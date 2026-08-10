@@ -1,0 +1,907 @@
+{
+  "instance": "congested_8x4x4",
+  "delta_return": 1,
+  "makespan": 97.0,
+  "operations": [
+    {
+      "job": 1,
+      "i": 1,
+      "machine": 2,
+      "start": 59.0,
+      "finish": 69.0
+    },
+    {
+      "job": 1,
+      "i": 2,
+      "machine": 2,
+      "start": 69.0,
+      "finish": 78.0
+    },
+    {
+      "job": 1,
+      "i": 3,
+      "machine": 2,
+      "start": 78.0,
+      "finish": 86.0
+    },
+    {
+      "job": 2,
+      "i": 1,
+      "machine": 2,
+      "start": 18.0,
+      "finish": 27.0
+    },
+    {
+      "job": 2,
+      "i": 2,
+      "machine": 3,
+      "start": 39.0,
+      "finish": 45.0
+    },
+    {
+      "job": 2,
+      "i": 3,
+      "machine": 4,
+      "start": 47.0,
+      "finish": 52.0
+    },
+    {
+      "job": 3,
+      "i": 1,
+      "machine": 2,
+      "start": 50.0,
+      "finish": 59.0
+    },
+    {
+      "job": 3,
+      "i": 2,
+      "machine": 3,
+      "start": 70.0,
+      "finish": 75.0
+    },
+    {
+      "job": 3,
+      "i": 3,
+      "machine": 3,
+      "start": 75.0,
+      "finish": 81.0
+    },
+    {
+      "job": 4,
+      "i": 1,
+      "machine": 1,
+      "start": 4.0,
+      "finish": 11.0
+    },
+    {
+      "job": 4,
+      "i": 2,
+      "machine": 4,
+      "start": 22.0,
+      "finish": 27.0
+    },
+    {
+      "job": 4,
+      "i": 3,
+      "machine": 1,
+      "start": 45.0,
+      "finish": 53.0
+    },
+    {
+      "job": 5,
+      "i": 1,
+      "machine": 2,
+      "start": 43.0,
+      "finish": 50.0
+    },
+    {
+      "job": 5,
+      "i": 2,
+      "machine": 1,
+      "start": 53.0,
+      "finish": 61.0
+    },
+    {
+      "job": 5,
+      "i": 3,
+      "machine": 1,
+      "start": 70.0,
+      "finish": 80.0
+    },
+    {
+      "job": 6,
+      "i": 1,
+      "machine": 4,
+      "start": 13.0,
+      "finish": 19.0
+    },
+    {
+      "job": 6,
+      "i": 2,
+      "machine": 3,
+      "start": 49.0,
+      "finish": 54.0
+    },
+    {
+      "job": 6,
+      "i": 3,
+      "machine": 4,
+      "start": 62.0,
+      "finish": 67.0
+    },
+    {
+      "job": 7,
+      "i": 1,
+      "machine": 2,
+      "start": 27.0,
+      "finish": 36.0
+    },
+    {
+      "job": 7,
+      "i": 2,
+      "machine": 2,
+      "start": 36.0,
+      "finish": 43.0
+    },
+    {
+      "job": 7,
+      "i": 3,
+      "machine": 1,
+      "start": 61.0,
+      "finish": 70.0
+    },
+    {
+      "job": 8,
+      "i": 1,
+      "machine": 2,
+      "start": 9.0,
+      "finish": 18.0
+    },
+    {
+      "job": 8,
+      "i": 2,
+      "machine": 4,
+      "start": 34.0,
+      "finish": 39.0
+    },
+    {
+      "job": 8,
+      "i": 3,
+      "machine": 3,
+      "start": 60.0,
+      "finish": 65.0
+    }
+  ],
+  "returns": [
+    {
+      "job": 1,
+      "complete": 93.0
+    },
+    {
+      "job": 2,
+      "complete": 63.0
+    },
+    {
+      "job": 3,
+      "complete": 91.0
+    },
+    {
+      "job": 4,
+      "complete": 65.0
+    },
+    {
+      "job": 5,
+      "complete": 95.0
+    },
+    {
+      "job": 6,
+      "complete": 78.0
+    },
+    {
+      "job": 7,
+      "complete": 86.0
+    },
+    {
+      "job": 8,
+      "complete": 97.0
+    }
+  ],
+  "agv_segments": [
+    {
+      "agv": 1,
+      "u": "v0",
+      "v": "c1",
+      "enter": 0.0,
+      "exit": 2.0,
+      "task": "J4-1-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "c1",
+      "v": "r1",
+      "enter": 2.0,
+      "exit": 4.0,
+      "task": "J4-1-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "r1",
+      "v": "c1",
+      "enter": 11.0,
+      "exit": 13.0,
+      "task": "J4-2-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "c1",
+      "v": "c2",
+      "enter": 13.0,
+      "exit": 19.0,
+      "task": "J4-2-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "c2",
+      "v": "r4",
+      "enter": 19.0,
+      "exit": 22.0,
+      "task": "J4-2-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "r4",
+      "v": "c2",
+      "enter": 27.0,
+      "exit": 30.0,
+      "task": "J4-3-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "c2",
+      "v": "c1",
+      "enter": 37.0,
+      "exit": 43.0,
+      "task": "J4-3-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "c1",
+      "v": "r1",
+      "enter": 43.0,
+      "exit": 45.0,
+      "task": "J4-3-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "r1",
+      "v": "r2",
+      "enter": 45.0,
+      "exit": 47.0,
+      "task": "J5-2-empty"
+    },
+    {
+      "agv": 1,
+      "u": "r2",
+      "v": "r1",
+      "enter": 50.0,
+      "exit": 52.0,
+      "task": "J5-2-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "r1",
+      "v": "r2",
+      "enter": 52.0,
+      "exit": 54.0,
+      "task": "J3-2-empty"
+    },
+    {
+      "agv": 1,
+      "u": "r2",
+      "v": "c1",
+      "enter": 59.0,
+      "exit": 62.0,
+      "task": "J3-2-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "c1",
+      "v": "c2",
+      "enter": 62.0,
+      "exit": 68.0,
+      "task": "J3-2-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "c2",
+      "v": "r3",
+      "enter": 68.0,
+      "exit": 70.0,
+      "task": "J3-2-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "r3",
+      "v": "c2",
+      "enter": 81.0,
+      "exit": 83.0,
+      "task": "J3-4-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "c2",
+      "v": "c1",
+      "enter": 83.0,
+      "exit": 89.0,
+      "task": "J3-4-loaded"
+    },
+    {
+      "agv": 1,
+      "u": "c1",
+      "v": "v0",
+      "enter": 89.0,
+      "exit": 91.0,
+      "task": "J3-4-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "v0",
+      "v": "c1",
+      "enter": 2.0,
+      "exit": 4.0,
+      "task": "J6-1-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "c1",
+      "v": "c2",
+      "enter": 4.0,
+      "exit": 10.0,
+      "task": "J6-1-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "c2",
+      "v": "r4",
+      "enter": 10.0,
+      "exit": 13.0,
+      "task": "J6-1-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "r4",
+      "v": "c2",
+      "enter": 13.0,
+      "exit": 16.0,
+      "task": "J2-2-empty"
+    },
+    {
+      "agv": 2,
+      "u": "c2",
+      "v": "c1",
+      "enter": 19.0,
+      "exit": 25.0,
+      "task": "J2-2-empty"
+    },
+    {
+      "agv": 2,
+      "u": "c1",
+      "v": "r2",
+      "enter": 25.0,
+      "exit": 28.0,
+      "task": "J2-2-empty"
+    },
+    {
+      "agv": 2,
+      "u": "r2",
+      "v": "c1",
+      "enter": 28.0,
+      "exit": 31.0,
+      "task": "J2-2-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "c1",
+      "v": "c2",
+      "enter": 31.0,
+      "exit": 37.0,
+      "task": "J2-2-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "c2",
+      "v": "r3",
+      "enter": 37.0,
+      "exit": 39.0,
+      "task": "J2-2-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "r3",
+      "v": "r4",
+      "enter": 45.0,
+      "exit": 47.0,
+      "task": "J2-3-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "r4",
+      "v": "r3",
+      "enter": 47.0,
+      "exit": 49.0,
+      "task": "J6-2-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "r3",
+      "v": "r4",
+      "enter": 49.0,
+      "exit": 51.0,
+      "task": "J2-4-empty"
+    },
+    {
+      "agv": 2,
+      "u": "r4",
+      "v": "c2",
+      "enter": 52.0,
+      "exit": 55.0,
+      "task": "J2-4-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "c2",
+      "v": "c1",
+      "enter": 55.0,
+      "exit": 61.0,
+      "task": "J2-4-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "c1",
+      "v": "v0",
+      "enter": 61.0,
+      "exit": 63.0,
+      "task": "J2-4-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "v0",
+      "v": "c1",
+      "enter": 65.0,
+      "exit": 67.0,
+      "task": "J8-4-empty"
+    },
+    {
+      "agv": 2,
+      "u": "c1",
+      "v": "c2",
+      "enter": 76.0,
+      "exit": 82.0,
+      "task": "J8-4-empty"
+    },
+    {
+      "agv": 2,
+      "u": "c2",
+      "v": "r3",
+      "enter": 83.0,
+      "exit": 85.0,
+      "task": "J8-4-empty"
+    },
+    {
+      "agv": 2,
+      "u": "r3",
+      "v": "c2",
+      "enter": 85.0,
+      "exit": 87.0,
+      "task": "J8-4-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "c2",
+      "v": "c1",
+      "enter": 89.0,
+      "exit": 95.0,
+      "task": "J8-4-loaded"
+    },
+    {
+      "agv": 2,
+      "u": "c1",
+      "v": "v0",
+      "enter": 95.0,
+      "exit": 97.0,
+      "task": "J8-4-loaded"
+    },
+    {
+      "agv": 3,
+      "u": "v0",
+      "v": "c1",
+      "enter": 4.0,
+      "exit": 6.0,
+      "task": "J8-1-loaded"
+    },
+    {
+      "agv": 3,
+      "u": "c1",
+      "v": "r2",
+      "enter": 6.0,
+      "exit": 9.0,
+      "task": "J8-1-loaded"
+    },
+    {
+      "agv": 3,
+      "u": "r2",
+      "v": "c1",
+      "enter": 18.0,
+      "exit": 21.0,
+      "task": "J8-2-loaded"
+    },
+    {
+      "agv": 3,
+      "u": "c1",
+      "v": "c2",
+      "enter": 25.0,
+      "exit": 31.0,
+      "task": "J8-2-loaded"
+    },
+    {
+      "agv": 3,
+      "u": "c2",
+      "v": "r4",
+      "enter": 31.0,
+      "exit": 34.0,
+      "task": "J8-2-loaded"
+    },
+    {
+      "agv": 3,
+      "u": "r4",
+      "v": "c2",
+      "enter": 34.0,
+      "exit": 37.0,
+      "task": "J1-1-empty"
+    },
+    {
+      "agv": 3,
+      "u": "c2",
+      "v": "c1",
+      "enter": 43.0,
+      "exit": 49.0,
+      "task": "J1-1-empty"
+    },
+    {
+      "agv": 3,
+      "u": "c1",
+      "v": "v0",
+      "enter": 49.0,
+      "exit": 51.0,
+      "task": "J1-1-empty"
+    },
+    {
+      "agv": 3,
+      "u": "v0",
+      "v": "c1",
+      "enter": 51.0,
+      "exit": 53.0,
+      "task": "J1-1-loaded"
+    },
+    {
+      "agv": 3,
+      "u": "c1",
+      "v": "r2",
+      "enter": 53.0,
+      "exit": 56.0,
+      "task": "J1-1-loaded"
+    },
+    {
+      "agv": 3,
+      "u": "r2",
+      "v": "r1",
+      "enter": 56.0,
+      "exit": 58.0,
+      "task": "J7-3-loaded"
+    },
+    {
+      "agv": 3,
+      "u": "r1",
+      "v": "c1",
+      "enter": 58.0,
+      "exit": 60.0,
+      "task": "J4-4-loaded"
+    },
+    {
+      "agv": 3,
+      "u": "c1",
+      "v": "v0",
+      "enter": 63.0,
+      "exit": 65.0,
+      "task": "J4-4-loaded"
+    },
+    {
+      "agv": 3,
+      "u": "v0",
+      "v": "c1",
+      "enter": 67.0,
+      "exit": 69.0,
+      "task": "J1-4-empty"
+    },
+    {
+      "agv": 3,
+      "u": "c1",
+      "v": "r2",
+      "enter": 69.0,
+      "exit": 72.0,
+      "task": "J1-4-empty"
+    },
+    {
+      "agv": 3,
+      "u": "r2",
+      "v": "c1",
+      "enter": 86.0,
+      "exit": 89.0,
+      "task": "J1-4-loaded"
+    },
+    {
+      "agv": 3,
+      "u": "c1",
+      "v": "v0",
+      "enter": 91.0,
+      "exit": 93.0,
+      "task": "J1-4-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "v0",
+      "v": "c1",
+      "enter": 6.0,
+      "exit": 8.0,
+      "task": "J2-1-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "r2",
+      "enter": 9.0,
+      "exit": 12.0,
+      "task": "J2-1-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "r2",
+      "v": "c1",
+      "enter": 12.0,
+      "exit": 15.0,
+      "task": "J7-1-empty"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "v0",
+      "enter": 15.0,
+      "exit": 17.0,
+      "task": "J7-1-empty"
+    },
+    {
+      "agv": 4,
+      "u": "v0",
+      "v": "c1",
+      "enter": 17.0,
+      "exit": 19.0,
+      "task": "J7-1-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "r1",
+      "enter": 19.0,
+      "exit": 21.0,
+      "task": "J7-1-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "r1",
+      "v": "r2",
+      "enter": 21.0,
+      "exit": 23.0,
+      "task": "J7-1-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "r2",
+      "v": "r1",
+      "enter": 23.0,
+      "exit": 25.0,
+      "task": "J5-1-empty"
+    },
+    {
+      "agv": 4,
+      "u": "r1",
+      "v": "c1",
+      "enter": 25.0,
+      "exit": 27.0,
+      "task": "J5-1-empty"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "v0",
+      "enter": 27.0,
+      "exit": 29.0,
+      "task": "J5-1-empty"
+    },
+    {
+      "agv": 4,
+      "u": "v0",
+      "v": "c1",
+      "enter": 29.0,
+      "exit": 31.0,
+      "task": "J5-1-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "r2",
+      "enter": 31.0,
+      "exit": 34.0,
+      "task": "J5-1-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "r2",
+      "v": "c1",
+      "enter": 34.0,
+      "exit": 37.0,
+      "task": "J3-1-empty"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "v0",
+      "enter": 37.0,
+      "exit": 39.0,
+      "task": "J3-1-empty"
+    },
+    {
+      "agv": 4,
+      "u": "v0",
+      "v": "c1",
+      "enter": 39.0,
+      "exit": 41.0,
+      "task": "J3-1-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "r2",
+      "enter": 41.0,
+      "exit": 44.0,
+      "task": "J3-1-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "r2",
+      "v": "c1",
+      "enter": 44.0,
+      "exit": 47.0,
+      "task": "J8-3-empty"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "c2",
+      "enter": 49.0,
+      "exit": 55.0,
+      "task": "J8-3-empty"
+    },
+    {
+      "agv": 4,
+      "u": "c2",
+      "v": "r4",
+      "enter": 55.0,
+      "exit": 58.0,
+      "task": "J8-3-empty"
+    },
+    {
+      "agv": 4,
+      "u": "r4",
+      "v": "r3",
+      "enter": 58.0,
+      "exit": 60.0,
+      "task": "J8-3-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "r3",
+      "v": "r4",
+      "enter": 60.0,
+      "exit": 62.0,
+      "task": "J6-3-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "r4",
+      "v": "c2",
+      "enter": 67.0,
+      "exit": 70.0,
+      "task": "J6-4-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "c2",
+      "v": "c1",
+      "enter": 70.0,
+      "exit": 76.0,
+      "task": "J6-4-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "v0",
+      "enter": 76.0,
+      "exit": 78.0,
+      "task": "J6-4-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "v0",
+      "v": "c1",
+      "enter": 78.0,
+      "exit": 80.0,
+      "task": "J7-4-empty"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "r1",
+      "enter": 80.0,
+      "exit": 82.0,
+      "task": "J7-4-empty"
+    },
+    {
+      "agv": 4,
+      "u": "r1",
+      "v": "c1",
+      "enter": 82.0,
+      "exit": 84.0,
+      "task": "J7-4-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "v0",
+      "enter": 84.0,
+      "exit": 86.0,
+      "task": "J7-4-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "v0",
+      "v": "c1",
+      "enter": 86.0,
+      "exit": 88.0,
+      "task": "J5-4-empty"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "r1",
+      "enter": 88.0,
+      "exit": 90.0,
+      "task": "J5-4-empty"
+    },
+    {
+      "agv": 4,
+      "u": "r1",
+      "v": "c1",
+      "enter": 90.0,
+      "exit": 92.0,
+      "task": "J5-4-loaded"
+    },
+    {
+      "agv": 4,
+      "u": "c1",
+      "v": "v0",
+      "enter": 93.0,
+      "exit": 95.0,
+      "task": "J5-4-loaded"
+    }
+  ]
+}

@@ -1,0 +1,196 @@
+{
+  "instance": "S8x4x4-LD21-H0.3-F0.6-A4-s42",
+  "delta_return": 1,
+  "features": {
+    "Tt_over_Tp": 0.9991,
+    "heterogeneity": 0.2879,
+    "flexibility": 0.5833,
+    "NA_over_NM": 1.0,
+    "num_jobs": 8,
+    "num_machines": 4,
+    "num_agvs": 4,
+    "num_real_ops": 24,
+    "num_nodes": 10,
+    "num_corridors": 10,
+    "funnel_share": 0.2857,
+    "lu_min_cut": 2,
+    "lu_cut_corridors": [
+      "e1|v0",
+      "e2|v0"
+    ],
+    "far_group_cut": 1,
+    "corridors_per_node": 1.0
+  },
+  "ga_config": {
+    "pop": 40,
+    "max_gen": 30,
+    "stall_gen": 12,
+    "seed": 42,
+    "theta": 0.0,
+    "max_entry_options": 3,
+    "price_top_k": 24,
+    "price_refresh": 5,
+    "fd_calibrate": false,
+    "dispatch": "exact",
+    "use_conflict_ops": true
+  },
+  "results": {
+    "closed": {
+      "makespan": 71.0,
+      "runtime_sec": 14.11,
+      "valid": true,
+      "validation_errors": [],
+      "bucket_width": 7.6071,
+      "price_slots": 0,
+      "price_cost_total": 0.0,
+      "generations": 29,
+      "evaluations": 1160,
+      "convergence_history": [
+        95.0,
+        87.0,
+        81.0,
+        81.0,
+        81.0,
+        81.0,
+        81.0,
+        81.0,
+        81.0,
+        76.0,
+        76.0,
+        75.0,
+        75.0,
+        75.0,
+        75.0,
+        75.0,
+        71.0,
+        71.0,
+        71.0,
+        71.0,
+        71.0,
+        71.0,
+        71.0,
+        71.0,
+        71.0,
+        71.0,
+        71.0,
+        71.0,
+        71.0
+      ],
+      "occupancy": {
+        "bucket_width": 7.6071,
+        "num_buckets": 10,
+        "bottleneck_corridor": "h1|r2",
+        "by_corridor": {
+          "h1|r2": {
+            "mean": 0.4732,
+            "peak": 0.7371,
+            "busy_buckets": 9
+          },
+          "g1|h1": {
+            "mean": 0.3944,
+            "peak": 0.8685,
+            "busy_buckets": 10
+          },
+          "g1|h2": {
+            "mean": 0.3944,
+            "peak": 0.7418,
+            "busy_buckets": 9
+          },
+          "h1|r1": {
+            "mean": 0.3681,
+            "peak": 0.6901,
+            "busy_buckets": 8
+          },
+          "e1|v0": {
+            "mean": 0.2366,
+            "peak": 0.493,
+            "busy_buckets": 9
+          },
+          "e1|h1": {
+            "mean": 0.2366,
+            "peak": 0.3944,
+            "busy_buckets": 9
+          },
+          "h2|r3": {
+            "mean": 0.2103,
+            "peak": 0.6854,
+            "busy_buckets": 5
+          },
+          "h2|r4": {
+            "mean": 0.2103,
+            "peak": 0.5305,
+            "busy_buckets": 6
+          },
+          "e2|v0": {
+            "mean": 0.0526,
+            "peak": 0.2629,
+            "busy_buckets": 3
+          },
+          "e2|h1": {
+            "mean": 0.0526,
+            "peak": 0.2629,
+            "busy_buckets": 4
+          }
+        },
+        "hottest_slots": [
+          {
+            "corridor": "g1|h1",
+            "bucket": 3,
+            "t_from": 22.82,
+            "t_to": 30.43,
+            "util": 0.8685
+          },
+          {
+            "corridor": "g1|h1",
+            "bucket": 6,
+            "t_from": 45.64,
+            "t_to": 53.25,
+            "util": 0.8685
+          },
+          {
+            "corridor": "g1|h2",
+            "bucket": 5,
+            "t_from": 38.04,
+            "t_to": 45.64,
+            "util": 0.7418
+          },
+          {
+            "corridor": "h1|r2",
+            "bucket": 7,
+            "t_from": 53.25,
+            "t_to": 60.86,
+            "util": 0.7371
+          },
+          {
+            "corridor": "g1|h1",
+            "bucket": 0,
+            "t_from": 0.0,
+            "t_to": 7.61,
+            "util": 0.7371
+          },
+          {
+            "corridor": "h1|r2",
+            "bucket": 1,
+            "t_from": 7.61,
+            "t_to": 15.21,
+            "util": 0.7371
+          },
+          {
+            "corridor": "h1|r2",
+            "bucket": 6,
+            "t_from": 45.64,
+            "t_to": 53.25,
+            "util": 0.6901
+          },
+          {
+            "corridor": "h1|r1",
+            "bucket": 6,
+            "t_from": 45.64,
+            "t_to": 53.25,
+            "util": 0.6901
+          }
+        ]
+      }
+    }
+  }
+}

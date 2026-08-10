@@ -46,6 +46,15 @@ def main() -> int:
         ("D C+错峰算子(完整版)", dict(theta=0.0, use_conflict_ops=True, dispatch="exact")),
         ("E D+价格 theta=0.15", dict(theta=0.15, use_conflict_ops=True,
                                      dispatch="exact", max_entry_options=1)),
+        # E 原本是唯一的定价档,却也是唯一把 max_entry_options 设成 1 的档,于是与
+        # A~D 的差异同时压在"开不开价格"和"能不能选进入时刻"两件事上。而按
+        # network.feasible_entries 的注释,limit<=1 时只返回最早可行时刻,价格感知
+        # 路由就再也表达不出"多等一会儿、进一个更便宜的时段"——这正是多标签路由存在
+        # 的理由。于是 E 只剩空间绕行,定价机制的时间维自由度被关掉了。
+        # E' 只把这一处改回默认的 3,其余与 E 全同,故两者之差可归因给进入时刻选择;
+        # E' 与 D 之差才是"开价格"的干净效应。
+        ("E' E 但进入时刻选项=3", dict(theta=0.15, use_conflict_ops=True,
+                                      dispatch="exact", max_entry_options=3)),
     ]
 
     print(f"\n{'配置':<24s} {'均值':>6s} {'最好':>6s} {'最差':>6s} {'秒/次':>7s} {'评估数':>8s}  各种子")

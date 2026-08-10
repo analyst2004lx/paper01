@@ -1,0 +1,7 @@
+instance,seed,mode,makespan,disturb_type,disturb_class,corridor,t_now,t_start,t_end,n_reservations,n_T_direct,n_T_impact,n_R1_release,n_seeds,n_closure,closure_frac,feasible_after_block,lu_min_cut,far_group_cut,structural_leaks,pass_C1
+example_3x3x2,42,heuristic,57.0,corridor_block,B,c1|c2,40.0,39.0,55.0,28,0,0,0,2,4,0.1429,False,1,1,0,True
+congested_8x4x4,7,heuristic,180.0,corridor_block,B,c1|c2,40.0,36.0,178.0,91,0,0,0,19,61,0.6703,False,1,1,1,True
+example_3x3x2,42,heuristic,57.0,corridor_block,B,c1|c2,40.0,39.0,55.0,28,0,0,0,2,4,0.1429,False,1,1,0,True
+congested_8x4x4,7,heuristic,180.0,corridor_block,B,c1|c2,40.0,36.0,178.0,91,0,0,0,19,61,0.6703,False,1,1,0,True
+example_3x3x2,42,heuristic,57.0,corridor_block,B,c1|c2,40.0,39.0,55.0,28,0,0,0,2,4,0.1429,False,1,1,0,True
+example_3x3x2,42,heuristic,57.0,corridor_block,B,c1|c2,40.0,39.0,55.0,28,0,0,0,2,4,0.1429,False,1,1,0,True

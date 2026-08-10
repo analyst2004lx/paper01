@@ -1,0 +1,70 @@
+{
+ "runs": [
+  "p3",
+  "lowmid"
+ ],
+ "num_results": 1280,
+ "instances": [
+  "S8x4x4-LG21-H0-F0.6-A4-s42",
+  "S8x4x4-LG21-H0.15-F0.6-A4-s42",
+  "S8x4x4-LG21-H0.3-F0.6-A4-s42",
+  "S8x4x4-LG21-H0.5-F0.6-A4-s42",
+  "S8x4x4-LD22-H0-F0.6-A4-s42",
+  "S8x4x4-LD22-H0.15-F0.6-A4-s42",
+  "S8x4x4-LD22-H0.3-F0.6-A4-s42",
+  "S8x4x4-LD22-H0.5-F0.6-A4-s42",
+  "S8x4x4-LD21-H0-F0.6-A4-s42",
+  "S8x4x4-LD21-H0.15-F0.6-A4-s42",
+  "S8x4x4-LD21-H0.3-F0.6-A4-s42",
+  "S8x4x4-LD21-H0.5-F0.6-A4-s42",
+  "S8x4x4-LD11-H0-F0.6-A4-s42",
+  "S8x4x4-LD11-H0.15-F0.6-A4-s42",
+  "S8x4x4-LD11-H0.3-F0.6-A4-s42",
+  "S8x4x4-LD11-H0.5-F0.6-A4-s42"
+ ],
+ "arms": [
+  "rule",
+  "twostage",
+  "nofeedback",
+  "opendispatch",
+  "opendispatch_nols",
+  "nostagger",
+  "closed",
+  "priced"
+ ],
+ "seeds": [
+  3,
+  7,
+  11,
+  19,
+  23,
+  31,
+  42,
+  47,
+  53,
+  2024
+ ],
+ "num_seeds": 10,
+ "budgets_sec": {
+  "S8x4x4-LD21-H0-F0.6-A4-s42": 40.79,
+  "S8x4x4-LD21-H0.15-F0.6-A4-s42": 42.19,
+  "S8x4x4-LD21-H0.3-F0.6-A4-s42": 46.71,
+  "S8x4x4-LD21-H0.5-F0.6-A4-s42": 50.32,
+  "S8x4x4-LD11-H0-F0.6-A4-s42": 46.6,
+  "S8x4x4-LD11-H0.15-F0.6-A4-s42": 30.21,
+  "S8x4x4-LD11-H0.3-F0.6-A4-s42": 60.09,
+  "S8x4x4-LD11-H0.5-F0.6-A4-s42": 41.26,
+  "S8x4x4-LG21-H0-F0.6-A4-s42": 47.65,
+  "S8x4x4-LG21-H0.15-F0.6-A4-s42": 47.44,
+  "S8x4x4-LG21-H0.3-F0.6-A4-s42": 60.42,
+  "S8x4x4-LG21-H0.5-F0.6-A4-s42": 55.44,
+  "S8x4x4-LD22-H0-F0.6-A4-s42": 72.93,
+  "S8x4x4-LD22-H0.15-F0.6-A4-s42": 49.52,
+  "S8x4x4-LD22-H0.3-F0.6-A4-s42": 37.77,
+  "S8x4x4-LD22-H0.5-F0.6-A4-s42": 46.67
+ },
+ "invalid_count": 0,
+ "invalid": [],
+ "complete_cells": 128,
+ "total_cells": 128
+}
