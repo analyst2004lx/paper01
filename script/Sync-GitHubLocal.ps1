@@ -753,22 +753,24 @@ try {
     Write-Log ('Local blob hash: in-process SHA1 (normalizeCrlf={0})' -f $script:HashNormalizeCrlf)
 
     function ConvertTo-GitHashBytes([byte[]]$Bytes) {
-        if (-not $script:HashNormalizeCrlf -or $null -eq $Bytes -or $Bytes.Length -eq 0) { return $Bytes }
+        # NOTE: always return via `, $array` so single-byte results are not unrolled by PowerShell.
+        if ($null -eq $Bytes) { return , [byte[]]@() }
+        if (-not $script:HashNormalizeCrlf -or $Bytes.Length -eq 0) { return , $Bytes }
         # Skip binary-ish buffers (NUL in first 8KiB) — same idea as git's text heuristic.
         $probe = [Math]::Min($Bytes.Length, 8192)
         for ($i = 0; $i -lt $probe; $i++) {
-            if ($Bytes[$i] -eq 0) { return $Bytes }
+            if ($Bytes[$i] -eq 0) { return , $Bytes }
         }
-        $out = New-Object System.Collections.Generic.List[byte] ($Bytes.Length)
+        $out = New-Object 'System.Collections.Generic.List[byte]' ($Bytes.Length)
         for ($i = 0; $i -lt $Bytes.Length; $i++) {
             if ($Bytes[$i] -eq 13 -and ($i + 1) -lt $Bytes.Length -and $Bytes[$i + 1] -eq 10) {
-                [void]$out.Add(10)
+                [void]$out.Add([byte]10)
                 $i++
             } else {
                 [void]$out.Add($Bytes[$i])
             }
         }
-        return $out.ToArray()
+        return , $out.ToArray()
     }
 
     function Get-LocalFileHash([string]$AbsPath) {
@@ -778,6 +780,7 @@ try {
         try {
             $raw = [System.IO.File]::ReadAllBytes($AbsPath)
             $bytes = ConvertTo-GitHashBytes -Bytes $raw
+            if ($null -eq $bytes) { $bytes = [byte[]]@() }
             $sha = [System.Security.Cryptography.SHA1]::Create()
             $header = [System.Text.Encoding]::ASCII.GetBytes(('blob {0}' -f $bytes.Length))
             $payload = New-Object byte[] ($header.Length + 1 + $bytes.Length)
