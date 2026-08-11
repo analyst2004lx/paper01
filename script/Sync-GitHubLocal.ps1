@@ -38,8 +38,9 @@ $Config = @{
     NewerSkewSec  = 5
     # When merge-base missing and hashes differ: 'Mtime' = who-newer wins; 'Conflict' = skip
     DivergedFallback = 'Mtime'
-    # On content-identical: align local LastWriteTime to remote commit time (reduces noise)
-    AlignMtimeWhenEqual = $true
+    # On content-identical: align local LastWriteTime to remote commit time.
+    # Default off — three-way sync no longer needs mtime; enabling costs 1x git-log per file.
+    AlignMtimeWhenEqual = $false
     SyncDeletions = $false
     # Used only for commits made by this script (does not change your global git config)
     GitUserName   = 'analyst2004lx'
@@ -742,11 +743,56 @@ try {
         return $null
     }
 
+    # Match `git hash-object` under core.autocrlf (text: CRLF->LF before hashing).
+    $autoCrlfRes = Invoke-Git -GitArgs @('config', '--get', 'core.autocrlf') -AllowFail
+    $script:HashNormalizeCrlf = $false
+    if ($autoCrlfRes.ExitCode -eq 0) {
+        $v = (($autoCrlfRes.Output -split "`n" | Select-Object -First 1).Trim().ToLowerInvariant())
+        if ($v -eq 'true' -or $v -eq 'input') { $script:HashNormalizeCrlf = $true }
+    }
+    Write-Log ('Local blob hash: in-process SHA1 (normalizeCrlf={0})' -f $script:HashNormalizeCrlf)
+
+    function ConvertTo-GitHashBytes([byte[]]$Bytes) {
+        if (-not $script:HashNormalizeCrlf -or $null -eq $Bytes -or $Bytes.Length -eq 0) { return $Bytes }
+        # Skip binary-ish buffers (NUL in first 8KiB) — same idea as git's text heuristic.
+        $probe = [Math]::Min($Bytes.Length, 8192)
+        for ($i = 0; $i -lt $probe; $i++) {
+            if ($Bytes[$i] -eq 0) { return $Bytes }
+        }
+        $out = New-Object System.Collections.Generic.List[byte] ($Bytes.Length)
+        for ($i = 0; $i -lt $Bytes.Length; $i++) {
+            if ($Bytes[$i] -eq 13 -and ($i + 1) -lt $Bytes.Length -and $Bytes[$i + 1] -eq 10) {
+                [void]$out.Add(10)
+                $i++
+            } else {
+                [void]$out.Add($Bytes[$i])
+            }
+        }
+        return $out.ToArray()
+    }
+
     function Get-LocalFileHash([string]$AbsPath) {
+        # Git blob SHA-1 in-process (same as `git hash-object` with autocrlf).
         if (-not (Test-Path -LiteralPath $AbsPath -PathType Leaf)) { return $null }
-        $r = Invoke-Git -GitArgs @('hash-object', '--', $AbsPath) -AllowFail
-        if ($r.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($r.Output)) { return $null }
-        return ($r.Output -split "`n" | Select-Object -First 1).Trim().ToLowerInvariant()
+        $sha = $null
+        try {
+            $raw = [System.IO.File]::ReadAllBytes($AbsPath)
+            $bytes = ConvertTo-GitHashBytes -Bytes $raw
+            $sha = [System.Security.Cryptography.SHA1]::Create()
+            $header = [System.Text.Encoding]::ASCII.GetBytes(('blob {0}' -f $bytes.Length))
+            $payload = New-Object byte[] ($header.Length + 1 + $bytes.Length)
+            [Array]::Copy($header, 0, $payload, 0, $header.Length)
+            $payload[$header.Length] = 0
+            if ($bytes.Length -gt 0) {
+                [Array]::Copy($bytes, 0, $payload, $header.Length + 1, $bytes.Length)
+            }
+            $hash = $sha.ComputeHash($payload)
+            return ([BitConverter]::ToString($hash) -replace '-', '').ToLowerInvariant()
+        } catch {
+            return $null
+        } finally {
+            if ($sha) { $sha.Dispose() }
+        }
     }
 
     function Read-LsTreeHashMap([string]$TreeIsh) {
