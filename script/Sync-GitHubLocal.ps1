@@ -721,6 +721,8 @@ try {
     }
 
     function Get-RemoteCommitTime([string]$RelPath) {
+        # IMPORTANT: only call this for paths that exist in the *current* remote tree.
+        # `git log -- path` also matches deleted history and must not be used for existence.
         $r = Invoke-Git -GitArgs @('log', '-1', '--format=%ct', $remoteRef, '--', $RelPath) -AllowFail
         if ($r.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($r.Output)) { return $null }
         $line = ($r.Output -split "`n" | Select-Object -First 1).Trim()
@@ -812,6 +814,10 @@ try {
     Write-Log ('Local file count (filtered): {0}' -f $localFiles.Count)
 
     $all = @($remoteFiles + $localFiles.ToArray() | Select-Object -Unique)
+    # O(1) membership for "does this path exist on current origin/main tip?"
+    $remoteTreeSet = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
+    foreach ($rf in $remoteFiles) { [void]$remoteTreeSet.Add($rf) }
+
     $pullCount = 0
     $pushCandidates = New-Object 'System.Collections.Generic.List[string]'
     $skipCount = 0
@@ -829,8 +835,16 @@ try {
 
             $localPath = Get-LocalPathFromRel -RelGit $rel
             $localExists = Test-Path -LiteralPath $localPath -PathType Leaf
-            $remoteTime = Get-RemoteCommitTime $rel
-            $remoteExists = $null -ne $remoteTime
+            # Existence = in current remote tree (ls-tree), NOT "ever appeared in git log"
+            $remoteExists = $remoteTreeSet.Contains($rel)
+            $remoteTime = $null
+            if ($remoteExists) {
+                $remoteTime = Get-RemoteCommitTime $rel
+                if ($null -eq $remoteTime) {
+                    # Tree has the blob but log failed; fall back so compare still works
+                    $remoteTime = [int64]([DateTimeOffset]::UtcNow.ToUnixTimeSeconds())
+                }
+            }
             $localTime = if ($localExists) { Get-FileUnixTime $localPath } else { $null }
 
             if ($remoteExists -and -not $localExists) {
