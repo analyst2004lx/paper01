@@ -12,9 +12,12 @@
 
 </Ignore>
 
+
+
 <Delete>
 # Entire obsolete
 paper01_new
+paper01/figures
 汇报稿_应用场景介绍.files
 cursor_document_conversion_request.md
 cursor_export_transaction.md
@@ -22,37 +25,41 @@ cursor_export_transaction.md
 汇报稿_应用场景介绍+路线考虑.docx
 汇报稿_应用场景介绍.html
 md_to_word_html.py
+Convert_MD_to_Html(open_and_save_in_Word).py
 
 # Recently deleted unused graphics / scripts under paper01_new/fig
-paper01_new/fig/fig_comprehensive_comparison.pdf
-paper01_new/fig/fig_comprehensive_comparison.py
-paper01_new/fig/fig_convergence.pdf
-paper01_new/fig/fig_convergence_time_axis.pdf
-paper01_new/fig/fig_convergence_time_axis.png
-paper01_new/fig/fig_convergence_time_axis.py
-paper01_new/fig/fig_grid_sensitivity.pdf
-paper01_new/fig/fig_grid_sensitivity.py
-paper01_new/fig/fig_hdp_arc.pdf
-paper01_new/fig/fig_hdp_architecture.pdf
-paper01_new/fig/fig_hdp_architecture.py
-paper01_new/fig/fig_hdp_architecture_new.pdf
-paper01_new/fig/fig_hdp_architecture_new.py
-paper01_new/fig/fig_hdp_methodology.py
-paper01_new/fig/fig_intro_problem.pdf
-paper01_new/fig/fig_intro_problem.py
-paper01_new/fig/fig_intro_problem_new.pdf
-paper01_new/fig/fig_intro_problem_new.py
-paper01_new/fig/fig_intro_solution.pdf
-paper01_new/fig/fig_intro_solution.py
-paper01_new/fig/fig_motivating_example.pdf
-paper01_new/fig/fig_motivating_example.py
-paper01_new/fig/fig_robustness.pdf
-paper01_new/fig/fig_robustness.py
-paper01_new/fig/fig_scalability.pdf
-paper01_new/fig/fig_scalability.py
-paper01_new/fig/fig_workspace_layout.png
+paper01/fig/fig_ablation.pdf
+paper01/fig/fig_ablation.png
+paper01/fig/fig_ablation.py
+paper01/fig/fig_comprehensive_comparison.pdf
+paper01/fig/fig_comprehensive_comparison.py
+paper01/fig/fig_convergence.pdf
+paper01/fig/fig_convergence_time_axis.pdf
+paper01/fig/fig_convergence_time_axis.png
+paper01/fig/fig_convergence_time_axis.py
+paper01/fig/fig_grid_sensitivity.pdf
+paper01/fig/fig_grid_sensitivity.py
+paper01/fig/fig_hdp_arc.pdf
+paper01/fig/fig_hdp_architecture.pdf
+paper01/fig/fig_hdp_architecture.py
+paper01/fig/fig_hdp_architecture_new.pdf
+paper01/fig/fig_hdp_architecture_new.py
+paper01/fig/fig_hdp_methodology.py
+paper01/fig/fig_heterogeneity.pdf
+paper01/fig/fig_heterogeneity.png
+paper01/fig/fig_heterogeneity.py
+paper01/fig/fig_intro_problem.pdf
+paper01/fig/fig_intro_problem.py
+paper01/fig/fig_intro_problem_new.pdf
+paper01/fig/fig_intro_problem_new.py
+paper01/fig/fig_intro_solution.pdf
+paper01/fig/fig_intro_solution.py
+paper01/fig/fig_motivating_example.pdf
+paper01/fig/fig_motivating_example.py
+paper01/fig/fig_robustness.pdf
+paper01/fig/fig_robustness.py
+paper01/fig/fig_scalability.pdf
+paper01/fig/fig_scalability.py
+paper01/fig/fig_workspace_layout.png
 
-# Recently deleted unused scripts
-clbs/tools/_an_gen100.py
-clbs/tools/diagnose_ls.py
 </Delete>

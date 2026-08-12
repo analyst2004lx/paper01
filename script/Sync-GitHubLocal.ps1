@@ -1,7 +1,15 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-  Daytime sync between a GitHub repo and a local folder (newer wins).
+  Daytime sync between a GitHub repo and a local folder.
+
+.DESCRIPTION
+  Compare content hashes first. If equal, skip.
+  If different, three-way vs merge-base:
+    - only local changed  -> push
+    - only remote changed -> pull/overwrite local
+    - both changed        -> conflict (skip; log path)
+  Falls back to hash+mtime when merge-base is unavailable.
 
 .NOTES
   Requires Git for Windows and push permission to the repo.
@@ -28,6 +36,11 @@ $Config = @{
     LogDir        = (Join-Path $PSScriptRoot 'logs')
     CommitPrefix  = 'auto-sync'
     NewerSkewSec  = 5
+    # When merge-base missing and hashes differ: 'Mtime' = who-newer wins; 'Conflict' = skip
+    DivergedFallback = 'Mtime'
+    # On content-identical: align local LastWriteTime to remote commit time.
+    # Default off — three-way sync no longer needs mtime; enabling costs 1x git-log per file.
+    AlignMtimeWhenEqual = $false
     SyncDeletions = $false
     # Used only for commits made by this script (does not change your global git config)
     GitUserName   = 'analyst2004lx'
@@ -53,6 +66,10 @@ $Config = @{
     # If a path is in both, Ignore wins. Missing paths are skipped.
     IgnoreDeleteListFile = (Join-Path $PSScriptRoot 'Sync-GitHub-Ignore_and_Delete.txt')
     GitPath       = ''
+    # GitHub fetch often stalls on flaky links: retry + hard timeout (seconds)
+    FetchRetries     = 5
+    FetchRetrySec    = 6
+    FetchTimeoutSec  = 90
 }
 # =============================================================
 
@@ -145,7 +162,9 @@ function Invoke-Git {
         [switch]$AllowFail,
         [switch]$WithCommitIdentity,
         # Print "still running" every N seconds (0 = silent wait)
-        [int]$HeartbeatSec = 15
+        [int]$HeartbeatSec = 15,
+        # Kill git if it exceeds this many seconds (0 = wait forever)
+        [int]$TimeoutSec = 0
     )
     $git = $script:GitExe
 
@@ -159,20 +178,17 @@ function Invoke-Git {
     $cmdLabel = ($GitArgs -join ' ')
     Write-Log ('git {0}  (cwd={1})' -f $cmdLabel, $WorkDir) -Level DEBUG
 
-    # UTF-8 capture via temp files + heartbeat (avoids stdout/stderr pipe deadlock)
-    $outFile = [System.IO.Path]::GetTempFileName()
-    $errFile = [System.IO.Path]::GetTempFileName()
     $argList = @()
     foreach ($a in $allArgs) { $argList += [string]$a }
 
     $code = 1
     $stdout = ''
     $stderr = ''
+    $timedOut = $false
     $proc = $null
     try {
         $psi = New-Object System.Diagnostics.ProcessStartInfo
         $psi.FileName = $git
-        # ArgumentList not available on older ProcessStartInfo in all hosts; build safely
         $psi.Arguments = (($argList | ForEach-Object {
             $a = $_
             if ($a -match '[\s"]') { '"' + ($a -replace '"', '\"') + '"' } else { $a }
@@ -197,15 +213,38 @@ function Invoke-Git {
         $lastBeat = 0
         while (-not $proc.HasExited) {
             Start-Sleep -Milliseconds 500
+            if ($TimeoutSec -gt 0 -and $sw.Elapsed.TotalSeconds -ge $TimeoutSec) {
+                $timedOut = $true
+                Write-Log ('TIMEOUT after {0}s — killing git: {1}' -f $TimeoutSec, $cmdLabel) -Level WARN
+                try { $proc.Kill() } catch {}
+                # Also kill helper (git-remote-https) that may keep the pack download hung
+                Get-Process -Name 'git-remote-https','git' -ErrorAction SilentlyContinue |
+                    Where-Object { $_.Id -ne $PID } |
+                    ForEach-Object {
+                        try {
+                            # Only kill children started around this command window
+                            if ($_.StartTime -ge $sw.StartTime.AddSeconds(-2)) {
+                                Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
+                            }
+                        } catch {}
+                    }
+                break
+            }
             if ($HeartbeatSec -gt 0 -and $sw.Elapsed.TotalSeconds -ge ($lastBeat + $HeartbeatSec)) {
                 $lastBeat = [int]$sw.Elapsed.TotalSeconds
                 Write-Log ('... git still running ({0}s): {1}' -f $lastBeat, $cmdLabel) -Level INFO
             }
         }
-        # Ensure async readers finish
-        $stdout = $outTask.Result
-        $stderr = $errTask.Result
-        $code = $proc.ExitCode
+        try { $stdout = $outTask.Result } catch { $stdout = '' }
+        try { $stderr = $errTask.Result } catch { $stderr = '' }
+        if ($timedOut) {
+            $code = 124
+            if ([string]::IsNullOrWhiteSpace($stderr)) {
+                $stderr = ("Timed out after {0}s (likely stalled GitHub download)." -f $TimeoutSec)
+            }
+        } else {
+            $code = $proc.ExitCode
+        }
         if ($sw.Elapsed.TotalSeconds -ge 3) {
             Write-Log ('git finished in {0:N1}s (exit={1}): {2}' -f $sw.Elapsed.TotalSeconds, $code, $cmdLabel) -Level DEBUG
         }
@@ -214,7 +253,6 @@ function Invoke-Git {
         $stderr = $_.Exception.Message
     } finally {
         if ($null -ne $proc) { $proc.Dispose() }
-        Remove-Item -LiteralPath $outFile, $errFile -Force -ErrorAction SilentlyContinue
     }
 
     $parts = @()
@@ -576,10 +614,44 @@ try {
     }
 
     Write-Log 'fetch origin...'
-    $fetch = Invoke-Git -GitArgs @('fetch', 'origin', '--prune') -AllowFail
-    if ($fetch.ExitCode -ne 0) {
-        Write-Log ('fetch failed. Check network/credentials.{0}{1}' -f [Environment]::NewLine, $fetch.Output) -Level ERROR
-        Write-Log 'Hints: 1) Open WireGuard/VPN then retry  2) Browser open github.com  3) Test: git ls-remote origin  4) Configure git http.proxy if needed' -Level ERROR
+    # HTTP/1.1 + larger buffer helps when HTTPS pack download stalls mid-way
+    $httpHardening = @(
+        '-c', 'http.version=HTTP/1.1'
+        '-c', 'http.postBuffer=524288000'
+        '-c', 'http.lowSpeedLimit=1000'
+        '-c', 'http.lowSpeedTime=60'
+    )
+    $fetchOk = $false
+    $fetch = $null
+    $maxTry = [Math]::Max(1, [int]$Config.FetchRetries)
+    $fetchTimeout = [Math]::Max(30, [int]$Config.FetchTimeoutSec)
+    for ($i = 1; $i -le $maxTry; $i++) {
+        Write-Log ('fetch attempt {0}/{1} (timeout={2}s)...' -f $i, $maxTry, $fetchTimeout)
+        if ($i -le 2) {
+            $fetchArgs = $httpHardening + @('fetch', 'origin', '--prune')
+        } else {
+            Write-Log 'Using shallow fetch fallback (depth=1; smaller download)...' -Level WARN
+            $fetchArgs = $httpHardening + @('fetch', 'origin', '--prune', '--depth', '1')
+        }
+        $fetch = Invoke-Git -GitArgs $fetchArgs -AllowFail -HeartbeatSec 15 -TimeoutSec $fetchTimeout
+        if ($fetch.ExitCode -eq 0) {
+            $fetchOk = $true
+            Write-Log ('fetch ok on attempt {0}' -f $i)
+            break
+        }
+        Write-Log ('fetch attempt {0} failed (exit={1}): {2}' -f $i, $fetch.ExitCode, $fetch.Output) -Level WARN
+        # Clear locks left by killed/stalled fetch
+        Clear-StaleGitLocks -RepoRoot $Config.LocalFolder -MinAgeSec 0
+        if ($i -lt $maxTry) {
+            $wait = [int]$Config.FetchRetrySec * $i
+            Write-Log ('Wait {0}s then retry (WireGuard/VPN recommended)...' -f $wait) -Level WARN
+            Start-Sleep -Seconds $wait
+        }
+    }
+    if (-not $fetchOk) {
+        Write-Log ('fetch failed after {0} attempts.{1}{2}' -f $maxTry, [Environment]::NewLine, $fetch.Output) -Level ERROR
+        Write-Log 'This usually means GitHub pack download stalled (not a script logic bug).' -Level ERROR
+        Write-Log 'Hints: 1) Connect WireGuard/VPN  2) Open https://github.com  3) git -c http.version=HTTP/1.1 ls-remote origin  4) Retry later' -Level ERROR
         exit 2
     }
 
@@ -662,6 +734,8 @@ try {
     }
 
     function Get-RemoteCommitTime([string]$RelPath) {
+        # IMPORTANT: only call this for paths that exist in the *current* remote tree.
+        # `git log -- path` also matches deleted history and must not be used for existence.
         $r = Invoke-Git -GitArgs @('log', '-1', '--format=%ct', $remoteRef, '--', $RelPath) -AllowFail
         if ($r.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($r.Output)) { return $null }
         $line = ($r.Output -split "`n" | Select-Object -First 1).Trim()
@@ -669,15 +743,107 @@ try {
         return $null
     }
 
-    $ls = Invoke-Git -GitArgs @('ls-tree', '-r', '--name-only', $remoteRef)
-    $remoteFilesAll = @()
-    if (-not [string]::IsNullOrWhiteSpace($ls.Output)) {
-        $remoteFilesAll = @(
-            $ls.Output -split "`r?`n" |
-            ForEach-Object { ConvertFrom-GitQuotedPath $_ } |
-            Where-Object { $_ }
-        )
+    # Match `git hash-object` under core.autocrlf (text: CRLF->LF before hashing).
+    $autoCrlfRes = Invoke-Git -GitArgs @('config', '--get', 'core.autocrlf') -AllowFail
+    $script:HashNormalizeCrlf = $false
+    if ($autoCrlfRes.ExitCode -eq 0) {
+        $v = (($autoCrlfRes.Output -split "`n" | Select-Object -First 1).Trim().ToLowerInvariant())
+        if ($v -eq 'true' -or $v -eq 'input') { $script:HashNormalizeCrlf = $true }
     }
+    Write-Log ('Local blob hash: in-process SHA1 (normalizeCrlf={0})' -f $script:HashNormalizeCrlf)
+
+    function ConvertTo-GitHashBytes([byte[]]$Bytes) {
+        # NOTE: always return via `, $array` so single-byte results are not unrolled by PowerShell.
+        if ($null -eq $Bytes) { return , [byte[]]@() }
+        if (-not $script:HashNormalizeCrlf -or $Bytes.Length -eq 0) { return , $Bytes }
+        # Skip binary-ish buffers (NUL in first 8KiB) — same idea as git's text heuristic.
+        $probe = [Math]::Min($Bytes.Length, 8192)
+        for ($i = 0; $i -lt $probe; $i++) {
+            if ($Bytes[$i] -eq 0) { return , $Bytes }
+        }
+        $out = New-Object 'System.Collections.Generic.List[byte]' ($Bytes.Length)
+        for ($i = 0; $i -lt $Bytes.Length; $i++) {
+            if ($Bytes[$i] -eq 13 -and ($i + 1) -lt $Bytes.Length -and $Bytes[$i + 1] -eq 10) {
+                [void]$out.Add([byte]10)
+                $i++
+            } else {
+                [void]$out.Add($Bytes[$i])
+            }
+        }
+        return , $out.ToArray()
+    }
+
+    function Get-LocalFileHash([string]$AbsPath) {
+        # Git blob SHA-1 in-process (same as `git hash-object` with autocrlf).
+        if (-not (Test-Path -LiteralPath $AbsPath -PathType Leaf)) { return $null }
+        $sha = $null
+        try {
+            $raw = [System.IO.File]::ReadAllBytes($AbsPath)
+            $bytes = ConvertTo-GitHashBytes -Bytes $raw
+            if ($null -eq $bytes) { $bytes = [byte[]]@() }
+            $sha = [System.Security.Cryptography.SHA1]::Create()
+            $header = [System.Text.Encoding]::ASCII.GetBytes(('blob {0}' -f $bytes.Length))
+            $payload = New-Object byte[] ($header.Length + 1 + $bytes.Length)
+            [Array]::Copy($header, 0, $payload, 0, $header.Length)
+            $payload[$header.Length] = 0
+            if ($bytes.Length -gt 0) {
+                [Array]::Copy($bytes, 0, $payload, $header.Length + 1, $bytes.Length)
+            }
+            $hash = $sha.ComputeHash($payload)
+            return ([BitConverter]::ToString($hash) -replace '-', '').ToLowerInvariant()
+        } catch {
+            return $null
+        } finally {
+            if ($sha) { $sha.Dispose() }
+        }
+    }
+
+    function Read-LsTreeHashMap([string]$TreeIsh) {
+        # path -> blob sha1 from `git ls-tree -r <tree>`
+        $map = @{}
+        $r = Invoke-Git -GitArgs @('ls-tree', '-r', $TreeIsh) -AllowFail
+        if ($r.ExitCode -ne 0 -or [string]::IsNullOrWhiteSpace($r.Output)) { return $map }
+        foreach ($line in ($r.Output -split "`r?`n")) {
+            if ([string]::IsNullOrWhiteSpace($line)) { continue }
+            # e.g. "100644 blob abcdef...\tpath/with spaces"
+            if ($line -match '^\S+\s+blob\s+([0-9a-f]{40})\t(.+)$') {
+                $p = ConvertFrom-GitQuotedPath $Matches[2]
+                if ($p) { $map[$p] = $Matches[1].ToLowerInvariant() }
+            }
+        }
+        return $map
+    }
+
+    function Set-LocalMtimeFromRemote([string]$AbsPath, [string]$RelPath) {
+        if (-not $Config.AlignMtimeWhenEqual) { return }
+        if (-not (Test-Path -LiteralPath $AbsPath -PathType Leaf)) { return }
+        $ct = Get-RemoteCommitTime $RelPath
+        if ($null -eq $ct) { return }
+        try {
+            $dto = [DateTimeOffset]::FromUnixTimeSeconds($ct).LocalDateTime
+            (Get-Item -LiteralPath $AbsPath).LastWriteTime = $dto
+        } catch {}
+    }
+
+    # merge-base for three-way decisions
+    $mbRes = Invoke-Git -GitArgs @('merge-base', 'HEAD', $remoteRef) -AllowFail
+    $mergeBase = $null
+    if ($mbRes.ExitCode -eq 0 -and -not [string]::IsNullOrWhiteSpace($mbRes.Output)) {
+        $mergeBase = ($mbRes.Output -split "`n" | Select-Object -First 1).Trim()
+        Write-Log ('Three-way merge-base: {0}' -f $mergeBase)
+    } else {
+        Write-Log ('No merge-base with {0}; will use hash+mtime fallback when content differs.' -f $remoteRef) -Level WARN
+    }
+
+    Write-Log 'Loading remote tree hashes...'
+    $remoteHashMap = Read-LsTreeHashMap -TreeIsh $remoteRef
+    $baseHashMap = @{}
+    if ($mergeBase) {
+        Write-Log 'Loading merge-base tree hashes...'
+        $baseHashMap = Read-LsTreeHashMap -TreeIsh $mergeBase
+    }
+
+    $remoteFilesAll = @($remoteHashMap.Keys)
     Write-Log ('Remote file count (raw): {0}' -f $remoteFilesAll.Count)
 
     # Apply <Delete> list: remove matching paths from GitHub index (Ignore wins).
@@ -714,10 +880,12 @@ try {
                     if ($rm.ExitCode -eq 0) {
                         $deleteRmCount++
                         Write-Log ('git rm --cached: {0}' -f $relDel)
+                        if ($remoteHashMap.ContainsKey($relDel)) { $remoteHashMap.Remove($relDel) }
                     } else {
                         Write-Log ('git rm failed: {0} :: {1}' -f $relDel, $rm.Output) -Level WARN
                     }
                 }
+                $remoteFilesAll = @($remoteHashMap.Keys)
             }
         } else {
             Write-Log 'No <Delete> targets present on GitHub (nothing to remove).'
@@ -753,10 +921,17 @@ try {
     Write-Log ('Local file count (filtered): {0}' -f $localFiles.Count)
 
     $all = @($remoteFiles + $localFiles.ToArray() | Select-Object -Unique)
+    # O(1) membership for "does this path exist on current origin/main tip?"
+    $remoteTreeSet = New-Object 'System.Collections.Generic.HashSet[string]' ([StringComparer]::Ordinal)
+    foreach ($rf in $remoteFiles) { [void]$remoteTreeSet.Add($rf) }
+
     $pullCount = 0
     $pushCandidates = New-Object 'System.Collections.Generic.List[string]'
     $skipCount = 0
+    $equalCount = 0
+    $conflictCount = 0
     $errorCount = 0
+    $conflictPaths = New-Object 'System.Collections.Generic.List[string]'
 
     foreach ($relRaw in $all) {
         try {
@@ -770,19 +945,13 @@ try {
 
             $localPath = Get-LocalPathFromRel -RelGit $rel
             $localExists = Test-Path -LiteralPath $localPath -PathType Leaf
-            $remoteTime = Get-RemoteCommitTime $rel
-            $remoteExists = $null -ne $remoteTime
-            $localTime = if ($localExists) { Get-FileUnixTime $localPath } else { $null }
+            # Existence = in current remote tree (ls-tree), NOT "ever appeared in git log"
+            $remoteExists = $remoteTreeSet.Contains($rel)
 
             if ($remoteExists -and -not $localExists) {
                 Write-Log ('Remote only -> pull: {0}' -f $rel)
                 Invoke-Git -GitArgs @('checkout', $remoteRef, '--', $rel) | Out-Null
-                try {
-                    if (Test-Path -LiteralPath $localPath -PathType Leaf) {
-                        $dto = [DateTimeOffset]::FromUnixTimeSeconds($remoteTime).LocalDateTime
-                        (Get-Item -LiteralPath $localPath).LastWriteTime = $dto
-                    }
-                } catch {}
+                Set-LocalMtimeFromRemote -AbsPath $localPath -RelPath $rel
                 $pullCount++
                 continue
             }
@@ -793,22 +962,98 @@ try {
                 continue
             }
 
-            if ($localExists -and $remoteExists) {
-                $skew = [int64]$Config.NewerSkewSec
-                if ($localTime -gt ($remoteTime + $skew)) {
-                    Write-Log ('Local newer -> push: {0} (local={1}, remote={2})' -f $rel, $localTime, $remoteTime)
-                    [void]$pushCandidates.Add($rel)
-                } elseif ($remoteTime -gt ($localTime + $skew)) {
-                    Write-Log ('Remote newer -> overwrite local: {0} (local={1}, remote={2})' -f $rel, $localTime, $remoteTime)
-                    Invoke-Git -GitArgs @('checkout', $remoteRef, '--', $rel) | Out-Null
-                    try {
-                        $dto = [DateTimeOffset]::FromUnixTimeSeconds($remoteTime).LocalDateTime
-                        (Get-Item -LiteralPath $localPath).LastWriteTime = $dto
-                    } catch {}
-                    $pullCount++
+            if (-not ($localExists -and $remoteExists)) { continue }
+
+            # --- both sides have the file: content hash first, then three-way ---
+            $localHash = Get-LocalFileHash -AbsPath $localPath
+            $remoteHash = $remoteHashMap[$rel]
+            if ([string]::IsNullOrWhiteSpace($localHash) -or [string]::IsNullOrWhiteSpace($remoteHash)) {
+                Write-Log ('Hash unavailable, skip: {0}' -f $rel) -Level WARN
+                $errorCount++
+                continue
+            }
+
+            if ($localHash -eq $remoteHash) {
+                $equalCount++
+                Set-LocalMtimeFromRemote -AbsPath $localPath -RelPath $rel
+                Write-Log ('Content equal, skip: {0}' -f $rel) -Level DEBUG
+                continue
+            }
+
+            # Content differs
+            $baseHash = $null
+            if ($mergeBase -and $baseHashMap.ContainsKey($rel)) {
+                $baseHash = $baseHashMap[$rel]
+            }
+
+            $decision = $null  # 'push' | 'pull' | 'conflict' | 'mtime-local' | 'mtime-remote'
+
+            if ($mergeBase) {
+                $localChanged = $true
+                $remoteChanged = $true
+                if ($null -ne $baseHash) {
+                    $localChanged = ($localHash -ne $baseHash)
+                    $remoteChanged = ($remoteHash -ne $baseHash)
                 } else {
+                    # Not in merge-base: both sides "added" (or re-added) after base
+                    $localChanged = $true
+                    $remoteChanged = $true
+                }
+
+                if ($localChanged -and -not $remoteChanged) {
+                    $decision = 'push'
+                } elseif ($remoteChanged -and -not $localChanged) {
+                    $decision = 'pull'
+                } elseif ($localChanged -and $remoteChanged) {
+                    $decision = 'conflict'
+                } else {
+                    # neither changed vs base but tips differ — should be rare; treat as conflict
+                    $decision = 'conflict'
+                }
+            } else {
+                # No merge-base: hash differs -> mtime or conflict per config
+                if ($Config.DivergedFallback -eq 'Conflict') {
+                    $decision = 'conflict'
+                } else {
+                    $localTime = Get-FileUnixTime $localPath
+                    $remoteTime = Get-RemoteCommitTime $rel
+                    $skew = [int64]$Config.NewerSkewSec
+                    if ($null -ne $localTime -and $null -ne $remoteTime) {
+                        if ($localTime -gt ($remoteTime + $skew)) { $decision = 'mtime-local' }
+                        elseif ($remoteTime -gt ($localTime + $skew)) { $decision = 'mtime-remote' }
+                        else { $decision = 'conflict' }
+                    } else {
+                        $decision = 'conflict'
+                    }
+                }
+            }
+
+            switch ($decision) {
+                'push' {
+                    Write-Log ('Only local changed -> push: {0}' -f $rel)
+                    [void]$pushCandidates.Add($rel)
+                }
+                'pull' {
+                    Write-Log ('Only remote changed -> pull: {0}' -f $rel)
+                    Invoke-Git -GitArgs @('checkout', $remoteRef, '--', $rel) | Out-Null
+                    Set-LocalMtimeFromRemote -AbsPath $localPath -RelPath $rel
+                    $pullCount++
+                }
+                'mtime-local' {
+                    Write-Log ('Hash differs (no merge-base), local mtime newer -> push: {0}' -f $rel) -Level WARN
+                    [void]$pushCandidates.Add($rel)
+                }
+                'mtime-remote' {
+                    Write-Log ('Hash differs (no merge-base), remote newer -> pull: {0}' -f $rel) -Level WARN
+                    Invoke-Git -GitArgs @('checkout', $remoteRef, '--', $rel) | Out-Null
+                    Set-LocalMtimeFromRemote -AbsPath $localPath -RelPath $rel
+                    $pullCount++
+                }
+                default {
+                    $conflictCount++
+                    [void]$conflictPaths.Add($rel)
+                    Write-Log ('CONFLICT (both changed) -> skip: {0}' -f $rel) -Level WARN
                     $skipCount++
-                    Write-Log ('Close timestamps, skip: {0}' -f $rel) -Level DEBUG
                 }
             }
         } catch {
@@ -822,12 +1067,22 @@ try {
         Write-Log 'SyncDeletions=true: full bidirectional delete is limited in this version; overwrite sync only.' -Level WARN
     }
 
-    Write-Log ('Stats: pull/overwrite={0}, pushCandidates={1}, skipped~={2}, pathErrors={3}, listDeletes={4}' -f `
-        $pullCount, $pushCandidates.Count, $skipCount, $errorCount, $deleteRmCount)
+    if ($conflictPaths.Count -gt 0) {
+        $conflictFile = Join-Path $script:LogDir ('conflicts-{0}.txt' -f (Get-Date -Format 'yyyyMMdd-HHmmss'))
+        try {
+            $conflictPaths | Set-Content -LiteralPath $conflictFile -Encoding UTF8
+            Write-Log ('Conflict list written: {0}' -f $conflictFile) -Level WARN
+        } catch {
+            Write-Log ('Could not write conflict list: {0}' -f $_.Exception.Message) -Level WARN
+        }
+    }
+
+    Write-Log ('Stats: pull={0}, pushCandidates={1}, contentEqual={2}, conflicts={3}, skipped={4}, pathErrors={5}, listDeletes={6}' -f `
+        $pullCount, $pushCandidates.Count, $equalCount, $conflictCount, $skipCount, $errorCount, $deleteRmCount)
 
     $pushOk = $true
     if ($pushCandidates.Count -gt 0) {
-        Write-Log ('Staging {0} local-newer/local-only files...' -f $pushCandidates.Count)
+        Write-Log ('Staging {0} local-changed/local-only files...' -f $pushCandidates.Count)
         $added = 0
         $addFail = 0
         foreach ($rel in $pushCandidates) {

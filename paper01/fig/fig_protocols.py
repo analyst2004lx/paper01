@@ -22,6 +22,18 @@ m = S.meta_protocols()
 order = ["twostage", "nofeedback", "opendispatch", "nostagger"]
 order = [b for b in order if b in set(df["baseline"])]
 
+# Rows are named by the mechanism each one isolates, not by the configuration it
+# is measured against.  The paper now speaks of mechanisms rather than of a chain
+# of arms, and a figure that keeps the older arm names would read as if it came
+# from a different study -- which, being an earlier batch, is exactly the
+# impression to avoid creating by accident.
+ROW_LABEL = {
+    "twostage": "the closed loop\nas a whole",
+    "nofeedback": "both decision-level\nmechanisms",
+    "opendispatch": "reservation-aware\ndispatch",
+    "nostagger": "the staggering\noperator",
+}
+
 PROTO = [
     ("wallclock", "equal wall-clock time", "#08519c", "o"),
     ("generations", "equal generations", "#d95f02", "s"),
@@ -51,8 +63,8 @@ for row, base in enumerate(order):
 
 ax.axvline(0.0, color="0.25", lw=0.9, zorder=1)
 ax.set_yticks(range(len(order)))
-ax.set_yticklabels([S.BASELINE_LABEL.get(b, b).replace("vs ", "")
-                    for b in reversed(order)])
+ax.set_yticklabels([ROW_LABEL.get(b, S.BASELINE_LABEL.get(b, b))
+                    for b in reversed(order)], fontsize=7)
 ax.set_ylim(-0.6, len(order) - 0.4)
 ax.set_xlabel(r"relative change in $C_{\max}$ "
               r"(positive $=$ full closed loop better)")
@@ -67,7 +79,8 @@ lo, hi = ax.get_xlim()
 ax.set_xlim(lo - 0.02, hi + 0.03)
 
 fig.text(0.0, -0.02,
-         "%d instances, %d seeds, paired Wilcoxon; * p<0.05, ** p<0.01, *** p<0.001"
+         "%d instances, %d seeds, paired Wilcoxon; * p<0.05, ** p<0.01, "
+         "*** p<0.001.  Batch measured before the cost reduction of Sec. 4.5."
          % (len(m.get("instances", [])), m.get("num_seeds", 0)),
          fontsize=6.6, color="0.35")
 fig.subplots_adjust(bottom=0.26)

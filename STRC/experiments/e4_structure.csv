@@ -1,0 +1,11 @@
+case,tag,seed,lu_min_cut,far_group_cut,cut_corridors,blocked_on_cut,makespan,n_reservations,n_hits,n_seeds,n_closure,closure_frac,corridor
+A funnel,funnel,42,1,1,e1|v0,True,78.0,181,16,16,46,0.2541,e1|v0
+A funnel,funnel,7,1,1,e1|v0,True,77.0,171,15,15,31,0.1813,e1|v0
+A funnel,funnel,2024,1,1,e1|v0,True,84.0,179,17,17,53,0.2961,e1|v0
+A funnel,funnel,99,1,1,e1|v0,True,82.0,181,16,16,56,0.3094,e1|v0
+A funnel,funnel,123,1,1,e1|v0,True,68.0,178,16,16,32,0.1798,e1|v0
+A high,high,42,2,1,e1|v0|e2|v0,True,79.0,173,12,12,27,0.1561,e1|v0
+A high,high,7,2,1,e1|v0|e2|v0,True,74.0,176,13,13,36,0.2045,e1|v0
+A high,high,2024,2,1,e1|v0|e2|v0,True,87.0,191,14,14,71,0.3717,e1|v0
+A high,high,99,2,1,e1|v0|e2|v0,True,85.0,179,14,14,41,0.2291,e1|v0
+A high,high,123,2,1,e1|v0|e2|v0,True,68.0,174,15,15,32,0.1839,e1|v0

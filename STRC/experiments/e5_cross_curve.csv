@@ -1,0 +1,9 @@
+instance,seed,corridor,t_now,budget_sec,arm_r0,R0_feasible,R0_makespan,R0_res_changed,R0_res_total,R0_wall_ms,R0_gens,R0_decodes,R2_feasible,R2_makespan,R2_res_changed,R2_res_total,R2_wall_ms,R2_release,makespan_winner,stability_winner,ref_makespan
+congested_8x4x4,42,c1|c2,62.65,0.05,R0+,True,237.0,86,86,219.28,1,40,True,301.0,52,86,2.1,53,R0+,R2,179.0
+congested_8x4x4,42,c1|c2,62.65,0.2,R0+,True,237.0,86,86,222.98,1,40,True,301.0,52,86,2.1,53,R0+,R2,179.0
+congested_8x4x4,42,c1|c2,62.65,1.0,R0+,True,194.0,86,86,1135.35,6,240,True,301.0,52,86,2.1,53,R0+,R2,179.0
+congested_8x4x4,42,c1|c2,62.65,5.0,R0+,True,96.0,86,86,5050.75,36,1440,True,301.0,52,86,2.1,53,R0+,R2,179.0
+congested_8x4x4,7,c1|c2,63.0,0.05,R0+,True,235.0,91,91,210.15,1,40,True,303.0,55,91,2.01,51,R0+,R2,180.0
+congested_8x4x4,7,c1|c2,63.0,0.2,R0+,True,235.0,91,91,207.59,1,40,True,303.0,55,91,2.01,51,R0+,R2,180.0
+congested_8x4x4,7,c1|c2,63.0,1.0,R0+,True,210.0,90,91,1119.67,6,240,True,303.0,55,91,2.01,51,R0+,R2,180.0
+congested_8x4x4,7,c1|c2,63.0,5.0,R0+,True,98.0,91,91,5024.43,31,1240,True,303.0,55,91,2.01,51,R0+,R2,180.0

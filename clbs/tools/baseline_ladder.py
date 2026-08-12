@@ -136,10 +136,15 @@ def main() -> int:
               + f" {(avg['B2'] - avg['B0']) / avg['B0']:>7.2%}")
     print("-" * 96)
 
+    # 各配对的相对增益在此累积,供末尾的互补性小结引用,避免把结论写死在字符串里:
+    # 换一批数据就该跟着变的数字,不能靠人记得去改。
+    gains: Dict[str, float] = {}
+
     def paired(a: str, b: str, note: str) -> None:
         xa = [v for c in cases for v in mk[a][c["name"]]]
         xb = [v for c in cases for v in mk[b][c["name"]]]
         rel = sum((x - y) / y for x, y in zip(xb, xa)) / len(xa)
+        gains[f"{a}->{b}"] = rel
         w = wilcoxon_signed_rank(xb, xa)
         win = sum(1 for x, y in zip(xb, xa) if x < y - 1e-9)
         print(f"  {a:>6s} → {b:<4s} {rel:>+8.2%}  {win:>2d} 胜 / "
@@ -173,10 +178,19 @@ def main() -> int:
     print("        实测它亦强于'执行时按规则重新派车'(B0宽松),故取它为主报口径——")
     print("        对基线取强者,是我们这边该承担的举证责任。")
     print("  B0+ = 排产冻结、车辆指派感知冲突,对应 2023 那篇的两阶段结构。")
-    print("  闭环与试探派车是**互补品**而非替代品:试探派车在开环下仅值约 -2.8% 且不显著,")
-    print("  在闭环内部才达 -5.8% 且显著;闭环的价值同样在试探派车下更大。端到端 -18.5%")
-    print("  超过两者独立时的乘积 -15.2%,即存在正交互。拥堵感知的派车装在一张对拥堵")
-    print("  视而不见的排程上几乎不值钱——这一点须在论文里明写,它把两个贡献焊成一体。")
+
+    # 互补性小结:两个机制若彼此独立,端到端应恰为二者的乘积复合;实测超出即为正交互。
+    # 这几个数一律现算,不写死——上一版这里印的是初跑的固定数字,补跑之后就与表自相矛盾。
+    g_open, g_loop = gains.get("B0->B0+", 0.0), gains.get("B1->B2", 0.0)
+    g_rule, g_e2e = gains.get("B0->B1", 0.0), gains.get("B0->B2", 0.0)
+    indep = (1.0 + g_rule) * (1.0 + g_open) - 1.0
+    print(f"  闭环与试探派车是**互补品**而非替代品:试探派车在开环下仅值 {g_open:+.2%},")
+    print(f"  在闭环内部达 {g_loop:+.2%};闭环的价值同样在试探派车下更大。端到端 {g_e2e:+.2%}")
+    print(f"  与两者独立时的乘积 {indep:+.2%} 相比,"
+          + ("超出前者,存在正交互。" if g_e2e < indep - 1e-9 else
+             "**并未超出**,正交互的论断在这批数据上不成立,论文第 5.4 节须改写!"))
+    print("  拥堵感知的派车装在一张对拥堵视而不见的排程上几乎不值钱——这一点须在论文里")
+    print("  明写,它把两个贡献焊成一体。")
 
     # 逐种子原始数据落盘,便于事后换口径重算而不必重跑
     out_csv = os.path.join(os.path.dirname(__file__), "..", "output",

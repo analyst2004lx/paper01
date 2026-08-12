@@ -1,0 +1,8 @@
+{
+  "type": "corridor_block",
+  "t_now": 40,
+  "corridor": "c1|c2",
+  "t_start": 40,
+  "t_end": 200,
+  "note": "B-class seed for E1: task-graph T_direct should be empty"
+}

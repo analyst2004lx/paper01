@@ -1,84 +1,131 @@
-"""Figure: what the two-stage baseline is actually optimizing.
+# -*- coding: utf-8 -*-
+"""Convergence on a shared wall-clock axis (Section 5.3).
 
-The dashed curve is the two-stage method's own objective, computed against a
-constant travel matrix.  It descends smoothly and reaches a value well below
-anything the closed loop attains -- and it is not achievable: the marker at the
-end of the budget is the same solution's makespan once its routes are made
-conflict-free.  The vertical distance between the two is the cost of planning
-against a travel time that the vehicles do not honour.
+The one thing this figure exists to show is that the open-loop curve is not
+comparable to the others, because it descends towards a value that cannot be
+achieved.  Drawing all arms on a common time axis and then marking where the
+open-loop plan actually lands when executed makes the gap visible in one
+glance; plotting against generations instead would hide it twice over, once by
+equalizing a budget the arms spend at wildly different rates, and once by
+letting the surrogate curve be read as if it were an objective.
 
-Solid curves are true makespans throughout, since those arms route every
-candidate conflict-free before scoring it.  The horizontal axis is wall-clock
-time rather than generations, because the arms differ by an order of magnitude
-in the cost of a single evaluation.
+So: solid lines are realized makespan throughout (B1, B2), the dashed line is a
+*surrogate* the search believes (B0's open-loop objective), and the cross marks
+what that plan costs once executed.  The vertical distance between the dashed
+line's end and the cross is the optimism, and it is the whole argument for
+evaluating inside the loop.
+
+Output stem is fig_convergence_closedloop, which is what paper.tex includes.
+Data: clbs/output/ladder_convergence.csv and ladder_cost.csv (tools/ladder_diag.py).
+
+Run: py paper01/fig/fig_convergence.py [case name]
 """
 from __future__ import annotations
 
-import numpy as np
+import os
+import sys
 
-import _style as S
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-ARMS = ["twostage", "nofeedback", "closed"]
-LABEL = {"twostage": "two-stage (surrogate objective)",
-         "nofeedback": "evaluation loop only",
-         "closed": "full closed loop"}
+from _style import COL, by, load_output, mean, plt, save  # noqa: E402
+
+HINT = "py -u -m tools.ladder_diag --budget 90 --seeds 42,7,2024"
+# B0 and B0+ share one open-loop search, so their curve is one curve; showing it
+# twice would suggest two searches were run.  B0+ therefore appears only as a
+# second landing point on the same dashed line.
+CURVES = [("B1", "#6baed6", "-", "B1  closed loop, rule dispatch"),
+          ("B2", "#08519c", "-", "B2  closed loop, probing dispatch")]
+LANDING = [("B0", "#525252", "X", "B0  executed"),
+           ("B0+", "#969696", "P", "B0$^+$  executed")]
 
 
-def step_median(sub, grid):
-    """Median best-so-far across seeds on a common time grid.
+def step_envelope(rows):
+    """Mean best-so-far across seeds on a common grid.
 
-    A plain mean over seeds would be dominated by whichever seed happened to
-    run one more generation near the end of the budget.
+    Each seed logs one point per generation, so the raw time stamps do not line
+    up between seeds.  We hold each seed's best-so-far constant between its own
+    log points (which is what best-so-far means) and average on a shared grid,
+    rather than averaging the k-th generation of each seed -- the latter would
+    silently compare different instants.
     """
-    curves = []
-    for _, s in sub.groupby("seed"):
-        s = s.sort_values("sec")
-        curves.append(np.interp(grid, s["sec"].values, s["best_makespan"].values,
-                                left=np.nan,
-                                right=s["best_makespan"].values[-1]))
-    stack = np.vstack(curves)
-    # 预算起点到某档第一代完成之间没有任何数据,该列整列为 NaN。直接 nanmedian
-    # 会对空切片告警,而那些时刻本就不该画线:留成 NaN 让 matplotlib 断开即可。
-    out = np.full(stack.shape[1], np.nan)
-    have = ~np.all(np.isnan(stack), axis=0)
-    out[have] = np.nanmedian(stack[:, have], axis=0)
+    per_seed = by(rows, "seed")
+    tmax = max(r["t_sec"] for r in rows)
+    grid = [tmax * i / 120.0 for i in range(1, 121)]
+    out = []
+    for t in grid:
+        vals = []
+        for _k, rs in per_seed.items():
+            rs = sorted(rs, key=lambda r: r["t_sec"])
+            cur = None
+            for r in rs:
+                if r["t_sec"] <= t:
+                    cur = r["best"]
+                else:
+                    break
+            if cur is not None:
+                vals.append(cur)
+        if vals:
+            out.append((t, mean(vals)))
     return out
 
 
-def main():
-    df = S.load("convergence.csv")
-    budget = float(df["budget_sec"].iloc[0])
-    grid = np.linspace(0.0, budget, 160)
+def main() -> None:
+    want = sys.argv[1] if len(sys.argv) > 1 else None
+    conv = load_output("ladder_convergence.csv", HINT)
+    cost = load_output("ladder_cost.csv", HINT)
+    cases = sorted({r["case"] for r in conv})
+    case = want or ("A funnel" if "A funnel" in cases else cases[0])
+    if case not in cases:
+        raise SystemExit("算例 %r 不在收敛数据里,可选:%s" % (case, cases))
+    conv = [r for r in conv if r["case"] == case]
+    cost = [r for r in cost if r["case"] == case]
+    seeds = sorted({r["seed"] for r in conv})
 
-    fig, ax = S.plt.subplots(figsize=(S.COL * 1.45, 2.25))
-    for arm in ARMS:
-        sub = df[df["arm"] == arm]
-        if not len(sub):
+    fig, ax = plt.subplots(figsize=(COL, 2.5))
+
+    # The surrogate curve: B0's open-loop search, believing a constant matrix.
+    sur = step_envelope([r for r in conv if r["arm"] == "B0"])
+    if sur:
+        ax.plot([t for t, _ in sur], [v for _, v in sur], ls=(0, (3, 1.6)),
+                color="#525252", linewidth=1.2,
+                label="B0  open-loop objective\n(surrogate, not achievable)")
+
+    for arm, colour, ls, label in CURVES:
+        pts = step_envelope([r for r in conv if r["arm"] == arm])
+        if pts:
+            ax.plot([t for t, _ in pts], [v for _, v in pts], ls,
+                    color=colour, label=label)
+
+    # Where the open-loop plans actually land once executed.
+    tmax = max(r["t_sec"] for r in conv)
+    for arm, colour, marker, label in LANDING:
+        vals = [r["makespan"] for r in cost if r["arm"] == arm]
+        if not vals:
             continue
-        surrogate = bool(sub["surrogate"].iloc[0])
-        y = step_median(sub, grid)
-        ax.plot(grid, y, ls="--" if surrogate else "-",
-                color=S.ARM_COLOR[arm], label=LABEL.get(arm, arm),
-                alpha=0.95 if not surrogate else 0.8)
-        if surrogate:
-            true = sub.groupby("seed")["final_true_makespan"].first().median()
-            ax.plot([budget], [true], marker="*", ms=9, ls="none",
-                    color=S.ARM_COLOR[arm], zorder=5)
-            ax.annotate("after conflict-free\nrouting is applied",
-                        xy=(budget, true), xytext=(-6, 6),
-                        textcoords="offset points", ha="right",
-                        fontsize=6.3, color=S.ARM_COLOR[arm])
-            ax.plot([budget, budget], [y[-1], true], color=S.ARM_COLOR[arm],
-                    lw=0.8, ls=":", alpha=0.8)
+        y = mean(vals)
+        ax.plot([tmax], [y], marker, color=colour, markersize=7,
+                markeredgecolor="white", markeredgewidth=0.7, clip_on=False,
+                zorder=6, label=label)
+
+    # Name the optimism, with an arrow, so no one has to measure it off the axis.
+    b0 = mean([r["makespan"] for r in cost if r["arm"] == "B0"])
+    if sur and b0 == b0:
+        end = sur[-1][1]
+        ax.annotate("", xy=(tmax, b0), xytext=(tmax, end),
+                    arrowprops=dict(arrowstyle="<->", color="#d62728",
+                                    linewidth=0.9, shrinkA=0, shrinkB=0))
+        ax.text(tmax * 0.985, 0.5 * (b0 + end),
+                "optimism\n%+.1f%%" % (100.0 * (b0 - end) / end),
+                ha="right", va="center", fontsize=6.6, color="#d62728",
+                fontweight="bold")
 
     ax.set_xlabel("wall-clock time (s)")
-    ax.set_ylabel(r"best $C_{\max}$ so far")
-    ax.set_xlim(0, budget * 1.02)
-    ax.legend(loc="upper right", handletextpad=0.6)
-    n = df["seed"].nunique()
-    ax.set_title("median over %d seeds, one instance (high congestion)" % n,
-                 fontsize=6.8, color="0.3", pad=4)
-    S.save(fig, "fig_convergence_closedloop")
+    ax.set_ylabel("best $C_{\\max}$ so far")
+    ax.set_title("%s,  %d seeds" % (case, len(seeds)), fontsize=8.5)
+    ax.legend(loc="upper right", fontsize=6.3, handlelength=1.9,
+              labelspacing=0.35)
+    fig.tight_layout()
+    save(fig, "fig_convergence_closedloop")
 
 
 if __name__ == "__main__":
