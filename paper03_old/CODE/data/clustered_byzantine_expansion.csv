@@ -1,0 +1,4 @@
+scenario,count,messages
+avoiding_cluster,62,27
+triggering_expansion,0,55
+expansion_failures,38,1770

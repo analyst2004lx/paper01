@@ -1,0 +1,5 @@
+attack_type,simulation_detection,testbed_detection
+replay,100.0,100.0
+spatial_forgery,98.3,97.3
+conflicting_msgs,94.7,93.7
+cross_domain,98.7,97.7

@@ -1,0 +1,5 @@
+protocol,messages_mean,messages_std,latency_mean,latency_std,success_rate
+pbft,11940.0,0.0,2244.7869777679443,0.0,1.0
+pbft_local,9.0,0.0,1.9977092742919922,0.0,1.0
+ctg_lc,42.0,0.0,125.78129768371582,0.0,1.0
+ctg_lc_global,4380.0,0.0,823.4970569610596,0.0,1.0

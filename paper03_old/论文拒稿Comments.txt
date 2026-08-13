@@ -1,0 +1,102 @@
+Associate Editor
+Comments to the Author:
+The Reviewers recognize the practical relevance of localized consensus domains and appreciate the validation through both network emulation and hardware testbeds. However, several very significant issues were raised and some of the main points are here reported for the sake of authors' convenience:
+
+- The classification and formal properties of the consensus mechanism are ambiguous in the current form. Reviewers note that the lack of essential protocol mechanisms makes the algorithm resemble reliable broadcast rather than true consensus, while the network model relies on conflicting environmental definitions.
+
+- The comparative evaluation is narrow since benchmarking exclusively against a global consensus baseline is unrealistic. Reviewers note that a more practical baseline using scheduling nodes is needed to properly isolate communication savings. The evaluation should also expand to include other localized or subset-based paradigms.
+
+- Internal contradictions exist between the theoretical design constraints and the experimental implementation. The testbed configuration does not match the theoretical replica requirements stated for Byzantine fault tolerance. The authors must resolve this discrepancy and better formalize their assumptions regarding failure detection accuracy.
+
+- The claims regarding large-scale deployment are overstated, as physical hardware testing is limited and large-scale scenarios rely entirely on emulation. Furthermore, the introductory sections are repetitive, and the motivation lacks practical examples of mitigating real-world failures.
+
+In summary, the Reviewers believe that the theoretical consistency and evaluation realism have issues.
+
+Reviewer's comments to author:
+
+Reviewer: 1
+
+Comments to the Authors
+
+Please comment on Major Contribution of the Paper, Organization and Style, Technical Accuracy, Presentation and Adequacy of Citations (List possible additions if needed).
+This paper investigates scalable Byzantine fault-tolerant consensus for industrial cyber-physical systems and proposes a spatiotemporal localized consensus framework with adaptive trust management. The topic is interesting and practically relevant. However, the current version still contains several issues regarding theoretical consistency, experimental fairness, and the scope of validation that should be carefully addressed before the paper can be considered for publication. My comments are as follows.
+1. The Related Work section is necessary, but its boundary with the Introduction is not clearly managed. Several limitations of PBFT and existing BFT protocols are repeatedly discussed in both sections, leading to redundancy.
+2. The article appears to be internally inconsistent regarding the number of scheduler replicas and their Byzantine fault-tolerance capability. In the theoretical design, the authors state that $m \ge 4$ scheduler replicas are required to tolerate one Byzantine scheduler, which is consistent with the standard PBFT requirement of $3f + 1$. However, in the experimental setup and physical testbed, the authors use $m=3$ scheduler replicas while still claiming tolerance of one Byzantine scheduler. Under standard PBFT assumptions, $m=3$ cannot guarantee Byzantine fault tolerance for $f_s=1$. The authors should clarify whether the scheduler layer in the experiments is Byzantine-fault-tolerant, crash-fault-tolerant, or merely replicated without full PBFT guarantees.
+3. The comparison with PBFT, Raft, and HotStuff is not fully fair, since these baselines use global consensus while STLC uses localized task-coupled domains. Therefore, the reported communication reduction is largely expected from the reduced number of participating nodes. The authors should include more comparable baselines under similar localized consensus settings to better demonstrate the specific advantages of the proposed STLC framework.
+4. The paper provides valuable validation through both CORE emulation and a physical testbed. However, the physical testbed is relatively small in scale, while the evaluation of large-scale scenarios with 100+ agents mainly relies on emulation. Therefore, the authors are encouraged to clarify the scope of the hardware validation and moderate the claims regarding practical large-scale industrial deployment, or provide further discussion on how the proposed method would scale in real-world deployments.
+
+Reviewer: 2
+
+Comments to the Authors
+
+Please comment on Major Contribution of the Paper, Organization and Style, Technical Accuracy, Presentation and Adequacy of Citations (List possible additions if needed).
+The paper presents an adoption of a Byzantine agreement protocol to industrial cyber-physical systems.   The paper introduces a method to restrict consensus execution to a subset of agents in the system that are interested in a particular task.
+Additionally, the paper introduces mechanisms to detect domain-specific failures and to extend consensus participants and adjust voting weights accordingly.
+
+The paper is well written and understandable.   The main problem with this paper is that it compares its solution, both in presentation and in evaluation, with an unrealistic one. Additionally, the paper has flaws in motivation and related work. I therefore suggest rejecting this paper.
+
+Baseline:
+  The paper compares their solution, in which only agents participating in a task participate in consensus, with an alternative in which all agents jointly participate in a global consensus.   However, the system also contains some scheduling nodes. A more realistic baseline would be all agents acting as clients to a consensus run on a few scheduling nodes.   This baseline also offers the main advantage of reduced communication load, as fewer participants are involved.
+
+Agreement:  
+The properties of the proposed consensus algorithm are unclear. Indeed, the proposed algorithm implements reliable broadcast rather than consensus, since a view change is missing.
+Also in the problem definition (section III) it is unclear whether a task requires only a single decision, or whether multiple consecutive decisions are needed for a single task.  Also, the problem does not specify any requirements on the order in which values are decided.
+Additionally, the authors should mention whether the order of decisions for different tasks should be consistent for agents participating in different tasks.
+
+Motivation:  
+While the authors make a good case for considering Byzantine failures, they fail to give examples of how Byzantine fault-tolerant agreement can solve these problems.   If agents can report incorrect positions, crashes may occur, even if all correct agents agree on the possibly incorrect position of the faulty agent.  The motivation should contain a more detailed example of what information agents may agree on.
+
+Related work:  
+There is a significant body of related work that the authors should compare against.  
+- BFT with a selected subset of the participants, e.g., Algorand and others
+- Sharded BFT systems  
+- BFT with voting weights, e.g., weighted byzantine quorum systems.
+
+
+Failure detection:  
+The authors present methods to detect domain-specific failures. Such detection and the use of this information in the system are valuable contributions.   However, the author should be clearer on their assumptions regarding failure detection, especially:  
+- Completeness. Can an agent behave faulty, but never be detected?
+- Accuracy: Do you assume that timestamps and positions reported by correct agents are always correct? If not, how do you ensure safety despite this?
+
+
+Other comments:  
+- The network model is unclear. The model described in III A. is a synchronous model (with a known upper bound on message delivery), but you call it asynchronous in IIIA and partially synchronous in P2. Liveness.  
+- It is unclear how you enforce that the extension and weight adjustment happens consistent among replicas. If it does not happen consistently, there should be an argument/proof that this does not violate safety.
+- You seem to assume that Byzantine faults occur at random agents. If yes, this should be clearly stated. I think, in this domain, it is highly likely that Byzantine failures occur concentrated on a single task, either because this task is of interest to the attacker, or because robot arms with vulnerable software are concentrated in one area of the factory, or similar. 
+
+
+审稿人认可本地化共识域的实用价值，并对通过网络仿真和硬件测试平台进行的验证表示赞赏。然而，存在若干极为重要的问题，为方便作者，此处仅列出部分要点：
+-当前形式下，共识机制的分类及形式属性存在模糊性。审稿人指出，缺乏关键协议机制导致该算法更接近可靠广播而非真正共识，而网络模型则依赖于相互冲突的环境定义。
+-对比评估范围有限，因仅以全球共识基线为参照并不切实际。审稿人指出，需采用基于调度节点的更实用基线以准确量化通信节省效果。评估还应扩展至其他本地化或子集范式。
+-理论设计约束与实验实现之间存在内在矛盾。测试平台配置与拜占庭容错理论所规定的副本要求不符。作者必须解决这一差异，并更严谨地阐述其关于故障检测准确性的假设。
+-关于大规模部署的声明被夸大了，因为物理硬件测试有限，而大规模场景完全依赖仿真。此外，引言部分存在重复，且动机缺乏缓解现实故障的实际案例。
+综上所述，审稿人认为，理论一致性和评价现实性存在问题。
+
+
+审稿人对作者的意见：
+审稿人：1
+致作者的意见
+请对论文的主要贡献、组织结构与风格、技术准确性、展示方式以及引文的充分性（如有需要，请列出可能的补充项）进行评论。
+本文研究了工业信息物理系统中的可扩展拜占庭容错共识问题，并提出了一种具有自适应信任管理的时空局部共识框架。该主题有趣且具有实际意义。然而，当前版本在理论一致性、实验公平性和验证范围方面仍存在若干问题，在考虑发表该论文之前，应仔细解决这些问题。我的意见如下。
+1. “相关工作”部分是必要的，但其与“引言”部分的界限划分不明确。PBFT和现有BFT协议的几个局限性在两个部分中都被反复讨论，导致了内容重复。
+2. 该文章在调度器副本的数量及其拜占庭容错能力方面似乎存在内部不一致。在理论设计中，作者指出需要$m \ge 4$个调度器副本来容忍一个拜占庭调度器，这与标准PBFT（Practical Byzantine Fault Tolerance，实用拜占庭容错）要求的$3f + 1$一致。然而，在实验设置和物理测试平台中，作者使用了$m=3$个调度器副本，同时仍声称能够容忍一个拜占庭调度器。在标准PBFT假设下，$m=3$无法保证$f_s=1$情况下的拜占庭容错。作者应澄清实验中的调度器层是具有拜占庭容错性、崩溃容错性，还是仅仅进行了复制而没有完全的PBFT保证。
+3. 与PBFT、Raft和HotStuff的比较并不完全公平，因为这些基线算法使用的是全局共识，而STLC使用的是局部任务耦合域。因此，所报告的通信减少很大程度上是由于参与节点数量的减少。作者应在类似的局部共识设置下纳入更多可比的基线算法，以更好地展示所提出的STLC框架的具体优势。
+4. 本文通过CORE仿真和物理测试平台提供了有价值的验证。然而，物理测试平台的规模相对较小，而针对包含100多个代理的大规模场景的评估主要依赖于仿真。因此，建议作者明确硬件验证的范围，并适当调整关于实际大规模工业部署的声明，或者进一步讨论所提出的方法在实际部署中的扩展性。
+
+
+审稿人：2
+致作者的意见
+请对论文的主要贡献、组织与风格、技术准确性、展示方式以及引文的充分性进行评论（如有需要，可列出可能的补充内容）。
+本文提出了一种将拜占庭共识协议应用于工业信息物理系统的方法。本文介绍了一种方法，该方法将共识执行限制在系统中对特定任务感兴趣的代理子集中。
+此外，本文还介绍了检测特定领域故障的机制，以及扩展共识参与者并相应调整投票权重的机制。
+这篇论文写得很好，也容易理解。然而，这篇论文的主要问题在于，无论是在表述上还是在评估上，它都将自己的解决方案与一个不切实际的方案进行了比较。此外，这篇论文在动机和相关工作方面也存在缺陷。因此，我建议拒绝这篇论文。
+基线：本文将他们的解决方案（即只有参与任务的代理参与共识）与另一种方案（即所有代理共同参与全局共识）进行了比较。然而，该系统还包含一些调度节点。更现实的基线是所有代理作为客户端，在几个调度节点上运行共识。这一基线的主要优点是减少了通信负载，因为涉及的参与者更少。
+协议：所提出的共识算法的特性尚不明确。实际上，由于缺少视图变更，该算法实现的是可靠广播而非共识。
+同样在问题定义（第三节）中，不清楚一项任务是只需要一个决策，还是需要连续做出多个决策。此外，该问题未对决策值的顺序提出任何要求。
+此外，作者应说明，参与不同任务的智能体在处理不同任务时的决策顺序是否应保持一致。
+动机：虽然作者们为考虑拜占庭故障提供了有力的论据，但他们未能举例说明拜占庭容错协议如何解决这些问题。如果代理能够报告错误的位置，即使所有正确的代理都同意故障代理可能错误的位置，也可能会发生崩溃。动机部分应包含更详细的示例，说明代理可能就哪些信息达成一致。
+相关工作：作者应与大量相关工作进行比较。- 与选定参与者子集的拜占庭容错（BFT），例如Algorand等- 分片拜占庭容错系统- 带投票权重的拜占庭容错，例如按权重加权的拜占庭仲裁系统。
+故障检测：作者提出了检测特定领域故障的方法。这种检测以及在系统中利用这些信息都是宝贵的贡献。然而，作者应更明确地阐述他们对故障检测的假设，尤其是：- 完整性。一个代理是否可能存在故障行为，但从未被检测到？
+- 准确性：你是否认为正确代理报告的时间戳和位置总是正确的？如果不是，那么在这种情况下，你如何确保安全性？
+其他评论：- 网络模型不明确。在III A中描述的模型是同步模型（消息传递有已知的上限），但在IIIA中你称之为异步模型，在P2中又称为部分同步模型。- 不清楚你是如何确保扩展和权重调整在副本之间一致进行的。如果它们不一致进行，那么应该有一个论点/证明来说明这不会违反安全性。
+- 你似乎认为拜占庭故障会随机发生在各个代理上。如果是这样，应该明确指出这一点。我认为，在这个领域，拜占庭故障极有可能集中发生在单一任务上，要么是因为攻击者对这项任务感兴趣，要么是因为软件易受攻击的机器人手臂集中在工厂的某个区域，或者类似的原因。 
