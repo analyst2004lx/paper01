@@ -19,10 +19,11 @@ py main.py                                        # 默认数据集 + 默认攻�
 py main.py --dataset ft_trier --attack A2 --rho 0.15
 py main.py --arm ablation                         # 递进消融链
 py main.py --arm baselines --alpha 0.01           # 对照方法
-py -m pytest tests\test_all.py -v                 # T1–T39 断言
+py -m pytest tests\test_all.py -v                 # T1–T40 断言
 py -m tools.model_diag                            # M1/M2/M5 与探针脚本对数
 py -m tools.timing_diag                           # M4 时长模型与 rho* 逐组表
 py -m tools.fusion_diag                           # M6 通道依赖、校准架构、稀释代价
+py -m tools.a8_fisher                             # A8 红队:Fisher 合成路去留
 py -m tools.online_diag                           # 时间序效度、逐消息时延、抗投毒
 py -m tools.coverage_matrix                       # 攻击 x 通道覆盖矩阵(实测)
 py -m tools.struct_diag                           # M3 状态粒度(负面结果)
@@ -51,7 +52,7 @@ slid/
     sequential.py      #   M7 CUSUM / e 过程
     conformal.py       #   M8 随机化 conformal 校准
     detector.py        #   M0/M9 在线回放流水线 + 抗投毒的门控更新
-    attacks.py         #   红队注入器 A1–A7
+    attacks.py         #   红队注入器 A1–A6 与 A8;A7 不实现即不报告
     baselines.py       #   基线 B1–B5、统一判决口径 judge、六档消融
     metrics.py         #   指标与报告口径
   tools/               # 实验驱动与诊断
@@ -61,6 +62,7 @@ slid/
     model_diag.py      #   M1/M2/M5 落地后与 database/ 探针脚本对数
     timing_diag.py     #   M4 的四个聚合尺度、森林判定、逐组 rho*
     mbdf_undetectable.py #  构造性枚举原方法的恒不可检测状态集
+    a8_fisher.py       #   A8 红队:Fisher 合成路去留
     export_experiments.py # 汇总成论文级 CSV
   input/               # 输入
     ft_trier/          #   Trier Fischertechnik IoT 日志(主数据集)
@@ -70,7 +72,7 @@ slid/
   output/              # 每次运行的原始结果,按 tag 分目录
   experiments/         # 导出的论文级 CSV
   tests/
-    test_all.py        #   T1–T39,每条对应一个已量化的事实
+    test_all.py        #   T1–T40,每条对应一个已量化的事实
 ```
 
 ## 三、二十五条不可回退的设计约束
@@ -93,15 +95,14 @@ slid/
    （0.073 对 0.049）；随机化之后两种划分只差 0.053 对 0.046。
    Mondrian 逐组校准**不能**解决组间异质性：alpha=0.01 时 95% 的组不可达。
 
-4. **合成前必须逐通道校准，合成用 Fisher，且必须与逐通道判决并行。**
-   这条整个推翻了原先的"不能用 Fisher"——三通道相关实测只有 -0.030 /
-   -0.008 / +0.056，独立性成立。原论证把"同属横向证据"误当成"统计相关"。
-   顺序不可换：8.1% 的良性活动时序 p 值触到数值下界（其中 89.8% 是训练折
-   已见路线的真·失配，非冷启动），先合成会在 min 型统计量底部形成原子，
-   Simes/minp 的 FPR 卡在 0.074 且对 alpha 不敏感。合成也不免费——只碰
-   时序的抢跑下仅时序通道 0.110、任何合成只有 0.042~0.060；多通道攻击下
-   Fisher 0.413、Simes 0.187、仅时序 0.108。故两路并行、alpha 预算二分。
-   换产线要用 `fusion.dependence()` 重测，超过 0.15 退回 Simes。
+4. **合成前必须逐通道校准；Fisher 的独立性前提成立，但合成路不进生产配置。**
+   三通道相关实测只有 -0.030 / -0.008 / +0.056，独立性成立，原"不能用
+   Fisher"的论证把"同属横向证据"误当成"统计相关"。顺序仍不可换：
+   8.1% 的良性活动时序 p 值触到数值下界，先合成会在 min 型统计量底部
+   形成原子，Simes/minp 的 FPR 卡在 0.074。**但生产路径不跑合成**：
+   score-level misplace 下 Fisher 0.413 对仅时序 0.108，红队 A8 实现同一
+   攻击后，E1 口径下加合成路对 A8 是 -0.04、对 A1-A6 再 -0.04（结论
+   五十三）。M6 代码留作诊断，换产线仍用 `fusion.dependence()` 复测。
 
 5. **时序通道对抢跑攻击取单侧，理由是稳定而非功效。** 30 个折划分种子下
    单侧 DR 0.872 ± 0.026、双侧 0.722 ± 0.165，平均优势只有 +0.150
@@ -219,8 +220,10 @@ slid/
     马尔可夫与参考模型可行性约束的工业生产调度层注入攻击检测」，两个方法词
     与本表选中的三条路一一对应（参考模型↔硬层 F、时序↔时序通道、马尔可夫↔
     结构通道）；
-    (b) Fisher 合成针对的多通道攻击不在 A1-A6 里，要么补 A8 要么撤掉合成
-    路；(c) 路线协变量的 sigma 收益只有 3%（0.236->0.228），此前的
+    (b) Fisher 合成针对的多通道攻击已按红队口径实现为 A8：可实现、确
+    实跨通道、硬层不触发，但加合成路在序贯口径下 A8 Δ=-0.04、A1-A6
+    Δ=-0.04，**正式撤掉**（结论五十三，`tools/a8_fisher.py`）；
+    (c) 路线协变量的 sigma 收益只有 3%（0.236->0.228），此前的
     0.355->0.116 只在多路线搬运分组内成立——**全部 29 个分组里具名路线
     合计 34 条，多数分组单一路线、条件化是空操作**。
 
@@ -236,8 +239,8 @@ slid/
     q=1.0 把最有用的一路剔掉；互锁的原子被随机化 p 值摊成连续区间，读成
     0.0017 而非 3.15%。天花板是**通道语义**，必须逐通道声明——而随机化
     p 值（规则 5 要求的那一步）恰恰会抹掉这个信息，两条规则之间存在张力。
-    最终配置 = 硬层 + 时序 + 结构：互锁由良性判据剔除、合成由威胁模型声明
-    剔除，两条理由都不依赖测试折。T37。
+    最终配置 = 硬层 + 时序 + 结构：互锁由良性判据剔除、合成由 A8 红队
+    实测剔除，两条理由都不依赖测试折。T37。
 
 21. **互锁通道的功效上界 = 攻击触发率 × min(1, alpha/q_部署)，q 必须取
     部署流实测值。** 训练折 q=0.0054 会让人以为天花板不生效，而测试流实测
@@ -291,9 +294,9 @@ slid/
 | M3 `structural` case 级转移模型 | 已实现 | T7–T11 |
 | M7 `sequential` CUSUM / e 过程 | 已实现 | T15, T16 |
 | M8 `conformal` 随机化校准 | 已实现 | T9–T14 |
-| M6 `fusion` Fisher 合成与依赖检查 | 已实现 | T17–T21 |
+| M6 `fusion` Fisher 合成与依赖检查 | 已实现，**不进生产配置** | T17–T21, T40 |
 | M0/M9 `detector` 在线回放流水线 | 已实现 | T24, T25 |
-| `attacks` 注入器 | A1–A6 已实现，A7 不实现即不报告 | T22, T23, T27 |
+| `attacks` 注入器 | A1–A6 与 A8 已实现，A7 不实现即不报告 | T22, T23, T27, T40 |
 | `metrics` 报告口径 | 已实现 | — |
 | `tools/mbdf_undetectable` | 已实现 | 原方法不可检测集(T-a) |
 | `tools/coverage_matrix` | 已实现 | 攻击 x 通道矩阵，24 格实测 |

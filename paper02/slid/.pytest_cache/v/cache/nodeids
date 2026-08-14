@@ -44,5 +44,6 @@
   "tests/test_all.py::test_t6c_manual_station_is_marked_uninformative",
   "tests/test_all.py::test_t7_device_level_chain_is_vacuous",
   "tests/test_all.py::test_t8_case_level_chain_support",
-  "tests/test_all.py::test_t9_randomised_conformal_calibrated"
+  "tests/test_all.py::test_t9_randomised_conformal_calibrated",
+  "tests/test_all.py::test_t40_a8_is_legal_nonmodal_and_rushed"
 ]

@@ -117,7 +117,8 @@ def evaluate(det, ref, target, alpha, weights, seeds, rho, rate):
     for fam in FAMILIES:
         per = []
         for s in range(seeds):
-            stream, lab = attack_stream(target, fam, s, rate, rho, det.struct)
+            stream, lab = attack_stream(target, fam, s, rate, rho, det.struct,
+                                        det.model)
             rb = rows(det, baselines.order_stream(ref),
                       np.random.default_rng(900 + s))
             ra = rows(det, stream, np.random.default_rng(300 + s))

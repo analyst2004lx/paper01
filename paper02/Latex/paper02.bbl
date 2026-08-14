@@ -1,0 +1,225 @@
+%%% -*-BibTeX-*-
+%%% Do NOT edit. File created by BibTeX with style
+%%% ACM-Reference-Format-Journals [18-Jan-2012].
+
+\begin{thebibliography}{15}
+
+%%% ====================================================================
+%%% NOTE TO THE USER: you can override these defaults by providing
+%%% customized versions of any of these macros before the \bibliography
+%%% command.  Each of them MUST provide its own final punctuation,
+%%% except for \shownote{} and \showURL{}.  The latter two
+%%% do not use final punctuation, in order to avoid confusing it with
+%%% the Web address.
+%%%
+%%% To suppress output of a particular field, define its macro to expand
+%%% to an empty string, or better, \unskip, like this:
+%%%
+%%% \newcommand{\showURL}[1]{\unskip}   % LaTeX syntax
+%%%
+%%% \def \showURL #1{\unskip}           % plain TeX syntax
+%%%
+%%% ====================================================================
+
+\ifx \showCODEN    \undefined \def \showCODEN     #1{\unskip}     \fi
+\ifx \showISBNx    \undefined \def \showISBNx     #1{\unskip}     \fi
+\ifx \showISBNxiii \undefined \def \showISBNxiii  #1{\unskip}     \fi
+\ifx \showISSN     \undefined \def \showISSN      #1{\unskip}     \fi
+\ifx \showLCCN     \undefined \def \showLCCN      #1{\unskip}     \fi
+\ifx \shownote     \undefined \def \shownote      #1{#1}          \fi
+\ifx \showarticletitle \undefined \def \showarticletitle #1{#1}   \fi
+\ifx \showURL      \undefined \def \showURL       {\relax}        \fi
+% The following commands are used for tagged output and should be
+% invisible to TeX
+\providecommand\bibfield[2]{#2}
+\providecommand\bibinfo[2]{#2}
+\providecommand\natexlab[1]{#1}
+\providecommand\showeprint[2][]{arXiv:#2}
+
+\bibitem[Adriansyah et~al\mbox{.}(2011)]%
+        {adriansyah2011conformance}
+\bibfield{author}{\bibinfo{person}{Arya Adriansyah},
+  \bibinfo{person}{Boudewijn~F. van Dongen}, {and} \bibinfo{person}{Wil M.~P.
+  van~der Aalst}.} \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Conformance Checking Using Cost-Based Fitness
+  Analysis}. In \bibinfo{booktitle}{\emph{Proceedings of the 15th {IEEE}
+  International Enterprise Distributed Object Computing Conference (EDOC)}}.
+  \bibinfo{pages}{55--64}.
+\newblock
+
+
+\bibitem[Barsha and Hubballi(2024)]%
+        {barsha2024dcta}
+\bibfield{author}{\bibinfo{person}{Nisha~Kumari Barsha} {and}
+  \bibinfo{person}{Neminath Hubballi}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Anomaly Detection in {SCADA} Systems: A State
+  Transition Modeling}.
+\newblock \bibinfo{journal}{\emph{{IEEE} Transactions on Network and Service
+  Management}} \bibinfo{volume}{21}, \bibinfo{number}{3}
+  (\bibinfo{year}{2024}), \bibinfo{pages}{3511--3521}.
+\newblock
+\href{https://doi.org/10.1109/TNSM.2024.3373881}{doi:\nolinkurl{10.1109/TNSM.2024.3373881}}
+
+
+\bibitem[Goh et~al\mbox{.}(2017)]%
+        {goh2016swat}
+\bibfield{author}{\bibinfo{person}{Jonathan Goh}, \bibinfo{person}{Sridhar
+  Adepu}, \bibinfo{person}{Khurum~Nazir Junejo}, {and} \bibinfo{person}{Aditya
+  Mathur}.} \bibinfo{year}{2017}\natexlab{}.
+\newblock \showarticletitle{A Dataset to Support Research in the Design of
+  Secure Water Treatment Systems}. In \bibinfo{booktitle}{\emph{Critical
+  Information Infrastructures Security (CRITIS)}}
+  \emph{(\bibinfo{series}{LNCS}, Vol.~\bibinfo{volume}{10242})}.
+  \bibinfo{publisher}{Springer}, \bibinfo{pages}{88--99}.
+\newblock
+
+
+\bibitem[Goldenberg and Wool(2013)]%
+        {goldenberg2013modbus}
+\bibfield{author}{\bibinfo{person}{Niv Goldenberg} {and}
+  \bibinfo{person}{Avishai Wool}.} \bibinfo{year}{2013}\natexlab{}.
+\newblock \showarticletitle{Accurate Modeling of {Modbus/TCP} for Intrusion
+  Detection in {SCADA} Systems}.
+\newblock \bibinfo{journal}{\emph{International Journal of Critical
+  Infrastructure Protection}} \bibinfo{volume}{6}, \bibinfo{number}{2}
+  (\bibinfo{year}{2013}), \bibinfo{pages}{63--75}.
+\newblock
+
+
+\bibitem[Li et~al\mbox{.}(2015)]%
+        {li2015quickest}
+\bibfield{author}{\bibinfo{person}{Shang Li}, \bibinfo{person}{Yasin
+  Y{\i}lmaz}, {and} \bibinfo{person}{Xiaodong Wang}.}
+  \bibinfo{year}{2015}\natexlab{}.
+\newblock \showarticletitle{Quickest Detection of False Data Injection Attack
+  in Wide-Area Smart Grids}.
+\newblock \bibinfo{journal}{\emph{{IEEE} Transactions on Smart Grid}}
+  \bibinfo{volume}{6}, \bibinfo{number}{6} (\bibinfo{year}{2015}),
+  \bibinfo{pages}{2725--2735}.
+\newblock
+
+
+\bibitem[Lin et~al\mbox{.}(2018b)]%
+        {lin2018timing}
+\bibfield{author}{\bibinfo{person}{Chih-Yuan Lin}, \bibinfo{person}{Simin
+  Nadjm-Tehrani}, {and} \bibinfo{person}{Mikael Asplund}.}
+  \bibinfo{year}{2018}\natexlab{b}.
+\newblock \showarticletitle{Timing-Based Anomaly Detection in {SCADA}
+  Networks}. In \bibinfo{booktitle}{\emph{Critical Information Infrastructures
+  Security (CRITIS)}} \emph{(\bibinfo{series}{LNCS},
+  Vol.~\bibinfo{volume}{10707})}. \bibinfo{publisher}{Springer},
+  \bibinfo{pages}{48--59}.
+\newblock
+\href{https://doi.org/10.1007/978-3-319-99843-5_5}{doi:\nolinkurl{10.1007/978-3-319-99843-5_5}}
+
+
+\bibitem[Lin et~al\mbox{.}(2018a)]%
+        {lin2018tabor}
+\bibfield{author}{\bibinfo{person}{Qin Lin}, \bibinfo{person}{Sridhar Adepu},
+  \bibinfo{person}{Sicco Verwer}, {and} \bibinfo{person}{Aditya Mathur}.}
+  \bibinfo{year}{2018}\natexlab{a}.
+\newblock \showarticletitle{{TABOR}: A Graphical Model-based Approach for
+  Anomaly Detection in Industrial Control Systems}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2018 {ACM} Asia Conference on
+  Computer and Communications Security (AsiaCCS)}}. \bibinfo{publisher}{ACM},
+  \bibinfo{pages}{525--536}.
+\newblock
+\href{https://doi.org/10.1145/3196494.3196546}{doi:\nolinkurl{10.1145/3196494.3196546}}
+
+
+\bibitem[Liu et~al\mbox{.}(2022)]%
+        {liu2022limits}
+\bibfield{author}{\bibinfo{person}{Hanxiao Liu}, \bibinfo{person}{Yuqing Ni},
+  \bibinfo{person}{Lihua Xie}, {and} \bibinfo{person}{Karl~Henrik Johansson}.}
+  \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{Fundamental Limits under Linear Attacks on Network
+  Systems}.
+\newblock \bibinfo{journal}{\emph{Automatica}} (\bibinfo{year}{2022}).
+\newblock
+
+
+\bibitem[Maier et~al\mbox{.}(2011)]%
+        {maier2011timed}
+\bibfield{author}{\bibinfo{person}{Alexander Maier}, \bibinfo{person}{Oliver
+  Niggemann}, \bibinfo{person}{Roman Just}, \bibinfo{person}{Michael
+  J{\"a}ger}, {and} \bibinfo{person}{Asmir Voden{\v{c}}arevi{\'c}}.}
+  \bibinfo{year}{2011}\natexlab{}.
+\newblock \showarticletitle{Anomaly Detection in Production Plants Using Timed
+  Automata: Automated Learning of Models from Observations}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 8th International Conference on
+  Informatics in Control, Automation and Robotics (ICINCO)}}.
+  \bibinfo{publisher}{SciTePress}, \bibinfo{pages}{363--369}.
+\newblock
+\href{https://doi.org/10.5220/0003538903630369}{doi:\nolinkurl{10.5220/0003538903630369}}
+
+
+\bibitem[Malburg et~al\mbox{.}(2022)]%
+        {malburg2022trier}
+\bibfield{author}{\bibinfo{person}{Lukas Malburg}, \bibinfo{person}{Josua
+  Gr{\"u}ger}, {and} \bibinfo{person}{Ralph Bergmann}.}
+  \bibinfo{year}{2022}\natexlab{}.
+\newblock \showarticletitle{An {IoT}-Enriched Event Log for Process Mining in
+  Smart Factories}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2209.02702}}
+  (\bibinfo{year}{2022}).
+\newblock
+
+
+\bibitem[Mo and Sinopoli(2009)]%
+        {mo2009replay}
+\bibfield{author}{\bibinfo{person}{Yilin Mo} {and} \bibinfo{person}{Bruno
+  Sinopoli}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{Secure Control Against Replay Attacks}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 47th Annual Allerton Conference
+  on Communication, Control, and Computing}}. \bibinfo{pages}{911--918}.
+\newblock
+
+
+\bibitem[Naha et~al\mbox{.}(2023)]%
+        {naha2023watermark}
+\bibfield{author}{\bibinfo{person}{Arunava Naha}, \bibinfo{person}{Andr{\'e}
+  Teixeira}, \bibinfo{person}{Anders {\AA}hl{\'e}n}, {and}
+  \bibinfo{person}{Subhrakanti Dey}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Quickest Detection of Deception Attacks on
+  Cyber--Physical Systems with a Parsimonious Watermarking Policy}.
+\newblock \bibinfo{journal}{\emph{Automatica}}  \bibinfo{volume}{155}
+  (\bibinfo{year}{2023}), \bibinfo{pages}{111147}.
+\newblock
+\href{https://doi.org/10.1016/j.automatica.2023.111147}{doi:\nolinkurl{10.1016/j.automatica.2023.111147}}
+
+
+\bibitem[Shafer and Vovk(2008)]%
+        {shafer2008conformal}
+\bibfield{author}{\bibinfo{person}{Glenn Shafer} {and}
+  \bibinfo{person}{Vladimir Vovk}.} \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{A Tutorial on Conformal Prediction}.
+\newblock \bibinfo{journal}{\emph{Journal of Machine Learning Research}}
+  \bibinfo{volume}{9} (\bibinfo{year}{2008}), \bibinfo{pages}{371--421}.
+\newblock
+
+
+\bibitem[Tan and Xi(2008)]%
+        {tan2008hsmm}
+\bibfield{author}{\bibinfo{person}{Xiaobin Tan} {and}
+  \bibinfo{person}{Hongsheng Xi}.} \bibinfo{year}{2008}\natexlab{}.
+\newblock \showarticletitle{Hidden Semi-{Markov} Model for Anomaly Detection}.
+\newblock \bibinfo{journal}{\emph{Appl. Math. Comput.}} \bibinfo{volume}{205},
+  \bibinfo{number}{2} (\bibinfo{year}{2008}), \bibinfo{pages}{562--567}.
+\newblock
+\href{https://doi.org/10.1016/j.amc.2008.05.028}{doi:\nolinkurl{10.1016/j.amc.2008.05.028}}
+
+
+\bibitem[van~der Aalst et~al\mbox{.}(2012)]%
+        {aalst2012replay}
+\bibfield{author}{\bibinfo{person}{Wil M.~P. van~der Aalst},
+  \bibinfo{person}{Arya Adriansyah}, {and} \bibinfo{person}{Boudewijn~F. van
+  Dongen}.} \bibinfo{year}{2012}\natexlab{}.
+\newblock \showarticletitle{Replaying History on Process Models for Conformance
+  Checking and Performance Analysis}.
+\newblock \bibinfo{journal}{\emph{{WIREs} Data Mining and Knowledge Discovery}}
+  \bibinfo{volume}{2}, \bibinfo{number}{2} (\bibinfo{year}{2012}),
+  \bibinfo{pages}{182--192}.
+\newblock
+
+
+\end{thebibliography}

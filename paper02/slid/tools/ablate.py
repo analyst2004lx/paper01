@@ -156,7 +156,7 @@ def main() -> int:
     for fam in FAMILIES:
         for s in range(args.seeds):
             stream, lab = attack_stream(test, fam, s, args.rate, args.rho,
-                                        det.struct)
+                                        det.struct, det.model)
             for n in names:
                 d = det_nc if n in REFIT else det
                 cf = n not in RESCORE

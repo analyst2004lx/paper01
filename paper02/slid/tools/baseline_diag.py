@@ -40,9 +40,10 @@ def split(live):
     return take(keys[:a]), take(keys[a:b]), take(keys[b:])
 
 
-def attack_stream(test, fam, seed, rate, rho, struct_model):
+def attack_stream(test, fam, seed, rate, rho, struct_model, proc_model=None):
     spec = attacks.AttackSpec(family=fam, rho=rho, rate=rate, seed=seed,
-                              knowledge="model", struct_model=struct_model)
+                              knowledge="model", struct_model=struct_model,
+                              proc_model=proc_model)
     bad, lab = attacks.inject(test, spec)
     order = sorted(range(len(bad)),
                    key=lambda i: (bad[i].t_consume, bad[i].order))
@@ -149,7 +150,7 @@ def main() -> int:
         acc = {c: {k: [] for k in keys} for c in cols}
         for s in range(args.seeds):
             stream, lab = attack_stream(test, fam, s, args.rate, args.rho,
-                                        det.struct)
+                                        det.struct, det.model)
             for n in names:
                 r = baselines.run_baseline(n, train, calib, benign, stream,
                                            lab, alpha=args.alpha,
