@@ -9,8 +9,11 @@
 # If a listed path does not exist on GitHub, skip it.
 
 <Ignore>
-
+paper02\database\ft_trier_iot_log\Cleaned_Event_Log.zip
+paper02\database\ft_trier_iot_log\DQI_Event_Log.zip
 </Ignore>
+
+
 
 <Delete>
 # Entire obsolete
