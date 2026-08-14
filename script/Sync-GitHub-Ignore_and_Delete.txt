@@ -27,6 +27,8 @@ cursor_export_transaction.md
 汇报稿_应用场景介绍.html
 md_to_word_html.py
 Convert_MD_to_Html(open_and_save_in_Word).py
+paper03_old\CODE\quickstart.bat_tmp
+paper03_old\CODE\quickstart.sh_tmp
 
 # Recently deleted unused graphics / scripts under paper01_new/fig
 paper01/fig/fig_ablation.pdf
