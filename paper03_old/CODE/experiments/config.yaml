@@ -1,0 +1,51 @@
+# CTG-LC Experiment Configuration
+
+# Network parameters
+network:
+  mean_delay: 0.03        # 30ms average delay
+  jitter: 0.01            # ±10ms jitter
+  packet_loss: 0.001      # 0.1% packet loss
+  bandwidth_limit: 100.0  # 100 Mbps
+
+# System parameters
+system:
+  n: 30                   # Total nodes
+  k: 3                    # Task-coupled domain size
+  m: 3                    # Scheduler replicas
+  f: 10                   # Byzantine nodes (n/3)
+  
+  # Node distribution
+  num_agvs: 10
+  num_robot_arms: 17
+  num_schedulers: 3
+
+# Spatiotemporal parameters
+spatiotemporal:
+  delta_t: 0.6           # 600ms timestamp tolerance
+  epsilon: 0.5           # 0.5m spatial tolerance
+  v_max: 2.0             # 2 m/s max velocity
+  clock_drift: 0.1       # 100ms clock drift
+
+# Adaptive weight parameters
+adaptive_weights:
+  initial_weight: 1.0
+  min_weight: 0.1
+  penalty: 0.1           # Δw
+  recovery: 0.01         # γ
+  recovery_threshold: 5
+
+# Workspace
+workspace:
+  width: 10.0            # 10m x 10m
+  height: 10.0
+
+# Experiment parameters
+experiments:
+  baseline_decomposition:
+    num_runs: 50
+    tasks_per_run: 1
+    
+  comparative:
+    num_runs: 50
+    concurrent_tasks: [1, 2, 3, 4, 5]
+    measurement_duration: 60  # seconds

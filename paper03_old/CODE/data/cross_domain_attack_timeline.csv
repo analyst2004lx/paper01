@@ -1,0 +1,5 @@
+metric,value
+total_attacks,100.0
+rejected,0.0
+passed,100.0
+rejection_rate,0.0

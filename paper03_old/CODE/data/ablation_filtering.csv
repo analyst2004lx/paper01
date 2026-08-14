@@ -1,0 +1,7 @@
+metric,value
+total_messages,10000.0
+byzantine_rejected,2700.0
+filtering_rate,90.0
+timestamp_violations,1350.0
+spatial_violations,891.0
+task_inconsistency,459.0

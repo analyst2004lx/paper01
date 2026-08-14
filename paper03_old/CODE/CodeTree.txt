@@ -1,0 +1,31 @@
+code/
+├── src/
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── node.py              # 节点基类
+│   │   ├── message.py           # 消息定义
+│   │   ├── network.py           # 网络模拟器
+│   │   └── crypto.py            # 签名验证
+│   ├── protocols/
+│   │   ├── __init__.py
+│   │   ├── ctg_lc.py            # CTG-LC完整实现
+│   │   ├── pbft.py              # PBFT简化版
+│   │   └── raft.py              # Raft简化版
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── spatiotemporal.py    # 时空验证
+│   │   └── adaptive_weights.py  # 权重更新
+│   └── attacks/
+│       ├── __init__.py
+│       └── byzantine.py         # Byzantine攻击模拟
+├── experiments/
+│   ├── exp1_baseline_decomposition.py
+│   ├── exp2_comparative.py
+│   └── config.yaml
+├── data/                        # 生成的CSV数据
+├── plots/                       # 绘图脚本
+│   ├── plot_baseline.py
+│   └── plot_comparative.py
+├── results/                     # 生成的PDF
+├── requirements.txt
+└── README.md

@@ -1,0 +1,307 @@
+TimeSlot:0, AGV_idle AGV ID:0
+TimeSlot:0, AGV_idle AGV ID:1
+TimeSlot:0, AGV_idle AGV ID:2
+TimeSlot:0, RobotArm_idle RobotArm ID:0
+TimeSlot:0, RobotArm_idle RobotArm ID:1
+TimeSlot:0, RobotArm_idle RobotArm ID:2
+TimeSlot:1, AGVMovingToRobotArm AGV ID:0
+TimeSlot:1, RobotArm_producing RobotArm ID:0
+TimeSlot:1, AGVMovingToRobotArm AGV ID:1
+TimeSlot:1, RobotArm_producing RobotArm ID:1
+TimeSlot:1, AGVMovingToRobotArm AGV ID:2
+TimeSlot:1, RobotArm_producing RobotArm ID:2
+TimeSlot:3, AGVAtRobotArm AGV ID:1
+TimeSlot:3, AGVMovingToOrigin AGV ID:1
+TimeSlot:5, AGVAtOrigin AGV ID:1
+TimeSlot:5, AGV_idle AGV ID:1
+TimeSlot:6, AGVAtRobotArm AGV ID:0
+TimeSlot:6, AGVMovingToOrigin AGV ID:0
+TimeSlot:6, AGVAtRobotArm AGV ID:2
+TimeSlot:6, AGVMovingToOrigin AGV ID:2
+TimeSlot:11, AGVAtOrigin AGV ID:0
+TimeSlot:11, AGV_idle AGV ID:0
+TimeSlot:11, AGVAtOrigin AGV ID:2
+TimeSlot:11, AGV_idle AGV ID:2
+TimeSlot:13, RobotArm_idle RobotArm ID:2
+TimeSlot:13, AGVMovingToRobotArm AGV ID:0
+TimeSlot:13, RobotArm_producing RobotArm ID:2
+TimeSlot:14, RobotArm_idle RobotArm ID:1
+TimeSlot:14, AGVMovingToRobotArm AGV ID:1
+TimeSlot:14, RobotArm_producing RobotArm ID:1
+TimeSlot:16, AGVAtRobotArm AGV ID:1
+TimeSlot:16, AGVMovingToOrigin AGV ID:1
+TimeSlot:16, RobotArm_idle RobotArm ID:0
+TimeSlot:16, AGVMovingToRobotArm AGV ID:2
+TimeSlot:16, RobotArm_producing RobotArm ID:0
+TimeSlot:18, AGVAtRobotArm AGV ID:0
+TimeSlot:18, AGVMovingToOrigin AGV ID:0
+TimeSlot:18, AGVAtOrigin AGV ID:1
+TimeSlot:18, AGV_idle AGV ID:1
+TimeSlot:21, AGVAtRobotArm AGV ID:2
+TimeSlot:21, AGVMovingToOrigin AGV ID:2
+TimeSlot:23, AGVAtOrigin AGV ID:0
+TimeSlot:23, AGV_idle AGV ID:0
+TimeSlot:23, RobotArm_idle RobotArm ID:2
+TimeSlot:23, AGVMovingToRobotArm AGV ID:0
+TimeSlot:23, RobotArm_producing RobotArm ID:2
+TimeSlot:26, AGVAtOrigin AGV ID:2
+TimeSlot:26, AGV_idle AGV ID:2
+TimeSlot:26, RobotArm_idle RobotArm ID:0
+TimeSlot:26, AGVMovingToRobotArm AGV ID:1
+TimeSlot:26, RobotArm_producing RobotArm ID:0
+TimeSlot:28, AGVAtRobotArm AGV ID:0
+TimeSlot:28, AGVMovingToOrigin AGV ID:0
+TimeSlot:28, RobotArm_idle RobotArm ID:1
+TimeSlot:28, AGVMovingToRobotArm AGV ID:2
+TimeSlot:28, RobotArm_producing RobotArm ID:1
+TimeSlot:30, AGVAtRobotArm AGV ID:2
+TimeSlot:30, AGVMovingToOrigin AGV ID:2
+TimeSlot:31, AGVAtRobotArm AGV ID:1
+TimeSlot:31, AGVMovingToOrigin AGV ID:1
+TimeSlot:33, AGVAtOrigin AGV ID:0
+TimeSlot:33, AGV_idle AGV ID:0
+TimeSlot:33, AGVAtOrigin AGV ID:1
+TimeSlot:33, AGV_idle AGV ID:1
+TimeSlot:35, AGVAtOrigin AGV ID:2
+TimeSlot:35, AGV_idle AGV ID:2
+TimeSlot:35, RobotArm_idle RobotArm ID:0
+TimeSlot:35, AGVMovingToRobotArm AGV ID:0
+TimeSlot:35, RobotArm_producing RobotArm ID:0
+TimeSlot:38, RobotArm_idle RobotArm ID:2
+TimeSlot:38, AGVMovingToRobotArm AGV ID:1
+TimeSlot:38, RobotArm_producing RobotArm ID:2
+TimeSlot:40, AGVAtRobotArm AGV ID:0
+TimeSlot:40, AGVMovingToOrigin AGV ID:0
+TimeSlot:40, RobotArm_idle RobotArm ID:1
+TimeSlot:40, AGVMovingToRobotArm AGV ID:2
+TimeSlot:40, RobotArm_producing RobotArm ID:1
+TimeSlot:42, AGVAtRobotArm AGV ID:2
+TimeSlot:42, AGVMovingToOrigin AGV ID:2
+TimeSlot:43, AGVAtRobotArm AGV ID:1
+TimeSlot:43, AGVMovingToOrigin AGV ID:1
+TimeSlot:44, RobotArm_idle RobotArm ID:0
+TimeSlot:45, AGVAtOrigin AGV ID:0
+TimeSlot:45, AGV_idle AGV ID:0
+TimeSlot:45, AGVAtOrigin AGV ID:1
+TimeSlot:45, AGV_idle AGV ID:1
+TimeSlot:45, RobotArm_idle RobotArm ID:1
+TimeSlot:45, AGVMovingToRobotArm AGV ID:1
+TimeSlot:45, RobotArm_producing RobotArm ID:0
+TimeSlot:45, AGVMovingToRobotArm AGV ID:0
+TimeSlot:45, RobotArm_producing RobotArm ID:1
+TimeSlot:47, AGVAtRobotArm AGV ID:0
+TimeSlot:47, AGVMovingToOrigin AGV ID:0
+TimeSlot:47, AGVAtOrigin AGV ID:2
+TimeSlot:47, AGV_idle AGV ID:2
+TimeSlot:50, AGVAtRobotArm AGV ID:1
+TimeSlot:50, AGVMovingToOrigin AGV ID:1
+TimeSlot:52, AGVAtOrigin AGV ID:0
+TimeSlot:52, AGV_idle AGV ID:0
+TimeSlot:52, AGVAtOrigin AGV ID:1
+TimeSlot:52, AGV_idle AGV ID:1
+TimeSlot:52, RobotArm_idle RobotArm ID:2
+TimeSlot:52, AGVMovingToRobotArm AGV ID:0
+TimeSlot:52, RobotArm_producing RobotArm ID:2
+TimeSlot:56, RobotArm_idle RobotArm ID:1
+TimeSlot:56, AGVMovingToRobotArm AGV ID:1
+TimeSlot:56, RobotArm_producing RobotArm ID:1
+TimeSlot:57, AGVAtRobotArm AGV ID:0
+TimeSlot:57, AGVMovingToOrigin AGV ID:0
+TimeSlot:58, AGVAtRobotArm AGV ID:1
+TimeSlot:58, AGVMovingToOrigin AGV ID:1
+TimeSlot:60, AGVAtOrigin AGV ID:1
+TimeSlot:60, AGV_idle AGV ID:1
+TimeSlot:61, RobotArm_idle RobotArm ID:1
+TimeSlot:61, AGVMovingToRobotArm AGV ID:1
+TimeSlot:61, RobotArm_producing RobotArm ID:1
+TimeSlot:62, AGVAtOrigin AGV ID:0
+TimeSlot:62, AGV_idle AGV ID:0
+TimeSlot:63, AGVAtRobotArm AGV ID:1
+TimeSlot:63, AGVMovingToOrigin AGV ID:1
+TimeSlot:65, AGVAtOrigin AGV ID:1
+TimeSlot:65, AGV_idle AGV ID:1
+TimeSlot:65, RobotArm_idle RobotArm ID:0
+TimeSlot:65, AGVMovingToRobotArm AGV ID:0
+TimeSlot:65, RobotArm_producing RobotArm ID:0
+TimeSlot:69, RobotArm_idle RobotArm ID:2
+TimeSlot:69, AGVMovingToRobotArm AGV ID:1
+TimeSlot:69, RobotArm_producing RobotArm ID:2
+TimeSlot:70, AGVAtRobotArm AGV ID:0
+TimeSlot:70, AGVMovingToOrigin AGV ID:0
+TimeSlot:73, RobotArm_idle RobotArm ID:0
+TimeSlot:73, AGVMovingToRobotArm AGV ID:2
+TimeSlot:73, RobotArm_producing RobotArm ID:0
+TimeSlot:74, AGVAtRobotArm AGV ID:1
+TimeSlot:74, AGVMovingToOrigin AGV ID:1
+TimeSlot:75, AGVAtOrigin AGV ID:0
+TimeSlot:75, AGV_idle AGV ID:0
+TimeSlot:76, AGVAtOrigin AGV ID:1
+TimeSlot:76, AGV_idle AGV ID:1
+TimeSlot:78, AGVAtRobotArm AGV ID:2
+TimeSlot:78, AGVMovingToOrigin AGV ID:2
+TimeSlot:78, RobotArm_idle RobotArm ID:1
+TimeSlot:78, AGVMovingToRobotArm AGV ID:1
+TimeSlot:78, RobotArm_producing RobotArm ID:1
+TimeSlot:80, AGVAtRobotArm AGV ID:1
+TimeSlot:80, AGVMovingToOrigin AGV ID:1
+TimeSlot:82, AGVAtOrigin AGV ID:1
+TimeSlot:82, AGV_idle AGV ID:1
+TimeSlot:83, AGVAtOrigin AGV ID:2
+TimeSlot:83, AGV_idle AGV ID:2
+TimeSlot:85, RobotArm_idle RobotArm ID:0
+TimeSlot:85, RobotArm_idle RobotArm ID:2
+TimeSlot:85, AGVMovingToRobotArm AGV ID:0
+TimeSlot:85, RobotArm_producing RobotArm ID:0
+TimeSlot:85, AGVMovingToRobotArm AGV ID:1
+TimeSlot:85, RobotArm_producing RobotArm ID:2
+TimeSlot:90, AGVAtRobotArm AGV ID:0
+TimeSlot:90, AGVMovingToOrigin AGV ID:0
+TimeSlot:90, AGVAtRobotArm AGV ID:1
+TimeSlot:90, AGVMovingToOrigin AGV ID:1
+TimeSlot:92, AGVAtOrigin AGV ID:1
+TimeSlot:92, AGV_idle AGV ID:1
+TimeSlot:93, RobotArm_idle RobotArm ID:1
+TimeSlot:93, AGVMovingToRobotArm AGV ID:1
+TimeSlot:93, RobotArm_producing RobotArm ID:1
+TimeSlot:95, AGVAtOrigin AGV ID:0
+TimeSlot:95, AGV_idle AGV ID:0
+TimeSlot:95, AGVAtRobotArm AGV ID:1
+TimeSlot:95, AGVMovingToOrigin AGV ID:1
+TimeSlot:95, RobotArm_idle RobotArm ID:2
+TimeSlot:95, AGVMovingToRobotArm AGV ID:0
+TimeSlot:95, RobotArm_producing RobotArm ID:2
+TimeSlot:97, AGVAtOrigin AGV ID:1
+TimeSlot:97, AGV_idle AGV ID:1
+TimeSlot:98, RobotArm_idle RobotArm ID:0
+TimeSlot:98, AGVMovingToRobotArm AGV ID:1
+TimeSlot:98, RobotArm_producing RobotArm ID:0
+TimeSlot:99, RobotArm_idle RobotArm ID:1
+TimeSlot:100, AGVAtRobotArm AGV ID:0
+TimeSlot:100, AGVMovingToOrigin AGV ID:0
+TimeSlot:103, AGVAtRobotArm AGV ID:1
+TimeSlot:103, AGVMovingToOrigin AGV ID:1
+TimeSlot:105, AGVAtOrigin AGV ID:0
+TimeSlot:105, AGV_idle AGV ID:0
+TimeSlot:105, AGVAtOrigin AGV ID:1
+TimeSlot:105, AGV_idle AGV ID:1
+TimeSlot:108, RobotArm_idle RobotArm ID:0
+TimeSlot:110, RobotArm_idle RobotArm ID:2
+
+
+
+
+
+
+
+
+
+
+
+AGV_idle AGV ID:1
+RobotArm_idle RobotArm ID:1
+AGVMovingToRobotArm AGV ID:1
+RobotArm_producing RobotArm ID:0
+AGVMovingToRobotArm AGV ID:0
+RobotArm_producing RobotArm ID:1
+AGVAtRobotArm AGV ID:0
+AGVMovingToOrigin AGV ID:0
+AGVAtOrigin AGV ID:2
+AGV_idle AGV ID:2
+AGVAtRobotArm AGV ID:1
+AGVMovingToOrigin AGV ID:1
+AGVAtOrigin AGV ID:0
+AGV_idle AGV ID:0
+AGVAtOrigin AGV ID:1
+AGV_idle AGV ID:1
+RobotArm_idle RobotArm ID:2
+AGVMovingToRobotArm AGV ID:0
+RobotArm_producing RobotArm ID:2
+RobotArm_idle RobotArm ID:1
+AGVMovingToRobotArm AGV ID:1
+RobotArm_producing RobotArm ID:1
+AGVAtRobotArm AGV ID:0
+AGVMovingToOrigin AGV ID:0
+AGVAtRobotArm AGV ID:1
+AGVMovingToOrigin AGV ID:1
+AGVAtOrigin AGV ID:1
+AGV_idle AGV ID:1
+RobotArm_idle RobotArm ID:1
+AGVMovingToRobotArm AGV ID:1
+RobotArm_producing RobotArm ID:1
+AGVAtOrigin AGV ID:0
+AGV_idle AGV ID:0
+AGVAtRobotArm AGV ID:1
+AGVMovingToOrigin AGV ID:1
+AGVAtOrigin AGV ID:1
+AGV_idle AGV ID:1
+RobotArm_idle RobotArm ID:0
+AGVMovingToRobotArm AGV ID:0
+RobotArm_producing RobotArm ID:0
+RobotArm_idle RobotArm ID:2
+AGVMovingToRobotArm AGV ID:1
+RobotArm_producing RobotArm ID:2
+AGVAtRobotArm AGV ID:0
+AGVMovingToOrigin AGV ID:0
+RobotArm_idle RobotArm ID:0
+AGVMovingToRobotArm AGV ID:2
+RobotArm_producing RobotArm ID:0
+AGVAtRobotArm AGV ID:1
+AGVMovingToOrigin AGV ID:1
+AGVAtOrigin AGV ID:0
+AGV_idle AGV ID:0
+AGVAtOrigin AGV ID:1
+AGV_idle AGV ID:1
+AGVAtRobotArm AGV ID:2
+AGVMovingToOrigin AGV ID:2
+RobotArm_idle RobotArm ID:1
+AGVMovingToRobotArm AGV ID:1
+RobotArm_producing RobotArm ID:1
+AGVAtRobotArm AGV ID:1
+AGVMovingToOrigin AGV ID:1
+AGVAtOrigin AGV ID:1
+AGV_idle AGV ID:1
+AGVAtOrigin AGV ID:2
+AGV_idle AGV ID:2
+RobotArm_idle RobotArm ID:0
+RobotArm_idle RobotArm ID:2
+AGVMovingToRobotArm AGV ID:0
+RobotArm_producing RobotArm ID:0
+AGVMovingToRobotArm AGV ID:1
+RobotArm_producing RobotArm ID:2
+AGVAtRobotArm AGV ID:0
+AGVMovingToOrigin AGV ID:0
+AGVAtRobotArm AGV ID:1
+AGVMovingToOrigin AGV ID:1
+AGVAtOrigin AGV ID:1
+AGV_idle AGV ID:1
+RobotArm_idle RobotArm ID:1
+AGVMovingToRobotArm AGV ID:1
+RobotArm_producing RobotArm ID:1
+AGVAtOrigin AGV ID:0
+AGV_idle AGV ID:0
+AGVAtRobotArm AGV ID:1
+AGVMovingToOrigin AGV ID:1
+RobotArm_idle RobotArm ID:2
+AGVMovingToRobotArm AGV ID:0
+RobotArm_producing RobotArm ID:2
+AGVAtOrigin AGV ID:1
+AGV_idle AGV ID:1
+RobotArm_idle RobotArm ID:0
+AGVMovingToRobotArm AGV ID:1
+RobotArm_producing RobotArm ID:0
+RobotArm_idle RobotArm ID:1
+AGVAtRobotArm AGV ID:0
+AGVMovingToOrigin AGV ID:0
+AGVAtRobotArm AGV ID:1
+AGVMovingToOrigin AGV ID:1
+AGVAtOrigin AGV ID:0
+AGV_idle AGV ID:0
+AGVAtOrigin AGV ID:1
+AGV_idle AGV ID:1
+RobotArm_idle RobotArm ID:0
+RobotArm_idle RobotArm ID:2
+
+
+
+
+

@@ -1,0 +1,56 @@
+我用这个标题:Markov-Bayesian Dual-Layer Framework Based on Probabilistic State Space Modeling for Real-Time Anomaly Detection in Industrial Systems
+接下来，我想把这篇小论文按照以下框架改成一篇latex格式的小论文。
+1 Introduction
+2 Related Work（按问题或方法进行分类）
+3 Problem Formulation
+3.1 System Model
+3.2 Mathematical Model
+3.3 Problem Statement
+4 XXXX Framework
+4.1 Framework Overview
+4.2 
+4.3
+4.4
+...
+4.x Complexity(or maybe detection time ensurance?比较学术地证明 状态转移矩阵预训练，在线推理复杂度？或者其它)
+5 Experimental Evaluation
+5.1 Experimental Setup
+5.1.1 System Configuration.
+5.1.2 Baseline Methods. 
+5.1.3 Evaluation Metrics.
+5.2 Comparison with Baseline Methods
+5.2.1 Solution Quality and Efficiency.
+5.2.2 Ablation Study.
+5.3 Convergence Analysis
+5.4 Scalability and Sensitivity Analysis
+5.5 Robustness Analysis
+5.6 Summary
+6 Conclusion
+6.1 Summary of Contributions
+6.2 Limitations and Future Directions
+内容方面，论文的初稿“V6.txt”中的内容可以参考，但这只是个草稿，达不到SCI学术论文的水平。
+
+paper02-20260605.txt 是目前小论文的latex代码，请以SCI审稿人的角度，评价这篇论文并提供应该怎么提高创新性和学术性的建议（不要笼统的建议，而是比较建设性的、具体的建议）。
+
+[M1] 核心创新点的独立性存疑：Bayesian threshold 本质上是一个线性缩放，缺乏非平凡性论证
+问题所在： 论文的第二层核心机制为：
+$$\varepsilon_i = \mathcal{P}_{\mathrm{BN}}(s_i) \cdot k$$
+这本质上是用一个标量 (k) 对贝叶斯边缘概率做线性缩放。审稿人注意到，当状态空间近似均匀分布时（论文Table中 (\mathcal{P}_{BN}) 值集中在 0.138–0.154 之间），各状态的阈值差异极小（最大差异约 (0.016k)），与固定阈值的区别几乎可以忽略。论文声称这解决了"sensitivity-specificity trade-off"，但未提供该机制在非均匀分布场景下的理论优势证明。
+具体建议：
+•	将阈值函数从线性替换为非线性形式，例如： $$\varepsilon_i = -\log \mathcal{P}_{\mathrm{BN}}(s_i) \cdot \gamma$$ （信息熵权重），并证明其在稀有状态检测上的理论优越性，这将显著提升方法的非平凡性。
+
+我想解决这个问题，请基于“paper02-20260605”，给出需要修改部分的原来内容和订正后的该部分新的latex代码，便于我定位和替换。
+
+
+paper02-20260605.txt 是目前小论文的latex代码，请仔细阅读。目前这篇论文存在一个严重问题：
+实验数据集规模严重不足，统计结论可信度低
+问题所在： 全部实验基于单一自建仿真，训练集仅188条状态转移记录（Scenario A），测试集B为312条。这一规模在IIoT安全领域属于极小数据集。具体问题：
+1.	188条转移记录对于估计一个 (7 \times 7) 转移矩阵（49个自由参数），每个参数平均不足4个样本，过拟合风险极高。
+2.	所有实验均为自产自销的仿真数据，无法证明方法对真实工业协议（如OPC-UA、MQTT、Modbus/TCP）的适用性。
+3.	论文中声称的"97.5% detection rate"等具体数字，在如此小的测试集上，置信区间可能非常宽，但论文仅在部分地方报告了bootstrap CI，未系统性地对所有关键指标报告。
+具体建议：
+•	在公开数据集上验证，例如：
+o	HAI dataset（韩国工业控制系统异常检测数据集） 这些数据集虽然不是AGV场景，但可以验证MBDF的状态一致性框架在其他离散状态CPS中的泛化能力。
+https://github.com/icsdataset/hai
+
+所以，我想增加用这个数据集对于算法进行实验的部分。请考虑HAI dataset这个数据集的测试怎么与本文已有的188条状态转移记录的数据集进行结合，从而让论文更具学术性。思考过后，先告诉我论文的哪一章因此而需要做改动。
