@@ -1,0 +1,7 @@
+# SLID 依赖。刻意保持极简:检测器本体只需要 numpy,
+# 日志/BPMN 解析用标准库 xml.etree + zipfile 即可(数据集解压后达 66 GB,
+# 必须流式读取,不引入会整包载入的过程挖掘框架)。
+numpy>=1.24
+scipy>=1.10          # Student-t 分位数、Wilcoxon 配对检验
+matplotlib>=3.7      # 仅 tools/ 出图用,算法核心不依赖
+pytest>=7.0          # 仅 tests/ 用,跑 T1–T14 断言集

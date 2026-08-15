@@ -9,7 +9,8 @@
 # If a listed path does not exist on GitHub, skip it.
 
 <Ignore>
-
+paper02\database\ft_trier_iot_log\Cleaned_Event_Log.zip
+paper02\database\ft_trier_iot_log\DQI_Event_Log.zip
 </Ignore>
 
 
@@ -26,40 +27,21 @@ cursor_export_transaction.md
 汇报稿_应用场景介绍.html
 md_to_word_html.py
 Convert_MD_to_Html(open_and_save_in_Word).py
+paper03_old\CODE\quickstart.bat_tmp
+paper03_old\CODE\quickstart.sh_tmp
 
 # Recently deleted unused graphics / scripts under paper01_new/fig
-paper01/fig/fig_ablation.pdf
-paper01/fig/fig_ablation.png
-paper01/fig/fig_ablation.py
-paper01/fig/fig_comprehensive_comparison.pdf
-paper01/fig/fig_comprehensive_comparison.py
-paper01/fig/fig_convergence.pdf
-paper01/fig/fig_convergence_time_axis.pdf
-paper01/fig/fig_convergence_time_axis.png
-paper01/fig/fig_convergence_time_axis.py
-paper01/fig/fig_grid_sensitivity.pdf
-paper01/fig/fig_grid_sensitivity.py
-paper01/fig/fig_hdp_arc.pdf
-paper01/fig/fig_hdp_architecture.pdf
-paper01/fig/fig_hdp_architecture.py
-paper01/fig/fig_hdp_architecture_new.pdf
-paper01/fig/fig_hdp_architecture_new.py
-paper01/fig/fig_hdp_methodology.py
-paper01/fig/fig_heterogeneity.pdf
-paper01/fig/fig_heterogeneity.png
-paper01/fig/fig_heterogeneity.py
-paper01/fig/fig_intro_problem.pdf
-paper01/fig/fig_intro_problem.py
-paper01/fig/fig_intro_problem_new.pdf
-paper01/fig/fig_intro_problem_new.py
-paper01/fig/fig_intro_solution.pdf
-paper01/fig/fig_intro_solution.py
-paper01/fig/fig_motivating_example.pdf
-paper01/fig/fig_motivating_example.py
-paper01/fig/fig_robustness.pdf
-paper01/fig/fig_robustness.py
-paper01/fig/fig_scalability.pdf
-paper01/fig/fig_scalability.py
-paper01/fig/fig_workspace_layout.png
+paper02\Latex\figures\fig_detection_rate.py
+paper02\Latex\figures\fig_detection_rate.png
+paper02\Latex\figures\fig_detection_rate.pdf
+paper02\Latex\figures\fig_detection_time.py
+paper02\Latex\figures\fig_detection_time.png
+paper02\Latex\figures\fig_detection_time.pdf
+paper02\Latex\figures\fig_k_sensitivity.py
+paper02\Latex\figures\fig_k_sensitivity.png
+paper02\Latex\figures\fig_k_sensitivity.pdf
+paper02\Latex\figures\fig_framework.py
+paper02\Latex\figures\fig_framework.png
+paper02\Latex\figures\fig_framework.pdf
 
 </Delete>
