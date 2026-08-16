@@ -1,0 +1,28 @@
+{
+  "note": "引言动机算例;手工构造的存在性演示,非统计结论",
+  "params": {
+    "trunk_tau": 6.0,
+    "proc_fast": 3.0,
+    "proc_slow": 14.0,
+    "n_background": 3,
+    "bg_proc": 3.0,
+    "num_agvs": 2,
+    "travel_M1_round": 16.0,
+    "travel_M2_round": 6
+  },
+  "M1": {
+    "ideal": 41.0,
+    "routed": 95.0
+  },
+  "M2": {
+    "ideal": 54.0,
+    "routed": 60.0
+  },
+  "ideal_pick": 1,
+  "routed_pick": 2,
+  "sweep": {
+    "grid": 1200,
+    "reversed": 205,
+    "share": 0.1708
+  }
+}

@@ -23,6 +23,7 @@ OUT = os.path.join(ROOT, "clbs", "output")
 # (script, output stem, required paths relative to clbs/output or absolute markers)
 JOBS = [
     ("fig_framework.py", "fig_framework", []),  # schematic, no data
+    ("fig_motivating.py", "fig_motivating", ["motivating.json"]),
     ("fig_prediction3.py", "fig_prediction3", ["baseline_ladder.csv"]),
     ("fig_convergence.py", "fig_convergence_closedloop",
      ["ladder_convergence.csv", "ladder_cost.csv"]),
@@ -67,6 +68,7 @@ def main() -> int:
     print("\n完成: %d 写出 / %d 跳过 / %d 失败" % (ok, skip, fail))
     if skip:
         print("跳过的图在下列数据落盘后重跑本脚本即可:")
+        print("  tools/motivating.py --sweep -> motivating.json")
         print("  tools/baseline_ladder.py  -> baseline_ladder.csv")
         print("  tools/prune_ablation.py   -> prune_ablation.csv  (fig_protocol 的箭头可选)")
         print("  tools/ladder_diag.py      -> ladder_cost/convergence + case_study/")

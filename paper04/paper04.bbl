@@ -2,7 +2,7 @@
 %%% Do NOT edit. File created by BibTeX with style
 %%% ACM-Reference-Format-Journals [18-Jan-2012].
 
-\begin{thebibliography}{14}
+\begin{thebibliography}{24}
 
 %%% ====================================================================
 %%% NOTE TO THE USER: you can override these defaults by providing
@@ -36,123 +36,317 @@
 \providecommand\natexlab[1]{#1}
 \providecommand\showeprint[2][]{arXiv:#2}
 
+\bibitem[Abumaizar and Svestka(1997)]%
+        {abumaizar1997rescheduling}
+\bibfield{author}{\bibinfo{person}{Riyad~J. Abumaizar} {and}
+  \bibinfo{person}{Joseph~A. Svestka}.} \bibinfo{year}{1997}\natexlab{}.
+\newblock \showarticletitle{Rescheduling job shops under random disruptions}.
+\newblock \bibinfo{journal}{\emph{International Journal of Production
+  Research}} \bibinfo{volume}{35}, \bibinfo{number}{7} (\bibinfo{year}{1997}),
+  \bibinfo{pages}{2065--2082}.
+\newblock
+\href{https://doi.org/10.1080/002075497195074}{doi:\nolinkurl{10.1080/002075497195074}}
+
+
+\bibitem[Akt{\"u}rk and G{\"o}rg{\"u}l{\"u}(1999)]%
+        {akturk1999matchup}
+\bibfield{author}{\bibinfo{person}{M.~Selim Akt{\"u}rk} {and}
+  \bibinfo{person}{Elif G{\"o}rg{\"u}l{\"u}}.} \bibinfo{year}{1999}\natexlab{}.
+\newblock \showarticletitle{Match-up scheduling under a machine breakdown}.
+\newblock \bibinfo{journal}{\emph{European Journal of Operational Research}}
+  \bibinfo{volume}{112}, \bibinfo{number}{1} (\bibinfo{year}{1999}),
+  \bibinfo{pages}{81--97}.
+\newblock
+\href{https://doi.org/10.1016/S0377-2217(97)00396-2}{doi:\nolinkurl{10.1016/S0377-2217(97)00396-2}}
+
+
+\bibitem[Bean et~al\mbox{.}(1991)]%
+        {bean1991matchup}
+\bibfield{author}{\bibinfo{person}{James~C. Bean}, \bibinfo{person}{John~R.
+  Birge}, \bibinfo{person}{John Mittenthal}, {and} \bibinfo{person}{Charles~E.
+  Noon}.} \bibinfo{year}{1991}\natexlab{}.
+\newblock \showarticletitle{Matchup scheduling with multiple resources, release
+  dates and disruptions}.
+\newblock \bibinfo{journal}{\emph{Operations Research}} \bibinfo{volume}{39},
+  \bibinfo{number}{3} (\bibinfo{year}{1991}), \bibinfo{pages}{470--483}.
+\newblock
+\href{https://doi.org/10.1287/opre.39.3.470}{doi:\nolinkurl{10.1287/opre.39.3.470}}
+
+
 \bibitem[Dalcastagn{\'e} et~al\mbox{.}(2020)]%
         {dalcastagne2020reactive}
-\bibfield{author}{\bibinfo{person}{Manuel Dalcastagn{\'e}}, \bibinfo{person}{Andrea Mariello}, {and} \bibinfo{person}{Roberto Battiti}.} \bibinfo{year}{2020}\natexlab{}.
-\newblock \showarticletitle{Reactive Sample Size for Heuristic Search in Simulation-based Optimization}.
-\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2005.12141}} (\bibinfo{year}{2020}).
+\bibfield{author}{\bibinfo{person}{Manuel Dalcastagn{\'e}},
+  \bibinfo{person}{Andrea Mariello}, {and} \bibinfo{person}{Roberto Battiti}.}
+  \bibinfo{year}{2020}\natexlab{}.
+\newblock \showarticletitle{Reactive Sample Size for Heuristic Search in
+  Simulation-based Optimization}.
+\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2005.12141}}
+  (\bibinfo{year}{2020}).
 \newblock
+
+
+\bibitem[D'Ariano et~al\mbox{.}(2007)]%
+        {dariano2007branch}
+\bibfield{author}{\bibinfo{person}{Andrea D'Ariano}, \bibinfo{person}{Dario
+  Pacciarelli}, {and} \bibinfo{person}{Marco Pranzo}.}
+  \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{A branch and bound algorithm for scheduling trains
+  in a railway network}.
+\newblock \bibinfo{journal}{\emph{European Journal of Operational Research}}
+  \bibinfo{volume}{183}, \bibinfo{number}{2} (\bibinfo{year}{2007}),
+  \bibinfo{pages}{643--657}.
+\newblock
+\href{https://doi.org/10.1016/j.ejor.2006.10.034}{doi:\nolinkurl{10.1016/j.ejor.2006.10.034}}
 
 
 \bibitem[Fu et~al\mbox{.}(2025)]%
         {fu2025integrated}
-\bibfield{author}{\bibinfo{person}{Jie Fu}, \bibinfo{person}{Bin Yang}, \bibinfo{person}{Zhixing Chang}, \bibinfo{person}{Yuanrong Zhang}, \bibinfo{person}{Jiarui Wang}, \bibinfo{person}{Xiaotong Wang}, {and} \bibinfo{person}{Lei Wang}.} \bibinfo{year}{2025}\natexlab{}.
-\newblock \showarticletitle{Integrated Production--Logistics Scheduling in Flexible Assembly Shops Using an Improved Genetic Algorithm}.
-\newblock \bibinfo{journal}{\emph{Machines}} \bibinfo{volume}{13}, \bibinfo{number}{12} (\bibinfo{year}{2025}), \bibinfo{pages}{1090}.
+\bibfield{author}{\bibinfo{person}{Jie Fu}, \bibinfo{person}{Bin Yang},
+  \bibinfo{person}{Zhixing Chang}, \bibinfo{person}{Yuanrong Zhang},
+  \bibinfo{person}{Jiarui Wang}, \bibinfo{person}{Xiaotong Wang}, {and}
+  \bibinfo{person}{Lei Wang}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Integrated Production--Logistics Scheduling in
+  Flexible Assembly Shops Using an Improved Genetic Algorithm}.
+\newblock \bibinfo{journal}{\emph{Machines}} \bibinfo{volume}{13},
+  \bibinfo{number}{12} (\bibinfo{year}{2025}), \bibinfo{pages}{1090}.
 \newblock
 
 
 \bibitem[Kim and Kim(2026)]%
         {kim2026congestion}
-\bibfield{author}{\bibinfo{person}{Jeonghyeon Kim} {and} \bibinfo{person}{Junwoo Kim}.} \bibinfo{year}{2026}\natexlab{}.
-\newblock \showarticletitle{Congestion-Aware Scheduling for Large Fleets of {AGVs} Using Discrete Event Simulation}.
-\newblock \bibinfo{journal}{\emph{Electronics}} \bibinfo{volume}{15}, \bibinfo{number}{1} (\bibinfo{year}{2026}), \bibinfo{pages}{139}.
+\bibfield{author}{\bibinfo{person}{Jeonghyeon Kim} {and}
+  \bibinfo{person}{Junwoo Kim}.} \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{Congestion-Aware Scheduling for Large Fleets of
+  {AGVs} Using Discrete Event Simulation}.
+\newblock \bibinfo{journal}{\emph{Electronics}} \bibinfo{volume}{15},
+  \bibinfo{number}{1} (\bibinfo{year}{2026}), \bibinfo{pages}{139}.
 \newblock
 \href{https://doi.org/10.3390/electronics15010139}{doi:\nolinkurl{10.3390/electronics15010139}}
 
 
+\bibitem[Kuster et~al\mbox{.}(2007)]%
+        {kuster2007local}
+\bibfield{author}{\bibinfo{person}{J{\"u}rgen Kuster}, \bibinfo{person}{Dietmar
+  Jannach}, {and} \bibinfo{person}{Gerhard Friedrich}.}
+  \bibinfo{year}{2007}\natexlab{}.
+\newblock \showarticletitle{Local Rescheduling: A novel approach for efficient
+  response to schedule disruptions}. In \bibinfo{booktitle}{\emph{2007 IEEE
+  Symposium on Computational Intelligence in Scheduling (CISched)}}. IEEE,
+  \bibinfo{pages}{79--86}.
+\newblock
+\href{https://doi.org/10.1109/SCIS.2007.367673}{doi:\nolinkurl{10.1109/SCIS.2007.367673}}
+
+
 \bibitem[Li et~al\mbox{.}(2026)]%
         {li2026framework}
-\bibfield{author}{\bibinfo{person}{Ruiqi Li}, \bibinfo{person}{Jianlin Mao}, \bibinfo{person}{Xing Wu}, \bibinfo{person}{Wenna Zhou}, \bibinfo{person}{Chengze Qian}, {and} \bibinfo{person}{Haoshuang Du}.} \bibinfo{year}{2026}\natexlab{}.
-\newblock \showarticletitle{A New Framework for Job Shop Integrated Scheduling and Vehicle Path Planning Problem}.
-\newblock \bibinfo{journal}{\emph{Sensors}} \bibinfo{volume}{26}, \bibinfo{number}{2} (\bibinfo{year}{2026}), \bibinfo{pages}{543}.
+\bibfield{author}{\bibinfo{person}{Ruiqi Li}, \bibinfo{person}{Jianlin Mao},
+  \bibinfo{person}{Xing Wu}, \bibinfo{person}{Wenna Zhou},
+  \bibinfo{person}{Chengze Qian}, {and} \bibinfo{person}{Haoshuang Du}.}
+  \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{A New Framework for Job Shop Integrated Scheduling
+  and Vehicle Path Planning Problem}.
+\newblock \bibinfo{journal}{\emph{Sensors}} \bibinfo{volume}{26},
+  \bibinfo{number}{2} (\bibinfo{year}{2026}), \bibinfo{pages}{543}.
 \newblock
 \href{https://doi.org/10.3390/s26020543}{doi:\nolinkurl{10.3390/s26020543}}
 
 
+\bibitem[Li et~al\mbox{.}(1993)]%
+        {li1993heuristic}
+\bibfield{author}{\bibinfo{person}{Rong-Kwei Li}, \bibinfo{person}{Yu-Tang
+  Shyu}, {and} \bibinfo{person}{Sadashiv Adiga}.}
+  \bibinfo{year}{1993}\natexlab{}.
+\newblock \showarticletitle{A heuristic rescheduling algorithm for
+  computer-based production scheduling systems}.
+\newblock \bibinfo{journal}{\emph{International Journal of Production
+  Research}} \bibinfo{volume}{31}, \bibinfo{number}{8} (\bibinfo{year}{1993}),
+  \bibinfo{pages}{1815--1826}.
+\newblock
+\href{https://doi.org/10.1080/00207549308956824}{doi:\nolinkurl{10.1080/00207549308956824}}
+
+
+\bibitem[Malka et~al\mbox{.}(2024)]%
+        {malka2024online}
+\bibfield{author}{\bibinfo{person}{Nir Malka}, \bibinfo{person}{Guy Shani},
+  {and} \bibinfo{person}{Roni Stern}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Online Planning for Multi Agent Path Finding in
+  Inaccurate Maps}. In \bibinfo{booktitle}{\emph{2024 IEEE/RSJ International
+  Conference on Intelligent Robots and Systems (IROS)}}. IEEE,
+  \bibinfo{pages}{10214--10221}.
+\newblock
+\href{https://doi.org/10.1109/IROS58592.2024.10801975}{doi:\nolinkurl{10.1109/IROS58592.2024.10801975}}
+
+
+\bibitem[Mascis and Pacciarelli(2002)]%
+        {mascis2002alternative}
+\bibfield{author}{\bibinfo{person}{Alessandro Mascis} {and}
+  \bibinfo{person}{Dario Pacciarelli}.} \bibinfo{year}{2002}\natexlab{}.
+\newblock \showarticletitle{Job-shop scheduling with blocking and no-wait
+  constraints}.
+\newblock \bibinfo{journal}{\emph{European Journal of Operational Research}}
+  \bibinfo{volume}{143}, \bibinfo{number}{3} (\bibinfo{year}{2002}),
+  \bibinfo{pages}{498--517}.
+\newblock
+\href{https://doi.org/10.1016/S0377-2217(01)00338-1}{doi:\nolinkurl{10.1016/S0377-2217(01)00338-1}}
+
+
 \bibitem[Meng et~al\mbox{.}(2025)]%
         {meng2025cp}
-\bibfield{author}{\bibinfo{person}{Leilei Meng}, \bibinfo{person}{Weiyao Cheng}, \bibinfo{person}{Chaoyong Zhang}, \bibinfo{person}{Kaizhou Gao}, \bibinfo{person}{Biao Zhang}, {and} \bibinfo{person}{Yaping Ren}.} \bibinfo{year}{2025}\natexlab{}.
-\newblock \showarticletitle{Novel {CP} Models and {CP}-Assisted Meta-Heuristic Algorithm for Flexible Job Shop Scheduling Benchmark Problem with Multi-{AGV}}.
-\newblock \bibinfo{journal}{\emph{IEEE Transactions on Systems, Man, and Cybernetics: Systems}} \bibinfo{volume}{55}, \bibinfo{number}{11} (\bibinfo{year}{2025}), \bibinfo{pages}{8455--8468}.
+\bibfield{author}{\bibinfo{person}{Leilei Meng}, \bibinfo{person}{Weiyao
+  Cheng}, \bibinfo{person}{Chaoyong Zhang}, \bibinfo{person}{Kaizhou Gao},
+  \bibinfo{person}{Biao Zhang}, {and} \bibinfo{person}{Yaping Ren}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{Novel {CP} Models and {CP}-Assisted Meta-Heuristic
+  Algorithm for Flexible Job Shop Scheduling Benchmark Problem with
+  Multi-{AGV}}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Systems, Man, and
+  Cybernetics: Systems}} \bibinfo{volume}{55}, \bibinfo{number}{11}
+  (\bibinfo{year}{2025}), \bibinfo{pages}{8455--8468}.
 \newblock
 \href{https://doi.org/10.1109/TSMC.2025.3604355}{doi:\nolinkurl{10.1109/TSMC.2025.3604355}}
 
 
 \bibitem[Ouelhadj and Petrovic(2009)]%
         {ouelhadj2009survey}
-\bibfield{author}{\bibinfo{person}{Djamila Ouelhadj} {and} \bibinfo{person}{Sanja Petrovic}.} \bibinfo{year}{2009}\natexlab{}.
-\newblock \showarticletitle{A Survey of Dynamic Scheduling in Manufacturing Systems}.
-\newblock \bibinfo{journal}{\emph{Journal of Scheduling}} \bibinfo{volume}{12}, \bibinfo{number}{4} (\bibinfo{year}{2009}), \bibinfo{pages}{417--431}.
+\bibfield{author}{\bibinfo{person}{Djamila Ouelhadj} {and}
+  \bibinfo{person}{Sanja Petrovic}.} \bibinfo{year}{2009}\natexlab{}.
+\newblock \showarticletitle{A Survey of Dynamic Scheduling in Manufacturing
+  Systems}.
+\newblock \bibinfo{journal}{\emph{Journal of Scheduling}} \bibinfo{volume}{12},
+  \bibinfo{number}{4} (\bibinfo{year}{2009}), \bibinfo{pages}{417--431}.
 \newblock
 \href{https://doi.org/10.1007/s10951-008-0090-8}{doi:\nolinkurl{10.1007/s10951-008-0090-8}}
 
 
 \bibitem[Qin et~al\mbox{.}(2026)]%
         {qin2026knowledge}
-\bibfield{author}{\bibinfo{person}{Haoxiang Qin}, \bibinfo{person}{Yi Xiang}, \bibinfo{person}{Yuyan Han}, \bibinfo{person}{Yuting Wang}, \bibinfo{person}{Junqing Li}, {and} \bibinfo{person}{Quanke Pan}.} \bibinfo{year}{2026}\natexlab{}.
-\newblock \showarticletitle{A Knowledge Region Selection Enhanced Quality-Diversity Algorithm for Real-World Flexible Job Shop Scheduling with Automated Guided Vehicles Transportation}.
-\newblock \bibinfo{journal}{\emph{Engineering Applications of Artificial Intelligence}}  \bibinfo{volume}{164} (\bibinfo{year}{2026}), \bibinfo{pages}{113352}.
+\bibfield{author}{\bibinfo{person}{Haoxiang Qin}, \bibinfo{person}{Yi Xiang},
+  \bibinfo{person}{Yuyan Han}, \bibinfo{person}{Yuting Wang},
+  \bibinfo{person}{Junqing Li}, {and} \bibinfo{person}{Quanke Pan}.}
+  \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{A Knowledge Region Selection Enhanced
+  Quality-Diversity Algorithm for Real-World Flexible Job Shop Scheduling with
+  Automated Guided Vehicles Transportation}.
+\newblock \bibinfo{journal}{\emph{Engineering Applications of Artificial
+  Intelligence}}  \bibinfo{volume}{164} (\bibinfo{year}{2026}),
+  \bibinfo{pages}{113352}.
 \newblock
 \href{https://doi.org/10.1016/j.engappai.2025.113352}{doi:\nolinkurl{10.1016/j.engappai.2025.113352}}
 
 
+\bibitem[Subramaniam and Raheja(2003)]%
+        {subramaniam2003maor}
+\bibfield{author}{\bibinfo{person}{Velusamy Subramaniam} {and}
+  \bibinfo{person}{Amritpal~Singh Raheja}.} \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{{mAOR}: A heuristic-based reactive repair mechanism
+  for job shop schedules}.
+\newblock \bibinfo{journal}{\emph{The International Journal of Advanced
+  Manufacturing Technology}} \bibinfo{volume}{22}, \bibinfo{number}{9-10}
+  (\bibinfo{year}{2003}), \bibinfo{pages}{669--680}.
+\newblock
+\href{https://doi.org/10.1007/s00170-003-1601-6}{doi:\nolinkurl{10.1007/s00170-003-1601-6}}
+
+
 \bibitem[Sun et~al\mbox{.}(2023)]%
         {sun2023integrated}
-\bibfield{author}{\bibinfo{person}{Jiachen Sun}, \bibinfo{person}{Zifeng Xu}, \bibinfo{person}{Zhenhao Yan}, \bibinfo{person}{Lilan Liu}, {and} \bibinfo{person}{Yixiang Zhang}.} \bibinfo{year}{2023}\natexlab{}.
-\newblock \showarticletitle{An Approach to Integrated Scheduling of Flexible Job-Shop Considering Conflict-Free Routing Problems}.
-\newblock \bibinfo{journal}{\emph{Sensors}} \bibinfo{volume}{23}, \bibinfo{number}{9} (\bibinfo{year}{2023}), \bibinfo{pages}{4526}.
+\bibfield{author}{\bibinfo{person}{Jiachen Sun}, \bibinfo{person}{Zifeng Xu},
+  \bibinfo{person}{Zhenhao Yan}, \bibinfo{person}{Lilan Liu}, {and}
+  \bibinfo{person}{Yixiang Zhang}.} \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{An Approach to Integrated Scheduling of Flexible
+  Job-Shop Considering Conflict-Free Routing Problems}.
+\newblock \bibinfo{journal}{\emph{Sensors}} \bibinfo{volume}{23},
+  \bibinfo{number}{9} (\bibinfo{year}{2023}), \bibinfo{pages}{4526}.
 \newblock
 \href{https://doi.org/10.3390/s23094526}{doi:\nolinkurl{10.3390/s23094526}}
 
 
+\bibitem[{\v{S}}vancara et~al\mbox{.}(2019)]%
+        {svancara2019online}
+\bibfield{author}{\bibinfo{person}{Ji{\v{r}}{\'i} {\v{S}}vancara},
+  \bibinfo{person}{Marek Vlk}, \bibinfo{person}{Roni Stern},
+  \bibinfo{person}{Dor Atzmon}, {and} \bibinfo{person}{Roman Bart{\'a}k}.}
+  \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Online Multi-Agent Pathfinding}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the AAAI Conference on Artificial
+  Intelligence}}, Vol.~\bibinfo{volume}{33}. \bibinfo{pages}{7732--7739}.
+\newblock
+\href{https://doi.org/10.1609/aaai.v33i01.33017732}{doi:\nolinkurl{10.1609/aaai.v33i01.33017732}}
+
+
 \bibitem[van Os and Basten(2026)]%
         {vanos2026exact}
-\bibfield{author}{\bibinfo{person}{Roel W.~M. van Os} {and} \bibinfo{person}{Twan Basten}.} \bibinfo{year}{2026}\natexlab{}.
-\newblock \showarticletitle{An Exact Decomposition-Based Approach to the Conflict-Free-Transportation-Constrained Flexible Job-Shop Scheduling Problem}.
-\newblock \bibinfo{journal}{\emph{Computers \& Operations Research}}  \bibinfo{volume}{187} (\bibinfo{year}{2026}), \bibinfo{pages}{107342}.
+\bibfield{author}{\bibinfo{person}{Roel W.~M. van Os} {and}
+  \bibinfo{person}{Twan Basten}.} \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{An Exact Decomposition-Based Approach to the
+  Conflict-Free-Transportation-Constrained Flexible Job-Shop Scheduling
+  Problem}.
+\newblock \bibinfo{journal}{\emph{Computers \& Operations Research}}
+  \bibinfo{volume}{187} (\bibinfo{year}{2026}), \bibinfo{pages}{107342}.
 \newblock
 \href{https://doi.org/10.1016/j.cor.2025.107342}{doi:\nolinkurl{10.1016/j.cor.2025.107342}}
 
 
 \bibitem[Vieira et~al\mbox{.}(2003)]%
         {vieira2003rescheduling}
-\bibfield{author}{\bibinfo{person}{Guilherme~E Vieira}, \bibinfo{person}{Jeffrey~W Herrmann}, {and} \bibinfo{person}{Edward Lin}.} \bibinfo{year}{2003}\natexlab{}.
-\newblock \showarticletitle{Rescheduling Manufacturing Systems: A Framework of Strategies, Policies, and Methods}.
-\newblock \bibinfo{journal}{\emph{Journal of Scheduling}} \bibinfo{volume}{6}, \bibinfo{number}{1} (\bibinfo{year}{2003}), \bibinfo{pages}{39--62}.
+\bibfield{author}{\bibinfo{person}{Guilherme~E Vieira},
+  \bibinfo{person}{Jeffrey~W Herrmann}, {and} \bibinfo{person}{Edward Lin}.}
+  \bibinfo{year}{2003}\natexlab{}.
+\newblock \showarticletitle{Rescheduling Manufacturing Systems: A Framework of
+  Strategies, Policies, and Methods}.
+\newblock \bibinfo{journal}{\emph{Journal of Scheduling}} \bibinfo{volume}{6},
+  \bibinfo{number}{1} (\bibinfo{year}{2003}), \bibinfo{pages}{39--62}.
 \newblock
 \href{https://doi.org/10.1023/A:1022235519958}{doi:\nolinkurl{10.1023/A:1022235519958}}
 
 
 \bibitem[Xin et~al\mbox{.}(2025)]%
         {xin2025review}
-\bibfield{author}{\bibinfo{person}{Bin Xin}, \bibinfo{person}{Sai Lu}, \bibinfo{person}{Qing Wang}, {and} \bibinfo{person}{Fang Deng}.} \bibinfo{year}{2025}\natexlab{}.
-\newblock \showarticletitle{A Review of Flexible Job Shop Scheduling Problems Considering Transportation Vehicles}.
-\newblock \bibinfo{journal}{\emph{Frontiers of Information Technology \& Electronic Engineering}} \bibinfo{volume}{26}, \bibinfo{number}{3} (\bibinfo{year}{2025}), \bibinfo{pages}{332--353}.
+\bibfield{author}{\bibinfo{person}{Bin Xin}, \bibinfo{person}{Sai Lu},
+  \bibinfo{person}{Qing Wang}, {and} \bibinfo{person}{Fang Deng}.}
+  \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{A Review of Flexible Job Shop Scheduling Problems
+  Considering Transportation Vehicles}.
+\newblock \bibinfo{journal}{\emph{Frontiers of Information Technology \&
+  Electronic Engineering}} \bibinfo{volume}{26}, \bibinfo{number}{3}
+  (\bibinfo{year}{2025}), \bibinfo{pages}{332--353}.
 \newblock
 \href{https://doi.org/10.1631/FITEE.2300795}{doi:\nolinkurl{10.1631/FITEE.2300795}}
 
 
 \bibitem[Zeitr{\"a}g and Figueira(2025)]%
         {zeitrag2025novel}
-\bibfield{author}{\bibinfo{person}{Yannik Zeitr{\"a}g} {and} \bibinfo{person}{Jos{\'e}~Rui Figueira}.} \bibinfo{year}{2025}\natexlab{}.
-\newblock \showarticletitle{A novel machine-learning rolling horizon heuristic for dynamic lot-sizing and job shop scheduling problems}.
-\newblock \bibinfo{journal}{\emph{International Journal of Production Research}} \bibinfo{volume}{63}, \bibinfo{number}{12} (\bibinfo{year}{2025}), \bibinfo{pages}{4563--4589}.
+\bibfield{author}{\bibinfo{person}{Yannik Zeitr{\"a}g} {and}
+  \bibinfo{person}{Jos{\'e}~Rui Figueira}.} \bibinfo{year}{2025}\natexlab{}.
+\newblock \showarticletitle{A novel machine-learning rolling horizon heuristic
+  for dynamic lot-sizing and job shop scheduling problems}.
+\newblock \bibinfo{journal}{\emph{International Journal of Production
+  Research}} \bibinfo{volume}{63}, \bibinfo{number}{12} (\bibinfo{year}{2025}),
+  \bibinfo{pages}{4563--4589}.
 \newblock
 
 
 \bibitem[Zhang et~al\mbox{.}(2024)]%
         {zhang2024guidance}
-\bibfield{author}{\bibinfo{person}{Yulun Zhang}, \bibinfo{person}{He Jiang}, \bibinfo{person}{Varun Bhatt}, \bibinfo{person}{Stefanos Nikolaidis}, {and} \bibinfo{person}{Jiaoyang Li}.} \bibinfo{year}{2024}\natexlab{}.
-\newblock \showarticletitle{Guidance Graph Optimization for Lifelong Multi-Agent Path Finding}. In \bibinfo{booktitle}{\emph{Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence (IJCAI)}}.
+\bibfield{author}{\bibinfo{person}{Yulun Zhang}, \bibinfo{person}{He Jiang},
+  \bibinfo{person}{Varun Bhatt}, \bibinfo{person}{Stefanos Nikolaidis}, {and}
+  \bibinfo{person}{Jiaoyang Li}.} \bibinfo{year}{2024}\natexlab{}.
+\newblock \showarticletitle{Guidance Graph Optimization for Lifelong
+  Multi-Agent Path Finding}. In \bibinfo{booktitle}{\emph{Proceedings of the
+  Thirty-Third International Joint Conference on Artificial Intelligence
+  (IJCAI)}}.
 \newblock
 
 
 \bibitem[Zhao et~al\mbox{.}(2019)]%
         {zhao2019decomposition}
-\bibfield{author}{\bibinfo{person}{Ziyan Zhao}, \bibinfo{person}{Shixin Liu}, \bibinfo{person}{MengChu Zhou}, \bibinfo{person}{Xiwang Guo}, {and} \bibinfo{person}{Liang Qi}.} \bibinfo{year}{2019}\natexlab{}.
-\newblock \showarticletitle{Decomposition method for new single-machine scheduling problems from steel production systems}.
-\newblock \bibinfo{journal}{\emph{IEEE Transactions on Automation Science and Engineering}} \bibinfo{volume}{17}, \bibinfo{number}{3} (\bibinfo{year}{2019}), \bibinfo{pages}{1376--1387}.
+\bibfield{author}{\bibinfo{person}{Ziyan Zhao}, \bibinfo{person}{Shixin Liu},
+  \bibinfo{person}{MengChu Zhou}, \bibinfo{person}{Xiwang Guo}, {and}
+  \bibinfo{person}{Liang Qi}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Decomposition method for new single-machine
+  scheduling problems from steel production systems}.
+\newblock \bibinfo{journal}{\emph{IEEE Transactions on Automation Science and
+  Engineering}} \bibinfo{volume}{17}, \bibinfo{number}{3}
+  (\bibinfo{year}{2019}), \bibinfo{pages}{1376--1387}.
 \newblock
 
 

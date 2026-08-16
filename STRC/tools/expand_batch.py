@@ -23,22 +23,32 @@ if ROOT not in sys.path:
 
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser(description="STRC expanded seed/instance matrix")
-    ap.add_argument("--seeds", default="42,7,2024,99,123")
+    ap.add_argument("--seeds", default="42,7,2024,99,123,13,1,777,31415,8")
     ap.add_argument("--budget-sec", type=float, default=2.0)
     ap.add_argument("--t-now-frac", type=float, default=0.35)
     ap.add_argument("--skip-scale", action="store_true")
     ap.add_argument("--skip-e5", action="store_true")
+    ap.add_argument("--skip-e6", action="store_true")
     ap.add_argument("--out-dir", default=OUT)
     return ap.parse_args()
 
 
 def _instances():
+    """五个算例格。
+
+    原来只有前三个,共 3x5=15 对,而 paper01 是 100 对——评审上这是本文最弱的一处。
+    后两个补的是布局维度:funnel(LD11,装卸点最小割最窄)与 mid(LD22,出口更多),
+    与 high(LD21)同规模同柔性,只差走廊拓扑,故闭包规模的差异可归因于布局。
+    种子默认与 paper01 的十种子表对齐,合计 5x10=50 对。
+    """
     from algorithm.clbs_bridge import CLBS_INPUT
+    ext = lambda n: os.path.join(CLBS_INPUT, "ext", n)  # noqa: E731
     return [
         ("example_3x3x2", os.path.join(CLBS_INPUT, "example_3x3x2.json")),
         ("congested_8x4x4", os.path.join(CLBS_INPUT, "congested_8x4x4.json")),
-        ("S8x4x4_high", os.path.join(
-            CLBS_INPUT, "ext", "S8x4x4-LD21-H0.3-F0.6-A4-s42.json")),
+        ("S8x4x4_high", ext("S8x4x4-LD21-H0.3-F0.6-A4-s42.json")),
+        ("S8x4x4_funnel", ext("S8x4x4-LD11-H0.3-F0.6-A4-s42.json")),
+        ("S8x4x4_mid", ext("S8x4x4-LD22-H0.3-F0.6-A4-s42.json")),
     ]
 
 
@@ -235,6 +245,108 @@ def _run_e5(inst_path, inst_name, seed, t_frac, rows):
               f"R0 Cmax={rep0.makespan} R2 Cmax={rep2.makespan}")
 
 
+def _run_e6_types(inst_path, inst_name, seed, t_frac, rows):
+    """E6:扰动类型 x 边界定义。填的是覆盖矩阵里那一大片「未测」。
+
+    为什么这一组只测边界、不测修复。四类扰动里只有走廊阻断被修复引擎正确建模
+    ——阻断被注入为 Router 上的一段强制占用。降速在 block_context 里被当成整段
+    阻断处理(过近似),车辆故障与机械臂故障则根本没有注入通道,重放时那台车/那台
+    机器仍然可用。所以对后三类跑「可行率」得到的会是假阳性。本组因此只报**边界**:
+    任务图影响域有多大、预约闭包有多大、后者是否包含前者。这恰好是覆盖矩阵要回答
+    的问题——「任务图边界看不看得见这类扰动」——而不需要修复语义。
+
+    A/B 之分按 algorithm.disturbance.TOUCHES_TASK_GRAPH:
+      B 类(不碰任务图):corridor_block、corridor_slowdown
+      A 类(碰任务图)  :ra_failure、agv_breakdown
+    注意车辆故障被判为 A 类:它虽不改工序指派,却使该车承运的工序无法执行,
+    按定义 A 的「可执行性失效」成立,且任务图上确有非空种子(经车-任务映射)。
+    """
+    from algorithm.clbs_bridge import Network, load_instance
+    from algorithm.closure import (
+        machine_chains_from_ops,
+        spatiotemporal_closure,
+        task_graph_impact,
+        job_precedence_from_reservations,
+    )
+    from algorithm.disturbance import Disturbance, seed_failed_reservations
+    from algorithm.repair import release_set_r1
+    from algorithm.schedule_io import build_baseline, pick_busy_corridor
+
+    inst = load_instance(inst_path)
+    net = Network(inst.nodes, inst.corridors, inst.lu_node)
+    bundle = build_baseline(inst, net, seed=seed, mode="heuristic")
+    t_now = t_frac * bundle.makespan
+    chains = machine_chains_from_ops(bundle.result.ops)
+    job_succ = job_precedence_from_reservations(bundle.reservations)
+
+    cid, t0, t1, _ = pick_busy_corridor(bundle.reservations, t_now=t_now)
+    cases = [
+        ("corridor_block", Disturbance(
+            type="corridor_block", t_now=t_now, corridor=cid,
+            t_start=t0, t_end=t1)),
+        ("corridor_slowdown", Disturbance(
+            type="corridor_slowdown", t_now=t_now, corridor=cid,
+            t_start=t0, t_end=t1, tau_mult=2.0)),
+    ]
+
+    # 车辆故障:取 t_now 之后剩余运输段最多的那辆车,避免挑到一辆已经收工的。
+    fut = defaultdict(int)
+    for r in bundle.reservations:
+        if r.t_end > t_now:
+            fut[r.agv] += 1
+    if fut:
+        agv = max(fut, key=lambda a: fut[a])
+        cases.append(("agv_breakdown", Disturbance(
+            type="agv_breakdown", t_now=t_now, agv=int(agv))))
+
+    # 机械臂故障:取 t_now 之后剩余工序最多的那台机器,失效工序为其全部未完工序。
+    mfut = defaultdict(list)
+    for rec in bundle.result.ops.values():
+        if getattr(rec, "pseudo", False) or rec.machine is None:
+            continue
+        if rec.finish > t_now:
+            mfut[str(rec.machine)].append((rec.job, rec.i))
+    if mfut:
+        mac = max(mfut, key=lambda m: len(mfut[m]))
+        cases.append(("ra_failure", Disturbance(
+            type="ra_failure", t_now=t_now, machine=mac,
+            extra={"failed_ops": mfut[mac]})))
+
+    # 与 release_set_r1 内部逐字同构,否则 T_impact 与 |R1| 会来自两套 meta。
+    atasks = defaultdict(list)
+    for tr in bundle.result.transports:
+        if tr.arrive > t_now:
+            atasks[tr.agv].append(f"J{tr.job}-{tr.i}")
+    meta = {
+        "machine_tasks": {m: [f"J{j}-{i}" for j, i in ops]
+                          for m, ops in mfut.items()},
+        "agv_tasks": atasks,
+    }
+
+    n_alive = sum(1 for r in bundle.reservations if r.t_end > t_now)
+    for label, dist in cases:
+        t_impact = task_graph_impact(dist, job_succ, theta=2, schedule_meta=meta)
+        r1 = release_set_r1(bundle, dist, theta=2)
+        seeds = seed_failed_reservations(dist, bundle.reservations)
+        closure = spatiotemporal_closure(
+            seeds, bundle.reservations, horizon=bundle.makespan + 1.0,
+            t_now=t_now, machine_chains=chains)
+        cl = closure.as_set()
+        rows.append({
+            "instance": inst_name, "seed": seed,
+            "dist_type": label, "dist_class": dist.class_label,
+            "n_alive": n_alive,
+            "n_T_impact": len(t_impact),
+            "n_R1_release": len(r1),
+            "n_seeds": len(seeds),
+            "n_closure": closure.size,
+            "closure_frac": round(closure.size / max(1, n_alive), 4),
+            "R1_empty": len(r1) == 0,
+            "R2_covers_R1": all(r in cl for r in r1),
+            "R2_strictly_larger": len(cl) > len(set(r1)),
+        })
+
+
 def _write(path, rows):
     if not rows:
         return
@@ -334,11 +446,41 @@ def _summarize_md(out_dir, e1, e2, e3, scale, e5) -> str:
     return path
 
 
+def _summarize_e6(out_dir, e6) -> None:
+    if not e6:
+        return
+    lines = ["", "## E6 disturbance type x boundary", "",
+             "| type | class | n | R1 empty | mean T_impact | mean |R1| |"
+             " mean |Cl| | mean Cl/alive | R2 covers R1 |",
+             "|---|---|---:|---:|---:|---:|---:|---:|---:|"]
+    by = defaultdict(list)
+    for r in e6:
+        by[r["dist_type"]].append(r)
+    order = ["corridor_block", "corridor_slowdown", "agv_breakdown", "ra_failure"]
+    for t in order:
+        rs = by.get(t)
+        if not rs:
+            continue
+        n = len(rs)
+        lines.append(
+            f"| `{t}` | {rs[0]['dist_class']} | {n} | "
+            f"{sum(1 for r in rs if r['R1_empty'])}/{n} | "
+            f"{sum(r['n_T_impact'] for r in rs)/n:.1f} | "
+            f"{sum(r['n_R1_release'] for r in rs)/n:.1f} | "
+            f"{sum(r['n_closure'] for r in rs)/n:.1f} | "
+            f"{sum(r['closure_frac'] for r in rs)/n:.3f} | "
+            f"{sum(1 for r in rs if r['R2_covers_R1'])}/{n} |"
+        )
+    path = os.path.join(out_dir, "summary.md")
+    with open(path, "a", encoding="utf-8") as f:
+        f.write("\n".join(lines) + "\n")
+
+
 def main() -> int:
     args = parse_args()
     seeds = [int(x) for x in args.seeds.split(",")]
     os.makedirs(args.out_dir, exist_ok=True)
-    e1, e2, e3, scale, e5 = [], [], [], [], []
+    e1, e2, e3, scale, e5, e6 = [], [], [], [], [], []
 
     print("=== expand_batch: E1/E2/E3 ===")
     for name, path in _instances():
@@ -363,12 +505,22 @@ def main() -> int:
             for seed in seeds[:3]:  # 3 seeds × 3 budgets
                 _run_e5(path, name, seed, args.t_now_frac, e5)
 
+    if not args.skip_e6:
+        print("=== expand_batch: E6 disturbance types ===")
+        for name, path in _instances():
+            if not os.path.isfile(path):
+                continue
+            for seed in seeds:
+                _run_e6_types(path, name, seed, args.t_now_frac, e6)
+
+    _write(os.path.join(args.out_dir, "e6_types.csv"), e6)
     _write(os.path.join(args.out_dir, "e1_miss.csv"), e1)
     _write(os.path.join(args.out_dir, "e2_containment.csv"), e2)
     _write(os.path.join(args.out_dir, "e3_boundary.csv"), e3)
     _write(os.path.join(args.out_dir, "scale_compare.csv"), scale)
     _write(os.path.join(args.out_dir, "e5_cross_curve.csv"), e5)
     md = _summarize_md(args.out_dir, e1, e2, e3, scale, e5)
+    _summarize_e6(args.out_dir, e6)
     print(f"wrote summary {md}")
     print(f"E1 C1 pass {sum(1 for r in e1 if r['pass_C1'])}/{len(e1)}")
     print(f"E2b pass {sum(1 for r in e2 if r['pass_E2b'])}/{len(e2)}")
