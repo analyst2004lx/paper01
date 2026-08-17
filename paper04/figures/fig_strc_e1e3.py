@@ -16,10 +16,15 @@ EXP = os.path.abspath(os.path.join(
     HERE, "..", "..", "STRC", "experiments", "expanded"))
 OUT = os.path.join(HERE, "fig_strc_e1e3")
 
+ORDER = ("example_3x3x2", "congested_8x4x4", "S8x4x4_high",
+         "S8x4x4_funnel", "S8x4x4_mid")
+
 LABEL = {
     "example_3x3x2": "3x3x2",
     "congested_8x4x4": "congested",
     "S8x4x4_high": "S8 high",
+    "S8x4x4_funnel": "S8 funnel",
+    "S8x4x4_mid": "S8 mid",
 }
 
 
@@ -30,7 +35,8 @@ def main() -> None:
     by1 = defaultdict(list)
     for r in e1:
         by1[r["instance"]].append(r)
-    names = [n for n in ("example_3x3x2", "congested_8x4x4", "S8x4x4_high") if n in by1]
+    names = [n for n in ORDER if n in by1]
+    n_seeds = max(len(by1[n]) for n in names)
     x = np.arange(len(names))
     w = 0.28
 
@@ -46,15 +52,15 @@ def main() -> None:
     r2_feas = [sum(1 for r in by3[n] if r["R2_feasible"] == "True") / len(by3[n])
                for n in names]
 
-    fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.7))
+    fig, axes = plt.subplots(1, 2, figsize=(7.4, 2.8))
 
     ax = axes[0]
     ax.bar(x - w, t_imp, w, label=r"$|T_{\mathrm{impact}}|$", color="#b0b8c0")
     ax.bar(x, seeds, w, label=r"$|\mathrm{Seeds}|$", color="#c45c26")
     ax.bar(x + w, cl, w, label=r"$|\mathrm{Cl}|$", color="#1f4e79")
     ax.set_xticks(x)
-    ax.set_xticklabels([LABEL[n] for n in names])
-    ax.set_ylabel("mean count (5 seeds)")
+    ax.set_xticklabels([LABEL[n] for n in names], fontsize=8)
+    ax.set_ylabel(f"mean count ({n_seeds} seeds)")
     ax.set_title("E1: task-graph miss vs closure")
     ax.legend(loc="upper left", fontsize=7)
     ax.set_ylim(0, max(cl) * 1.25)
@@ -63,11 +69,12 @@ def main() -> None:
     ax.bar(x - w / 2, r1_feas, w, label="R1 feasible", color="#b0b8c0")
     ax.bar(x + w / 2, r2_feas, w, label="R2 / STRC feasible", color="#1f4e79")
     ax.set_xticks(x)
-    ax.set_xticklabels([LABEL[n] for n in names])
+    ax.set_xticklabels([LABEL[n] for n in names], fontsize=8)
     ax.set_ylabel("feasibility rate")
-    ax.set_ylim(0, 1.15)
+    ax.set_ylim(0, 1.45)
     ax.set_title("E3: same engine, swap boundary")
-    ax.legend(loc="upper right", fontsize=7)
+    # R2 的柱子在全部五格都顶到 1.0,右上角没有空位放图例,故压在标题下方居中。
+    ax.legend(loc="upper center", fontsize=7, ncol=2, framealpha=0.9)
     for i, (a, b) in enumerate(zip(r1_feas, r2_feas)):
         ax.text(i - w / 2, a + 0.03, f"{a:.0%}", ha="center", fontsize=7, color="#555")
         ax.text(i + w / 2, b + 0.03, f"{b:.0%}", ha="center", fontsize=7, color="#1f4e79")

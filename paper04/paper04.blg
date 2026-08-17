@@ -14,48 +14,55 @@ Reallocated glb_str_end (elt_size=4) to 20 items from 10.
 Reallocated singl_function (elt_size=4) to 100 items from 50.
 Warning--no number and no volume in dalcastagne2020reactive
 Warning--page numbers missing in both pages and numpages fields in dalcastagne2020reactive
+Warning--empty publisher in kuster2007local
+Warning--empty address in kuster2007local
+Warning--empty publisher in malka2024online
+Warning--empty address in malka2024online
+Warning--can't use both volume and number fields in svancara2019online
+Warning--empty publisher in svancara2019online
+Warning--empty address in svancara2019online
 Warning--empty publisher in zhang2024guidance
 Warning--empty address in zhang2024guidance
 Warning--page numbers missing in both pages and numpages fields in zhang2024guidance
-You've used 14 entries,
+You've used 24 entries,
             6273 wiz_defined-function locations,
-            1690 strings with 22504 characters,
-and the built_in function-call counts, 17551 in all, are:
-= -- 2700
-> -- 594
+            1763 strings with 24610 characters,
+and the built_in function-call counts, 30335 in all, are:
+= -- 4605
+> -- 928
 < -- 0
-+ -- 218
-- -- 206
-* -- 1263
-:= -- 1615
-add.period$ -- 69
-call.type$ -- 14
-change.case$ -- 114
-chr.to.int$ -- 14
-cite$ -- 19
-duplicate$ -- 1383
-empty$ -- 962
-format.name$ -- 262
-if$ -- 4556
++ -- 335
+- -- 325
+* -- 2135
+:= -- 2738
+add.period$ -- 119
+call.type$ -- 24
+change.case$ -- 183
+chr.to.int$ -- 24
+cite$ -- 36
+duplicate$ -- 2488
+empty$ -- 1734
+format.name$ -- 421
+if$ -- 7840
 int.to.chr$ -- 2
 int.to.str$ -- 1
-missing$ -- 57
-newline$ -- 159
-num.names$ -- 98
-pop$ -- 513
+missing$ -- 100
+newline$ -- 246
+num.names$ -- 168
+pop$ -- 888
 preamble$ -- 1
-purify$ -- 226
+purify$ -- 375
 quote$ -- 0
-skip$ -- 494
+skip$ -- 900
 stack$ -- 0
-substring$ -- 1215
-swap$ -- 161
+substring$ -- 2308
+swap$ -- 291
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 238
-warning$ -- 5
-while$ -- 82
+type$ -- 440
+warning$ -- 12
+while$ -- 158
 width$ -- 0
-write$ -- 310
-(There were 5 warnings)
+write$ -- 510
+(There were 12 warnings)

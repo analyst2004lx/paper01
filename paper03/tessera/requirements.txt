@@ -1,0 +1,9 @@
+# TESSERA 依赖。沿用 slid 的极简原则。
+# 哈希链、HMAC、槽号绑定全部用标准库 hashlib / hmac / secrets 即可,
+# 只有 Ed25519 承诺根签名需要外部库。
+# XES / BPMN 解析用标准库 xml.etree,流式读取,不引入过程挖掘框架。
+numpy>=1.24
+scipy>=1.10           # 统计检验与分位数
+matplotlib>=3.7       # 仅 tools/ 出图用,算法核心不依赖
+cryptography>=41.0    # 仅 Ed25519 承诺根签名与开销计量;哈希链用 hashlib
+pytest>=7.0           # 仅 tests/ 用

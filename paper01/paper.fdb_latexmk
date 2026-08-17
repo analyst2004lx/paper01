@@ -1,19 +1,19 @@
 # Fdb version 4
-["bibtex paper"] 1786259679.68425 "paper.aux" "paper.bbl" "paper" 1786259687.9398 0
-  "./ACM-Reference-Format.bst" 1785576501 96784 12e0ced1522ea2bfa9b2fb12855c7e9e ""
+["bibtex paper"] 1786866781.93516 "paper.aux" "paper.bbl" "paper" 1786868693.4416 0
+  "./ACM-Reference-Format.bst" 1785081366 96784 12e0ced1522ea2bfa9b2fb12855c7e9e ""
   "./reference-base.bib" 1786166664 44611 87428b836d39844b446938fe93f7dde0 ""
-  "paper.aux" 1786259685 31479 8c19abab6a26ec36f30d7dd5c2373ab1 "xelatex"
+  "paper.aux" 1786868690 34646 2d3e8a460ddd1db27721c16d04f6cee1 "xelatex"
   (generated)
   "paper.bbl"
   "paper.blg"
   (rewritten before read)
-["xdvipdfmx"] 1786259686.74412 "paper.xdv" "paper.pdf" "paper" 1786259687.9496 0
-  "paper.xdv" 1786259685 979816 a211fea43b08fbef72c8899c6ab121a6 "xelatex"
+["xdvipdfmx"] 1786868692.25529 "paper.xdv" "paper.pdf" "paper" 1786868693.45468 0
+  "paper.xdv" 1786868690 1069636 36bdf98fedcc848641f6b24c704e5ca5 "xelatex"
   (generated)
   "paper.pdf"
   (rewritten before read)
-["xelatex"] 1786259680.14599 "paper.tex" "paper.xdv" "paper" 1786259687.94015 0
-  "acmart.cls" 1785576501 126055 54cc4edcc7b9cb1bf0a23c528626957c ""
+["xelatex"] 1786868683.22028 "paper.tex" "paper.xdv" "paper" 1786868693.44183 0
+  "acmart.cls" 1785081366 126055 54cc4edcc7b9cb1bf0a23c528626957c ""
   "c:/Windows/Fonts/msyh.ttc" 1752635948 19704352 1e10e74402e59d54499af795caf0b135 ""
   "c:/texlive/2024/texmf-dist/fonts/map/fontname/texfonts.map" 1786172309 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "c:/texlive/2024/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm" 1786174222 1528 7e12f4c0fcf5a072cebdcfbfc610f54c ""
@@ -248,22 +248,23 @@
   "c:/texlive/2024/texmf-dist/web2c/texmf.cnf" 1786171582 41649 5d6ae549fbbcb850a863f69aa41f3d10 ""
   "c:/texlive/2024/texmf-var/web2c/xetex/xelatex.fmt" 1786174500 10849609 db8fef028da4ed64105e572ba2f8dbf8 ""
   "c:/texlive/2024/texmf.cnf" 1786174245 713 e69b156964470283e0530f5060668171 ""
-  "fig/fig_case_chain.pdf" 1786244369 28992 2b31f4b7d672df3dfcb050f58b17277c ""
-  "fig/fig_case_gantt.pdf" 1786244369 38707 60c8dfdfdbe6367c1478b4427b672551 ""
-  "fig/fig_convergence_closedloop.pdf" 1786244369 34944 8efa2a369a5240f22f6243ce6d118191 ""
-  "fig/fig_framework.pdf" 1786244369 43931 f1bb74b7d428a31266acc4b6507f394b ""
-  "fig/fig_prediction3.pdf" 1786244369 36953 8747edbb8b9da79df26a981663ee640f ""
-  "fig/fig_protocol.pdf" 1786244369 32006 76dadbf76441aff895c3401393ad6099 ""
-  "fig/fig_protocols.pdf" 1786244369 30016 8d63931eaf40a5d7254196b0a6f9be2a ""
-  "fig/fig_theta.pdf" 1786244369 31625 6923c4142a02f8178a6ee9f77528fbe9 ""
-  "paper.aux" 1786259685 31479 8c19abab6a26ec36f30d7dd5c2373ab1 "xelatex"
-  "paper.bbl" 1786259680 8033 20d12653f2d629724413fde2fe91952e "bibtex paper"
-  "paper.out" 1786259685 6066 68a3598e36f37cf8603a7df1a7581607 "xelatex"
-  "paper.tex" 1786252086 143429 31825d12f095eb517827accd5245b46b ""
-  "tab/tab_bytag.tex" 1786244369 1094 06ae7d0828dd5e8fc4c4f6d01a2ec0eb ""
-  "tab/tab_instances.tex" 1786244369 923 c9fb314be60b83d87524ce26495ec812 ""
-  "tab/tab_main.tex" 1786244369 1576 39f3423937a22767ccaede70f6d00ebf ""
-  "tab/tab_prune.tex" 1786252085 1017 ff4e54e1d66ac4fa442ce779f134a3e2 ""
+  "fig/fig_case_chain.pdf" 1786868664 28992 be16f49a9f651455e0555b464a064faf ""
+  "fig/fig_case_gantt.pdf" 1786868662 38707 f71bb079979d849947e396cbe119b54f ""
+  "fig/fig_convergence_closedloop.pdf" 1786868655 34944 1e5795d48902a2ed5369225d4ffe0e29 ""
+  "fig/fig_framework.pdf" 1786868650 43931 d27cd5c9b41d3e8d7b51d99f8824c53f ""
+  "fig/fig_motivating.pdf" 1786868652 72484 813c06f351c2b1684a45a8744298881e ""
+  "fig/fig_prediction3.pdf" 1786868653 35932 39ff43763e6c5a6cfba3811cdfcee643 ""
+  "fig/fig_protocol.pdf" 1786868656 32006 885caf31869cd63e39faceb87c7c2a90 ""
+  "fig/fig_protocols.pdf" 1786868658 30016 ecf167c57c29ea874a24740b6bc34f69 ""
+  "fig/fig_theta.pdf" 1786868660 31625 3ed87ee638f97abb73c0c696cb502825 ""
+  "paper.aux" 1786868690 34646 2d3e8a460ddd1db27721c16d04f6cee1 "xelatex"
+  "paper.bbl" 1786866782 8033 20d12653f2d629724413fde2fe91952e "bibtex paper"
+  "paper.out" 1786868690 6151 46d953787dccc3fc7a3042f830f468fe "xelatex"
+  "paper.tex" 1786867337 161978 b2e6d1d87b5f5a46060be28cc935dc17 ""
+  "tab/tab_bytag.tex" 1786868649 1147 a3981ab0678fb4186edff1ebd7f7ead2 ""
+  "tab/tab_instances.tex" 1786868649 923 c9fb314be60b83d87524ce26495ec812 ""
+  "tab/tab_main.tex" 1786868649 1576 39f3423937a22767ccaede70f6d00ebf ""
+  "tab/tab_prune.tex" 1786868649 955 be96f0a5eb1c2f5fa6ac668c71902ee1 ""
   (generated)
   "paper.aux"
   "paper.log"

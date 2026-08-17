@@ -53,8 +53,24 @@ def _tr_map(result: DecodeResult) -> Dict[Tuple[int, int], TransportRecord]:
     return {(tr.job, tr.i): tr for tr in result.transports}
 
 
-def _op_needs_release(j: int, i: int, closed_tasks: Set[str]) -> bool:
-    return (f"J{j}-{i}-empty" in closed_tasks) or (f"J{j}-{i}-loaded" in closed_tasks)
+def _segments_to_reroute(
+    j: int, i: int, closed_tasks: Set[str]
+) -> Tuple[bool, bool]:
+    """决定该工序的空载段/满载段各自是否重路。
+
+    释放集是\u4e00个**预约**集合,而不是工序集合。早先这里按工序判定——两段里任一段
+    落在闭包内就整道重规划——于是当只有满载段进闭包时,空载段也被改写,而它的
+    task 标签并不在释放集里,E2b 便记为「外侧漂移」。实测 26 个失败格里 84 条漂移
+    预约无一例外都是这种同工序的空载段,其中 71 条在 t_now 之前就已执行完毕,
+    改写它同时违反假设 A2。故改为按段判定。
+
+    空载段进闭包必然带着满载段一起(两者是同车相邻预约,同车后继边由前者指向
+    后者),反之不成立。第二个返回值里的 or 只是防御:若边集将来变动导致这个
+    蕴含不再成立,重路空载段而冻结满载段会让满载段的起点失去依据。
+    """
+    need_empty = f"J{j}-{i}-empty" in closed_tasks
+    need_loaded = f"J{j}-{i}-loaded" in closed_tasks
+    return need_empty, need_loaded or need_empty
 
 
 def _install_block(router: Router, dist: Disturbance) -> None:
@@ -142,10 +158,10 @@ def replay_reroute(
                 old = tr_old.get(key)
                 if old is None:
                     raise RuntimeError(f"missing original transport for {key}")
-                need = _op_needs_release(j, i, closed_tasks)
+                re_empty, re_loaded = _segments_to_reroute(j, i, closed_tasks)
                 k = old.agv
                 dispatch_order.append(k)
-                if not need:
+                if not (re_empty or re_loaded):
                     # 外侧冻结:沿用原路径(已在表中),只推进车辆/工件状态
                     empty, loaded = old.empty_plan, old.loaded_plan
                     arrive = loaded.arrive
@@ -153,18 +169,27 @@ def replay_reroute(
                     transports.append(TransportRecord(
                         j, i, k, pickup, dest, ready[j], empty, loaded))
                 else:
-                    # 内侧改路:表中无旧预约,原车重规划
-                    # 先清掉同 task 的残留(不应存在);直接 route+commit
-                    empty = router.route(loc[k], pickup, max(avail[k], dist.t_now),
-                                         k, f"J{j}-{i}-empty")
-                    t_load = max(empty.arrive, ready[j], dist.t_now)
-                    loaded = router.route(pickup, dest, t_load, k,
-                                          f"J{j}-{i}-loaded")
+                    # 内侧改路:被释放的段表中无旧预约,原车重规划;
+                    # 未被释放的段已由 _precommit_frozen 占位,沿用原计划。
+                    if re_empty:
+                        empty = router.route(
+                            loc[k], pickup, max(avail[k], dist.t_now),
+                            k, f"J{j}-{i}-empty")
+                    else:
+                        empty = old.empty_plan
+                    t_load = max(empty.arrive, ready[j], dist.t_now, avail[k])
+                    if re_loaded:
+                        loaded = router.route(pickup, dest, t_load, k,
+                                              f"J{j}-{i}-loaded")
+                    else:
+                        loaded = old.loaded_plan
                     arrive = loaded.arrive
                     loc[k], avail[k] = dest, arrive
                     transports.append(TransportRecord(
                         j, i, k, pickup, dest, ready[j], empty, loaded))
-                    for plan in (empty, loaded):
+                    for plan, fresh in ((empty, re_empty), (loaded, re_loaded)):
+                        if not fresh:
+                            continue
                         for cid, w in plan.wait_by_corridor.items():
                             congestion[cid] = congestion.get(cid, 0.0) + w
 

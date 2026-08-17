@@ -1,0 +1,6 @@
+[
+  "tests/test_smoke.py::TestSmoke::test_clbs_bridge_loads_instance",
+  "tests/test_smoke.py::TestSmoke::test_e1_and_repair_corridor",
+  "tests/test_smoke.py::TestSmoke::test_modules_import",
+  "tests/test_smoke.py::TestSmoke::test_r0_under_block_smoke"
+]

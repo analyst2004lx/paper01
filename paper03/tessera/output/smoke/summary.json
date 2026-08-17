@@ -1,0 +1,89 @@
+{
+  "config": {
+    "rate": 0.2,
+    "seed": 42,
+    "attack": [
+      "P1",
+      "P3"
+    ],
+    "devices": 28,
+    "refute": true,
+    "n_activities": 3062
+  },
+  "coverage": {
+    "n_activities": 3062,
+    "n_corroborated": 2145,
+    "frac_corroborated": 0.7005225342913128,
+    "n_same_device_only": 228,
+    "n_no_realized": 183,
+    "n_no_model": 506,
+    "oracle_gap": 0.29947746570868716
+  },
+  "benign_far": 0.022534291312867407,
+  "detections": {
+    "P1": {
+      "family": "P1",
+      "n_forged": 363,
+      "n_accomplice": 0,
+      "n_hit": 363,
+      "dr": 1.0,
+      "latency_median_s": 54.64491800009273,
+      "latency_p95_s": 439.20263800001703,
+      "by_outcome": {
+        "refuted": 349,
+        "expired": 14
+      },
+      "n_self_incriminating": 359
+    },
+    "P3": {
+      "family": "P3",
+      "n_forged": 363,
+      "n_accomplice": 0,
+      "n_hit": 363,
+      "dr": 1.0,
+      "latency_median_s": 54.64491800009273,
+      "latency_p95_s": 439.20263800001703,
+      "by_outcome": {
+        "refuted": 349,
+        "expired": 14
+      },
+      "n_self_incriminating": 363
+    }
+  },
+  "collusion": {
+    "n_chains": 2556,
+    "n_in_scope": 2373,
+    "k_min": 1,
+    "k_median": 5,
+    "k_max": 13,
+    "frac_k_ge_3": 0.809945217024863
+  },
+  "budget": {
+    "auto_indep": {
+      "t_hb_s": 0.7215897863959068,
+      "r_misses": 3,
+      "detect_delay_s": 2.17476935918772,
+      "bandwidth_bps": 620.8513596590747,
+      "far_per_hour": 0.13969155592329183,
+      "binding": "safety"
+    },
+    "motion_indep": {
+      "t_hb_s": 0.19383650302506691,
+      "r_misses": 3,
+      "detect_delay_s": 0.5915095090752007,
+      "bandwidth_bps": 2311.226177775528,
+      "far_per_hour": 0.520025889999494,
+      "binding": "safety"
+    },
+    "motion_burst": {
+      "t_hb_s": 0.058374114237417916,
+      "r_misses": 10,
+      "detect_delay_s": 0.5937411423741792,
+      "bandwidth_bps": 7674.634653605264,
+      "far_per_hour": 0.4182978262603856,
+      "binding": "safety"
+    },
+    "pbft_5hz_bps": 1003520.0
+  },
+  "elapsed_s": 6.129772901535034
+}

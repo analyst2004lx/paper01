@@ -467,6 +467,9 @@ INPUT c:/texlive/2024/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm5.tfm
 INPUT c:/texlive/2024/texmf-dist/fonts/tfm/public/cm/cmmib10.tfm
 INPUT c:/texlive/2024/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmmib7.tfm
 INPUT c:/texlive/2024/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmmib5.tfm
+INPUT ./fig/fig_motivating.pdf
+INPUT ./fig/fig_motivating.pdf
+INPUT ./fig/fig_motivating.pdf
 INPUT ./fig/fig_framework.pdf
 INPUT ./fig/fig_framework.pdf
 INPUT ./fig/fig_framework.pdf
