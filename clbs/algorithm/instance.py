@@ -5,7 +5,7 @@ import json
 import math
 import re
 from dataclasses import dataclass, field
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 OpKey = Tuple[int, int]  # (job, op_index),op_index 从 1 起
 
@@ -22,6 +22,11 @@ class Instance:
     lu_node: str
     nodes: List[str]
     corridors: List[dict]                   # {u, v, time}
+    # 直接给定的取放点两两行驶时间矩阵,**绕过最短路计算**(规格 12.4 第 2 项)。
+    # 仅用于公开基准的退化对标:文献只发布一张位置对–时长矩阵,而该矩阵可能是
+    # 有向的、甚至不满足三角不等式(实测 HF 的 3-M / 7-M 两个随机布局即如此),
+    # 这两种情形都无法由任何"无向走廊图 + 最短路"复现。给定矩阵可逐字复现文献模型。
+    ideal_dist: Optional[Dict[str, Dict[str, float]]] = None
 
     # ---- 派生量 ----
     def eligible(self, j: int, i: int) -> List[int]:
@@ -68,6 +73,14 @@ def parse_instance(data: dict) -> Instance:
                 raise ValueError(f"工序 ({j},{i}) 的 Ω 为空")
 
     net = data["network"]
+    raw_dist = net.get("ideal_dist")
+    dist = None
+    if raw_dist is not None:
+        dist = {a: {b: float(t) for b, t in row.items()} for a, row in raw_dist.items()}
+        missing = [(a, b) for a in net["nodes"] for b in net["nodes"]
+                   if a != b and b not in dist.get(a, {})]
+        if missing:
+            raise ValueError(f"ideal_dist 缺少 {len(missing)} 个节点对,首个: {missing[0]}")
     return Instance(
         name=data.get("name", "unnamed"),
         delta_return=int(data.get("delta_return", 1)),
@@ -79,6 +92,7 @@ def parse_instance(data: dict) -> Instance:
         lu_node=net["lu_node"],
         nodes=list(net["nodes"]),
         corridors=list(net["corridors"]),
+        ideal_dist=dist,
     )
 
 

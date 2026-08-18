@@ -1267,6 +1267,43 @@
   doi={10.1109/TSMC.2025.3604355}
 }
 
+% Integrated machine + AGV scheduling with conflict-free routing on a
+% BIDIRECTIONAL guide-path network where "only one vehicle at a time can transit
+% a segment" -- i.e. the reservation unit is the EDGE, as in this paper (and
+% unlike vanos2026exact, whose reservation unit is the NODE -- note that despite
+% that paper's stated "unidirectional graph" assumption, its Example 3.1 expands
+% each undirected edge into two opposite arcs, so travel there is bidirectional
+% as well; the real difference is node-vs-edge, not directionality. The
+% underlying MSc thesis (van Os 2024, shipped in TJSP-toolset/docs) says it more
+% plainly still: "every edge in the layout corresponds to two edges in [the]
+% unidirectional graph assumed as input for our CFRP", and elsewhere calls those
+% layout edges "(bidirectional)". Their "unidirectional graph" therefore means a
+% graph of one-way ARCS, not one-way corridors). Its
+% instances carry alternative machines with machine-dependent processing times
+% AND an explicit network (a 20x20 adjacency matrix of per-segment transit times
+% for the illustrative case; six numbered grid layouts for the 14-problem set),
+% plus reference makespans broken down by fleet size. Cited in the limitations
+% as the one public instance family the "two model translations" argument does
+% NOT dispose of; excluded instead because its constraint (11) additionally caps
+% node occupancy at one vehicle (our model is a relaxation of theirs), and
+% because per-segment travel times are unpublished for the larger set.
+% On that last point (verified 2026-08-18): the omission cannot be patched by
+% assuming unit edge weights. Fig. 1 -- the ONE layout for which Table 4 does
+% publish per-segment times -- is drawn as the very same kind of unlabelled
+% regular grid as the six Appendix A layouts, yet its adjacent-segment times
+% take the values 1, 2 and 3. So the grids are schematic, not to scale, and
+% "looks equally long" does not imply "costs the same" in this paper.
+@article{lyu2019approach,
+  title={Approach to Integrated Scheduling Problems Considering Optimal Number of Automated Guided Vehicles and Conflict-Free Routing in Flexible Manufacturing Systems},
+  author={Lyu, Xiangfei and Song, Yuchuan and He, Changzheng and Lei, Qi and Guo, Weifei},
+  journal={IEEE Access},
+  volume={7},
+  pages={74909--74924},
+  year={2019},
+  publisher={IEEE},
+  doi={10.1109/ACCESS.2019.2919109}
+}
+
 % Exact LBBD (CP + ILP) for the CFTFJSSP: flexible machine eligibility with
 % location-dependent processing times AND conflict-free vehicle routing. Defines
 % the problem class we adopt, and supplies proven-optimal makespans on small
@@ -1280,6 +1317,51 @@
   year={2026},
   publisher={Elsevier},
   doi={10.1016/j.cor.2025.107342}
+}
+
+% ---------------------------------------------------------------------------
+% 第 5.9 小节退化对标所用的公开算例与参考值。三篇的分工:
+%   fattahi2007mathematical  原始 FJSP 算例(SFJS1:10 / MFJS1:10),无运输
+%   homayouni2021production  加上布局与运输时间矩阵使之成为 FJSPT;提供 MILP
+%                            可证最优值(16 个)与 LAHC 启发式值,即我们的主参照
+%   lim2023twophase          两阶段启发式;MFJST07--10 的 best-known 取自此文,
+%                            "所有算例均为两辆车"这一口径也由此文明确
+% 算例、参考值与逐文件来源见 clbs/database/(MANIFEST.csv 与 refvalues/hf.csv)。
+% ---------------------------------------------------------------------------
+@article{fattahi2007mathematical,
+  title={Mathematical Modeling and Heuristic Approaches to Flexible Job Shop Scheduling Problems},
+  author={Fattahi, Parviz and Saidi Mehrabad, Mohammad and Jolai, Fariborz},
+  journal={Journal of Intelligent Manufacturing},
+  volume={18},
+  number={3},
+  pages={331--342},
+  year={2007},
+  publisher={Springer},
+  doi={10.1007/s10845-007-0026-8}
+}
+
+@article{homayouni2021production,
+  title={Production and Transport Scheduling in Flexible Job Shop Manufacturing Systems},
+  author={Homayouni, Seyed Mahdi and Fontes, Dalila B. M. M.},
+  journal={Journal of Global Optimization},
+  volume={79},
+  number={2},
+  pages={463--502},
+  year={2021},
+  publisher={Springer},
+  doi={10.1007/s10898-021-00992-6}
+}
+
+@article{lim2023twophase,
+  title={A Two-Phase Iterative Mathematical Programming-Based Heuristic for a Flexible Job Shop Scheduling Problem with Transportation},
+  author={Lim, Che Han and Moon, Seung Ki},
+  journal={Applied Sciences},
+  volume={13},
+  number={8},
+  pages={5215},
+  year={2023},
+  publisher={MDPI},
+  doi={10.3390/app13085215}
 }
 
 % Two-stage scheme: hybrid GA for scheduling, then AGV-encoded GA with

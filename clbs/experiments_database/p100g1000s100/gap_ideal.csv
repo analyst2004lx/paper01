@@ -1,0 +1,11 @@
+﻿instance,base,layout,ref_kind,ref_value,ref_method,ref_citekey,seeds,best,mean,std,worst,gap_best_pct,gap_mean_pct,matches_ref,lower_bound,mean_runtime_sec,all_valid
+mfjs01-ideal,mfjs01,6-M,proven_optimal,485.0,MILP,homayouni2021production,10,485.0,485.0,0.0,485.0,0.0,0.0,True,407.0,2.32,True
+mfjs02-ideal,mfjs02,7-M,proven_optimal,463.0,MILP,homayouni2021production,10,468.0,482.0,7.38,492.0,1.08,4.1,False,402.0,3.01,True
+mfjs03-ideal,mfjs03,7-M,proven_optimal,482.0,MILP,homayouni2021production,10,482.0,504.7,24.14,549.0,0.0,4.71,True,402.0,3.63,True
+mfjs04-ideal,mfjs04,7-M,proven_optimal,576.0,MILP,homayouni2021production,10,582.0,614.4,21.36,655.0,1.04,6.67,False,502.0,4.99,True
+mfjs05-ideal,mfjs05,7-M,proven_optimal,532.0,MILP,homayouni2021production,10,561.0,592.7,22.64,644.0,5.45,11.41,False,420.0,3.98,True
+mfjs06-ideal,mfjs06,7-M,proven_optimal,652.0,MILP,homayouni2021production,10,677.0,717.9,26.44,753.0,3.83,10.11,False,622.0,5.28,True
+mfjs07-ideal,mfjs07,7-M,best_known,898.0,LAHC,homayouni2021production,10,937.0,1005.7,35.52,1060.0,4.34,11.99,False,772.0,9.14,True
+mfjs08-ideal,mfjs08,8-M,best_known,900.0,LAHC,homayouni2021production,10,970.0,1020.4,46.88,1136.0,7.78,13.38,False,770.0,10.01,True
+mfjs09-ideal,mfjs09,8-M,best_known,1098.0,2-phase,lim2023twophase,10,1196.0,1247.3,31.1,1297.0,8.93,13.6,False,770.0,16.39,True
+mfjs10-ideal,mfjs10,8-M,best_known,1230.0,2-phase,lim2023twophase,10,1388.0,1463.3,44.63,1525.0,12.85,18.97,False,950.0,15.64,True

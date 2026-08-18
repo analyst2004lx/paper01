@@ -1,0 +1,243 @@
+{
+  "instance": "mfjs10-ideal",
+  "arm": "ideal",
+  "budget": "p100g200s30",
+  "reference": {
+    "kind": "best_known",
+    "value": 1230.0,
+    "method": "2-phase",
+    "citekey": "lim2023twophase"
+  },
+  "cells": [
+    {
+      "instance": "mfjs10-ideal",
+      "seed": 1,
+      "arm": "ideal",
+      "makespan": 1446.0,
+      "runtime_sec": 9.139,
+      "generations": 119,
+      "evaluations": 11900,
+      "stopped_by": "stall",
+      "valid": true,
+      "validation_errors": [],
+      "lower_bound": 950.0,
+      "lb_parts": {
+        "job_chain": 950.0,
+        "machine_load": 856.125,
+        "lu_cut": 0.0,
+        "lower_bound": 950.0
+      },
+      "budget": "p100g200s30",
+      "pop": 100,
+      "max_gen": 200,
+      "stall_gen": 30
+    },
+    {
+      "instance": "mfjs10-ideal",
+      "seed": 2,
+      "arm": "ideal",
+      "makespan": 1427.0,
+      "runtime_sec": 8.004,
+      "generations": 107,
+      "evaluations": 10700,
+      "stopped_by": "stall",
+      "valid": true,
+      "validation_errors": [],
+      "lower_bound": 950.0,
+      "lb_parts": {
+        "job_chain": 950.0,
+        "machine_load": 856.125,
+        "lu_cut": 0.0,
+        "lower_bound": 950.0
+      },
+      "budget": "p100g200s30",
+      "pop": 100,
+      "max_gen": 200,
+      "stall_gen": 30
+    },
+    {
+      "instance": "mfjs10-ideal",
+      "seed": 3,
+      "arm": "ideal",
+      "makespan": 1561.0,
+      "runtime_sec": 5.195,
+      "generations": 72,
+      "evaluations": 7200,
+      "stopped_by": "stall",
+      "valid": true,
+      "validation_errors": [],
+      "lower_bound": 950.0,
+      "lb_parts": {
+        "job_chain": 950.0,
+        "machine_load": 856.125,
+        "lu_cut": 0.0,
+        "lower_bound": 950.0
+      },
+      "budget": "p100g200s30",
+      "pop": 100,
+      "max_gen": 200,
+      "stall_gen": 30
+    },
+    {
+      "instance": "mfjs10-ideal",
+      "seed": 4,
+      "arm": "ideal",
+      "makespan": 1389.0,
+      "runtime_sec": 8.051,
+      "generations": 111,
+      "evaluations": 11100,
+      "stopped_by": "stall",
+      "valid": true,
+      "validation_errors": [],
+      "lower_bound": 950.0,
+      "lb_parts": {
+        "job_chain": 950.0,
+        "machine_load": 856.125,
+        "lu_cut": 0.0,
+        "lower_bound": 950.0
+      },
+      "budget": "p100g200s30",
+      "pop": 100,
+      "max_gen": 200,
+      "stall_gen": 30
+    },
+    {
+      "instance": "mfjs10-ideal",
+      "seed": 5,
+      "arm": "ideal",
+      "makespan": 1539.0,
+      "runtime_sec": 4.516,
+      "generations": 62,
+      "evaluations": 6200,
+      "stopped_by": "stall",
+      "valid": true,
+      "validation_errors": [],
+      "lower_bound": 950.0,
+      "lb_parts": {
+        "job_chain": 950.0,
+        "machine_load": 856.125,
+        "lu_cut": 0.0,
+        "lower_bound": 950.0
+      },
+      "budget": "p100g200s30",
+      "pop": 100,
+      "max_gen": 200,
+      "stall_gen": 30
+    },
+    {
+      "instance": "mfjs10-ideal",
+      "seed": 6,
+      "arm": "ideal",
+      "makespan": 1403.0,
+      "runtime_sec": 8.514,
+      "generations": 116,
+      "evaluations": 11600,
+      "stopped_by": "stall",
+      "valid": true,
+      "validation_errors": [],
+      "lower_bound": 950.0,
+      "lb_parts": {
+        "job_chain": 950.0,
+        "machine_load": 856.125,
+        "lu_cut": 0.0,
+        "lower_bound": 950.0
+      },
+      "budget": "p100g200s30",
+      "pop": 100,
+      "max_gen": 200,
+      "stall_gen": 30
+    },
+    {
+      "instance": "mfjs10-ideal",
+      "seed": 7,
+      "arm": "ideal",
+      "makespan": 1500.0,
+      "runtime_sec": 5.939,
+      "generations": 84,
+      "evaluations": 8400,
+      "stopped_by": "stall",
+      "valid": true,
+      "validation_errors": [],
+      "lower_bound": 950.0,
+      "lb_parts": {
+        "job_chain": 950.0,
+        "machine_load": 856.125,
+        "lu_cut": 0.0,
+        "lower_bound": 950.0
+      },
+      "budget": "p100g200s30",
+      "pop": 100,
+      "max_gen": 200,
+      "stall_gen": 30
+    },
+    {
+      "instance": "mfjs10-ideal",
+      "seed": 8,
+      "arm": "ideal",
+      "makespan": 1493.0,
+      "runtime_sec": 5.534,
+      "generations": 74,
+      "evaluations": 7400,
+      "stopped_by": "stall",
+      "valid": true,
+      "validation_errors": [],
+      "lower_bound": 950.0,
+      "lb_parts": {
+        "job_chain": 950.0,
+        "machine_load": 856.125,
+        "lu_cut": 0.0,
+        "lower_bound": 950.0
+      },
+      "budget": "p100g200s30",
+      "pop": 100,
+      "max_gen": 200,
+      "stall_gen": 30
+    },
+    {
+      "instance": "mfjs10-ideal",
+      "seed": 9,
+      "arm": "ideal",
+      "makespan": 1471.0,
+      "runtime_sec": 10.605,
+      "generations": 151,
+      "evaluations": 15100,
+      "stopped_by": "stall",
+      "valid": true,
+      "validation_errors": [],
+      "lower_bound": 950.0,
+      "lb_parts": {
+        "job_chain": 950.0,
+        "machine_load": 856.125,
+        "lu_cut": 0.0,
+        "lower_bound": 950.0
+      },
+      "budget": "p100g200s30",
+      "pop": 100,
+      "max_gen": 200,
+      "stall_gen": 30
+    },
+    {
+      "instance": "mfjs10-ideal",
+      "seed": 10,
+      "arm": "ideal",
+      "makespan": 1501.0,
+      "runtime_sec": 6.703,
+      "generations": 95,
+      "evaluations": 9500,
+      "stopped_by": "stall",
+      "valid": true,
+      "validation_errors": [],
+      "lower_bound": 950.0,
+      "lb_parts": {
+        "job_chain": 950.0,
+        "machine_load": 856.125,
+        "lu_cut": 0.0,
+        "lower_bound": 950.0
+      },
+      "budget": "p100g200s30",
+      "pop": 100,
+      "max_gen": 200,
+      "stall_gen": 30
+    }
+  ]
+}

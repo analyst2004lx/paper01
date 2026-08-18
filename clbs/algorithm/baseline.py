@@ -15,6 +15,10 @@ from .ga import GAConfig, run_ga, ma_min_time
 ARMS = ("rule", "twostage", "nofeedback", "opendispatch", "opendispatch_nols",
         "nostagger", "closed", "priced")
 
+# `solve_arm` 另接受 "ideal"(规格 12.2 退化对标)。它**故意不在 ARMS 里**:
+# ARMS 是同一算例上的组内比较,而 ideal 档跑在另一套算例(矩阵型公开基准)上、
+# 与文献值比而非与组内档位比。放进 ARMS 会让批跑器把两种口径拼进同一张表。
+
 # 不含 GA 搜索的档位:单次解码即完成,故"同算力预算"对其无意义,报告时须单列。
 NO_SEARCH_ARMS = ("rule",)
 
@@ -50,6 +54,25 @@ def two_stage_baseline(inst: Instance, net: Network, cfg: GAConfig,
         # 完全不同的处境,批跑脚本的预算体检靠它判断比较是否公平(规格 8.2)
         "stopped_by": stage1.get("stopped_by"),
     }
+
+
+def ideal_benchmark(inst: Instance, net: Network, cfg: GAConfig,
+                    log=None) -> dict:
+    """规格 12.2 第一层 —— **退化对标**:关闭冲突约束,运输时间取给定/理想矩阵 t*。
+
+    这一档不属于 8.1 的递进消融链(故不在 `ARMS` 内),它回答的是另一个问题:
+    去掉本文的贡献(走廊争用)之后,剩下的上层搜索与文献同类方法相比强不强。
+    这是排除"单一实现"这一有效性威胁的手段,而**不是**方法贡献的证据——两者
+    必须分表报告,否则读者无法判断哪个结论靠哪批数据。
+
+    它与 `two_stage_baseline` 的第一阶段配置完全相同(同一个 `run_ga(...,
+    conflict_free=False)`),差别只在于本档就地报告该值、不再做冲突修复重放:
+    公开基准是矩阵型算例,没有走廊图可供修复。
+    """
+    out = run_ga(inst, net, cfg, conflict_free=False, use_ls=True, log=log)
+    out["name"] = "ideal"
+    out["makespan"] = out["best_result"].makespan
+    return out
 
 
 def ablation_no_feedback(inst: Instance, net: Network, cfg: GAConfig,
@@ -134,6 +157,8 @@ def solve_arm(arm: str, inst: Instance, net: Network, cfg: GAConfig,
         return out
     if arm == "twostage":
         return two_stage_baseline(inst, net, cfg, log=log)
+    if arm == "ideal":
+        return ideal_benchmark(inst, net, cfg, log=log)
     if arm == "nofeedback":
         return ablation_no_feedback(inst, net, cfg, log=log)
     if arm == "opendispatch":

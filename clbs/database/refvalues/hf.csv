@@ -1,0 +1,55 @@
+instance,literature_name,citekey,kind,value,method,time_s,delta_return,note
+sfjs01,SFJST01,homayouni2021production,proven_optimal,70,MILP,0.2,0,
+sfjs02,SFJST02,homayouni2021production,proven_optimal,111,MILP,0.2,0,
+sfjs03,SFJST03,homayouni2021production,proven_optimal,223,MILP,0.3,0,
+sfjs04,SFJST04,homayouni2021production,proven_optimal,359,MILP,0.3,0,
+sfjs05,SFJST05,homayouni2021production,proven_optimal,123,MILP,0.4,0,
+sfjs06,SFJST06,homayouni2021production,proven_optimal,324,MILP,0.4,0,
+sfjs07,SFJST07,homayouni2021production,proven_optimal,409,MILP,0.4,0,
+sfjs08,SFJST08,homayouni2021production,proven_optimal,269,MILP,0.6,0,
+sfjs09,SFJST09,homayouni2021production,proven_optimal,220,MILP,0.4,0,
+sfjs10,SFJST10,homayouni2021production,proven_optimal,531,MILP,0.5,0,
+mfjs01,MFJST01,homayouni2021production,proven_optimal,485,MILP,6,0,
+mfjs02,MFJST02,homayouni2021production,proven_optimal,463,MILP,14,0,
+mfjs03,MFJST03,homayouni2021production,proven_optimal,482,MILP,59,0,
+mfjs04,MFJST04,homayouni2021production,proven_optimal,576,MILP,3277,0,
+mfjs05,MFJST05,homayouni2021production,proven_optimal,532,MILP,694,0,
+mfjs06,MFJST06,homayouni2021production,proven_optimal,652,MILP,34796,0,
+sfjs01,SFJST01,homayouni2021production,reported,70,LAHC,1.2,0,LAHC(1000) 列
+sfjs02,SFJST02,homayouni2021production,reported,111,LAHC,1.3,0,LAHC(1000) 列
+sfjs03,SFJST03,homayouni2021production,reported,223,LAHC,1.5,0,LAHC(1000) 列
+sfjs04,SFJST04,homayouni2021production,reported,359,LAHC,1.5,0,LAHC(1000) 列
+sfjs05,SFJST05,homayouni2021production,reported,123,LAHC,1.3,0,LAHC(1000) 列
+sfjs06,SFJST06,homayouni2021production,reported,324,LAHC,1.9,0,LAHC(1000) 列
+sfjs07,SFJST07,homayouni2021production,reported,409,LAHC,1.9,0,LAHC(1000) 列
+sfjs08,SFJST08,homayouni2021production,reported,269,LAHC,5,0,LAHC(1000) 列
+sfjs09,SFJST09,homayouni2021production,reported,220,LAHC,2.4,0,LAHC(1000) 列
+sfjs10,SFJST10,homayouni2021production,reported,531,LAHC,4.6,0,LAHC(1000) 列
+mfjs01,MFJST01,homayouni2021production,reported,485,LAHC,9.9,0,LAHC(1000) 列
+mfjs02,MFJST02,homayouni2021production,reported,463,LAHC,12.5,0,LAHC(1000) 列
+mfjs03,MFJST03,homayouni2021production,reported,482,LAHC,30.9,0,LAHC(1000) 列
+mfjs04,MFJST04,homayouni2021production,reported,576,LAHC,45.5,0,LAHC(1000) 列
+mfjs05,MFJST05,homayouni2021production,reported,532,LAHC,47.3,0,LAHC(1000) 列
+mfjs06,MFJST06,homayouni2021production,reported,652,LAHC,37.2,0,LAHC(1000) 列
+mfjs07,MFJST07,homayouni2021production,reported,898,LAHC,,0,值取自 Lim & Moon 2023 正文叙述"matched the two solutions obtained by LAHC (MFJST07 and MFJST08)";表列在本次提取中被截断,未直接核到
+mfjs08,MFJST08,homayouni2021production,reported,900,LAHC,,0,同上
+sfjs01,SFJST01,lim2023twophase,reported,70,2-phase,0.04,0,
+sfjs02,SFJST02,lim2023twophase,reported,111,2-phase,0.02,0,
+sfjs03,SFJST03,lim2023twophase,reported,223,2-phase,0.04,0,
+sfjs04,SFJST04,lim2023twophase,reported,359,2-phase,0.05,0,
+sfjs05,SFJST05,lim2023twophase,reported,123,2-phase,0.11,0,
+sfjs06,SFJST06,lim2023twophase,reported,324,2-phase,0.09,0,
+sfjs07,SFJST07,lim2023twophase,reported,409,2-phase,0.07,0,
+sfjs08,SFJST08,lim2023twophase,reported,269,2-phase,0.16,0,
+sfjs09,SFJST09,lim2023twophase,reported,220,2-phase,0.12,0,
+sfjs10,SFJST10,lim2023twophase,reported,531,2-phase,0.15,0,
+mfjs01,MFJST01,lim2023twophase,reported,485,2-phase,1.82,0,
+mfjs02,MFJST02,lim2023twophase,reported,463,2-phase,1.41,0,
+mfjs03,MFJST03,lim2023twophase,reported,482,2-phase,8.39,0,
+mfjs04,MFJST04,lim2023twophase,reported,576,2-phase,5.45,0,
+mfjs05,MFJST05,lim2023twophase,reported,532,2-phase,8.39,0,
+mfjs06,MFJST06,lim2023twophase,reported,652,2-phase,5.78,0,
+mfjs07,MFJST07,lim2023twophase,best_known,898,2-phase,34.03,0,MILP 未求得;文献称与 LAHC 同值
+mfjs08,MFJST08,lim2023twophase,best_known,900,2-phase,52.06,0,MILP 未求得;文献称与 LAHC 同值
+mfjs09,MFJST09,lim2023twophase,best_known,1098,2-phase,281.82,0,MILP 未求得;文献称优于 LAHC(LAHC 值未提取到)
+mfjs10,MFJST10,lim2023twophase,best_known,1230,2-phase,996.23,0,MILP 未求得;文献称优于 LAHC(LAHC 值未提取到)

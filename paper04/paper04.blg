@@ -24,45 +24,45 @@ Warning--empty address in svancara2019online
 Warning--empty publisher in zhang2024guidance
 Warning--empty address in zhang2024guidance
 Warning--page numbers missing in both pages and numpages fields in zhang2024guidance
-You've used 24 entries,
+You've used 27 entries,
             6273 wiz_defined-function locations,
-            1763 strings with 24610 characters,
-and the built_in function-call counts, 30335 in all, are:
-= -- 4605
-> -- 928
+            1784 strings with 25327 characters,
+and the built_in function-call counts, 34358 in all, are:
+= -- 5262
+> -- 1037
 < -- 0
-+ -- 335
-- -- 325
-* -- 2135
-:= -- 2738
-add.period$ -- 119
-call.type$ -- 24
-change.case$ -- 183
-chr.to.int$ -- 24
-cite$ -- 36
-duplicate$ -- 2488
-empty$ -- 1734
-format.name$ -- 421
-if$ -- 7840
++ -- 375
+- -- 368
+* -- 2405
+:= -- 3094
+add.period$ -- 134
+call.type$ -- 27
+change.case$ -- 204
+chr.to.int$ -- 27
+cite$ -- 39
+duplicate$ -- 2809
+empty$ -- 1959
+format.name$ -- 476
+if$ -- 8894
 int.to.chr$ -- 2
 int.to.str$ -- 1
-missing$ -- 100
-newline$ -- 246
-num.names$ -- 168
-pop$ -- 888
+missing$ -- 112
+newline$ -- 273
+num.names$ -- 189
+pop$ -- 985
 preamble$ -- 1
-purify$ -- 375
+purify$ -- 420
 quote$ -- 0
-skip$ -- 900
+skip$ -- 1018
 stack$ -- 0
-substring$ -- 2308
-swap$ -- 291
+substring$ -- 2660
+swap$ -- 333
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 440
+type$ -- 488
 warning$ -- 12
-while$ -- 158
+while$ -- 184
 width$ -- 0
-write$ -- 510
+write$ -- 570
 (There were 12 warnings)

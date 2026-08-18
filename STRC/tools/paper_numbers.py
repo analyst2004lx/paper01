@@ -14,13 +14,22 @@ from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 EXP = os.path.join(os.path.dirname(HERE), "experiments", "expanded")
+PUB = os.path.join(os.path.dirname(HERE), "experiments", "pub_layouts")
 
 ORDER = ["example_3x3x2", "congested_8x4x4", "S8x4x4_high",
          "S8x4x4_funnel", "S8x4x4_mid"]
 
+PUB_ORDER = ["LyuL2_4m", "LyuL3_5m", "LyuL4_6m", "LyuL5_7m", "LyuL6_8m"]
+PUB_CONTROL = ["self_high_LD21", "self_funnel_LD11", "self_mid_LD22"]
+
 
 def read(name):
     with open(os.path.join(EXP, name), encoding="utf-8") as f:
+        return list(csv.DictReader(f))
+
+
+def read_pub(name):
+    with open(os.path.join(PUB, name), encoding="utf-8") as f:
         return list(csv.DictReader(f))
 
 
@@ -134,7 +143,63 @@ def main() -> int:
         if a["n_closure"] == b["n_closure"])
     print("  block vs slowdown identical closure on %d/50 pairs "
           "(same seeding rule -> not an independent observation)" % ident)
+
+    pub_section()
     return 0
+
+
+def pub_section() -> None:
+    """外部来源布局批次(experiments/pub_layouts/)。
+
+    这一批是独立账本,不并入上面的 50 对。它回答的是"闭包规模的结构可预测性那条负
+    结果,到底出自结构指标还是出自算例集"——两组算例逐参数同口径,只差布局来源。
+    """
+    if not os.path.isdir(PUB):
+        print("\n== pub layouts ==\n  (无 experiments/pub_layouts/,"
+              "先在 STRC/ 下跑 py -m tools.pub_batch)")
+        return
+    e1, e2 = read_pub("e1_miss.csv"), read_pub("e2_containment.csv")
+    e3, e4 = read_pub("e3_boundary.csv"), read_pub("e4_structure.csv")
+    e5 = read_pub("e5_cross_curve.csv")
+
+    print("\n== pub layouts: E1/E2/E3 (n=%d) ==" % len(e1))
+    print("  C1 pass %d/%d   E2a %d/%d   E2b %d/%d   R1 feas %d/%d   R2 feas %d/%d"
+          % (sum(1 for r in e1 if istrue(r["pass_C1"])), len(e1),
+             sum(1 for r in e2 if istrue(r["pass_E2a"])), len(e2),
+             sum(1 for r in e2 if istrue(r["pass_E2b"])), len(e2),
+             sum(1 for r in e3 if istrue(r["R1_feasible"])), len(e3),
+             sum(1 for r in e3 if istrue(r["R2_feasible"])), len(e3)))
+    print("  structural leaks total %d"
+          % sum(int(r["structural_leaks"]) for r in e1))
+    fr = [st.median([float(r["closure_frac"]) for r in by_inst(e1)[k]])
+          for k in PUB_ORDER if by_inst(e1)[k]]
+    print("  E1 Cl/|R| per-layout medians %.3f--%.3f" % (min(fr), max(fr)))
+
+    print("\n== pub layouts: E4 structure (matched parameters) ==")
+    g4 = by_inst(e4)
+    for label, order in (("external", PUB_ORDER), ("self-built", PUB_CONTROL)):
+        names = [k for k in order if g4[k]]
+        if not names:
+            continue
+        med = [st.median([float(r["closure_frac"]) for r in g4[k]]) for k in names]
+        cuts = sorted({int(g4[k][0]["lu_min_cut"]) for k in names})
+        fun = sorted({float(g4[k][0]["funnel_share"]) for k in names})
+        cpn = sorted({float(g4[k][0]["corridors_per_node"]) for k in names})
+        print("  %-11s n_layouts=%d  Cl/|R| medians %.3f--%.3f  spread %.3f"
+              % (label, len(names), min(med), max(med), max(med) - min(med)))
+        print("              lu_min_cut set %s  funnel_share set %s  "
+              "corridors_per_node set %s" % (cuts, fun, cpn))
+        for k, m in zip(names, med):
+            print("                %-18s %.3f" % (k, m))
+
+    print("\n== pub layouts: E5 ==")
+    worse = [r for r in e5 if float(r["R2_makespan"]) > float(r["R0_makespan"])]
+    print("  R2 worse than R0+ in %d/%d budget points (no crossing)"
+          % (len(worse), len(e5)))
+    ms2 = [float(r["R2_wall_ms"]) for r in e5]
+    ms0 = [float(r["R0_wall_ms"]) for r in e5]
+    print("  R2 wall ms %.1f--%.1f   R0+ wall ms %.0f--%.0f"
+          % (min(ms2), max(ms2), min(ms0), max(ms0)))
 
 
 if __name__ == "__main__":
