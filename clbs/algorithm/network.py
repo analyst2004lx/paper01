@@ -70,7 +70,24 @@ def corridor_id(u: str, v: str) -> str:
 
 
 class Network:
-    def __init__(self, nodes: List[str], corridors: List[dict], lu_node: str):
+    """走廊图 + 理想最短路矩阵 t*。
+
+    `ideal_dist` 参数(规格 12.2 / 12.4 第 2 项)用于公开基准的退化对标:文献只发布
+    一张位置对–时长矩阵,把它**原样**作为 t* 使用,不做任何最短路合成。必须给这条
+    旁路的理由是,这类矩阵有两种性质无法由"无向走廊图 + 最短路"表达:
+
+    1. **有向**——同一对位置的往返时长不等(单向导轨的必然结果);而 `corridors`
+       是无向的,一条走廊只有一个 `time`;
+    2. **不满足三角不等式**——直达时长可能长于绕行时长(HF 的 3-M / 7-M 两个"随机
+       生成"布局实测如此)。任何图的最短路闭包必然满足三角不等式,故这类矩阵**不是
+       任何图的最短路闭包**,试图还原只会得到一个比原算例更容易的算例。
+
+    给定 `ideal_dist` 时 `corridors` 为空,网络无法路由,只能跑 `conflict_free=False`
+    的退化档;`Router` 对此有显式拦截。
+    """
+
+    def __init__(self, nodes: List[str], corridors: List[dict], lu_node: str,
+                 ideal_dist: Optional[Dict[str, Dict[str, float]]] = None):
         self.nodes = list(nodes)
         self.lu_node = lu_node
         self.corridor_time: Dict[str, float] = {}
@@ -81,7 +98,18 @@ class Network:
             self.corridor_time[cid] = tau
             self.adj[c["u"]].append((cid, c["v"], tau))
             self.adj[c["v"]].append((cid, c["u"], tau))
-        self.ideal_dist = self._all_pairs_shortest()
+        self.dist_is_given = ideal_dist is not None
+        if ideal_dist is not None:
+            self.ideal_dist = {a: dict(row) for a, row in ideal_dist.items()}
+            for n in self.nodes:
+                self.ideal_dist.setdefault(n, {})[n] = 0.0
+        else:
+            self.ideal_dist = self._all_pairs_shortest()
+
+    @property
+    def routable(self) -> bool:
+        """是否存在可路由的走廊图(矩阵型算例为假)。"""
+        return bool(self.corridor_time)
 
     def _all_pairs_shortest(self) -> Dict[str, Dict[str, float]]:
         """无预约理想最短路矩阵 t*(规格 5.4)。"""
@@ -535,6 +563,10 @@ class Router:
                  max_entry_options: int = 3, label_budget: int = 3000,
                  bucket_width: float = 0.0,
                  capacity_override: Optional[Dict[BucketKey, int]] = None):
+        if conflict_free and not network.routable:
+            raise ValueError(
+                "该算例只给了行驶时间矩阵、没有走廊图,无法在冲突模型下路由;"
+                "只能跑 conflict_free=False 的退化对标档(规格 12.2)")
         self.net = network
         self.conflict_free = conflict_free
         self.prices = prices

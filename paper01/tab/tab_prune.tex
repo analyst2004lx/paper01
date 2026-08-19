@@ -1,5 +1,5 @@
-%% 由 prune_ablation.csv 汇总写入(与 tools/prune_ablation.py 日志一致),勿手工改数字
-%% 6 算例 x 10 种子;开=exact(剪枝+复用),关=exact_noopt;输出逐位相同
+%% 由 tab/gen_tables_ladder.py 生成,请勿手工编辑
+%% 数据源:clbs/output/baseline_ladder.csv 等,见脚本首部
 \begin{tabular}{@{}lrrrrrr@{}}
 \toprule
 算例 & 争用强度 & 关 & 开 & $\Delta C_{\max}$ & 评价次数比 & 加速比 \\
@@ -11,7 +11,6 @@ B NA/NM 0.5 & 15.8\% & 66.70 & \textbf{65.10} & $-2.40\%$ & 2.11$\times$ & 2.11$
 B NA/NM 1.0 & 30.2\% & 51.90 & \textbf{48.90} & $-5.78\%$ & 2.31$\times$ & 2.31$\times$ \\
 B NA/NM 2.0 & 32.4\% & 44.50 & \textbf{42.20} & $-5.17\%$ & 1.98$\times$ & 2.01$\times$ \\
 \midrule
-\emph{配对合计}(60 配对) & --- & --- & --- & $-5.60\%^{***}$ &
-\multicolumn{2}{r}{50/0/10,\ $<10^{-4}$} \\
+\emph{配对合计}(60 配对) & --- & --- & --- & $-5.60\%^{***}$ & \multicolumn{2}{r}{50/0/10,\ $<10^{-4}$} \\
 \bottomrule
 \end{tabular}

@@ -1,0 +1,41 @@
+% Dual-deadline corroboration + heartbeat slots (protocol timing)
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta,positioning}
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily\footnotesize,
+  arr/.style={-{Latex}, thick},
+  tline/.style={thick},
+]
+% time axis
+\draw[tline, -{Latex}] (0,0) -- (11.2,0) node[right] {$t$};
+\foreach \x/\lab in {0.8/$t_u$, 2.2/$t_r$, 4.0/$t_{\mathrm{wd}}$, 6.2/$t_{\mathrm{corr}}$, 8.8/$t_{k}$, 10.2/$t_{k}+T_{\mathrm{hb}}$} {
+  \draw (\x,0.12) -- (\x,-0.12);
+  \node[below=2pt] at (\x,0) {\lab};
+}
+
+% events
+\node[above=8pt, align=center] at (0.8,0) {cmd $u$\\opens pending};
+\node[above=8pt, align=center] at (2.2,0) {claim $r$\\(optional)};
+\draw[orange!80!black, thick] (0.8,0.55) -- (4.0,0.55);
+\node[above, font=\tiny, text=orange!70!black] at (2.4,0.55) {watchdog window};
+\draw[blue!70!black, thick] (0.8,0.95) -- (6.2,0.95);
+\node[above, font=\tiny, text=blue!60!black] at (3.5,0.95) {corroboration window $\Delta$};
+\node[above=8pt, align=center, text=blue!60!black] at (6.2,0) {confirm /\\refute / expire};
+
+% heartbeat track
+\draw[tline, densely dashed, gray] (0,-1.6) -- (11.2,-1.6);
+\node[left, gray] at (0,-1.6) {HB};
+\foreach \x in {1.4,3.0,4.6,6.2,7.8,9.4} {
+  \fill[green!50!black] (\x,-1.6) circle (2.2pt);
+}
+\node[above, font=\tiny, text=green!40!black] at (4.6,-1.35) {disclose $h_k$};
+\draw[red!70!black, thick] (9.4,-1.35) -- (10.2,-1.35);
+\node[above, font=\tiny, text=red!60!black, align=center] at (10.0,-1.05) {miss $\times r$\\$\Rightarrow$ accountable};
+
+\node[below=18pt, align=left, text=black!60] at (0.2,-1.7) {%
+  Completion path (solid): conditional latency after counterpart dispatch.\\
+  Heartbeat path (dashed): unconditional $T_{\mathrm{detect}}\le r\,T_{\mathrm{hb}}$.};
+\end{tikzpicture}
+\end{document}

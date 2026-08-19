@@ -9,8 +9,7 @@
 # If a listed path does not exist on GitHub, skip it.
 
 <Ignore>
-paper02\database\ft_trier_iot_log\Cleaned_Event_Log.zip
-paper02\database\ft_trier_iot_log\DQI_Event_Log.zip
+
 </Ignore>
 
 
@@ -29,6 +28,7 @@ md_to_word_html.py
 Convert_MD_to_Html(open_and_save_in_Word).py
 
 # Recently deleted unused graphics / scripts under paper01_new/fig
+paper01/paper-20260602.tex
 paper01/fig/fig_ablation.pdf
 paper01/fig/fig_ablation.png
 paper01/fig/fig_ablation.py

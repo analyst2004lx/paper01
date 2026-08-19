@@ -95,7 +95,7 @@ def main() -> int:
         cells, mks, m67s, dbl = [[] for _ in PATHS], [], [], []
         for s in range(args.seeds):
             stream, lab = attack_stream(test, fam, s, args.rate, args.rho,
-                                        det.struct)
+                                        det.struct, det.model)
             for i in range(len(PATHS)):
                 cells[i].append(solo(det, benign, stream, lab, args.alpha,
                                      np.random.default_rng(300 + s), i))

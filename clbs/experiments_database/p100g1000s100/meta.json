@@ -1,0 +1,28 @@
+{
+  "git_commit": "4b38686",
+  "generated_at": "2026-08-17 15:27:49",
+  "dataset": "hf",
+  "arm": "ideal",
+  "regime": "ideal (conflict_free=False, delta_return=0, 行驶时间取给定矩阵)",
+  "budget": "p100g1000s100",
+  "ga_config": {
+    "pop": 100,
+    "max_gen": 1000,
+    "stall_gen": 100
+  },
+  "seeds": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "num_instances": 10,
+  "ledger": "output_database\\records_p100g1000s100.jsonl",
+  "flags": []
+}

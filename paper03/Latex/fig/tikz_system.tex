@@ -1,0 +1,29 @@
+% Standalone: system model + message loop (command opens pending)
+\documentclass[tikz,border=6pt]{standalone}
+\usepackage{amsmath}
+\usetikzlibrary{arrows.meta,positioning,fit,calc}
+\begin{document}
+\begin{tikzpicture}[
+  font=\sffamily\small,
+  box/.style={draw, rounded corners=2pt, align=center, inner sep=6pt, minimum height=1.05cm},
+  sch/.style={box, fill=blue!8, minimum width=2.6cm},
+  dev/.style={box, fill=orange!12, minimum width=2.2cm},
+  arr/.style={-{Latex}, thick},
+  note/.style={font=\sffamily\footnotesize, text=black!70},
+]
+\node[sch] (S) {Scheduler $S$\\[-1pt]{\footnotesize ledger $c$, detect}};
+\node[dev, right=2.8cm of S] (D) {Device $d$\\[-1pt]{\footnotesize (possibly hijacked)}};
+\node[dev, below=1.6cm of D] (B) {Counterpart $d'$\\[-1pt]{\footnotesize local sensing}};
+
+\draw[arr] (S.east) -- node[above, note] {cmd $u$ (opens pending)} (D.west);
+\draw[arr, dashed] (D.west) -- ++(-0.9,0.35) -| node[pos=0.25, left, note, align=right] {report $r$\\completion} (S.east);
+\draw[arr, densely dotted] (D.south west) -- ++(-0.7,-0.15) -| node[pos=0.2, left, note] {preimage $h_k$} (S.south east);
+
+\draw[arr, orange!70!black] (B.north) -- node[right, note] {confirm / refute} (D.south);
+\draw[arr, orange!70!black, bend left=18] (B.west) to node[below, note] {evidence to $S$} (S.south);
+
+\node[note, below=0.15cm of S.south west, anchor=north west, align=left] {%
+  Completion claims $\to$ coupled corroboration\\
+  Heartbeat preimages $\to$ accountable silence};
+\end{tikzpicture}
+\end{document}

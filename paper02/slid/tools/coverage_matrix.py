@@ -55,7 +55,8 @@ def score_stream(det: Detector, stream, rng):
 def measure(det, benign, family, alpha, seed, rate, rho):
     rng = np.random.default_rng(seed)
     spec = attacks.AttackSpec(family=family, rho=rho, rate=rate, seed=seed,
-                              knowledge="model", struct_model=det.struct)
+                              knowledge="model", struct_model=det.struct,
+                              proc_model=det.model)
     bad, labels = attacks.inject(benign, spec)
     order = sorted(range(len(bad)),
                    key=lambda i: (bad[i].t_consume, bad[i].order))

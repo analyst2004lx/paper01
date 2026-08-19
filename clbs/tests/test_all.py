@@ -391,6 +391,57 @@ def t14_batch_infrastructure():
     assert d["verdict"] == "支持", d
 
 
+def t15_matrix_only_instance():
+    """矩阵型算例(公开基准退化对标,规格 12.2 / 12.4 第 2 项)。
+
+    要断言的正是"为什么必须给 `ideal_dist` 这条旁路、而不能还原成走廊图":
+    公开基准的行驶时间矩阵可能**有向**、且可能**不满足三角不等式**,这两种性质
+    没有任何无向走廊图能承载。若哪天有人图省事把它改成"造一张完全图跑最短路",
+    本测试会立刻失败——因为最短路会把非度量的那一项抄近道抹平。
+    """
+    data = {
+        "name": "matrix_only",
+        "delta_return": 0,
+        "jobs": [{"id": 1, "num_ops": 1}],
+        "machines": [{"id": 1, "node": "m1"}, {"id": 2, "node": "m2"}],
+        "proc_time": {"(1,1)": {"1": 5, "2": 7}},
+        "num_agvs": 1,
+        "network": {
+            "lu_node": "LU", "nodes": ["LU", "m1", "m2"], "corridors": [],
+            # 有向:LU->m1=10 而 m1->LU=3;
+            # 非度量:m2->m1 直达 9 > 绕行 m2->LU->m1 = 1+10 = 11?不,取 9 < 11。
+            # 真正的非度量项是 m1->m2 直达 8 > m1->LU->m2 = 3+2 = 5。
+            "ideal_dist": {
+                "LU": {"LU": 0, "m1": 10, "m2": 2},
+                "m1": {"LU": 3, "m1": 0, "m2": 8},
+                "m2": {"LU": 1, "m1": 9, "m2": 0},
+            },
+        },
+    }
+    inst = parse_instance(data)
+    net = Network(inst.nodes, inst.corridors, inst.lu_node, ideal_dist=inst.ideal_dist)
+    net.check_reachability()
+
+    assert net.dist_is_given and not net.routable
+    # (1) 有向性保留
+    assert net.ideal_dist["LU"]["m1"] == 10 and net.ideal_dist["m1"]["LU"] == 3
+    # (2) 非度量项**不被抹平**:若走了最短路合成,m1->m2 会变成 5
+    assert net.ideal_dist["m1"]["m2"] == 8, "非度量项被最短路抄了近道"
+
+    # (3) 退化解码用的就是这张矩阵:LU->m1 = 10,加工 5,δ_return=0 -> 15
+    res = decode(inst, net, {(1, 1): 1}, [1], conflict_free=False)
+    assert abs(res.makespan - 15.0) < 1e-9, res.makespan
+    assert not validate(inst, res.to_timetable())
+
+    # (4) 没有走廊图时,冲突模型必须显式拒绝而不是给出无意义的解
+    try:
+        decode(inst, net, {(1, 1): 1}, [1], conflict_free=True)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("矩阵型算例不该能在 conflict_free=True 下解码")
+
+
 # ---------------- 运行器 ----------------
 
 TESTS = [
@@ -408,6 +459,7 @@ TESTS = [
     ("T12 拥堵度旋钮受控性与可复现", t12_congestion_knobs_isolated),
     ("T13 统计工具(精确 Wilcoxon / 平局 / 秩相关)", t13_statistics),
     ("T14 批跑基础设施(预算闸门/账本续跑/配对不错位)", t14_batch_infrastructure),
+    ("T15 矩阵型算例(有向 + 非度量,退化对标)", t15_matrix_only_instance),
 ]
 
 

@@ -106,7 +106,8 @@ def run_one(acts, model, args: argparse.Namespace) -> dict:
     det = Detector(cfg).fit(fit_acts, model=model, rng=rng,
                             temporal=args.temporal)
     spec = attacks.AttackSpec(family=args.attack, rho=args.rho,
-                              knowledge=args.knowledge, seed=args.seed)
+                              knowledge=args.knowledge, seed=args.seed,
+                              struct_model=det.struct, proc_model=model)
     poisoned, labels = attacks.inject(test, spec)
     order = sorted(range(len(poisoned)),
                    key=lambda i: (poisoned[i].t_consume, poisoned[i].order))

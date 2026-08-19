@@ -1282,6 +1282,49 @@
   doi={10.3390/electronics15010139}
 }
 
+% Public instance families for the FJSP with transport, cited in the limitation on
+% instance provenance. Homayouni & Fontes and Bilge & Ulusoy publish inter-machine
+% travel times as a MATRIX (no guide-path network): none of their 11 layouts can be
+% reconstructed as an undirected corridor graph consistent with the published matrix
+% (all asymmetric; two also violate the triangle inequality). Lyu et al. is the only
+% family publishing an explicit bidirectional exclusive network, but its per-segment
+% travel times appear only for a single illustrative instance and its model adds a
+% one-vehicle-per-node capacity constraint.
+@article{homayouni2021production,
+  title={Production and Transport Scheduling in Flexible Job Shop Manufacturing Systems},
+  author={Homayouni, Seyed Mahdi and Fontes, Dalila B. M. M.},
+  journal={Journal of Global Optimization},
+  volume={79},
+  number={2},
+  pages={463--502},
+  year={2021},
+  publisher={Springer},
+  doi={10.1007/s10898-021-00992-6}
+}
+
+@article{bilge1995time,
+  title={A Time Window Approach to Simultaneous Scheduling of Machines and Material Handling System in an {FMS}},
+  author={Bilge, {\"U}mit and Ulusoy, G{\"u}nd{\"u}z},
+  journal={Operations Research},
+  volume={43},
+  number={6},
+  pages={1058--1070},
+  year={1995},
+  publisher={INFORMS},
+  doi={10.1287/opre.43.6.1058}
+}
+
+@article{lyu2019approach,
+  title={Approach to Integrated Scheduling Problems Considering Optimal Number of Automated Guided Vehicles and Conflict-Free Routing in Flexible Manufacturing Systems},
+  author={Lyu, Xiangfei and Song, Yuchuan and He, Changzheng and Lei, Qi and Guo, Weifei},
+  journal={IEEE Access},
+  volume={7},
+  pages={74909--74924},
+  year={2019},
+  publisher={IEEE},
+  doi={10.1109/ACCESS.2019.2919109}
+}
+
 @article{qin2026knowledge,
   title={A Knowledge Region Selection Enhanced Quality-Diversity Algorithm for Real-World Flexible Job Shop Scheduling with Automated Guided Vehicles Transportation},
   author={Qin, Haoxiang and Xiang, Yi and Han, Yuyan and Wang, Yuting and Li, Junqing and Pan, Quanke},
@@ -1298,6 +1341,133 @@
   author={Zhang, Yulun and Jiang, He and Bhatt, Varun and Nikolaidis, Stefanos and Li, Jiaoyang},
   booktitle={Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence (IJCAI)},
   year={2024}
+}
+
+% ============================================================
+% 影响边界的既有划法(2026-08-16 补入)。
+%
+% 补这一批的原因:paper04 的核心主张是「影响域一直被划在任务依赖图上」,
+% 而原稿只引了 vieira2003 / ouelhadj2009 两篇综述。对一个针对整支文献的
+% 判断只引综述,等于把 R1 基线塑造成稻草人。下面四组分别对应正文 2.1--2.4:
+%   (1) 任务图上划界的原型 = AOR 三篇。R1 就是它。
+%   (2) 时间轴上划界 = match-up 两篇 + LRS。说明「边界怎么划」早是研究对象。
+%   (3) 让行图已有先例 = alternative graph + 铁路实时重调度。最危险的一支。
+%   (4) 无任务图的局部重规划 = Online MAPF 的 Replan Affected 与后续。
+% ============================================================
+
+@article{li1993heuristic,
+  title={A heuristic rescheduling algorithm for computer-based production scheduling systems},
+  author={Li, Rong-Kwei and Shyu, Yu-Tang and Adiga, Sadashiv},
+  journal={International Journal of Production Research},
+  volume={31},
+  number={8},
+  pages={1815--1826},
+  year={1993},
+  publisher={Taylor \& Francis},
+  doi={10.1080/00207549308956824}
+}
+
+@article{abumaizar1997rescheduling,
+  title={Rescheduling job shops under random disruptions},
+  author={Abumaizar, Riyad J. and Svestka, Joseph A.},
+  journal={International Journal of Production Research},
+  volume={35},
+  number={7},
+  pages={2065--2082},
+  year={1997},
+  publisher={Taylor \& Francis},
+  doi={10.1080/002075497195074}
+}
+
+@article{subramaniam2003maor,
+  title={{mAOR}: A heuristic-based reactive repair mechanism for job shop schedules},
+  author={Subramaniam, Velusamy and Raheja, Amritpal Singh},
+  journal={The International Journal of Advanced Manufacturing Technology},
+  volume={22},
+  number={9-10},
+  pages={669--680},
+  year={2003},
+  publisher={Springer},
+  doi={10.1007/s00170-003-1601-6}
+}
+
+@article{bean1991matchup,
+  title={Matchup scheduling with multiple resources, release dates and disruptions},
+  author={Bean, James C. and Birge, John R. and Mittenthal, John and Noon, Charles E.},
+  journal={Operations Research},
+  volume={39},
+  number={3},
+  pages={470--483},
+  year={1991},
+  publisher={INFORMS},
+  doi={10.1287/opre.39.3.470}
+}
+
+@article{akturk1999matchup,
+  title={Match-up scheduling under a machine breakdown},
+  author={Akt{\"u}rk, M. Selim and G{\"o}rg{\"u}l{\"u}, Elif},
+  journal={European Journal of Operational Research},
+  volume={112},
+  number={1},
+  pages={81--97},
+  year={1999},
+  publisher={Elsevier},
+  doi={10.1016/S0377-2217(97)00396-2}
+}
+
+@inproceedings{kuster2007local,
+  title={Local Rescheduling: A novel approach for efficient response to schedule disruptions},
+  author={Kuster, J{\"u}rgen and Jannach, Dietmar and Friedrich, Gerhard},
+  booktitle={2007 IEEE Symposium on Computational Intelligence in Scheduling (CISched)},
+  pages={79--86},
+  year={2007},
+  organization={IEEE},
+  doi={10.1109/SCIS.2007.367673}
+}
+
+@article{mascis2002alternative,
+  title={Job-shop scheduling with blocking and no-wait constraints},
+  author={Mascis, Alessandro and Pacciarelli, Dario},
+  journal={European Journal of Operational Research},
+  volume={143},
+  number={3},
+  pages={498--517},
+  year={2002},
+  publisher={Elsevier},
+  doi={10.1016/S0377-2217(01)00338-1}
+}
+
+@article{dariano2007branch,
+  title={A branch and bound algorithm for scheduling trains in a railway network},
+  author={D'Ariano, Andrea and Pacciarelli, Dario and Pranzo, Marco},
+  journal={European Journal of Operational Research},
+  volume={183},
+  number={2},
+  pages={643--657},
+  year={2007},
+  publisher={Elsevier},
+  doi={10.1016/j.ejor.2006.10.034}
+}
+
+@inproceedings{svancara2019online,
+  title={Online Multi-Agent Pathfinding},
+  author={{\v{S}}vancara, Ji{\v{r}}{\'i} and Vlk, Marek and Stern, Roni and Atzmon, Dor and Bart{\'a}k, Roman},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={33},
+  number={01},
+  pages={7732--7739},
+  year={2019},
+  doi={10.1609/aaai.v33i01.33017732}
+}
+
+@inproceedings{malka2024online,
+  title={Online Planning for Multi Agent Path Finding in Inaccurate Maps},
+  author={Malka, Nir and Shani, Guy and Stern, Roni},
+  booktitle={2024 IEEE/RSJ International Conference on Intelligent Robots and Systems (IROS)},
+  pages={10214--10221},
+  year={2024},
+  organization={IEEE},
+  doi={10.1109/IROS58592.2024.10801975}
 }
 
 % ==================== END OF REFERENCES ====================

@@ -36,7 +36,7 @@ class InstanceSpec:
     num_machines: int
     num_agvs: int
     ops_per_job: int
-    layout: str = "dumbbell"          # dumbbell | grid
+    layout: str = "dumbbell"          # dumbbell | grid | mesh | pubgrid
     lu_exits: int = 2                 # LU 出口条数 = 漏斗宽度(容量旋钮)
     mid_lanes: int = 1                # 中段并行通道数(容量旋钮)
     mid_time: float = 6.0             # 中段单程时间(拉大则远端更贵)
@@ -53,14 +53,24 @@ class InstanceSpec:
     delta_return: int = 1
     seed: int = 0
     tag: str = ""                     # 拥堵度档位名,仅用于命名与追溯
+    # layout="pubgrid" 时使用:拓扑取自公开数据文件而非本文设计,见 PUB_LAYOUTS。
+    # 节点号沿用原文件的行主序 1 基编号 n = (r-1)*grid_cols + c。
+    pub_source: str = ""              # 来源标签(非空即表示布局非本文设计)
+    grid_lu_node: int = 0
+    grid_machine_nodes: List[int] = field(default_factory=list)
+    grid_removed_edges: List[List[int]] = field(default_factory=list)
 
     def base_name(self) -> str:
         return f"S{self.num_jobs}x{self.num_machines}x{self.num_agvs}"
 
     def name(self) -> str:
         """规格 12.3 的命名规则: <基础>-L<布局>-H<异构>-F<柔性>-A<AGV>[-s<种子>]。"""
-        layout = f"{self.layout[:1].upper()}{self.lu_exits}{self.mid_lanes}"
-        return (f"{self.base_name()}-L{layout}-H{self.heterogeneity:g}"
+        # 外部布局直接用来源标签作布局段(它自带来源名,再冠一个 L 只会变成 LLyuL4)。
+        if self.pub_source:
+            layout = self.pub_source
+        else:
+            layout = f"L{self.layout[:1].upper()}{self.lu_exits}{self.mid_lanes}"
+        return (f"{self.base_name()}-{layout}-H{self.heterogeneity:g}"
                 f"-F{self.flexibility:g}-A{self.num_agvs}-s{self.seed}")
 
 
@@ -186,7 +196,61 @@ def _mesh(spec: InstanceSpec) -> Tuple[List[str], List[dict], List[str]]:
     return nodes, corridors, chosen
 
 
-_LAYOUTS = {"dumbbell": _dumbbell, "grid": _grid, "mesh": _mesh}
+def _pubgrid(spec: InstanceSpec) -> Tuple[List[str], List[dict], List[str]]:
+    """外部来源的网格布局:尺寸、装卸站与机器落位、缺边逐项读自公开数据文件。
+
+    与 `_grid` 的唯一区别是选点方式。`_grid` 自己按到 LU 的距离挑机器节点,因此
+    布局是本文设计的;本函数改为读入外部给定的节点号,于是"哪里放机器、哪里断路"
+    这两件事都不由本文决定——这正是它存在的理由(见 PUB_LAYOUTS)。
+
+    节点名保留原文件的行主序 1 基编号(`g<n>`,n = (r-1)*cols + c),使生成的算例
+    可以和原始 `.data` 文件逐项对账。缺边必须确实是网格四邻接边,否则说明编号口径
+    与原文件不一致,此时宁可报错也不能静默生成一张错的图。
+    """
+    rows, cols = spec.grid_rows, spec.grid_cols
+    total = rows * cols
+    if len(spec.grid_machine_nodes) != spec.num_machines:
+        raise ValueError(f"pubgrid: num_machines={spec.num_machines} 与机器节点数 "
+                         f"{len(spec.grid_machine_nodes)} 不一致")
+
+    def gid(n: int) -> str:
+        return f"g{n}"
+
+    def coord(n: int) -> Tuple[int, int]:
+        return (n - 1) // cols + 1, (n - 1) % cols + 1
+
+    for n in [spec.grid_lu_node] + list(spec.grid_machine_nodes):
+        if not 1 <= n <= total:
+            raise ValueError(f"pubgrid: 节点号 {n} 超出 {rows}x{cols} 网格")
+    if spec.grid_lu_node in spec.grid_machine_nodes:
+        raise ValueError(f"pubgrid: 装卸点 {spec.grid_lu_node} 同时被列为机器节点")
+
+    removed = set()
+    for pair in spec.grid_removed_edges:
+        a, b = int(pair[0]), int(pair[1])
+        (ra, ca), (rb, cb) = coord(a), coord(b)
+        adjacent = (ra == rb and abs(ca - cb) == 1) or (ca == cb and abs(ra - rb) == 1)
+        if not adjacent:
+            raise ValueError(f"pubgrid: 缺边 ({a},{b}) 在 {rows}x{cols} 上不是四邻接边,"
+                             f"坐标为 {(ra, ca)} 与 {(rb, cb)};编号口径可能不一致")
+        removed.add(frozenset((a, b)))
+
+    corridors: List[dict] = []
+    for r in range(1, rows + 1):
+        for c in range(1, cols + 1):
+            n = (r - 1) * cols + c
+            for m in ([n + 1] if c < cols else []) + ([n + cols] if r < rows else []):
+                if frozenset((n, m)) not in removed:
+                    corridors.append({"u": gid(n), "v": gid(m),
+                                      "time": spec.grid_time})
+
+    lu = gid(spec.grid_lu_node)
+    nodes = [lu] + [gid(n) for n in range(1, total + 1) if n != spec.grid_lu_node]
+    return nodes, corridors, [gid(n) for n in spec.grid_machine_nodes]
+
+
+_LAYOUTS = {"dumbbell": _dumbbell, "grid": _grid, "mesh": _mesh,
+            "pubgrid": _pubgrid}
 
 
 # --------------------------------------------------------------------------
@@ -364,3 +428,73 @@ def make_spec(tag: str, heterogeneity: float, flexibility: float,
                         num_agvs=num_agvs, ops_per_job=ops_per_job,
                         heterogeneity=heterogeneity, flexibility=flexibility,
                         seed=seed, tag=tag, **kwargs)
+
+
+# --------------------------------------------------------------------------
+# 外部来源布局(公开数据集)
+# --------------------------------------------------------------------------
+
+# 拓扑三项——网格尺寸、装卸站与机器落位、缺边——逐项转录自
+# `database/raw/tjsp_toolset/data/benchmarks/lyu2019/layouts/`,即 van Os 配套
+# 工具集对 Lyu 等(2019)附录 A 图 10--15 的机读编码。本项目**只借这三项**,
+# 目的是获得一批不由本文设计的拓扑(布局出处的可信度,不是求解质量的对标)。
+#
+# **边权不是原始数据。** Lyu 只为单个示例算例发表了逐段行驶时间(其 Table 4 取值
+# 为 1/2/3,并不均匀),附录 A 那批测试算例的逐段时长从未发表。故此处按"所有边等权"
+# 补齐:这与 van Os 模型里"单步时长为常量"的假设在结构上等价,只是时间单位的标度
+# 不同(标度由 tt_tp 标定吸收)。**据此生成的算例不可与 Lyu 或 van Os 的参照值
+# 比较**,两边的边权口径不同。
+#
+# 原文件第二行的节点序为 [装货站, m1..mk, 卸货站](见 model_data.py 中
+# `VEHICLE_START_LOCATIONS = MACHINE_LOCATIONS[0]  # Vehicles start at loading
+# station`)。本项目只有一个装卸点,故取装货站为 lu_node,卸货站退化为普通网格
+# 节点——这是与原设定的一处实质差异,必须声明。
+#
+# Liu 等(2023)的四张布局未收入:其首行带 `d` 后缀,即允许对角移动,而本项目的
+# 走廊为四邻接。接受对角移动要改的是下层路由层而不是算例,性质与 van Os 的节点
+# 容量问题相同,故排除。
+PUB_LAYOUTS: Dict[str, dict] = {
+    "LyuL1": {"grid_rows": 3, "grid_cols": 3, "grid_lu_node": 1,
+              "grid_machine_nodes": [2, 5, 7],
+              "grid_removed_edges": []},
+    "LyuL2": {"grid_rows": 4, "grid_cols": 4, "grid_lu_node": 1,
+              "grid_machine_nodes": [4, 6, 11, 13],
+              "grid_removed_edges": [[7, 11]]},
+    "LyuL3": {"grid_rows": 4, "grid_cols": 4, "grid_lu_node": 1,
+              "grid_machine_nodes": [4, 7, 9, 11, 14],
+              "grid_removed_edges": [[7, 11]]},
+    "LyuL4": {"grid_rows": 5, "grid_cols": 5, "grid_lu_node": 1,
+              "grid_machine_nodes": [3, 10, 11, 14, 17, 23],
+              "grid_removed_edges": [[8, 13], [19, 20]]},
+    "LyuL5": {"grid_rows": 5, "grid_cols": 5, "grid_lu_node": 1,
+              "grid_machine_nodes": [3, 9, 12, 15, 16, 22, 24],
+              "grid_removed_edges": [[8, 13], [19, 20]]},
+    "LyuL6": {"grid_rows": 5, "grid_cols": 5, "grid_lu_node": 1,
+              "grid_machine_nodes": [4, 6, 8, 10, 13, 16, 19, 23],
+              "grid_removed_edges": [[8, 13], [19, 20]]},
+}
+
+
+def make_pub_spec(key: str, heterogeneity: float, flexibility: float,
+                  num_jobs: int, num_agvs: int, ops_per_job: int, seed: int,
+                  **overrides) -> InstanceSpec:
+    """按外部布局 key 造 spec。
+
+    `num_machines` 由布局决定而不接受调用方指定——外部布局的机器台数是数据的一部分,
+    允许覆盖就等于把"借来的拓扑"改回"自己设计的拓扑"。
+    """
+    if key not in PUB_LAYOUTS:
+        raise ValueError(f"未知外部布局 {key};可选 {sorted(PUB_LAYOUTS)}")
+    kwargs = dict(PUB_LAYOUTS[key])
+    kwargs.update(overrides)
+    num_machines = len(kwargs["grid_machine_nodes"])
+    if flexibility * num_machines < 2:
+        raise ValueError(
+            f"{key} 有 {num_machines} 台机器,F={flexibility} 给出 F*NM="
+            f"{flexibility * num_machines:.2f} < 2,与 B1 冲突;"
+            f"该布局需 F >= {2 / num_machines:.3f}")
+    return InstanceSpec(num_jobs=num_jobs, num_machines=num_machines,
+                        num_agvs=num_agvs, ops_per_job=ops_per_job,
+                        layout="pubgrid", heterogeneity=heterogeneity,
+                        flexibility=flexibility, seed=seed, tag="pub",
+                        pub_source=key, **kwargs)

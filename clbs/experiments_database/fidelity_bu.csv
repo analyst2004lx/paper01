@@ -1,0 +1,5 @@
+layout,size,symmetric,closure_violations,max_excess,digraph_reconstructible,corridor_reconstructible
+layout1,5,False,0,0.0,True,False
+layout2,5,False,0,0.0,True,False
+layout3,5,False,0,0.0,True,False
+layout4,5,False,0,0.0,True,False

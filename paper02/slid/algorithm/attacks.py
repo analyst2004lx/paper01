@@ -14,6 +14,9 @@
   A5 渐变漂移      多步小幅偏移,单条都在正常区间内,靠序贯层累积
   A6 消息抑制/延迟 该来的没来,靠看门狗定时器(既有方法亦具备,非本文卖点)
   A7 多设备协同伪造 单设备视角自洽的最强攻击者,本方法的能力边界
+  A8 跨通道工序伪造 同时改标签与时长:F 允许但非众数的下一步 + 抢跑
+                     (结论二十五那个"人工多通道攻击"的红队实现;用来判定
+                     Fisher 合成路该留还是该撤)
 
 每种攻击都要标注**攻击者知识等级**:黑盒 / 知模型 / 知模型且知阈值。
 最强的对手知道检测器参数并把 rho 压在 rho* 以下——此时防御方的保证不是
@@ -26,20 +29,24 @@ import copy
 import random
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Literal
+try:
+    from typing import Literal
+except ImportError:                                 # Python 3.7
+    from typing_extensions import Literal
 
-Family = Literal["A1", "A2", "A3", "A4", "A5", "A6", "A7"]
+Family = Literal["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8"]
 Knowledge = Literal["blackbox", "model", "model+threshold"]
 
 #: 与 新想法.md 覆盖矩阵逐行对齐,供报告与断言交叉核对
 FAMILY_ZH = {
     "A1": "朴素重放", "A2": "物理不可行注入", "A3": "抢跑重放",
     "A4": "状态模仿", "A5": "渐变漂移", "A6": "消息抑制/延迟",
-    "A7": "多设备协同伪造",
+    "A7": "多设备协同伪造", "A8": "跨通道工序伪造",
 }
-IMPLEMENTED = ("A1", "A2", "A3", "A4", "A5", "A6")
+IMPLEMENTED = ("A1", "A2", "A3", "A4", "A5", "A6", "A8")
 #: A7 需要攻击者同时伪造多设备且与命令账本对齐,是本方法声明的能力边界,
 #: 不实现即不报告——比实现一个弱版本然后声称"我们也能抓 A7"诚实。
+#: A8 已实现:它是判定 Fisher 合成路去留的专用攻击,不是主表的第六族。
 
 
 @dataclass
@@ -55,10 +62,13 @@ class AttackSpec:
     shift_downstream: bool = False
     #: 受攻击活动占全流的比例
     rate: float = 0.2
-    #: A4 用:结构通道的 TransitionModel。给了它,攻击者就会挑**结构上
-    #: 最可能的下一个操作**来伪造(knowledge='model');不给则退化为复制
-    #: 当前操作,那会制造异常重复、被结构通道轻易抓到,**低估了攻击者**。
+    #: A4/A8 用:结构通道的 TransitionModel。给了它,攻击者就会按转移
+    #: 概率挑下一步(knowledge='model');不给则退化为复制当前操作,那会
+    #: 制造异常重复、被结构通道轻易抓到,**低估了攻击者**。
     struct_model: object = None
+    #: A8 用:参考过程模型,用来保证注入仍在一元/二元 F 内。缺了它,A8
+    #: 会退化成随机改标签,硬层直接否决,合成路的贡献被硬层吃掉。
+    proc_model: object = None
 
 
 def inject(activities, spec: AttackSpec):
@@ -75,7 +85,7 @@ def inject(activities, spec: AttackSpec):
             f"以免出现'跑了但其实是别的攻击'的错位。")
     return {
         "A1": _naive_replay, "A2": _infeasible, "A3": _advance_replay,
-        "A4": _mimicry, "A5": _drift, "A6": _suppress,
+        "A4": _mimicry, "A5": _drift, "A6": _suppress, "A8": _multichannel,
     }[spec.family](activities, spec)
 
 
@@ -222,6 +232,124 @@ def _likeliest_next(tm, device: str, prev_op: str):
         d, _, o = nxt.partition("|")
         return (d, o)
     return (None, nxt)
+
+
+def _ranked_successors(tm, prev_op: str):
+    """按 P(next|prev) 降序返回 (概率, 状态名) ,只保留正概率。"""
+    pred = tm.predictive(prev_op) if tm is not None else None
+    states = getattr(tm, "states", None) or []
+    if pred is None or not states:
+        return []
+    ranked = sorted(zip((float(x) for x in pred), states), reverse=True)
+    return [(p, s) for p, s in ranked if p > 0]
+
+
+def _op_of_state(state: str) -> str:
+    return state.partition("|")[2] if "|" in state else state
+
+
+def _capable_device(op: str, last_op_by_dev: dict, proc, dev_of_op: dict,
+                    fallback: str):
+    """挑一台能做该操作且不违反二元 F 的设备。找不到就返回 None。
+
+    None 表示这条注入做不成 A8、会退化成 A2,必须跳过而不是硬塞。
+    """
+    cands = list(dev_of_op.get(op) or [])
+    if fallback not in cands:
+        cands.append(fallback)
+    for d in cands:
+        if proc is not None and not proc.can_perform(d, op):
+            continue
+        prev = last_op_by_dev.get(d)
+        if prev is not None and proc is not None \
+                and not proc.allows(d, prev, op):
+            continue
+        return d
+    return None
+
+
+def _multichannel(activities, spec: AttackSpec):
+    """A8 跨通道工序伪造:插入一条 F 允许但非众数的下一步,并压缩时长。
+
+    这是 `fusion_diag` 里那个 score-level `misplace` 的红队实现,不是打分
+    时随机改前驱。攻击者知模型、知 F,目标是让调度器以为工序跳到了另一
+    条仍合法的分支并且提前完成——两个残差都是收益本身带来的,不是攻击者
+    变笨。
+
+    与相邻攻击族的边界,必须钉死,否则数字不可读:
+
+      vs A4  A4 插入**众数**下一步 + 典型时长,结构/时序都干净;
+             A8 故意跳过众数,取概率次高且 F 仍允许的下一步,并压缩 rho。
+      vs A2  A2 故意违反 F,硬层一票否决;A8 的候选在一元/二元 F 内,
+             硬层按构造不应触发。找不到 F 允许的非众数后继就跳过该受害者,
+             绝不退化为 A2。
+      vs A3  A3 只压缩时长、不改标签;A8 两个都改。
+
+    用插入而非原地改写:Trier 上多数设备类只有 1 个操作(vgr 只有搬运),
+    原地改写几乎没有 F 允许的替代标签,A8 会退化成空攻击。插入可以换到
+    另一台设备上仍合法的下一步,这才是"伪造工序位置"的原意。
+    """
+    tm = spec.struct_model
+    if tm is None:
+        raise ValueError(
+            "A8 必须提供 struct_model。缺少它就无法按转移概率挑非众数后继,"
+            "会退化成随机改标签,硬层直接否决,Fisher 的贡献被硬层吃掉——"
+            "那不是在测合成路,是在测 A2。")
+    rng = random.Random(spec.seed)
+    chosen, _ = _victims(activities, spec, rng)
+    typical: dict[tuple, list] = {}
+    dev_of_op: dict[str, list] = {}
+    for a in activities:
+        if a.duration_s:
+            typical.setdefault((a.device, a.op), []).append(a)
+        dev_of_op.setdefault(a.op, [])
+        if a.device not in dev_of_op[a.op]:
+            dev_of_op[a.op].append(a.device)
+
+    proc = spec.proc_model
+    out, labels = [], []
+    last_op_by_dev: dict[tuple, str] = {}      # (case, device) -> op
+    n_skip = 0
+    for a in activities:
+        out.append(a)
+        labels.append(False)
+        last_op_by_dev[(a.case, a.device)] = a.op
+        if id(a) not in chosen or not a.t_end:
+            continue
+        ranked = _ranked_successors(tm, a.op)
+        # 跳过众数(那是 A4);从第二名起找第一个 F 允许的
+        placed = False
+        for _p, state in ranked[1:]:
+            op = _op_of_state(state)
+            case_last = {d: o for (c, d), o in last_op_by_dev.items()
+                         if c == a.case}
+            dev = _capable_device(op, case_last, proc, dev_of_op, a.device)
+            if dev is None:
+                continue
+            pool = typical.get((dev, op)) or typical.get((a.device, a.op)) \
+                or [a]
+            ref = pool[len(pool) // 2]
+            b = copy.copy(ref)
+            b.case, b.device, b.op = a.case, dev, op
+            b.t_cmd = a.t_end
+            b.t_start = a.t_end + timedelta(seconds=1)
+            dur = (ref.duration_s or 1.0) * max(1.0 - spec.rho, 1e-3)
+            b.t_end = b.t_start + timedelta(seconds=dur)
+            b.t_done = b.t_end
+            out.append(b)
+            labels.append(True)
+            last_op_by_dev[(b.case, b.device)] = b.op
+            placed = True
+            break
+        if not placed:
+            n_skip += 1
+    if not any(labels):
+        raise RuntimeError(
+            "A8 在本段日志上找不到任何 F 允许的非众数后继。合成路的"
+            "存在理由在这个数据上不可测,不得用 score-level misplace 顶替。")
+    spec._a8_skipped = n_skip                  # 诊断用,不影响注入
+    spec._a8_injected = sum(labels)
+    return out, labels
 
 
 def _drift(activities, spec: AttackSpec):

@@ -38,6 +38,7 @@
     T35 并行路数受 m <= alpha*(n_b+1) 约束      (逐消息一行的分辨率上限)
     T36 互锁天花板的 q 必须取部署流实测值      (训练折低估 9 倍)
     T37 配额只能用良性判据选                  (相邻折按攻击表现选会反向)
+    T40 A8 必须知模型且落在 F 内的非众数后继  (Fisher 去留的注入器契约)
 
 用法:  py -m pytest tests/test_all.py -v
 """
@@ -445,7 +446,9 @@ def test_t19_fisher_accumulates_where_min_type_cannot():
 
     三个通道各自 p=0.05 时,alpha=0.01 下 Fisher 触发而 Simes/minp 不:
     Fisher 把三份中等证据加起来(约 0.006),Simes 最好也只能还原到单个
-    通道的 0.05,minp 还要再付 3 倍。这解释了多通道攻击下 0.413 对 0.187。
+    通道的 0.05,minp 还要再付 3 倍。这解释了 score-level 多通道扰动下
+    0.413 对 0.187;红队 A8 上这条机理仍对,但端到端加合成路无增益
+    (结论五十三)。
     """
     moderate = (0.05, 0.05, 0.05)
     assert fusion.fisher(moderate) < 0.01
@@ -476,7 +479,7 @@ def test_t22_attack_numbering_matches_the_paper():
     assert attacks.FAMILY_ZH == {
         "A1": "朴素重放", "A2": "物理不可行注入", "A3": "抢跑重放",
         "A4": "状态模仿", "A5": "渐变漂移", "A6": "消息抑制/延迟",
-        "A7": "多设备协同伪造"}
+        "A7": "多设备协同伪造", "A8": "跨通道工序伪造"}
     # 未实现的攻击族必须显式拒绝,不能静默返回良性流冒充攻击结果
     for fam in set(attacks.FAMILY_ZH) - set(attacks.IMPLEMENTED):
         with pytest.raises(NotImplementedError):
@@ -956,3 +959,58 @@ def test_t21_abstention_is_neutral_not_evidence():
     assert fusion.fisher((1e-6, 1.0, 1.0)) < 0.01
     # None 与 1.0 等价,避免调用方用 None 表示弃权时行为分叉
     assert fusion.simes((0.01, None, None)) == pytest.approx(0.03)
+
+
+def test_t40_a8_is_legal_nonmodal_and_rushed():
+    """A8 注入器契约:缺模型就拒绝;落下的必须是 F 允许的非众数后继,且时长被压缩。
+
+    这三条把 A8 与 A2/A4/A3 隔开。缺任何一条,Fisher 去留实验测的就不是
+    声称的那个攻击。
+    """
+    live, model, _ = trier()
+    sub = [a for a in live if a.duration_s]
+    chains = {}
+    for a in sub:
+        chains.setdefault(a.case, []).append(a.op)
+    tm = structural.fit(chains, states=sorted({a.op for a in sub}))
+
+    with pytest.raises(ValueError, match="struct_model"):
+        attacks.inject(sub[:80], attacks.AttackSpec(family="A8", rate=0.2))
+
+    spec = attacks.AttackSpec(family="A8", rho=0.30, rate=0.2, seed=0,
+                              knowledge="model", struct_model=tm,
+                              proc_model=model)
+    bad, lab = attacks.inject(sub, spec)
+    n_hit = sum(lab)
+    assert n_hit > 0
+    assert len(bad) == len(lab) == len(sub) + n_hit
+    assert getattr(spec, "_a8_injected", 0) == n_hit
+
+    hits = [a for a, h in zip(bad, lab) if h]
+    # 一元 F:按构造每条都该过
+    assert all(model.can_perform(a.device, a.op) for a in hits)
+    # 时长被压缩:注入条的时长等于某条同 (设备,操作) 原记录的 (1-rho)
+    originals = {}
+    for a in sub:
+        if a.duration_s:
+            originals.setdefault((a.device, a.op), []).append(a.duration_s)
+    rushed = 0
+    for a in hits:
+        pool = originals.get((a.device, a.op), [])
+        if a.duration_s and any(abs(a.duration_s - d * 0.7) < 1e-5 for d in pool):
+            rushed += 1
+    assert rushed == len(hits), (rushed, len(hits))
+    # 非众数:插入条的操作不应等于前驱的众数后继
+    modal = 0
+    for a in hits:
+        prev = max((b for b in bad
+                    if b.case == a.case and b.t_consume is not None
+                    and a.t_consume is not None and b.t_consume < a.t_consume),
+                   key=lambda b: b.t_consume, default=None)
+        if prev is None:
+            continue
+        ranked = attacks._ranked_successors(tm, prev.op)
+        if ranked and attacks._op_of_state(ranked[0][1]) == a.op:
+            modal += 1
+    assert modal / max(len(hits), 1) < 0.15, modal
+

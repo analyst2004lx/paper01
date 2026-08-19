@@ -195,7 +195,20 @@ def tab_main(by, cont, cases, seeds) -> None:
 
 
 def tab_bytag(by, cont, cases, seeds) -> None:
-    """Per-cell robustness view: where each mechanism pays and where it does not."""
+    """Per-cell robustness view: where each mechanism pays and where it does not.
+
+    The two gain columns use the *same* estimator as the pooled table, i.e. the
+    mean over seeds of the per-pair relative gain, not the ratio of the two
+    displayed means.  The design is balanced, so with this estimator the ten
+    cells average exactly to the headline macros; with the ratio-of-means it did
+    not, and a reader averaging the column got a different number from the one
+    in the prose.  The price is that the gain column is no longer reproducible
+    from the two mean columns on its own row -- said so in the caption.
+
+    Per-cell significance is printed because Section 5.5 reads signs off single
+    cells.  Ten seeds is thin, and a sign that is not significant must not be
+    narrated as a threshold.
+    """
     lines = [r"\begin{tabular}{@{}lrrrrrrr@{}}", r"\toprule",
              r"算例 & 争用强度 & " + " & ".join(ARM_TEX[a] for a in ARMS)
              + r" & B0$\rightarrow$B1 & B1$\rightarrow$B2 \\",
@@ -207,12 +220,12 @@ def tab_bytag(by, cont, cases, seeds) -> None:
         fam_seen = c.split()[0]
         m = {a: mean([by[c][a][s] for s in seeds if s in by[c].get(a, {})])
              for a in ARMS}
-        g1 = (m["B1"] - m["B0"]) / m["B0"]
-        g2 = (m["B2"] - m["B1"]) / m["B1"]
-        lines.append("%s & %.1f\\%% & %s & $%+.1f\\%%$ & $%+.1f\\%%$ \\\\"
+        g1, _w1, _l1, _t1, p1, _n1 = paired(by, [c], seeds, "B0", "B1")
+        g2, _w2, _l2, _t2, p2, _n2 = paired(by, [c], seeds, "B1", "B2")
+        lines.append("%s & %.1f\\%% & %s & $%+.1f\\%%%s$ & $%+.1f\\%%%s$ \\\\"
                      % (c, 100.0 * cont[c],
                         " & ".join("%.2f" % m[a] for a in ARMS),
-                        100.0 * g1, 100.0 * g2))
+                        100.0 * g1, stars(p1), 100.0 * g2, stars(p2)))
     lines += [r"\bottomrule", r"\end{tabular}"]
     write("tab_bytag.tex", "\n".join(lines) + "\n")
 
@@ -282,29 +295,66 @@ def macro_block(by, cont, cases, seeds) -> None:
     print(r"\newcommand{\GainIndepProduct}{%.1f\%%}" % (100.0 * abs(indep)))
     print(r"\newcommand{\ContentionLo}{%.1f\%%}" % (100.0 * min(cont.values())))
     print(r"\newcommand{\ContentionHi}{%.1f\%%}" % (100.0 * max(cont.values())))
+    # How many of the ten cells reach significance on their own.  Section 5.5
+    # reads signs off single cells, and the two effects differ sharply here:
+    # quoting these counts keeps the per-cell narrative honest about what ten
+    # seeds can and cannot resolve.
+    for ka, kb, cname in (("B0", "B1", "CellsSigLoop"),
+                          ("B1", "B2", "CellsSigProbe")):
+        k = sum(1 for c in cases if paired(by, [c], seeds, ka, kb)[4] < 0.05)
+        print(r"\newcommand{\%s}{%d}" % (cname, k))
 
     # B-family cells quoted in Section 5.5: scarce fleet (probing pays most) and
     # the two large-fleet cells (probing harmful inside the closed loop).
+    # Same estimator as the pooled contrasts and as tab_bytag, so the cell
+    # macros and the table cannot disagree.
     def cell_gain(name, ka, kb):
         if name not in by:
             return None
-        ma = mean([by[name][ka][s] for s in seeds if s in by[name].get(ka, {})])
-        mb = mean([by[name][kb][s] for s in seeds if s in by[name].get(kb, {})])
-        return (mb - ma) / ma
+        return paired(by, [name], seeds, ka, kb)[0]
+
+    def cell_p(name, ka, kb):
+        if name not in by:
+            return None
+        return paired(by, [name], seeds, ka, kb)[4]
 
     starved = cell_gain("B NA/NM 0.5", "B0", "B1")
     starve_p = cell_gain("B NA/NM 0.5", "B1", "B2")
     fleet1 = cell_gain("B NA/NM 1.0", "B1", "B2")
     fleet2 = cell_gain("B NA/NM 2.0", "B1", "B2")
+    # The base cell is the fourth point of the B family (N_A/N_M = 1.5) and the
+    # middle point of the C family (F = 0.6); tools/abc_matrix.py shares it
+    # across the three families and runs it once, under the name "A funnel".
+    # Section 5.5 must quote it, otherwise the fleet sweep looks monotone when
+    # it is not.
+    fleetbase = cell_gain("A funnel", "B1", "B2")
     if starved is not None:
         print(r"\newcommand{\GainLoopStarve}{%+.1f\%%}" % (100.0 * starved))
         print(r"\newcommand{\GainProbeStarve}{%.1f\%%}" % abs(100.0 * starve_p))
+    if fleetbase is not None:
+        print(r"\newcommand{\GainProbeFleetBase}{%+.1f\%%}" % (100.0 * fleetbase))
     if fleet1 is not None:
         print(r"\newcommand{\GainProbeFleetOne}{%+.1f\%%}" % (100.0 * fleet1))
         print(r"\newcommand{\GainProbeFleetTwo}{%+.1f\%%}" % (100.0 * fleet2))
         if fleet1 <= 0 or fleet2 <= 0:
             print("%%!! 注意:大车队两格上 B1->B2 已不都为正,第 5.5 适用上界段须核对。")
     print("=" * 74)
+
+    # Section 5.5 reads a sign off individual cells, so the cells it names must
+    # be checked for significance one by one and for monotonicity as a sweep.
+    print("B 族(funnel 布局)完整车臂比扫描,B1->B2 逐格:")
+    sweep = [(0.5, "B NA/NM 0.5"), (1.0, "B NA/NM 1.0"),
+             (1.5, "A funnel"), (2.0, "B NA/NM 2.0")]
+    signs = []
+    for lvl, name in sweep:
+        g, p = cell_gain(name, "B1", "B2"), cell_p(name, "B1", "B2")
+        if g is None:
+            continue
+        signs.append(g > 0)
+        print("  N_A/N_M=%.1f (%-13s): %+6.2f%%  p=%.4f%s"
+              % (lvl, name, 100.0 * g, p, "" if p < 0.05 else "  [不显著]"))
+    if len(set(signs)) > 1 and signs != sorted(signs):
+        print("  !! 符号在车队维度上不单调:不得把它叙述为一个单调的适用上界。")
     e2e = abs(100.0 * gains["GainEndToEnd"])
     ind = 100.0 * abs(indep)
     if e2e > ind + 0.05:
