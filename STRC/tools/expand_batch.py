@@ -29,8 +29,13 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--skip-scale", action="store_true")
     ap.add_argument("--skip-e5", action="store_true")
     ap.add_argument("--skip-e6", action="store_true")
+    ap.add_argument("--only-e5", action="store_true",
+                    help="只跑 E5。用于复核 A2 越界列而不重生成其余读数")
     ap.add_argument("--out-dir", default=OUT)
-    return ap.parse_args()
+    args = ap.parse_args()
+    if args.only_e5:
+        args.skip_scale = args.skip_e6 = True
+    return args
 
 
 def _instances():
@@ -211,9 +216,14 @@ def _run_scale(inst_path, inst_name, seed, t_frac, budget, pop, rows):
 def _run_e5(inst_path, inst_name, seed, t_frac, rows):
     from algorithm.clbs_bridge import Network, load_instance
     from algorithm.disturbance import Disturbance
+    from algorithm.metrics import reservation_delta_before
     from algorithm.repair import repair_with_strc
     from algorithm.resolve import resolve_r0
-    from algorithm.schedule_io import build_baseline, pick_busy_corridor
+    from algorithm.schedule_io import (
+        build_baseline,
+        pick_busy_corridor,
+        reservations_from_result,
+    )
 
     inst = load_instance(inst_path)
     net = Network(inst.nodes, inst.corridors, inst.lu_node)
@@ -223,9 +233,23 @@ def _run_e5(inst_path, inst_name, seed, t_frac, rows):
     dist = Disturbance(type="corridor_block", t_now=t_now, corridor=cid,
                        t_start=t0, t_end=t1)
     rep2 = repair_with_strc(inst, net, bundle, dist, expand_on_fail=False)
+
+    def _past(rep):
+        """按假设 A2,t_end <= t_now 的预约不得被改写,这里数它被改了几条。
+
+        全局重解臂从 t=0 重新解码,不受 A2 约束,其完工时间因此只能读作参考下界;
+        把越界条数与该臂的读数记在同一行,是为了让这层口径不必回到正文去找。
+        """
+        if not rep.feasible or rep.result is None:
+            return None, None
+        return reservation_delta_before(
+            bundle.reservations, reservations_from_result(rep.result), t_now=t_now)
+
+    r2_past_chg, r2_past_tot = _past(rep2)
     for bud in (0.2, 1.0, 2.0):
         rep0 = resolve_r0(inst, net, bundle, dist, budget_sec=bud,
                           seed=seed, hot=True, pop=40)
+        r0_past_chg, r0_past_tot = _past(rep0)
         d2 = rep2.deviation
         d0 = rep0.deviation
         rows.append({
@@ -239,10 +263,13 @@ def _run_e5(inst_path, inst_name, seed, t_frac, rows):
             "R2_wall_ms": round(rep2.wall_ms, 2),
             "R2_res_frac": (None if d2 is None or d2.reservation_total <= 0 else
                             round(d2.reservation_changed / d2.reservation_total, 3)),
+            "R0_past_changed": r0_past_chg, "R0_past_total": r0_past_tot,
+            "R2_past_changed": r2_past_chg, "R2_past_total": r2_past_tot,
             "ref_makespan": bundle.makespan,
         })
         print(f"  e5 {inst_name} seed={seed} bud={bud} "
-              f"R0 Cmax={rep0.makespan} R2 Cmax={rep2.makespan}")
+              f"R0 Cmax={rep0.makespan} R2 Cmax={rep2.makespan} "
+              f"past R0={r0_past_chg}/{r0_past_tot} R2={r2_past_chg}/{r2_past_tot}")
 
 
 def _run_e6_types(inst_path, inst_name, seed, t_frac, rows):
@@ -482,14 +509,15 @@ def main() -> int:
     os.makedirs(args.out_dir, exist_ok=True)
     e1, e2, e3, scale, e5, e6 = [], [], [], [], [], []
 
-    print("=== expand_batch: E1/E2/E3 ===")
-    for name, path in _instances():
-        if not os.path.isfile(path):
-            print(f"  skip missing {path}")
-            continue
-        for seed in seeds:
-            print(f"  E1-3 {name} seed={seed}")
-            _run_e1e2e3(path, name, seed, args.t_now_frac, e1, e2, e3)
+    if not args.only_e5:
+        print("=== expand_batch: E1/E2/E3 ===")
+        for name, path in _instances():
+            if not os.path.isfile(path):
+                print(f"  skip missing {path}")
+                continue
+            for seed in seeds:
+                print(f"  E1-3 {name} seed={seed}")
+                _run_e1e2e3(path, name, seed, args.t_now_frac, e1, e2, e3)
 
     if not args.skip_scale:
         print("=== expand_batch: scale_compare ===")

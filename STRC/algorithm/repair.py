@@ -85,12 +85,22 @@ def _precommit_frozen(
     closed_tasks: Set[str],
     dist: Disturbance,
 ) -> List[str]:
-    """预提交闭包外预约;若外侧与阻断冲突则记错误(闭包漏网)。"""
+    """预提交所有不可改写的预约:闭包外的全部,加上闭包内**已执行完**的那些。
+
+    第二类容易被漏掉,而漏掉它就等于允许改写历史。释放集是按任务标签落到重放里的,
+    而一个标签(如 `J8-1-empty`)可能横跨多条走廊腿;只要有一条腿的 t_end 落在
+    t_now 之后,整个标签就进释放集,于是连它在 t_now 之前**已经走完**的腿也会被
+    重新规划——按假设 A2 那些占用不得回溯修改。注 rem:e2b_history 修的是
+    「按工序 vs 按段」这一层错配,这里是更细一层的「按段 vs 按走廊腿」。
+
+    把历史腿在这里一次性占位(而不是等重放走到该工序时再补),是为了避免顺序依赖:
+    若晚于其他改路发生,别的段可能已经抢走该时空槽位,reserve 就会失败。
+    """
     from algorithm.block_context import block_windows_from_dist
     errs: List[str] = []
     blocks = block_windows_from_dist(dist)
     for r in reservations:
-        if r.task in closed_tasks:
+        if r.task in closed_tasks and r.t_end > dist.t_now + EPS:
             continue
         hit = any(
             r.corridor == cid and r.overlaps(t0, t1) for cid, t0, t1 in blocks
@@ -105,6 +115,49 @@ def _precommit_frozen(
         except AssertionError as e:
             errs.append(f"precommit fail {r.task}: {e}")
     return errs
+
+
+def _reroute_tail(
+    router: Router,
+    old_plan: RoutePlan,
+    fallback_start: str,
+    goal: str,
+    t_earliest: float,
+    agv: int,
+    task: str,
+    t_now: float,
+) -> RoutePlan:
+    """只重规划该段落在 t_now 之后的部分,已走完的走廊腿原样保留。
+
+    原先整段从 fallback_start 重规划,等于把车退回该段起点重走一遍;若该段跨越
+    t_now,已经走完的腿就被改写了(违反 A2)。这里按腿切分:exit <= t_now 的腿是
+    历史,车在 t_now 时位于最后一条历史腿的终点,改路从那里接着走。
+
+    历史腿的占位已由 _precommit_frozen 完成,此处不重复 reserve。
+    """
+    done = [s for s in old_plan.segments if s.exit <= t_now + EPS]
+    if not done:
+        return router.route(fallback_start, goal, t_earliest, agv, task)
+    at_node, at_time = done[-1].v, done[-1].exit
+    if at_node == goal:
+        # 该段在 t_now 前已抵达终点(标签因同工序另一段的腿而进释放集)。原样沿用,
+        # 但若还有 exit > t_now 的腿(路径绕经终点后又离开),它们没被 _precommit_frozen
+        # 占位,必须在此补上,否则预约表会留下空洞让别的车叠进来。
+        for s in old_plan.segments:
+            if s.exit > t_now + EPS:
+                router.table.reserve(s.corridor, s.enter, s.exit, agv, task)
+        return old_plan
+    tail = router.route(at_node, goal, max(at_time, t_now), agv, task)
+    return RoutePlan(
+        old_plan.start,
+        goal,
+        old_plan.t0,
+        tail.arrive,
+        list(done) + list(tail.segments),
+        # 只记新规划那部分的等待:历史腿上的让行已经发生,不该再计入本次拥堵归因
+        dict(tail.wait_by_corridor),
+        tail.price_cost,
+    )
 
 
 def replay_reroute(
@@ -172,15 +225,17 @@ def replay_reroute(
                     # 内侧改路:被释放的段表中无旧预约,原车重规划;
                     # 未被释放的段已由 _precommit_frozen 占位,沿用原计划。
                     if re_empty:
-                        empty = router.route(
-                            loc[k], pickup, max(avail[k], dist.t_now),
-                            k, f"J{j}-{i}-empty")
+                        empty = _reroute_tail(
+                            router, old.empty_plan, loc[k], pickup,
+                            max(avail[k], dist.t_now), k,
+                            f"J{j}-{i}-empty", dist.t_now)
                     else:
                         empty = old.empty_plan
                     t_load = max(empty.arrive, ready[j], dist.t_now, avail[k])
                     if re_loaded:
-                        loaded = router.route(pickup, dest, t_load, k,
-                                              f"J{j}-{i}-loaded")
+                        loaded = _reroute_tail(
+                            router, old.loaded_plan, pickup, dest,
+                            t_load, k, f"J{j}-{i}-loaded", dist.t_now)
                     else:
                         loaded = old.loaded_plan
                     arrive = loaded.arrive
@@ -451,6 +506,25 @@ def repair_with_strc(inst: Instance, net: Network, bundle: ScheduleBundle,
         out.closure_size = len(release)
     out.meta["arm"] = "R2"
     out.meta["expand_on_fail"] = expand_on_fail
+    return out
+
+
+def repair_with_all_future(inst: Instance, net: Network, bundle: ScheduleBundle,
+                           dist: Disturbance, **_kwargs) -> RepairResult:
+    """RA:不画边界,直接释放 t_now 之后的全部预约,再走同一遍改路重放。
+
+    这是「有没有边界」这个问题的另一侧对照。E3 比的是两种\u4e0d同的边界定义
+    (R1 任务图 vs R2 时空闭包);此处比的是「用边界」与「不用边界」——RA 与 R2
+    共用 replay_reroute、共用冻结判据、共用阻断安装,唯一差别是释放集取了平凡上界。
+    故两臂之差可以全部归因于闭包这个对象本身,而不是引擎、协议或实现的差别。
+
+    RA 同样按 A2 可采纳(t_end <= t_now 的预约仍然冻结),且已经是最大释放集,
+    因此不需要失败扩域。
+    """
+    release = expand_release_all_future(bundle.reservations, t_now=dist.t_now)
+    out = replay_reroute(inst, net, bundle, dist, release)
+    out.closure_size = len(release)
+    out.meta["arm"] = "RA"
     return out
 
 
