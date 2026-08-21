@@ -29,6 +29,8 @@ md_to_word_html.py
 Convert_MD_to_Html(open_and_save_in_Word).py
 paper02/database/ft_trier_iot_log/DQI_Event_Log.zip
 paper02/database/ft_trier_iot_log/Cleaned_Event_Log.zip
+paper01/paper-20260818.pdf
+paper01/paper-20260818.tex
 
 # Recently deleted unused graphics / scripts under paper01_new/fig
 paper01/paper-20260602.tex
