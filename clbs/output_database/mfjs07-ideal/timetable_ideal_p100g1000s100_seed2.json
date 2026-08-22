@@ -1,0 +1,233 @@
+{
+  "instance": "mfjs07-ideal",
+  "delta_return": 0,
+  "makespan": 981.0,
+  "operations": [
+    {
+      "job": 1,
+      "i": 1,
+      "machine": 1,
+      "start": 97.0,
+      "finish": 344.0
+    },
+    {
+      "job": 1,
+      "i": 2,
+      "machine": 4,
+      "start": 421.0,
+      "finish": 561.0
+    },
+    {
+      "job": 1,
+      "i": 3,
+      "machine": 4,
+      "start": 561.0,
+      "finish": 711.0
+    },
+    {
+      "job": 1,
+      "i": 4,
+      "machine": 7,
+      "start": 721.0,
+      "finish": 931.0
+    },
+    {
+      "job": 2,
+      "i": 1,
+      "machine": 3,
+      "start": 301.0,
+      "finish": 451.0
+    },
+    {
+      "job": 2,
+      "i": 2,
+      "machine": 2,
+      "start": 461.0,
+      "finish": 527.0
+    },
+    {
+      "job": 2,
+      "i": 3,
+      "machine": 6,
+      "start": 531.0,
+      "finish": 626.0
+    },
+    {
+      "job": 2,
+      "i": 4,
+      "machine": 5,
+      "start": 842.0,
+      "finish": 962.0
+    },
+    {
+      "job": 3,
+      "i": 1,
+      "machine": 2,
+      "start": 6.0,
+      "finish": 68.0
+    },
+    {
+      "job": 3,
+      "i": 2,
+      "machine": 7,
+      "start": 72.0,
+      "finish": 217.0
+    },
+    {
+      "job": 3,
+      "i": 3,
+      "machine": 5,
+      "start": 272.0,
+      "finish": 372.0
+    },
+    {
+      "job": 3,
+      "i": 4,
+      "machine": 7,
+      "start": 378.0,
+      "finish": 543.0
+    },
+    {
+      "job": 4,
+      "i": 1,
+      "machine": 1,
+      "start": 10.0,
+      "finish": 97.0
+    },
+    {
+      "job": 4,
+      "i": 2,
+      "machine": 5,
+      "start": 99.0,
+      "finish": 272.0
+    },
+    {
+      "job": 4,
+      "i": 3,
+      "machine": 4,
+      "start": 276.0,
+      "finish": 421.0
+    },
+    {
+      "job": 4,
+      "i": 4,
+      "machine": 6,
+      "start": 626.0,
+      "finish": 796.0
+    },
+    {
+      "job": 5,
+      "i": 1,
+      "machine": 2,
+      "start": 213.0,
+      "finish": 336.0
+    },
+    {
+      "job": 5,
+      "i": 2,
+      "machine": 5,
+      "start": 517.0,
+      "finish": 564.0
+    },
+    {
+      "job": 5,
+      "i": 3,
+      "machine": 2,
+      "start": 574.0,
+      "finish": 674.0
+    },
+    {
+      "job": 5,
+      "i": 4,
+      "machine": 4,
+      "start": 711.0,
+      "finish": 876.0
+    },
+    {
+      "job": 6,
+      "i": 1,
+      "machine": 2,
+      "start": 68.0,
+      "finish": 213.0
+    },
+    {
+      "job": 6,
+      "i": 2,
+      "machine": 3,
+      "start": 451.0,
+      "finish": 574.0
+    },
+    {
+      "job": 6,
+      "i": 3,
+      "machine": 5,
+      "start": 582.0,
+      "finish": 702.0
+    },
+    {
+      "job": 6,
+      "i": 4,
+      "machine": 7,
+      "start": 931.0,
+      "finish": 981.0
+    },
+    {
+      "job": 7,
+      "i": 1,
+      "machine": 3,
+      "start": 32.0,
+      "finish": 177.0
+    },
+    {
+      "job": 7,
+      "i": 2,
+      "machine": 3,
+      "start": 177.0,
+      "finish": 301.0
+    },
+    {
+      "job": 7,
+      "i": 3,
+      "machine": 5,
+      "start": 372.0,
+      "finish": 517.0
+    },
+    {
+      "job": 7,
+      "i": 4,
+      "machine": 5,
+      "start": 702.0,
+      "finish": 842.0
+    },
+    {
+      "job": 8,
+      "i": 1,
+      "machine": 4,
+      "start": 18.0,
+      "finish": 263.0
+    },
+    {
+      "job": 8,
+      "i": 2,
+      "machine": 6,
+      "start": 271.0,
+      "finish": 495.0
+    },
+    {
+      "job": 8,
+      "i": 3,
+      "machine": 7,
+      "start": 543.0,
+      "finish": 721.0
+    },
+    {
+      "job": 8,
+      "i": 4,
+      "machine": 6,
+      "start": 796.0,
+      "finish": 946.0
+    }
+  ],
+  "returns": [],
+  "agv_segments": []
+}

@@ -66,10 +66,12 @@ $Config = @{
     # If a path is in both, Ignore wins. Missing paths are skipped.
     IgnoreDeleteListFile = (Join-Path $PSScriptRoot 'Sync-GitHub-Ignore_and_Delete.txt')
     GitPath       = ''
-    # GitHub fetch often stalls on flaky links: retry + hard timeout (seconds)
+    # GitHub fetch: idle timeout (no pack growth) vs absolute cap.
+    # Slow WireGuard still counts as progress, so do not kill a growing download.
     FetchRetries     = 5
     FetchRetrySec    = 6
     FetchTimeoutSec  = 90
+    FetchMaxSec      = 600
 }
 # =============================================================
 
@@ -98,18 +100,40 @@ function Write-Log {
 }
 
 function Get-GitExe {
-    if ($Config.GitPath -and (Test-Path -LiteralPath $Config.GitPath)) {
-        return $Config.GitPath
-    }
-    $cmd = Get-Command git -ErrorAction SilentlyContinue
-    if ($cmd) { return $cmd.Source }
+    # Prefer mingw64\bin over cmd\git.exe — the cmd wrapper can survive Kill()
+    # while the real fetch/index-pack keep running and block retries.
+    $candidates = New-Object 'System.Collections.Generic.List[string]'
+    if ($Config.GitPath) { [void]$candidates.Add($Config.GitPath) }
     foreach ($c in @(
+        'C:\Program Files\Git\mingw64\bin\git.exe',
+        'C:\Program Files\Git\bin\git.exe',
         'C:\Program Files\Git\cmd\git.exe',
+        'C:\Program Files (x86)\Git\mingw64\bin\git.exe',
         'C:\Program Files (x86)\Git\cmd\git.exe'
-    )) {
-        if (Test-Path -LiteralPath $c) { return $c }
+    )) { [void]$candidates.Add($c) }
+    $cmd = Get-Command git -ErrorAction SilentlyContinue
+    if ($cmd -and $cmd.Source) { [void]$candidates.Add($cmd.Source) }
+    foreach ($c in $candidates) {
+        if ($c -and (Test-Path -LiteralPath $c -PathType Leaf)) { return $c }
     }
     throw 'git.exe not found. Install Git for Windows or set Config.GitPath.'
+}
+
+function Stop-ProcessTree {
+    param([int]$ProcessId)
+    if ($ProcessId -le 0) { return }
+    # /T = whole tree (git -> remote-https -> index-pack). Process.Kill() only
+    # hits the root and often leaves a hung pack download.
+    $tk = Get-Command taskkill.exe -ErrorAction SilentlyContinue
+    if ($tk) {
+        $p = Start-Process -FilePath $tk.Source -ArgumentList @('/PID', [string]$ProcessId, '/T', '/F') `
+            -Wait -PassThru -WindowStyle Hidden -ErrorAction SilentlyContinue
+        if ($p -and $p.ExitCode -in @(0, 128)) { return }
+    }
+    try {
+        $root = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
+        if ($root) { $root.Kill() }
+    } catch {}
 }
 
 function ConvertFrom-GitQuotedPath {
@@ -163,9 +187,21 @@ function Invoke-Git {
         [switch]$WithCommitIdentity,
         # Print "still running" every N seconds (0 = silent wait)
         [int]$HeartbeatSec = 15,
-        # Kill git if it exceeds this many seconds (0 = wait forever)
-        [int]$TimeoutSec = 0
+        # Kill git if it exceeds this many seconds (0 = wait forever).
+        # When ProgressDir is set, TimeoutSec is idle time with no file growth.
+        [int]$TimeoutSec = 0,
+        [int]$MaxSec = 0,
+        [string]$ProgressDir = '',
+        [string]$ProgressFilter = 'tmp_pack*'
     )
+
+    function Get-ProgressBytes {
+        if ([string]::IsNullOrWhiteSpace($ProgressDir) -or -not (Test-Path -LiteralPath $ProgressDir)) { return [int64]0 }
+        $sum = [int64]0
+        Get-ChildItem -LiteralPath $ProgressDir -Filter $ProgressFilter -Force -ErrorAction SilentlyContinue |
+            ForEach-Object { $sum += [int64]$_.Length }
+        return $sum
+    }
     $git = $script:GitExe
 
     # Always disable quotepath so Chinese paths are not shown as \345\273\272...
@@ -211,28 +247,41 @@ function Invoke-Git {
 
         $sw = [System.Diagnostics.Stopwatch]::StartNew()
         $lastBeat = 0
+        $lastBytes = Get-ProgressBytes
+        $lastProgressSec = 0
+        $watchProgress = -not [string]::IsNullOrWhiteSpace($ProgressDir)
         while (-not $proc.HasExited) {
             Start-Sleep -Milliseconds 500
-            if ($TimeoutSec -gt 0 -and $sw.Elapsed.TotalSeconds -ge $TimeoutSec) {
+            $elapsed = $sw.Elapsed.TotalSeconds
+            $idle = $elapsed
+            $bytesNow = $lastBytes
+            if ($watchProgress) {
+                $bytesNow = Get-ProgressBytes
+                if ($bytesNow -gt $lastBytes) {
+                    $lastBytes = $bytesNow
+                    $lastProgressSec = $elapsed
+                }
+                $idle = $elapsed - $lastProgressSec
+            }
+            $hitIdle = ($TimeoutSec -gt 0 -and $idle -ge $TimeoutSec)
+            $hitMax  = ($MaxSec -gt 0 -and $elapsed -ge $MaxSec)
+            if ($hitIdle -or $hitMax) {
                 $timedOut = $true
-                Write-Log ('TIMEOUT after {0}s — killing git: {1}' -f $TimeoutSec, $cmdLabel) -Level WARN
-                try { $proc.Kill() } catch {}
-                # Also kill helper (git-remote-https) that may keep the pack download hung
-                Get-Process -Name 'git-remote-https','git' -ErrorAction SilentlyContinue |
-                    Where-Object { $_.Id -ne $PID } |
-                    ForEach-Object {
-                        try {
-                            # Only kill children started around this command window
-                            if ($_.StartTime -ge $sw.StartTime.AddSeconds(-2)) {
-                                Stop-Process -Id $_.Id -Force -ErrorAction SilentlyContinue
-                            }
-                        } catch {}
-                    }
+                $why = if ($hitMax) { 'absolute cap' } else { 'no pack growth (idle)' }
+                Write-Log ('TIMEOUT after {0:N0}s ({1}, pack={2:N1} MB) — killing git tree PID {3}: {4}' -f `
+                    $elapsed, $why, ($lastBytes / 1MB), $proc.Id, $cmdLabel) -Level WARN
+                Stop-ProcessTree -ProcessId $proc.Id
+                Start-Sleep -Milliseconds 800
                 break
             }
-            if ($HeartbeatSec -gt 0 -and $sw.Elapsed.TotalSeconds -ge ($lastBeat + $HeartbeatSec)) {
-                $lastBeat = [int]$sw.Elapsed.TotalSeconds
-                Write-Log ('... git still running ({0}s): {1}' -f $lastBeat, $cmdLabel) -Level INFO
+            if ($HeartbeatSec -gt 0 -and $elapsed -ge ($lastBeat + $HeartbeatSec)) {
+                $lastBeat = [int]$elapsed
+                if ($watchProgress) {
+                    Write-Log ('... git still running ({0}s, pack={1:N1} MB, idle={2:N0}s): {3}' -f `
+                        $lastBeat, ($lastBytes / 1MB), $idle, $cmdLabel) -Level INFO
+                } else {
+                    Write-Log ('... git still running ({0}s): {1}' -f $lastBeat, $cmdLabel) -Level INFO
+                }
             }
         }
         try { $stdout = $outTask.Result } catch { $stdout = '' }
@@ -621,19 +670,33 @@ try {
         '-c', 'http.lowSpeedLimit=1000'
         '-c', 'http.lowSpeedTime=60'
     )
+    Write-Log 'preflight: ls-remote origin (checks GitHub without downloading a pack)...'
+    $preflight = Invoke-Git -GitArgs ($httpHardening + @('ls-remote', '--heads', 'origin')) -AllowFail -HeartbeatSec 10 -TimeoutSec 30
+    if ($preflight.ExitCode -eq 0) {
+        Write-Log 'preflight ok (GitHub reachable)'
+    } else {
+        Write-Log ('preflight failed (exit={0}): {1}' -f $preflight.ExitCode, $preflight.Output) -Level WARN
+        Write-Log 'GitHub may be slow or blocked; fetch will still be attempted.' -Level WARN
+    }
     $fetchOk = $false
     $fetch = $null
     $maxTry = [Math]::Max(1, [int]$Config.FetchRetries)
-    $fetchTimeout = [Math]::Max(30, [int]$Config.FetchTimeoutSec)
+    $fetchIdle = [Math]::Max(30, [int]$Config.FetchTimeoutSec)
+    $fetchMax = [Math]::Max($fetchIdle, [int]$Config.FetchMaxSec)
+    $packDir = Join-Path $Config.LocalFolder '.git\objects\pack'
+    $fetchBranch = $Config.Branch
+    if ([string]::IsNullOrWhiteSpace($fetchBranch)) { $fetchBranch = 'main' }
     for ($i = 1; $i -le $maxTry; $i++) {
-        Write-Log ('fetch attempt {0}/{1} (timeout={2}s)...' -f $i, $maxTry, $fetchTimeout)
+        Write-Log ('fetch attempt {0}/{1} (idle={2}s, max={3}s, ref={4})...' -f $i, $maxTry, $fetchIdle, $fetchMax, $fetchBranch)
         if ($i -le 2) {
-            $fetchArgs = $httpHardening + @('fetch', 'origin', '--prune')
+            # Single branch + no tags: smaller pack than `fetch origin --prune`
+            $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', 'origin', $fetchBranch)
         } else {
             Write-Log 'Using shallow fetch fallback (depth=1; smaller download)...' -Level WARN
-            $fetchArgs = $httpHardening + @('fetch', 'origin', '--prune', '--depth', '1')
+            $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', '--depth', '1', 'origin', $fetchBranch)
         }
-        $fetch = Invoke-Git -GitArgs $fetchArgs -AllowFail -HeartbeatSec 15 -TimeoutSec $fetchTimeout
+        $fetch = Invoke-Git -GitArgs $fetchArgs -AllowFail -HeartbeatSec 15 `
+            -TimeoutSec $fetchIdle -MaxSec $fetchMax -ProgressDir $packDir
         if ($fetch.ExitCode -eq 0) {
             $fetchOk = $true
             Write-Log ('fetch ok on attempt {0}' -f $i)

@@ -1,0 +1,156 @@
+{
+  "instance": "mfjs04-ideal",
+  "delta_return": 0,
+  "makespan": 618.0,
+  "operations": [
+    {
+      "job": 1,
+      "i": 1,
+      "machine": 2,
+      "start": 68.0,
+      "finish": 291.0
+    },
+    {
+      "job": 1,
+      "i": 2,
+      "machine": 7,
+      "start": 295.0,
+      "finish": 418.0
+    },
+    {
+      "job": 1,
+      "i": 3,
+      "machine": 7,
+      "start": 418.0,
+      "finish": 618.0
+    },
+    {
+      "job": 2,
+      "i": 1,
+      "machine": 3,
+      "start": 28.0,
+      "finish": 178.0
+    },
+    {
+      "job": 2,
+      "i": 2,
+      "machine": 3,
+      "start": 178.0,
+      "finish": 265.0
+    },
+    {
+      "job": 2,
+      "i": 3,
+      "machine": 6,
+      "start": 267.0,
+      "finish": 362.0
+    },
+    {
+      "job": 3,
+      "i": 1,
+      "machine": 2,
+      "start": 6.0,
+      "finish": 68.0
+    },
+    {
+      "job": 3,
+      "i": 2,
+      "machine": 7,
+      "start": 72.0,
+      "finish": 217.0
+    },
+    {
+      "job": 3,
+      "i": 3,
+      "machine": 6,
+      "start": 362.0,
+      "finish": 515.0
+    },
+    {
+      "job": 4,
+      "i": 1,
+      "machine": 1,
+      "start": 10.0,
+      "finish": 97.0
+    },
+    {
+      "job": 4,
+      "i": 2,
+      "machine": 5,
+      "start": 99.0,
+      "finish": 272.0
+    },
+    {
+      "job": 4,
+      "i": 3,
+      "machine": 4,
+      "start": 455.0,
+      "finish": 600.0
+    },
+    {
+      "job": 5,
+      "i": 1,
+      "machine": 1,
+      "start": 254.0,
+      "finish": 382.0
+    },
+    {
+      "job": 5,
+      "i": 2,
+      "machine": 4,
+      "start": 390.0,
+      "finish": 455.0
+    },
+    {
+      "job": 5,
+      "i": 3,
+      "machine": 6,
+      "start": 515.0,
+      "finish": 600.0
+    },
+    {
+      "job": 6,
+      "i": 1,
+      "machine": 4,
+      "start": 18.0,
+      "finish": 172.0
+    },
+    {
+      "job": 6,
+      "i": 2,
+      "machine": 4,
+      "start": 172.0,
+      "finish": 322.0
+    },
+    {
+      "job": 6,
+      "i": 3,
+      "machine": 5,
+      "start": 332.0,
+      "finish": 452.0
+    },
+    {
+      "job": 7,
+      "i": 1,
+      "machine": 1,
+      "start": 97.0,
+      "finish": 254.0
+    },
+    {
+      "job": 7,
+      "i": 2,
+      "machine": 3,
+      "start": 265.0,
+      "finish": 389.0
+    },
+    {
+      "job": 7,
+      "i": 3,
+      "machine": 5,
+      "start": 452.0,
+      "finish": 597.0
+    }
+  ],
+  "returns": [],
+  "agv_segments": []
+}

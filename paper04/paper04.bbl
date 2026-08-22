@@ -2,7 +2,7 @@
 %%% Do NOT edit. File created by BibTeX with style
 %%% ACM-Reference-Format-Journals [18-Jan-2012].
 
-\begin{thebibliography}{24}
+\begin{thebibliography}{28}
 
 %%% ====================================================================
 %%% NOTE TO THE USER: you can override these defaults by providing
@@ -73,16 +73,16 @@
 \href{https://doi.org/10.1287/opre.39.3.470}{doi:\nolinkurl{10.1287/opre.39.3.470}}
 
 
-\bibitem[Dalcastagn{\'e} et~al\mbox{.}(2020)]%
-        {dalcastagne2020reactive}
-\bibfield{author}{\bibinfo{person}{Manuel Dalcastagn{\'e}},
-  \bibinfo{person}{Andrea Mariello}, {and} \bibinfo{person}{Roberto Battiti}.}
-  \bibinfo{year}{2020}\natexlab{}.
-\newblock \showarticletitle{Reactive Sample Size for Heuristic Search in
-  Simulation-based Optimization}.
-\newblock \bibinfo{journal}{\emph{arXiv preprint arXiv:2005.12141}}
-  (\bibinfo{year}{2020}).
+\bibitem[Bilge and Ulusoy(1995)]%
+        {bilge1995time}
+\bibfield{author}{\bibinfo{person}{{\"U}mit Bilge} {and}
+  \bibinfo{person}{G{\"u}nd{\"u}z Ulusoy}.} \bibinfo{year}{1995}\natexlab{}.
+\newblock \showarticletitle{A Time Window Approach to Simultaneous Scheduling
+  of Machines and Material Handling System in an {FMS}}.
+\newblock \bibinfo{journal}{\emph{Operations Research}} \bibinfo{volume}{43},
+  \bibinfo{number}{6} (\bibinfo{year}{1995}), \bibinfo{pages}{1058--1070}.
 \newblock
+\href{https://doi.org/10.1287/opre.43.6.1058}{doi:\nolinkurl{10.1287/opre.43.6.1058}}
 
 
 \bibitem[D'Ariano et~al\mbox{.}(2007)]%
@@ -110,6 +110,19 @@
 \newblock \bibinfo{journal}{\emph{Machines}} \bibinfo{volume}{13},
   \bibinfo{number}{12} (\bibinfo{year}{2025}), \bibinfo{pages}{1090}.
 \newblock
+
+
+\bibitem[Homayouni and Fontes(2021)]%
+        {homayouni2021production}
+\bibfield{author}{\bibinfo{person}{Seyed~Mahdi Homayouni} {and}
+  \bibinfo{person}{Dalila B. M.~M. Fontes}.} \bibinfo{year}{2021}\natexlab{}.
+\newblock \showarticletitle{Production and Transport Scheduling in Flexible Job
+  Shop Manufacturing Systems}.
+\newblock \bibinfo{journal}{\emph{Journal of Global Optimization}}
+  \bibinfo{volume}{79}, \bibinfo{number}{2} (\bibinfo{year}{2021}),
+  \bibinfo{pages}{463--502}.
+\newblock
+\href{https://doi.org/10.1007/s10898-021-00992-6}{doi:\nolinkurl{10.1007/s10898-021-00992-6}}
 
 
 \bibitem[Kim and Kim(2026)]%
@@ -163,6 +176,20 @@
   \bibinfo{pages}{1815--1826}.
 \newblock
 \href{https://doi.org/10.1080/00207549308956824}{doi:\nolinkurl{10.1080/00207549308956824}}
+
+
+\bibitem[Lyu et~al\mbox{.}(2019)]%
+        {lyu2019approach}
+\bibfield{author}{\bibinfo{person}{Xiangfei Lyu}, \bibinfo{person}{Yuchuan
+  Song}, \bibinfo{person}{Changzheng He}, \bibinfo{person}{Qi Lei}, {and}
+  \bibinfo{person}{Weifei Guo}.} \bibinfo{year}{2019}\natexlab{}.
+\newblock \showarticletitle{Approach to Integrated Scheduling Problems
+  Considering Optimal Number of Automated Guided Vehicles and Conflict-Free
+  Routing in Flexible Manufacturing Systems}.
+\newblock \bibinfo{journal}{\emph{IEEE Access}}  \bibinfo{volume}{7}
+  (\bibinfo{year}{2019}), \bibinfo{pages}{74909--74924}.
+\newblock
+\href{https://doi.org/10.1109/ACCESS.2019.2919109}{doi:\nolinkurl{10.1109/ACCESS.2019.2919109}}
 
 
 \bibitem[Malka et~al\mbox{.}(2024)]%
@@ -273,6 +300,20 @@
 \href{https://doi.org/10.1609/aaai.v33i01.33017732}{doi:\nolinkurl{10.1609/aaai.v33i01.33017732}}
 
 
+\bibitem[Tang et~al\mbox{.}(2026)]%
+        {tang2026dynamic}
+\bibfield{author}{\bibinfo{person}{Hongtao Tang}, \bibinfo{person}{Xuewei
+  Zhang}, \bibinfo{person}{Jiawei Huang}, \bibinfo{person}{Xuesong Xu}, {and}
+  \bibinfo{person}{Jiansha Lu}.} \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{Integrated Scheduling of Multi-Objective
+  Lot-Streaming Hybrid Flowshop with {AGV} under Dynamic Environments}.
+\newblock \bibinfo{journal}{\emph{International Journal of Industrial
+  Engineering Computations}} \bibinfo{volume}{17}, \bibinfo{number}{2}
+  (\bibinfo{year}{2026}), \bibinfo{pages}{295--316}.
+\newblock
+\href{https://doi.org/10.5267/j.ijiec.2025.9.003}{doi:\nolinkurl{10.5267/j.ijiec.2025.9.003}}
+
+
 \bibitem[van Os and Basten(2026)]%
         {vanos2026exact}
 \bibfield{author}{\bibinfo{person}{Roel W.~M. van Os} {and}
@@ -323,6 +364,20 @@
   Research}} \bibinfo{volume}{63}, \bibinfo{number}{12} (\bibinfo{year}{2025}),
   \bibinfo{pages}{4563--4589}.
 \newblock
+
+
+\bibitem[Zhang et~al\mbox{.}(2023)]%
+        {zhang2023energy}
+\bibfield{author}{\bibinfo{person}{Hongliang Zhang}, \bibinfo{person}{Chaoqun
+  Qin}, \bibinfo{person}{Wenhui Zhang}, \bibinfo{person}{Zhenxing Xu},
+  \bibinfo{person}{Gongjie Xu}, {and} \bibinfo{person}{Zhenhua Gao}.}
+  \bibinfo{year}{2023}\natexlab{}.
+\newblock \showarticletitle{Energy-Saving Scheduling for Flexible Job Shop
+  Problem with {AGV} Transportation Considering Emergencies}.
+\newblock \bibinfo{journal}{\emph{Systems}} \bibinfo{volume}{11},
+  \bibinfo{number}{2} (\bibinfo{year}{2023}), \bibinfo{pages}{103}.
+\newblock
+\href{https://doi.org/10.3390/systems11020103}{doi:\nolinkurl{10.3390/systems11020103}}
 
 
 \bibitem[Zhang et~al\mbox{.}(2024)]%

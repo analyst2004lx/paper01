@@ -38,6 +38,13 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--t-now-frac", type=float, default=0.35)
     ap.add_argument("--pop", type=int, default=40)
     ap.add_argument("--cold", action="store_true", help="用 R0 冷启动(默认 R0+ 热启动)")
+    ap.add_argument(
+        "--baseline-mode", choices=("heuristic", "ga"), default="heuristic",
+        help="初始排程的来源。heuristic 是未优化解,ga 是收敛后的解;"
+             "两者会给出完全不同的 R0+/R2 差距,见 experiments/README",
+    )
+    ap.add_argument("--baseline-budget", type=float, default=5.0,
+                    help="--baseline-mode ga 时构造初始解的挂钟预算")
     ap.add_argument("--out", default=os.path.join(ROOT, "experiments", "e5_cross_curve.csv"))
     return ap.parse_args()
 
@@ -46,9 +53,22 @@ def main() -> int:
     args = parse_args()
     from algorithm.clbs_bridge import CLBS_INPUT, Network, load_instance
     from algorithm.disturbance import Disturbance
+    from algorithm.metrics import reservation_delta_before
     from algorithm.repair import repair_with_strc
     from algorithm.resolve import resolve_r0
-    from algorithm.schedule_io import build_baseline, pick_busy_corridor
+    from algorithm.schedule_io import (
+        build_baseline,
+        pick_busy_corridor,
+        reservations_from_result,
+    )
+
+    def past_delta(bundle, rep, t_now: float):
+        """该臂改写了多少条 t_now 之前已执行完的预约(按 A2 应为 0)。"""
+        if not rep.feasible or rep.result is None:
+            return None, None
+        return reservation_delta_before(
+            bundle.reservations, reservations_from_result(rep.result), t_now=t_now
+        )
 
     inst_path = args.instance or os.path.join(CLBS_INPUT, "congested_8x4x4.json")
     inst = load_instance(inst_path)
@@ -63,9 +83,13 @@ def main() -> int:
     rows = []
     print(f"=== STRC E5: {arm_r0} vs R2 (Cmax + stability) ===")
     print(f"instance={inst.name}  seeds={seeds}  budgets={budgets}")
+    print(f"baseline_mode={args.baseline_mode}")
 
     for seed in seeds:
-        bundle = build_baseline(inst, net, seed=seed, mode="heuristic")
+        bundle = build_baseline(
+            inst, net, seed=seed, mode=args.baseline_mode,
+            budget_sec=args.baseline_budget,
+        )
         t_now = args.t_now_frac * bundle.makespan
         cid, _, _, n_hit = pick_busy_corridor(bundle.reservations, t_now=t_now)
         dist = Disturbance(
@@ -74,11 +98,13 @@ def main() -> int:
         )
         rep2 = repair_with_strc(inst, net, bundle, dist)
         d2 = rep2.deviation
+        r2_past_ch, r2_past_tot = past_delta(bundle, rep2, t_now)
         print(f"\n  seed={seed} corridor={cid} hits={n_hit}")
         print(f"    R2  feas={rep2.feasible} Cmax={rep2.makespan} "
               f"RΔ={None if d2 is None else d2.reservation_changed}/"
               f"{None if d2 is None else d2.reservation_total} "
-              f"wall={rep2.wall_ms:.2f}ms")
+              f"past={r2_past_ch}/{r2_past_tot} "
+              f"wall={rep2.wall_ms:.2f}ms  ref={bundle.makespan}")
 
         for b in budgets:
             rep0 = resolve_r0(
@@ -108,12 +134,18 @@ def main() -> int:
                 else:
                     stab_winner = "tie"
 
+            r0_past_ch, r0_past_tot = past_delta(bundle, rep0, t_now)
             row = {
                 "instance": inst.name,
                 "seed": seed,
                 "corridor": cid,
                 "t_now": round(t_now, 4),
+                "baseline_mode": args.baseline_mode,
                 "budget_sec": b,
+                # 挂钟是否守住预算。GA 至少要跑完一代才检查终止条件,故小预算下
+                # 这一列会是 False,而 R0_wall_ms 就是该臂的响应时间下界。
+                "budget_honored": rep0.wall_ms <= b * 1000.0 * 1.05,
+                "R0_stopped_by": rep0.meta.get("stopped_by"),
                 "arm_r0": arm_r0,
                 "R0_feasible": rep0.feasible,
                 "R0_makespan": rep0.makespan,
@@ -122,19 +154,25 @@ def main() -> int:
                 "R0_wall_ms": round(rep0.wall_ms, 2),
                 "R0_gens": rep0.meta.get("generations"),
                 "R0_decodes": rep0.meta.get("decodes"),
+                "R0_past_changed": r0_past_ch,
+                "R0_past_total": r0_past_tot,
                 "R2_feasible": rep2.feasible,
                 "R2_makespan": rep2.makespan,
                 "R2_res_changed": (None if d2 is None else d2.reservation_changed),
                 "R2_res_total": (None if d2 is None else d2.reservation_total),
                 "R2_wall_ms": round(rep2.wall_ms, 2),
                 "R2_release": rep2.release_size,
+                "R2_past_changed": r2_past_ch,
+                "R2_past_total": r2_past_tot,
                 "makespan_winner": ms_winner,
                 "stability_winner": stab_winner,
                 "ref_makespan": bundle.makespan,
             }
             rows.append(row)
             print(f"    budget={b:6.2f}s  {arm_r0}: Cmax={rep0.makespan} "
-                  f"RΔ={row['R0_res_changed']} gens={row['R0_gens']}  "
+                  f"RΔ={row['R0_res_changed']} past={r0_past_ch}/{r0_past_tot} "
+                  f"wall={rep0.wall_ms:.0f}ms honored={row['budget_honored']} "
+                  f"gens={row['R0_gens']}  "
                   f"ms_win={ms_winner} stab_win={stab_winner}")
 
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)

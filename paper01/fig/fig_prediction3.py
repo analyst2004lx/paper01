@@ -41,7 +41,7 @@ from _style import (LADDER, by, load_output, mark_draft, mean,  # noqa: E402
                     plt, save)
 
 try:                                                            # noqa: E402
-    from algorithm.stats import wilcoxon_signed_rank
+    from algorithm.stats import holm, wilcoxon_signed_rank
     from tools.abc_matrix import BASE
 except Exception as exc:                                        # pragma: no cover
     raise SystemExit("需要 clbs/ 在 sys.path 上以取显著性与基点水平:%s" % exc)
@@ -107,6 +107,21 @@ def cell_effect(rows_of_cell, ka: str, kb: str):
     return 100.0 * rel, wilcoxon_signed_rank(xb, xa)["p_value"]
 
 
+def adjusted(cells, ka: str, kb: str):
+    """Holm-adjusted per-cell p for one effect, keyed by cell name.
+
+    The family is all ten cells of that effect, not the three or five cells of
+    whichever panel is being drawn: the reader's question is "which of these
+    readings may I believe", and they are looking at all ten of them.  Adjusting
+    per panel would make a cell's fill depend on which panel it appears in,
+    which for the shared base point would mean two different fills for one
+    number.
+    """
+    names = [c for (c,) in cells]
+    ps = [cell_effect(cells[(c,)], ka, kb)[1] for c in names]
+    return dict(zip(names, holm(ps)))
+
+
 def main() -> None:
     rows = load_output("baseline_ladder.csv", HINT)
     seeds = sorted({r["seed"] for r in rows})
@@ -131,20 +146,20 @@ def main() -> None:
         xs = [level(c, fam, cont[c]) for c in names]
 
         for ka, kb, label, colour, marker, ls in EFFECTS:
-            ys, ps = [], []
-            for c in names:
-                y, p = cell_effect(cells[(c,)], ka, kb)
-                ys.append(y)
-                ps.append(p)
+            adj = adjusted(cells, ka, kb)
+            ys = [cell_effect(cells[(c,)], ka, kb)[0] for c in names]
             ax.plot(xs, ys, ls, color=colour, linewidth=1.2,
                     label=label if fam == "A" else None, zorder=3,
                     clip_on=False)
-            # Fill carries significance.  A hollow marker is the figure saying
-            # "this cell does not license a claim about its sign", which is the
-            # whole point of the panel for the probing curve.
-            for x, y, p in zip(xs, ys, ps):
+            # Fill carries significance *after* correcting over the ten cells of
+            # this effect.  A hollow marker is the figure saying "this cell does
+            # not license a claim about its sign", which is the whole point of
+            # the panel for the probing curve -- and after correction that curve
+            # is hollow throughout, which is the honest picture: ten seeds per
+            # cell resolve the main effect and do not resolve this one.
+            for x, y, c in zip(xs, ys, names):
                 ax.plot([x], [y], marker, color=colour, markersize=4.6,
-                        markerfacecolor=colour if p < ALPHA else "white",
+                        markerfacecolor=colour if adj[c] < ALPHA else "white",
                         markeredgecolor=colour, markeredgewidth=1.0,
                         zorder=4, clip_on=False)
 
@@ -162,12 +177,15 @@ def main() -> None:
 
     axes[0].set_ylabel("$\\Delta C_{\\max}$ (%)\nnegative is better")
     axes[0].legend(loc="lower left", fontsize=6.8, handlelength=1.8)
-    fig.text(0.995, 0.015,
-             "%d seeds per cell, equal wall clock; "
-             "filled marker = that cell significant at $p<%.2f$"
-             % (len(seeds), ALPHA),
+    # tight_layout first, then reserve a strip for the protocol line: stating the
+    # correction is what makes the marker fills readable, so it must not be laid
+    # on top of the axis labels.
+    fig.tight_layout(rect=(0.0, 0.075, 1.0, 1.0))
+    fig.text(0.995, 0.012,
+             "%d seeds per cell, equal wall clock; filled marker = that cell "
+             "significant at $p<%.2f$, Holm-corrected over the %d cells"
+             % (len(seeds), ALPHA, len(cells)),
              ha="right", va="bottom", fontsize=6.2, color="#777777")
-    fig.tight_layout()
     save(fig, "fig_prediction3")
 
 

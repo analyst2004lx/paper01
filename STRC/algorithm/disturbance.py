@@ -7,7 +7,12 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from typing import Any, List, Literal, Optional, Sequence
+from typing import Any, List, Optional, Sequence
+
+try:                                    # Literal 自 3.8 起才进 typing
+    from typing import Literal
+except ImportError:                     # pragma: no cover - 3.7 回退
+    from typing_extensions import Literal
 
 from algorithm.closure import ReservationRef
 
