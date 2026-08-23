@@ -16,14 +16,18 @@ would not be run.
 Inputs
   clbs/output/baseline_ladder.csv   case,contention,arm,seed,makespan
   clbs/output/prune_ablation.csv    case,contention,arm,seed,makespan,decodes,ms_per_eval
+  clbs/experiments_database/gap_ideal.csv   public-benchmark comparison
+  clbs/database/json/hf/*.json      the public instances, read only for their
+                                    operation counts, which the CSV omits
 Outputs (LaTeX tabular fragments, no float wrapper -- paper.tex supplies that)
-  tab_instances.tex  tab_main.tex  tab_bytag.tex  tab_prune.tex
+  tab_instances.tex  tab_main.tex  tab_bytag.tex  tab_prune.tex  tab_external.tex
 
 Run from the repository root:  py paper01/tab/gen_tables_ladder.py
 """
 from __future__ import annotations
 
 import csv
+import json
 import os
 import sys
 from typing import Dict, List
@@ -65,7 +69,9 @@ def read(path: str) -> List[dict]:
     if not os.path.exists(path):
         raise SystemExit(
             "缺少 %s\n  先在 clbs/ 目录下运行对应的工具生成它。" % path)
-    with open(path, encoding="utf-8") as f:
+    # utf-8-sig, 不是 utf-8:experiments_database 的 CSV 带 BOM,若不吃掉它,
+    # 首列列名会变成 "\ufeffinstance" 而只在读第一列时才报错。
+    with open(path, encoding="utf-8-sig") as f:
         return list(csv.DictReader(f))
 
 
@@ -181,11 +187,12 @@ def citex(r: dict) -> str:
             % (100.0 * r["hl"], 100.0 * r["lo"], 100.0 * r["hi"]))
 
 
-def write(name: str, body: str) -> None:
+def write(name: str, body: str,
+          src: str = "clbs/output/baseline_ladder.csv 等,见脚本首部") -> None:
     path = os.path.join(HERE, name)
     with open(path, "w", encoding="utf-8") as f:
         f.write("%% 由 tab/gen_tables_ladder.py 生成,请勿手工编辑\n")
-        f.write("%% 数据源:clbs/output/baseline_ladder.csv 等,见脚本首部\n")
+        f.write("%%%% 数据源:%s\n" % src)
         f.write(body)
     print("写出 %s" % os.path.relpath(path, ROOT))
 
@@ -213,7 +220,8 @@ def tab_instances(cont: Dict[str, float], cases: List[str]) -> Dict[str, float]:
     layout: Dict[str, str] = {}
     spec = {c["name"]: c for c in CASES}
     lines = [r"\begin{tabular}{@{}llrrrrrr@{}}", r"\toprule",
-             r"算例 & 变化的因子 & 节点 & 走廊 & $N_A$ & $F$ & 争用强度 & 复合下界 \\",
+             r"算例 & 变化的因子 & 节点 & 走廊 & $N_A$ & $F$ & 争用强度 "
+             r"& 复合下界(时间单位) \\",
              r"\midrule"]
     fam_seen = None
     for c in cases:
@@ -243,7 +251,13 @@ def tab_instances(cont: Dict[str, float], cases: List[str]) -> Dict[str, float]:
 
 def tab_main(by, cont, cases, seeds) -> None:
     """Main result: per-case means on top, the factorial contrasts below."""
+    # Bold marks the paper's configuration in the *header* only.  Bolding the
+    # B2 cells read as "best in row", and it is not: on two of the ten cells B1
+    # is faster.  One convention across every table in the paper -- bold header
+    # = this paper's arm, no bold on any value -- is what stops that misreading.
     lines = [r"\begin{tabular}{@{}lrrrrr@{}}", r"\toprule",
+             r"& & \multicolumn{4}{c}{$C_{\max}$(时间单位)} \\",
+             r"\cmidrule(lr){3-6}",
              r"算例 & 争用强度 & "
              + " & ".join(ARM_TEX[a] for a in ARMS) + r" \\",
              r"\midrule"]
@@ -253,16 +267,15 @@ def tab_main(by, cont, cases, seeds) -> None:
             lines.append(r"\midrule")
         fam_seen = c.split()[0]
         vals = " & ".join(
-            ("\\textbf{%.2f}" if a == "B2" else "%.2f")
-            % mean([by[c][a][s] for s in seeds if s in by[c].get(a, {})])
+            "%.2f" % mean([by[c][a][s] for s in seeds
+                           if s in by[c].get(a, {})])
             for a in ARMS)
         lines.append("%s & %.1f\\%% & %s \\\\" % (c, 100.0 * cont[c], vals))
 
     lines.append(r"\midrule")
     allv = " & ".join(
-        ("\\textbf{%.2f}" if a == "B2" else "%.2f")
-        % mean([by[c][a][s] for c in cases for s in seeds
-                if s in by[c].get(a, {})]) for a in ARMS)
+        "%.2f" % mean([by[c][a][s] for c in cases for s in seeds
+                       if s in by[c].get(a, {})]) for a in ARMS)
     lines.append(r"\emph{全体均值} & --- & %s \\" % allv)
     # The five contrasts form one family, so they are corrected together.  The
     # end-to-end row is included rather than exempted: leaving it out would make
@@ -311,6 +324,9 @@ def tab_bytag(by, cont, cases, seeds) -> None:
     probe = {r["case"]: r for r in per_cell(by, cases, seeds, "B1", "B2")}
 
     lines = [r"\begin{tabular}{@{}lrrrrrrr@{}}", r"\toprule",
+             r"& & \multicolumn{4}{c}{$C_{\max}$(时间单位)} "
+             r"& \multicolumn{2}{c}{逐对相对增益} \\",
+             r"\cmidrule(lr){3-6}\cmidrule(lr){7-8}",
              r"算例 & 争用强度 & " + " & ".join(ARM_TEX[a] for a in ARMS)
              + r" & B0$\rightarrow$B1 & B1$\rightarrow$B2 \\",
              r"\midrule"]
@@ -344,8 +360,16 @@ def tab_prune() -> None:
     ms, _, _, _ = group(rows, "ms_per_eval")
     on, off = "开", "关"
 
+    # Both ratio columns are against the *off* arm, but in opposite directions:
+    # more evaluations is better, fewer ms per evaluation is better.  Printing
+    # the quotient in the header is the only way a reader can tell which way
+    # round each one runs without going to the text.
     lines = [r"\begin{tabular}{@{}lrrrrrr@{}}", r"\toprule",
-             r"算例 & 争用强度 & 关 & 开 & $\Delta C_{\max}$ & 评价次数比 & 加速比 \\",
+             r"& & \multicolumn{2}{c}{$C_{\max}$(时间单位)} & "
+             r"& 评价次数比 & 单次评价加速比 \\",
+             r"\cmidrule(lr){3-4}",
+             r"算例 & 争用强度 & 关 & \textbf{开} & $\Delta C_{\max}$ "
+             r"& (开/关) & (关/开) \\",
              r"\midrule"]
     for c in cases:
         a = mean([by[c][on][s] for s in seeds if s in by[c].get(on, {})])
@@ -354,7 +378,7 @@ def tab_prune() -> None:
         eb = mean([ev[c][off][s] for s in seeds if s in ev[c].get(off, {})])
         ma = mean([ms[c][on][s] for s in seeds if s in ms[c].get(on, {})])
         mb = mean([ms[c][off][s] for s in seeds if s in ms[c].get(off, {})])
-        lines.append("%s & %.1f\\%% & %.2f & \\textbf{%.2f} & $%+.2f\\%%$ & "
+        lines.append("%s & %.1f\\%% & %.2f & %.2f & $%+.2f\\%%$ & "
                      "%.2f$\\times$ & %.2f$\\times$ \\\\"
                      % (c, 100.0 * cont[c], b, a, 100.0 * (a - b) / b,
                         ea / max(eb, 1e-9), mb / max(ma, 1e-9)))
@@ -369,6 +393,98 @@ def tab_prune() -> None:
               + citex(r) + r"\,\%} \\",
               r"\bottomrule", r"\end{tabular}"]
     write("tab_prune.tex", "\n".join(lines) + "\n")
+
+
+# ---------------------------------------------------------------------------
+# 公开基准对标。这批数据与阶梯批次无关(另一套算例、另一条工具链),放进本脚本只
+# 因为它同样是一张手打必漂的表:七列二十行共一百四十个数,重跑之后没有人会逐个
+# 重核。工序数是全表唯一不在 CSV 里的列,故从算例文件现数,不从旧表里抄。
+REF_TEX = {"proven_optimal": r"\textsc{opt}", "best_known": r"\textsc{bk}"}
+
+
+def pub_name(base: str) -> str:
+    """sfjs01 -> SFJST01。正文一律用带 T 的写法,数据文件不带,此处只此一处转换。"""
+    return base[:4].upper() + "T" + base[4:]
+
+
+def n_ops(instance: str) -> int:
+    with open(os.path.join(CLBS, "database", "json", "hf", instance + ".json"),
+              encoding="utf-8") as f:
+        return len(json.load(f)["proc_time"])
+
+
+def num(x) -> str:
+    """整数不带小数点,与文献报告参照值的写法一致。"""
+    v = float(x)
+    return "%d" % round(v) if abs(v - round(v)) < 1e-9 else "%.1f" % v
+
+
+def median(xs) -> float:
+    ys = sorted(xs)
+    n = len(ys)
+    if not n:
+        return 0.0
+    return ys[n // 2] if n % 2 else 0.5 * (ys[n // 2 - 1] + ys[n // 2])
+
+
+def external_rows() -> List[dict]:
+    path = os.path.join(CLBS, "experiments_database", "gap_ideal.csv")
+    if not os.path.exists(path):
+        print("跳过 tab_external:%s 不存在" % os.path.relpath(path, ROOT))
+        return []
+    rows = read(path)
+    # sfjs 在前、mfjs 在后,与正文"小算例全部命中、间隙随规模上升"的读法同序。
+    rows.sort(key=lambda r: (r["base"][:4] != "sfjs", r["base"]))
+    return rows
+
+
+def tab_external(rows: List[dict]) -> None:
+    if not rows:
+        return
+    lines = [r"\begin{tabular}{lrrrrrr}", r"\toprule",
+             r"& & & \multicolumn{3}{c}{$C_{\max}$(时间单位)} & \\",
+             r"\cmidrule(lr){4-6}",
+             r"算例 & 工序 & 参照 & \multicolumn{1}{c}{值} & 最优 & 均值 & 间隙 \\",
+             r"\midrule"]
+    for r in rows:
+        star = r"\rlap{$^*$}" if r["matches_ref"] == "True" else ""
+        lines.append("%s & %d & %s & %s & %s%s & %.1f & %.2f\\%% \\\\"
+                     % (pub_name(r["base"]), n_ops(r["instance"]),
+                        REF_TEX[r["ref_kind"]], num(r["ref_value"]),
+                        num(r["best"]), star, float(r["mean"]),
+                        float(r["gap_best_pct"])))
+    lines += [r"\bottomrule", r"\end{tabular}"]
+    write("tab_external.tex", "\n".join(lines) + "\n",
+          "clbs/experiments_database/gap_ideal.csv;工序数取自 "
+          "clbs/database/json/hf/*.json")
+
+
+def macro_external(rows: List[dict]) -> None:
+    """公开基准那一小节的导言区宏,与上表同源。"""
+    if not rows:
+        return
+    gap = [float(r["gap_best_pct"]) for r in rows]
+    big = sorted(rows, key=lambda r: n_ops(r["instance"]))[-4:]
+    opt = [r for r in rows if r["ref_kind"] == "proven_optimal"]
+    print(r"\newcommand{\PubNInst}{%d}" % len(rows))
+    print(r"\newcommand{\PubNOpt}{%d}" % len(opt))
+    print(r"\newcommand{\PubNMatch}{%d}"
+          % sum(1 for r in rows if r["matches_ref"] == "True"))
+    print(r"\newcommand{\PubGapMean}{%.2f\%%}" % mean(gap))
+    print(r"\newcommand{\PubGapMed}{%.2f\%%}" % median(gap))
+    print(r"\newcommand{\PubGapMax}{%.2f\%%}" % max(gap))
+    print(r"\newcommand{\PubGapBig}{%.2f\%%}"
+          % mean([float(r["gap_best_pct"]) for r in big]))
+    print(r"\newcommand{\PubGapMeanSeed}{%.2f\%%}"
+          % mean([float(r["gap_mean_pct"]) for r in rows]))
+    # 复合下界的松弛:分母用参照值,只在有可证最优值的算例上算,否则"距最优多远"
+    # 无从谈起。第二个是同一批算例上下界距本方法最好解的中位。
+    print(r"\newcommand{\PubLBSlack}{%.1f\%%}"
+          % median([100.0 * (float(r["ref_value"]) - float(r["lower_bound"]))
+                    / float(r["ref_value"]) for r in opt]))
+    print(r"\newcommand{\PubLBTotal}{%.1f\%%}"
+          % median([100.0 * (float(r["best"]) - float(r["lower_bound"]))
+                    / float(r["best"]) for r in opt]))
 
 
 def macro_block(by, cont, cases, seeds, legs: Dict[str, float],
@@ -615,7 +731,10 @@ def main() -> int:
     tab_main(by, cont, cases, seeds)
     tab_bytag(by, cont, cases, seeds)
     tab_prune()
+    ext = external_rows()
+    tab_external(ext)
     macro_block(by, cont, cases, seeds, legs, layout)
+    macro_external(ext)
     return 0
 
 

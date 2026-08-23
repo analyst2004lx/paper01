@@ -39,6 +39,16 @@ OUTPUT = os.path.abspath(os.path.join(HERE, "..", "..", "clbs", "output"))
 COL = 3.33
 FULL = 7.0
 
+# Nothing in the artwork may sit below FS_MIN at the final trim size.  The
+# sizes below are named rather than typed at each call site so that "the
+# figures are unreadable in print" is a one-line fix here instead of a hunt
+# through nine scripts.
+FS_MIN = 7.0
+FS_FOOT = 7.0        # provenance / protocol strip along the figure edge
+FS_LEG = 7.0         # legend entries
+FS_ANNOT = 7.0       # annotations placed in axes whitespace
+FS_TICK_SM = 7.0     # tick labels on crowded categorical axes
+
 plt.rcParams.update({
     "font.size": 8,
     "font.family": "serif",
@@ -171,6 +181,32 @@ def by(rows, *keys):
 def mean(xs):
     xs = [x for x in xs if x is not None]
     return sum(xs) / len(xs) if xs else float("nan")
+
+
+def sem(xs):
+    """Standard error of the mean -- the dispersion that matches a plotted mean.
+
+    Every figure whose point estimate is a mean over seeds uses this, so a bar
+    means the same thing in all of them.  Returns 0.0 rather than NaN for a
+    single observation, so an under-powered draft still draws (and gets the
+    draft watermark from mark_draft) instead of failing on a bar it cannot size.
+    """
+    xs = [x for x in xs if x is not None]
+    if len(xs) < 2:
+        return 0.0
+    m = sum(xs) / len(xs)
+    return (sum((x - m) ** 2 for x in xs) / (len(xs) - 1) / len(xs)) ** 0.5
+
+
+def span(xs):
+    """Min and max -- the honest band when there are too few seeds for quantiles.
+
+    Three seeds cannot support a quartile, and drawing one anyway would dress
+    up the range as a robust interval.  The convergence figure has three, so it
+    gets this and says so on its face.
+    """
+    xs = [x for x in xs if x is not None]
+    return (min(xs), max(xs)) if xs else (float("nan"), float("nan"))
 
 
 # ---- the four ladder arms -------------------------------------------------
