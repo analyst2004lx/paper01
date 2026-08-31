@@ -82,6 +82,6 @@ fig.text(0.0, -0.02,
          "%d instances, %d seeds, paired Wilcoxon; * p<0.05, ** p<0.01, "
          "*** p<0.001.  Batch measured before the cost reduction of Sec. 4.5."
          % (len(m.get("instances", [])), m.get("num_seeds", 0)),
-         fontsize=6.6, color="0.35")
+         fontsize=S.FS_FOOT, color="0.35")
 fig.subplots_adjust(bottom=0.26)
 S.save(fig, "fig_protocols")

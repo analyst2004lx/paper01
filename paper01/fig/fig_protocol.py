@@ -8,6 +8,15 @@ visible: an arm can only move along it, and a mechanism has to buy more per
 evaluation than it costs in evaluations forgone.  Stating it that way is what
 turns "our method is slower" from an apology into a quantity.
 
+The line is drawn at the *nominal* cap, not at the mean of observed runtimes.
+Averaging the two regimes present here (B0 stalls at ~18 s, the closed-loop arms
+exhaust the 90 s) would put the line at 54 s, a budget no run ever received.
+B0 therefore sits visibly below the line, which is the honest picture: it
+converged and stopped rather than being cut off.  Arm markers use the geometric
+mean, the only average on log axes for which cost x evaluations still equals the
+arm's wall clock -- the arithmetic mean of three instances whose cost scales
+differ threefold puts B2 on a 121 s hyperbola that no run occupies.
+
 The pruning ablation is drawn on the same axes when its CSV is present, because
 it is the one intervention that moves an arm *along* the line without changing
 what the arm computes -- the two points are bit-identical in output, so the
@@ -26,41 +35,57 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from _style import (COL, LADDER, LADDER_COLOR, LADDER_SHORT, by,  # noqa: E402
-                    load_output, mean, plt, save)
+from _style import (COL, FS_ANNOT, FS_FOOT, FS_LEG, LADDER,  # noqa: E402
+                    LADDER_COLOR, LADDER_SHORT, load_output, plt, save)
 
 HINT = "py -u -m tools.ladder_diag --budget 90 --seeds 42,7,2024"
+
+BUDGET = 90.0   # the cap offered to every arm, declared in Section 5.1.2
+
+
+def gmean(vals):
+    p = 1.0
+    for v in vals:
+        p *= v
+    return p ** (1.0 / len(vals))
 
 
 def main() -> None:
     rows = load_output("ladder_cost.csv", HINT)
     fig, ax = plt.subplots(figsize=(COL, 2.5))
 
-    # The budget hyperbola: cost x evaluations = wall clock.  Drawn from the
-    # measured budget rather than assumed, so a mismatch would be visible.
-    budget = mean([r["runtime_sec"] for r in rows])
     xs = [10 ** (i / 40.0) for i in range(-40, 121)]
-    ax.plot(xs, [1000.0 * budget / x for x in xs], color="#bbbbbb",
+    ax.plot(xs, [1000.0 * BUDGET / x for x in xs], color="#bbbbbb",
             linewidth=0.9, zorder=1,
-            label="equal wall clock (%.0f s)" % budget)
+            label="budget cap (%.0f s)" % BUDGET)
 
+    stall_at = float("nan")
     for arm in LADDER:
         rs = [r for r in rows if r["arm"] == arm]
         if not rs:
             continue
-        x, y = mean([r["ms_per_eval"] for r in rs]), mean([r["decodes"]
-                                                           for r in rs])
+        # Per-instance points behind the marker: the spread is real and the
+        # marker is a summary of it, not a measurement in its own right.
+        ax.plot([r["ms_per_eval"] for r in rs], [r["decodes"] for r in rs],
+                "o", color=LADDER_COLOR[arm], markersize=2.6, alpha=0.35,
+                markeredgewidth=0.0, zorder=3)
+        x, y = gmean([r["ms_per_eval"] for r in rs]), gmean([r["decodes"]
+                                                             for r in rs])
         ax.plot([x], [y], "o", color=LADDER_COLOR[arm], markersize=6.5,
                 markeredgecolor="white", markeredgewidth=0.7, zorder=5)
         ax.annotate(LADDER_SHORT[arm], (x, y), textcoords="offset points",
                     xytext=(7, 4), fontsize=7.2, color=LADDER_COLOR[arm],
                     fontweight="bold")
+        if arm == "B0":
+            stall_at = gmean([r["runtime_sec"] for r in rs])
 
-    # B0 and B0+ share one search, hence one point; say so on the figure rather
-    # than letting the overlap look like a plotting bug.
-    ax.text(0.03, 0.06, "B0 and B0$^+$ share one open-loop search,\n"
-                        "so they share one point",
-            transform=ax.transAxes, fontsize=6.2, color="#777777",
+    # Two things a reader would otherwise misread: the overlapping B0/B0+ marker
+    # looks like a plotting bug, and B0 sitting off the line looks like a
+    # shortchanged baseline rather than one that finished searching.
+    ax.text(0.03, 0.06, "B0 and B0$^+$ share one open-loop search, so they "
+                        "share one point;\nit stalls at %.0f s — converged, "
+                        "not cut off by the budget" % stall_at,
+            transform=ax.transAxes, fontsize=FS_FOOT, color="#777777",
             va="bottom")
 
     try:
@@ -73,22 +98,22 @@ def main() -> None:
         for label in ("开", "关"):
             rs = [r for r in pr if r["arm"] == label]
             if rs:
-                pts[label] = (mean([r["ms_per_eval"] for r in rs]),
-                              mean([r["decodes"] for r in rs]))
+                pts[label] = (gmean([r["ms_per_eval"] for r in rs]),
+                              gmean([r["decodes"] for r in rs]))
         if len(pts) == 2:
             (x0, y0), (x1, y1) = pts["关"], pts["开"]
             ax.annotate("", xy=(x1, y1), xytext=(x0, y0),
                         arrowprops=dict(arrowstyle="-|>", color="#d95f02",
                                         linewidth=1.3))
             ax.text(x1, y1, "  pruning +\n  winner reuse\n  (identical output)",
-                    fontsize=6.4, color="#d95f02", va="top",
+                    fontsize=FS_ANNOT, color="#d95f02", va="top",
                     fontweight="bold")
 
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("cost per evaluation (ms)")
     ax.set_ylabel("evaluations completed")
-    ax.legend(loc="upper right", fontsize=6.5)
+    ax.legend(loc="upper right", fontsize=FS_LEG)
     fig.tight_layout()
     save(fig, "fig_protocol")
 
