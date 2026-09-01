@@ -24,6 +24,8 @@ plt.rcParams.update({
     "font.sans-serif": ["Microsoft YaHei", "SimHei", "DejaVu Sans"],
     "axes.unicode_minus": False,
     "figure.dpi": 200,
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
 })
 
 C_FAST = "#2e7d32"      # 快臂 M1
@@ -32,7 +34,7 @@ C_TRUNK = "#c62828"     # 排他干道
 C_GREY = "#7a7a7a"
 
 
-def node(ax, x, y, label, fc="#ffffff", ec="#444", r=0.30, fs=9, bold=False):
+def node(ax, x, y, label, fc="#ffffff", ec="#444444", r=0.30, fs=9, bold=False):
     ax.add_patch(Circle((x, y), r, facecolor=fc, edgecolor=ec, lw=1.4, zorder=4))
     ax.text(x, y, label, ha="center", va="center", zorder=5,
             fontsize=fs, fontweight="bold" if bold else "normal")
@@ -46,7 +48,7 @@ def edge(ax, p, q, tau, color=C_GREY, lw=1.6, ls="-", off=(0.0, 0.22), fs=8.5):
 
 
 def panel_layout(ax, p) -> None:
-    ax.set_title("(a) 算例:通往快臂的唯一通路是一条排他干道",
+    ax.set_title("(a) 通往快臂的唯一通路是一条排他干道",
                  fontsize=10.5, fontweight="bold", pad=10)
     ax.set_xlim(-0.6, 9.4)
     ax.set_ylim(-0.4, 5.0)
@@ -62,6 +64,8 @@ def panel_layout(ax, p) -> None:
     edge(ax, P["v2"], P["m1"], "1")
     edge(ax, P["v2"], P["m3"], "1")
     edge(ax, P["v1"], P["m2"], "2", color=C_SLOW, lw=2.0)
+    ax.text(0.12, 3.05, "不经过干道", ha="left", va="center",
+            fontsize=8, color=C_SLOW)
 
     node(ax, *P["v0"], "LU", fc="#dceaf8", ec="#08519c", r=0.36, bold=True)
     node(ax, *P["v1"], "$v_1$")
@@ -74,24 +78,24 @@ def panel_layout(ax, p) -> None:
             fontsize=8.5, color=C_FAST, fontweight="bold")
     ax.text(0.9, 4.48, f"慢臂  t$^P$={p['proc_slow']:.0f}", ha="center",
             fontsize=8.5, color=C_SLOW, fontweight="bold")
-    ax.text(8.5, 0.16, f"{p['n_background']:.0f} 个背景工件只能上 M3",
+    ax.text(8.5, 0.16, f"{p['n_background']:.0f} 个只能上 M3 加工的工件",
             ha="center", va="top", fontsize=8, color=C_GREY)
-    ax.text(4.7, 1.68, "背景车流反复穿越干道 → 让行等待",
+    ax.text(4.7, 1.68, "只能上 M3 的工件反复穿越干道 → 让行等待",
             ha="center", fontsize=8.5, color=C_TRUNK)
 
     ax.text(4.4, -0.30,
-            f"焦点工序 (1,1) 的两个候选：M1 往返行程 {p['travel_M1_round']:.0f} + 加工 "
-            f"{p['proc_fast']:.0f}　|　M2 往返行程 {p['travel_M2_round']:.0f} + 加工 "
+            f"同一道工序的两个指派：快臂 M1 往返行程 {p['travel_M1_round']:.0f} + 加工 "
+            f"{p['proc_fast']:.0f}　|　慢臂 M2 往返行程 {p['travel_M2_round']:.0f} + 加工 "
             f"{p['proc_slow']:.0f}",
-            ha="center", va="center", fontsize=8.5, color="#222",
-            bbox=dict(boxstyle="round,pad=0.3", fc="#f7f7f7", ec="#999"))
+            ha="center", va="center", fontsize=8.5, color="#222222",
+            bbox=dict(boxstyle="round,pad=0.3", fc="#f7f7f7", ec="#999999"))
 
 
 def panel_reversal(ax, d) -> None:
-    ax.set_title("(b) 同一指派，两种评价给出相反的次序",
+    ax.set_title("(b) 同一对指派：常数矩阵与无冲突路由",
                  fontsize=10.5, fontweight="bold", pad=10)
-    groups = [("理想矩阵\n（常数运输时间）", "ideal"),
-              ("无冲突路由\n（本文的评价通路）", "routed")]
+    groups = [("常数运输时间\n矩阵", "ideal"),
+              ("无冲突路由", "routed")]
     xs = [0.0, 1.45]
     w = 0.42
 
@@ -106,15 +110,15 @@ def panel_reversal(ax, d) -> None:
             chosen = who == win
             ax.bar(gx + off, val, width=w, color=col, zorder=3,
                    alpha=1.0 if chosen else 0.30,
-                   edgecolor="#222" if chosen else "none",
+                   edgecolor="#222222" if chosen else "none",
                    linewidth=1.6 if chosen else 0)
             ax.text(gx + off, val + top * 0.02, f"{val:.0f}", ha="center",
                     va="bottom", fontsize=10.5, zorder=4,
                     fontweight="bold" if chosen else "normal",
-                    color="#111" if chosen else "#999")
+                    color="#111111" if chosen else "#999999")
             ax.text(gx + off, top * 0.035, f"M{who}", ha="center", va="bottom",
                     fontsize=9.5, zorder=5, fontweight="bold",
-                    color="#ffffff" if chosen else "#777")
+                    color="#ffffff" if chosen else "#777777")
             if chosen:
                 ax.plot([gx + off], [-top * 0.055], marker="^", ms=7, color=col,
                         clip_on=False, zorder=5)
@@ -123,20 +127,21 @@ def panel_reversal(ax, d) -> None:
         ax.text(gx, -top * 0.24, glabel, ha="center", va="top", fontsize=9.5)
 
     ax.text((xs[0] + xs[1]) / 2, top * 1.31,
-            f"次序反转：理想矩阵选 M{picks[0]}（快臂），真实路由选 M{picks[1]}（慢臂）",
-            ha="center", va="center", fontsize=10, fontweight="bold", color="#111",
+            f"优劣对调：常数矩阵选 M{picks[0]}（快臂），无冲突路由选 M{picks[1]}（慢臂）",
+            ha="center", va="center", fontsize=10, fontweight="bold", color="#111111",
             bbox=dict(boxstyle="round,pad=0.34", fc="#fff8f0", ec="#d95f02", lw=1.2))
     ax.text((xs[0] + xs[1]) / 2, top * 1.15,
             f"$C$(M1)$-$$C$(M2)：{d['M1']['ideal'] - d['M2']['ideal']:+.0f}"
             f"   →   {d['M1']['routed'] - d['M2']['routed']:+.0f}",
-            ha="center", va="center", fontsize=9, color="#444")
+            ha="center", va="center", fontsize=9, color="#444444")
 
     ax.set_ylabel("完工时间 $C_{\\max}$", fontsize=9.5)
     ax.set_ylim(0, top * 1.44)
     ax.set_xlim(-0.70, 2.15)
     ax.set_xticks([])
-    ax.spines[["top", "right", "bottom"]].set_visible(False)
-    ax.grid(axis="y", ls=":", color="#ccc", zorder=0)
+    for side in ("top", "right", "bottom"):
+        ax.spines[side].set_visible(False)
+    ax.grid(axis="y", ls=":", color="#cccccc", zorder=0)
     ax.set_axisbelow(True)
 
 
