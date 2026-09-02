@@ -34,6 +34,16 @@ paper01/paper-20260818.tex
 
 # Recently deleted unused graphics / scripts under paper01_new/fig
 paper01/paper-20260602.tex
+paper01/paper_AI-Modify-26-08-22.aux
+paper01/paper_AI-Modify-26-08-22.bbl
+paper01/paper_AI-Modify-26-08-22.blg
+paper01/paper_AI-Modify-26-08-22.fdb_latexmk
+paper01/paper_AI-Modify-26-08-22.fls
+paper01/paper_AI-Modify-26-08-22.log
+paper01/paper_AI-Modify-26-08-22.out
+paper01/paper_AI-Modify-26-08-22.xdv
+paper01/_titlecheck.pdf
+paper01/paper-ledger_cursor-AI-Modify-Process.md
 paper01/fig/fig_ablation.pdf
 paper01/fig/fig_ablation.png
 paper01/fig/fig_ablation.py

@@ -77,7 +77,7 @@ def main() -> None:
             fontsize=9.5, fontweight="bold")
     box(ax, 34.5, 40, 25, 5.5, "弹出下一道就绪工序", fs=8.2)
     box(ax, 34.5, 30, 25, 7.5, "生成运输任务\n（取货、送货、就绪时刻）", fs=8.2)
-    box(ax, 34.5, 18, 25, 9, "选择车辆：\n对候选车试探预约表",
+    box(ax, 34.5, 18, 25, 9, "选择车辆：\n对候选车试算预约表",
         ec=C_DEC, lw=1.4, weight="bold", color=C_DEC, fs=8.2)
     box(ax, 34.5, 8, 25, 7.5, "提交走廊预约\n推进仿真时钟", fs=8.2)
     arrow(ax, (47, 40), (47, 37.5))
@@ -91,7 +91,7 @@ def main() -> None:
             va="center", fontsize=9.5, fontweight="bold")
     box(ax, 72, 35.5, 23, 9.5, "时间窗 Dijkstra\n走廊网络上\n最早到达搜索", fs=8.0)
     box(ax, 72, 21, 23, 9.5, "预约表\n走廊占用与车头时距", fs=8.0)
-    box(ax, 72, 8, 23, 8, "试探路由后回滚\n（不留占用痕迹）",
+    box(ax, 72, 8, 23, 8, "试算路由后回滚\n（不留占用痕迹）",
         ec=C_DEC, lw=1.0, color=C_DEC, fs=8.0)
     arrow(ax, (80, 35.5), (80, 30.5))
     arrow(ax, (88, 30.5), (88, 35.5))

@@ -80,7 +80,7 @@ def main() -> None:
             va="center", fontsize=7.8, fontweight="bold")
     box(ax, 4.5, 37, 20, 7.5, "Chromosome population\n"
                               "(assignment, sequence)")
-    box(ax, 4.5, 27, 20, 7, "Crossover, mutation,\nguided local search")
+    box(ax, 4.5, 27, 20, 7, "Crossover, mutation,\nlocal search")
     box(ax, 4.5, 16.5, 20, 7, "Fitness $=$ realized $C_{\\max}$",
         ec=C_EVAL, lw=1.4, weight="bold", color=C_EVAL)
     box(ax, 4.5, 8, 20, 5, "Selection")
@@ -98,8 +98,8 @@ def main() -> None:
     box(ax, 34.5, 40, 25, 5.5, "Pop the next ready operation")
     box(ax, 34.5, 30, 25, 7.5, "Derive its transport task\n"
                                "(pickup, drop-off, ready)")
-    box(ax, 34.5, 18, 25, 9, "Choose the vehicle:\nprobe the table\n"
-                             "for each candidate",
+    box(ax, 34.5, 18, 25, 9, "Choose the vehicle:\ntrial the reservation\n"
+                             "table for each candidate",
         ec=C_DEC, lw=1.4, weight="bold", color=C_DEC)
     box(ax, 34.5, 8, 25, 7.5, "Commit reservations,\nadvance the clock")
     arrow(ax, (47, 40), (47, 37.5))

@@ -144,7 +144,7 @@ def main() -> None:
     xmax = 1.06 * max(tt[a]["makespan"] for a in ("B0", "B2"))
     fig, axes = plt.subplots(2, 1, figsize=(FULL, 5.0), sharex=True)
     draw(axes[0], tt["B0"], "B0  open loop, rule dispatch", xmax)
-    draw(axes[1], tt["B2"], "B2  closed loop, probing dispatch (proposed)",
+    draw(axes[1], tt["B2"], "B2  closed loop, reservation-aware dispatch (proposed)",
          xmax)
     axes[1].set_xlabel("time")
 

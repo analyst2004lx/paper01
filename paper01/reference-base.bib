@@ -269,7 +269,8 @@
   number={11},
   pages={4741},
   year={2021},
-  publisher={MDPI}
+  publisher={MDPI},
+  doi={10.3390/app11114741}
 }
 
 @article{zhou2025robustness,
@@ -1340,6 +1341,31 @@
   doi={10.1007/s10845-007-0026-8}
 }
 
+% 第 5.1 节哑铃布局的工业对应:量产脊式 fab 中廊拥堵(Suh & Choi);
+% 串联 AGV 把导轨拆成互不重叠单车环以消交叉冲突(Rahimikelarijani et al.)。
+@article{suh2022spine,
+  title={Efficient {Fab} Facility Layout with Spine Structure Using Genetic Algorithm under Various Material-Handling Considerations},
+  author={Suh, Yong Jin and Choi, Jin Young},
+  journal={International Journal of Production Research},
+  volume={60},
+  number={9},
+  pages={2816--2829},
+  year={2022},
+  publisher={Taylor \& Francis},
+  doi={10.1080/00207543.2021.1904159}
+}
+
+@article{rahimikelarijani2020tandem,
+  title={Multi-Objective Multi-Load Tandem Autonomous Guided Vehicle for Robust Workload Balance and Material Handling Optimization},
+  author={Rahimikelarijani, Behnam and Fazlollahtabar, Hamed and Nayeri, Sina},
+  journal={{SN} Applied Sciences},
+  volume={2},
+  pages={1032},
+  year={2020},
+  publisher={Springer},
+  doi={10.1007/s42452-020-3002-y}
+}
+
 @article{homayouni2021production,
   title={Production and Transport Scheduling in Flexible Job Shop Manufacturing Systems},
   author={Homayouni, Seyed Mahdi and Fontes, Dalila B. M. M.},
@@ -1435,6 +1461,98 @@
   author={Zhang, Yulun and Jiang, He and Bhatt, Varun and Nikolaidis, Stefanos and Li, Jiaoyang},
   booktitle={Proceedings of the Thirty-Third International Joint Conference on Artificial Intelligence (IJCAI)},
   year={2024}
+}
+
+% ---------- 2021--2025 insertions (paper.tex 扩引) ----------
+
+% General FJSP review: NP-hardness, constraints, metaheuristics, and dynamic/uncertain settings.
+@article{dauzereperes2024fjsp,
+  title={The Flexible Job Shop Scheduling Problem: A Review},
+  author={Dauz{\`e}re-P{\'e}r{\`e}s, St{\'e}phane and Ding, Junwen and Shen, Liji and Tamssaouet, Karim},
+  journal={European Journal of Operational Research},
+  volume={314},
+  number={2},
+  pages={409--432},
+  year={2024},
+  publisher={Elsevier},
+  doi={10.1016/j.ejor.2023.05.017}
+}
+
+% SIPP on 2D roadmaps with continuous time; cited where the paper contrasts
+% single-label Dijkstra with safe-interval labelling.
+@article{kasaura2022sipp,
+  title={Prioritized Safe Interval Path Planning for Multi-Agent Pathfinding with Continuous Time on {2D} Roadmaps},
+  author={Kasaura, Kazumi and Nishimura, Mai and Yonetani, Ryo},
+  journal={{IEEE} Robotics and Automation Letters},
+  volume={7},
+  number={4},
+  pages={10494--10501},
+  year={2022},
+  publisher={IEEE},
+  doi={10.1109/LRA.2022.3187265}
+}
+
+% Graph-based MAPF solver review; states that optimal MAPF is NP-hard.
+@article{gao2023mapf,
+  title={A Review of Graph-Based Multi-Agent Pathfinding Solvers: From Classical to Beyond Classical},
+  author={Gao, Jianqi and Li, Yanjie and Li, Xinyi and Yan, Kejian and Lin, Ke and Wu, Xinyu},
+  journal={Knowledge-Based Systems},
+  volume={283},
+  pages={111121},
+  year={2023},
+  publisher={Elsevier},
+  doi={10.1016/j.knosys.2023.111121}
+}
+
+% Multi-AGV management review: dispatch as a layer distinct from routing;
+% idle-first / nearest-vehicle as common single-attribute rules.
+@article{lu2022agv,
+  title={Analysis of Multi-{AGVs} Management System and Key Issues: A Review},
+  author={Lu, Wenhao and Guo, Shuai and Song, Tao and Li, Yuwen},
+  journal={Computer Modeling in Engineering \& Sciences},
+  volume={131},
+  number={3},
+  pages={1197--1227},
+  year={2022},
+  doi={10.32604/cmes.2022.019770}
+}
+
+% Unifies JSP/FJSP neighbourhood evaluation on disjunctive graphs;
+% cited with Otala for critical-chain / local-search pedigree.
+@article{tamssaouet2023neighborhood,
+  title={A General Efficient Neighborhood Structure Framework for the Job-Shop and Flexible Job-Shop Scheduling Problems},
+  author={Tamssaouet, Karim and Dauz{\`e}re-P{\'e}r{\`e}s, St{\'e}phane},
+  journal={European Journal of Operational Research},
+  volume={311},
+  number={2},
+  pages={455--471},
+  year={2023},
+  publisher={Elsevier},
+  doi={10.1016/j.ejor.2023.05.018}
+}
+
+% Memetic search on FJSP with multiple AGVs; cited at the upper-layer search.
+@article{zhang2024memetic,
+  title={Deep Reinforcement Learning-Based Memetic Algorithm for Energy-Aware Flexible Job Shop Scheduling with Multi-{AGV}},
+  author={Zhang, Fayong and Li, Rui and Gong, Wenyin},
+  journal={Computers \& Industrial Engineering},
+  volume={189},
+  pages={109917},
+  year={2024},
+  publisher={Elsevier},
+  doi={10.1016/j.cie.2024.109917}
+}
+
+% Dynamic FJSP with DRL; cited at assumption A7 and future work (5).
+@article{gui2023dynamic,
+  title={Dynamic Scheduling for Flexible Job Shop Using a Deep Reinforcement Learning Approach},
+  author={Gui, Yong and Tang, Dunbing and Zhu, Haihua and Zhang, Yi and Zhang, Zequn},
+  journal={Computers \& Industrial Engineering},
+  volume={180},
+  pages={109255},
+  year={2023},
+  publisher={Elsevier},
+  doi={10.1016/j.cie.2023.109255}
 }
 
 % ==================== END OF REFERENCES ====================

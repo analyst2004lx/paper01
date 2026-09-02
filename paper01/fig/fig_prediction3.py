@@ -59,7 +59,7 @@ HINT = "py -u -m tools.baseline_ladder --budget 90 --seeds 42,7,2024,13,1,99,123
 # 2x2 fixed and moves the other, so each can be attributed to one mechanism.
 EFFECTS = [
     ("B0", "B1", "closed loop\n(rule dispatch fixed)", "#08519c", "o", "-"),
-    ("B1", "B2", "probing dispatch\n(closed loop fixed)", "#d95f02", "s", "--"),
+    ("B1", "B2", "reservation-aware dispatch\n(closed loop fixed)", "#d95f02", "s", "--"),
 ]
 PANELS = [
     ("A", "layout", "contention strength (%)"),

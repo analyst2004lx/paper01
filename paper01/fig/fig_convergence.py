@@ -35,7 +35,7 @@ HINT = "py -u -m tools.ladder_diag --budget 90 --seeds 42,7,2024"
 # twice would suggest two searches were run.  B0+ therefore appears only as a
 # second landing point on the same dashed line.
 CURVES = [("B1", "#6baed6", "-", "B1  closed loop, rule dispatch"),
-          ("B2", "#08519c", "-", "B2  closed loop, probing dispatch")]
+          ("B2", "#08519c", "-", "B2  closed loop, reservation-aware dispatch")]
 LANDING = [("B0", "#525252", "X", "B0  executed"),
            ("B0+", "#969696", "P", "B0$^+$  executed")]
 
