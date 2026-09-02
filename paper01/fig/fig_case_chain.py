@@ -26,7 +26,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from _style import COL, OUTPUT, plt, save  # noqa: E402
+from _style import COL, FS_FOOT, FS_LEG, OUTPUT, plt, save  # noqa: E402
 
 HINT = 'py -u -m tools.ladder_diag --case-study "A funnel"'
 
@@ -109,7 +109,11 @@ def main() -> None:
     ax.set_xticks(range(len(order)))
     ax.set_xticklabels(["B0\nopen loop", "B2\nproposed"], fontsize=7)
     ax.set_ylabel("critical-chain composition\n(time units)")
-    ax.legend(loc="upper right", fontsize=6.2, labelspacing=0.3)
+    # Headroom for the legend.  At the 7pt floor the four entries are wide
+    # enough to land on the B2 bar's segment labels, and a legend that covers
+    # the numbers it explains is worse than a shorter bar.
+    ax.set_ylim(0, 1.62 * max(sum(comps[a].values()) for a in order))
+    ax.legend(loc="upper right", fontsize=FS_LEG, labelspacing=0.3)
     ax.set_title("corridor waiting removed %.0f,  makespan recovered %.0f"
                  % (d_corr, d_mk), fontsize=7.6, loc="left")
 
@@ -134,7 +138,7 @@ def main() -> None:
 
     fig.text(0.005, 0.005, "instance %s,  seed %s"
              % (arms["B2"]["case"], arms["B2"]["seed"]),
-             fontsize=6.2, color="#777777")
+             fontsize=FS_FOOT, color="#777777")
     fig.tight_layout(rect=(0, 0.02, 1, 1))
     save(fig, "fig_case_chain")
 

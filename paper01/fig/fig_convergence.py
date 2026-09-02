@@ -27,7 +27,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from _style import COL, by, load_output, mean, plt, save  # noqa: E402
+from _style import (COL, FS_ANNOT, FS_LEG, by, load_output,  # noqa: E402
+                    mean, plt, save, span)
 
 HINT = "py -u -m tools.ladder_diag --budget 90 --seeds 42,7,2024"
 # B0 and B0+ share one open-loop search, so their curve is one curve; showing it
@@ -40,13 +41,18 @@ LANDING = [("B0", "#525252", "X", "B0  executed"),
 
 
 def step_envelope(rows):
-    """Mean best-so-far across seeds on a common grid.
+    """Mean best-so-far across seeds on a common grid, with the seed spread.
 
     Each seed logs one point per generation, so the raw time stamps do not line
     up between seeds.  We hold each seed's best-so-far constant between its own
     log points (which is what best-so-far means) and average on a shared grid,
     rather than averaging the k-th generation of each seed -- the latter would
     silently compare different instants.
+
+    Returns (t, mean, lo, hi) where lo/hi are the min and max over seeds.  This
+    batch has three seeds, which cannot support a quartile; drawing one anyway
+    would dress the range up as a robust interval.  The band is the full range
+    and the caption says so.
     """
     per_seed = by(rows, "seed")
     tmax = max(r["t_sec"] for r in rows)
@@ -65,8 +71,22 @@ def step_envelope(rows):
             if cur is not None:
                 vals.append(cur)
         if vals:
-            out.append((t, mean(vals)))
+            lo, hi = span(vals)
+            out.append((t, mean(vals), lo, hi))
     return out
+
+
+def band(ax, pts, colour):
+    """Shade the seed-to-seed range behind a curve.
+
+    Drawn at low zorder and low alpha: the figure's argument is the gap between
+    the dashed surrogate and the cross, and the band must not compete with it.
+    Its job is only to stop the three mean curves from being read as if they
+    were noise-free.
+    """
+    ax.fill_between([p[0] for p in pts], [p[2] for p in pts],
+                    [p[3] for p in pts], color=colour, alpha=0.13,
+                    linewidth=0, zorder=1)
 
 
 def main() -> None:
@@ -86,14 +106,16 @@ def main() -> None:
     # The surrogate curve: B0's open-loop search, believing a constant matrix.
     sur = step_envelope([r for r in conv if r["arm"] == "B0"])
     if sur:
-        ax.plot([t for t, _ in sur], [v for _, v in sur], ls=(0, (3, 1.6)),
+        band(ax, sur, "#525252")
+        ax.plot([p[0] for p in sur], [p[1] for p in sur], ls=(0, (3, 1.6)),
                 color="#525252", linewidth=1.2,
                 label="B0  open-loop objective\n(surrogate, not achievable)")
 
     for arm, colour, ls, label in CURVES:
         pts = step_envelope([r for r in conv if r["arm"] == arm])
         if pts:
-            ax.plot([t for t, _ in pts], [v for _, v in pts], ls,
+            band(ax, pts, colour)
+            ax.plot([p[0] for p in pts], [p[1] for p in pts], ls,
                     color=colour, label=label)
 
     # Where the open-loop plans actually land once executed.
@@ -116,14 +138,18 @@ def main() -> None:
                                     linewidth=0.9, shrinkA=0, shrinkB=0))
         ax.text(tmax * 0.985, 0.5 * (b0 + end),
                 "optimism\n%+.1f%%" % (100.0 * (b0 - end) / end),
-                ha="right", va="center", fontsize=6.6, color="#d62728",
+                ha="right", va="center", fontsize=FS_ANNOT, color="#d62728",
                 fontweight="bold")
 
     ax.set_xlabel("wall-clock time (s)")
     ax.set_ylabel("best $C_{\\max}$ so far")
-    ax.set_title("%s,  %d seeds" % (case, len(seeds)), fontsize=8.5)
-    ax.legend(loc="upper right", fontsize=6.3, handlelength=1.9,
-              labelspacing=0.35)
+    ax.set_title("%s,  %d seeds  (band: min-max over seeds)"
+                 % (case, len(seeds)), fontsize=8.5)
+    # Anchored short of the right edge: the executed-plan markers sit at t_max
+    # and the optimism arrow runs down the right margin, so a flush-right
+    # legend lands on top of the two things the figure exists to compare.
+    ax.legend(loc="upper right", bbox_to_anchor=(0.90, 1.02),
+              fontsize=FS_LEG, handlelength=1.9, labelspacing=0.3)
     fig.tight_layout()
     save(fig, "fig_convergence_closedloop")
 

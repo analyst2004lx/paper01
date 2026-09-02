@@ -6,16 +6,22 @@
   2. 定义了却没有任何地方引用的宏(通常意味着某处数字被写死了,绕过了单一来源);
   3. 花括号净差与常用环境的 begin/end 配对。
 
-用法:py paper01/check_tex.py
+用法:py paper01/check_tex.py [要检查的 tex 路径]
+     不传路径时检查同目录的 paper.tex。
 """
 import collections
 import os
 import re
+import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TEX = os.path.join(HERE, "paper.tex")
+# 改稿期间的施工稿是另一个文件(paper_AI-Modify-<日期>.tex),必须显式传入才会被检查;
+# 原始稿永不被改,对它反复运行本脚本的输出恒定不变,等于没有体检。
+TEX = os.path.abspath(sys.argv[1]) if len(sys.argv) > 1 else os.path.join(HERE, "paper.tex")
 
 src = open(TEX, encoding="utf-8").read()
+
+print("受检文件             : %s" % os.path.relpath(TEX))
 
 defined = set(re.findall(r"\\newcommand\{\\([A-Za-z]+)\}", src))
 # 只看首字母大写的驼峰宏,即本文为"数字单一来源"新增的那批;LaTeX 自带命令不在此列。

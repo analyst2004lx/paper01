@@ -14,6 +14,13 @@ eight of the ten cells, so the marker fill now carries significance and the
 reader can see at a glance that one curve is evidence and the other is mostly
 noise.
 
+Marker fill alone made that point as a binary, which left the reader taking the
+threshold on trust.  Each cell therefore also carries the standard error of its
+mean over the ten seeds: the probing bars visibly straddle zero everywhere and
+the closed-loop bars do not, which is the same conclusion shown rather than
+asserted.  SEM and not a quartile because the plotted point is a mean, and the
+bar must be the dispersion of the quantity actually drawn.
+
 The shared base point.  tools/abc_matrix.py runs the base cell once, under the
 name "A funnel", and it serves simultaneously as the B-family level 1.5 and the
 C-family level 0.6.  Selecting family members by the leading letter of the case
@@ -37,11 +44,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.abspath(os.path.join(
     os.path.dirname(os.path.abspath(__file__)), "..", "..", "clbs")))
 
-from _style import (LADDER, by, load_output, mark_draft, mean,  # noqa: E402
-                    plt, save)
+from _style import (FS_ANNOT, FS_FOOT, FS_LEG, LADDER, by,  # noqa: E402
+                    load_output, mark_draft, mean, plt, save, sem)
 
 try:                                                            # noqa: E402
-    from algorithm.stats import wilcoxon_signed_rank
+    from algorithm.stats import holm, wilcoxon_signed_rank
     from tools.abc_matrix import BASE
 except Exception as exc:                                        # pragma: no cover
     raise SystemExit("需要 clbs/ 在 sys.path 上以取显著性与基点水平:%s" % exc)
@@ -90,10 +97,17 @@ def members(cells, fam: str):
 
 
 def cell_effect(rows_of_cell, ka: str, kb: str):
-    """Paired relative gain over seeds, and its two-sided Wilcoxon p value.
+    """Paired relative gain over seeds, its spread, and a two-sided Wilcoxon p.
 
     Same estimator as tab/gen_tables_ladder.py, so the figure, the per-cell
     table and the preamble macros are three views of one computation.
+
+    The spread is the standard error of that mean over the ten seeds.  It is
+    reported because the panel's whole claim is about which per-cell readings
+    may be believed, and until now that was carried only by the marker fill --
+    a binary derived from the p value.  The bar shows the quantity the binary
+    is thresholding, so a reader can see *how far* a hollow cell is from
+    resolving rather than being told only that it did not.
     """
     val = {}
     for r in rows_of_cell:
@@ -102,9 +116,25 @@ def cell_effect(rows_of_cell, ka: str, kb: str):
     xa = [val[ka][s] for s in seeds]
     xb = [val[kb][s] for s in seeds]
     if not seeds:
-        return float("nan"), 1.0
-    rel = mean([(y - x) / x for x, y in zip(xa, xb)])
-    return 100.0 * rel, wilcoxon_signed_rank(xb, xa)["p_value"]
+        return float("nan"), 0.0, 1.0
+    rel = [(y - x) / x for x, y in zip(xa, xb)]
+    return (100.0 * mean(rel), 100.0 * sem(rel),
+            wilcoxon_signed_rank(xb, xa)["p_value"])
+
+
+def adjusted(cells, ka: str, kb: str):
+    """Holm-adjusted per-cell p for one effect, keyed by cell name.
+
+    The family is all ten cells of that effect, not the three or five cells of
+    whichever panel is being drawn: the reader's question is "which of these
+    readings may I believe", and they are looking at all ten of them.  Adjusting
+    per panel would make a cell's fill depend on which panel it appears in,
+    which for the shared base point would mean two different fills for one
+    number.
+    """
+    names = [c for (c,) in cells]
+    ps = [cell_effect(cells[(c,)], ka, kb)[2] for c in names]
+    return dict(zip(names, holm(ps)))
 
 
 def main() -> None:
@@ -123,7 +153,8 @@ def main() -> None:
         names = members(cells, fam)
         if not names:
             ax.text(0.5, 0.5, "family %s absent" % fam, transform=ax.transAxes,
-                    ha="center", va="center", fontsize=8, color="#999999")
+                    ha="center", va="center", fontsize=FS_ANNOT,
+                    color="#999999")
             ax.set_xlabel(xlabel)
             continue
         cont = {c: cells[(c,)][0]["contention"] for c in names}
@@ -131,20 +162,28 @@ def main() -> None:
         xs = [level(c, fam, cont[c]) for c in names]
 
         for ka, kb, label, colour, marker, ls in EFFECTS:
-            ys, ps = [], []
-            for c in names:
-                y, p = cell_effect(cells[(c,)], ka, kb)
-                ys.append(y)
-                ps.append(p)
+            adj = adjusted(cells, ka, kb)
+            eff = [cell_effect(cells[(c,)], ka, kb) for c in names]
+            ys = [e[0] for e in eff]
+            es = [e[1] for e in eff]
             ax.plot(xs, ys, ls, color=colour, linewidth=1.2,
                     label=label if fam == "A" else None, zorder=3,
                     clip_on=False)
-            # Fill carries significance.  A hollow marker is the figure saying
-            # "this cell does not license a claim about its sign", which is the
-            # whole point of the panel for the probing curve.
-            for x, y, p in zip(xs, ys, ps):
+            # Drawn under the markers so the fill (significance) stays legible.
+            # The two effects sit far apart on this axis, so no dodge is needed
+            # and adding one would misplace the points against the x levels.
+            ax.errorbar(xs, ys, yerr=es, fmt="none", ecolor=colour,
+                        elinewidth=0.8, capsize=1.8, capthick=0.8,
+                        alpha=0.7, zorder=3, clip_on=False)
+            # Fill carries significance *after* correcting over the ten cells of
+            # this effect.  A hollow marker is the figure saying "this cell does
+            # not license a claim about its sign", which is the whole point of
+            # the panel for the probing curve -- and after correction that curve
+            # is hollow throughout, which is the honest picture: ten seeds per
+            # cell resolve the main effect and do not resolve this one.
+            for x, y, c in zip(xs, ys, names):
                 ax.plot([x], [y], marker, color=colour, markersize=4.6,
-                        markerfacecolor=colour if p < ALPHA else "white",
+                        markerfacecolor=colour if adj[c] < ALPHA else "white",
                         markeredgecolor=colour, markeredgewidth=1.0,
                         zorder=4, clip_on=False)
 
@@ -161,13 +200,17 @@ def main() -> None:
             ax.set_xticks(xs)
 
     axes[0].set_ylabel("$\\Delta C_{\\max}$ (%)\nnegative is better")
-    axes[0].legend(loc="lower left", fontsize=6.8, handlelength=1.8)
-    fig.text(0.995, 0.015,
-             "%d seeds per cell, equal wall clock; "
-             "filled marker = that cell significant at $p<%.2f$"
-             % (len(seeds), ALPHA),
-             ha="right", va="bottom", fontsize=6.2, color="#777777")
-    fig.tight_layout()
+    axes[0].legend(loc="lower left", fontsize=FS_LEG, handlelength=1.8)
+    # tight_layout first, then reserve a strip for the protocol line: stating the
+    # correction is what makes the marker fills readable, so it must not be laid
+    # on top of the axis labels.
+    fig.tight_layout(rect=(0.0, 0.095, 1.0, 1.0))
+    fig.text(0.995, 0.012,
+             "%d seeds per cell, equal wall clock; error bar = standard error "
+             "of the mean over seeds;\nfilled marker = that cell significant at "
+             "$p<%.2f$, Holm-corrected over the %d cells"
+             % (len(seeds), ALPHA, len(cells)),
+             ha="right", va="bottom", fontsize=FS_FOOT, color="#777777")
     save(fig, "fig_prediction3")
 
 

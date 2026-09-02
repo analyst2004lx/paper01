@@ -49,6 +49,33 @@ def reservation_delta_count(
     return changed, len(before)
 
 
+def reservation_delta_before(
+    before: Sequence[ReservationRef],
+    after: Sequence[ReservationRef],
+    *,
+    t_now: float,
+) -> Tuple[int, int]:
+    """返回 (t_now 前已执行完毕的预约中被改写的条数, 这类预约总数)。
+
+    假设 A2 规定已完成的占用不得回溯修改,所以对任何解恢复问题的臂,这个数必须是 0。
+    全局重解臂从 t=0 重新解码,不受该约束,故用这个量把它越界的程度量出来——
+    否则「改动比例」按全表统计时,越界与合法改动混在一列里看不出来。
+    """
+    aft: Dict[Tuple[str, int, str], ReservationRef] = {_res_key(r): r for r in after}
+    changed = 0
+    total = 0
+    for r in before:
+        if r.t_end > t_now + EPS:
+            continue
+        total += 1
+        r2 = aft.get(_res_key(r))
+        if r2 is None:
+            changed += 1
+        elif abs(r2.t_start - r.t_start) > EPS or abs(r2.t_end - r.t_end) > EPS:
+            changed += 1
+    return changed, total
+
+
 def evaluate_deviation(before_result, after_result) -> Deviation:
     c_before = sorted(
         ((r.job, r.i), r.finish) for r in before_result.ops.values() if not r.pseudo

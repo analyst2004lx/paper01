@@ -76,7 +76,7 @@ def main():
     fig.text(0.0, -0.03,
              "positive is worse.  %d runs per point on the left, %d on the "
              "right; two instances, mean $\\pm$ s.e." % (n_wall, n_gen),
-             fontsize=6.6, color="0.35")
+             fontsize=S.FS_FOOT, color="0.35")
     fig.subplots_adjust(bottom=0.28, wspace=0.32)
     S.save(fig, "fig_theta")
 

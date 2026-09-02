@@ -26,7 +26,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from _style import FULL, OUTPUT, plt, save  # noqa: E402
+from _style import (FULL, FS_ANNOT, FS_FOOT, FS_LEG,  # noqa: E402
+                    FS_TICK_SM, OUTPUT, plt, save)
 
 HINT = ('py -u -m tools.ladder_diag --case-study "A funnel"')
 C_OP = "#4292c6"          # processing
@@ -125,10 +126,10 @@ def draw(ax, tt, title, xmax):
         ax.axvline(tt["surrogate"], color="#d62728", linewidth=0.9,
                    linestyle=(0, (3, 1.6)), zorder=6)
         ax.text(tt["surrogate"], -0.9, "surrogate %.0f " % tt["surrogate"],
-                fontsize=6.4, color="#d62728", ha="right", va="center")
+                fontsize=FS_ANNOT, color="#d62728", ha="right", va="center")
 
     ax.set_yticks([ypos[k] for k in ypos])
-    ax.set_yticklabels(labels, fontsize=6.2)
+    ax.set_yticklabels(labels, fontsize=FS_TICK_SM)
     ax.set_ylim(y - 0.2, -0.8)
     ax.set_xlim(0, xmax)
     ax.set_title("%s   (yielding total %.0f time units)" % (title, n_yield),
@@ -155,12 +156,13 @@ def main() -> None:
                       label="waiting: corridor occupied"),
         plt.Rectangle((0, 0), 1, 1, fc=C_IDLE, label="waiting: unassigned"),
     ]
-    axes[0].legend(handles=handles, loc="upper center", ncol=5, fontsize=6.4,
+    axes[0].legend(handles=handles, loc="upper center", ncol=5,
+                   fontsize=FS_LEG,
                    bbox_to_anchor=(0.5, 1.30), frameon=False)
     fig.text(0.005, 0.005, "instance %s,  seed %s,  contention %.1f%%"
              % (tt["B2"]["case"], tt["B2"]["seed"],
                 100.0 * tt["B2"]["contention"]),
-             fontsize=6.2, color="#777777")
+             fontsize=FS_FOOT, color="#777777")
     fig.tight_layout(rect=(0, 0.015, 1, 0.955))
     save(fig, "fig_case_gantt")
 
