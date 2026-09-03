@@ -41,7 +41,7 @@ def load_case():
     d = os.path.join(OUTPUT, "case_study")
     files = sorted(glob.glob(os.path.join(d, "*.json")))
     if not files:
-        raise SystemExit("缺少 %s/*.json\n  在 clbs/ 目录下运行:%s" % (d, HINT))
+        raise SystemExit("missing %s/*.json\n  from clbs/ run: %s" % (d, HINT))
     tt = {}
     for p in files:
         with open(p, encoding="utf-8") as f:
@@ -49,7 +49,7 @@ def load_case():
         tt[j["arm"]] = j
     for arm in ("B0", "B2"):
         if arm not in tt:
-            raise SystemExit("案例时刻表里缺少 %s 档" % arm)
+            raise SystemExit("case timetable is missing arm %s" % arm)
     return tt
 
 

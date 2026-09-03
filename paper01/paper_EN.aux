@@ -1,0 +1,296 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\@writefile{toc}{\contentsline {section}{Abstract}{1}{section*.1}\protected@file@percent }
+\citation{xin2025review}
+\citation{meng2025cp,qin2026knowledge,fu2025integrated}
+\citation{kim2026congestion}
+\citation{vanos2026exact}
+\citation{sun2023integrated}
+\citation{li2026framework}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{2}{section.1}\protected@file@percent }
+\newlabel{sec:Chapter_I}{{1}{2}{Introduction}{section.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Background and motivation}{2}{subsection.1.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Gap relative to prior work}{2}{subsection.1.2}\protected@file@percent }
+\citation{li2026framework}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces Motivating instance: the same assignment decision, ranked in opposite order by two evaluations. (a)\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces The only path to the fast arm M1 is an exclusive trunk ($\tau =6$); the slow arm M2 sits on a short corridor that avoids the trunk; three further jobs that can only be processed on M3 must cross the trunk repeatedly. (b)\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces The fast-arm and slow-arm assignments of the same operation, each evaluated by the constant matrix and by conflict-free routing. The constant travel-time matrix contains no yielding wait, so it chooses the fast arm by ``shorter processing $+$ longer travel''; evaluating the same assignments by conflict-free routing makes the slow arm better. The difference flips from $-13$ to $+35$. This figure is an \emph  {existence demonstration}, not a statistical conclusion---it shows that the reversal can occur, not that it must; of $1200$ parameter combinations around this instance, $205$ ($17\%$) reverse, so it is not an isolated point in the parameter space.}}{3}{figure.caption.2}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:motivating}{{1}{3}{Motivating instance: the same assignment decision, ranked in opposite order by two evaluations. (a)~The only path to the fast arm M1 is an exclusive trunk ($\tau =6$); the slow arm M2 sits on a short corridor that avoids the trunk; three further jobs that can only be processed on M3 must cross the trunk repeatedly. (b)~The fast-arm and slow-arm assignments of the same operation, each evaluated by the constant matrix and by conflict-free routing. The constant travel-time matrix contains no yielding wait, so it chooses the fast arm by ``shorter processing $+$ longer travel''; evaluating the same assignments by conflict-free routing makes the slow arm better. The difference flips from $-13$ to $+35$. This figure is an \emph {existence demonstration}, not a statistical conclusion---it shows that the reversal can occur, not that it must; of $1200$ parameter combinations around this instance, $205$ ($17\%$) reverse, so it is not an isolated point in the parameter space}{figure.caption.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Approach}{3}{subsection.1.3}\protected@file@percent }
+\citation{li2026framework}
+\citation{li2026framework}
+\citation{sun2023integrated}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.4}Main results}{4}{subsection.1.4}\protected@file@percent }
+\citation{sun2023integrated}
+\citation{li2026framework}
+\citation{vanos2026exact}
+\citation{li2026framework}
+\citation{li2026framework}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.5}Contributions}{5}{subsection.1.5}\protected@file@percent }
+\citation{xin2025review}
+\citation{dauzereperes2024fjsp}
+\citation{homayouni2021production}
+\citation{meng2025cp}
+\citation{qin2026knowledge}
+\citation{fu2025integrated}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Related work}{6}{section.2}\protected@file@percent }
+\newlabel{sec:Chapter_II}{{2}{6}{Related work}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Flexible job shop scheduling with transportation}{6}{subsection.2.1}\protected@file@percent }
+\citation{xin2025review}
+\citation{gao2023mapf}
+\citation{kasaura2022sipp}
+\citation{zhang2024guidance}
+\citation{kim2026congestion}
+\citation{lu2022agv}
+\citation{fragapane2021planning}
+\citation{kim2026congestion}
+\citation{zhang2024guidance}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Conflict-free routing with exogenous tasks and congestion-aware dispatching}{7}{subsection.2.2}\protected@file@percent }
+\citation{vanos2026exact}
+\citation{sun2023integrated}
+\citation{li2026framework}
+\citation{sun2023integrated}
+\citation{li2026framework}
+\citation{otala2021graph,tamssaouet2023neighborhood}
+\citation{qin2026knowledge}
+\citation{xin2025review}
+\citation{vanos2026exact}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Integrating scheduling and conflict-free routing: feedback depth and our position}{8}{subsection.2.3}\protected@file@percent }
+\citation{meng2025cp,qin2026knowledge,fu2025integrated}
+\citation{gao2023mapf,zhang2024guidance}
+\citation{kim2026congestion}
+\citation{sun2023integrated}
+\citation{li2026framework}
+\citation{vanos2026exact}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Comparison of related work with this paper. ``Machine heterogeneity'' means that an operation has several optional machines and the processing time varies with the machine; ``coupling frequency'' means the number and direction of times the routing result enters the schedule; the last column is the content fed back to the schedule. This paper evaluates every candidate by the makespan after conflict-free routing, and chooses a vehicle by reservation-table-aware dispatching. This paper implements three interfaces---realized time, the yield record, and a surcharge on corridor--time slots---and reports each by its cost and its gain.}}{9}{table.caption.3}\protected@file@percent }
+\newlabel{tab:related}{{1}{9}{Comparison of related work with this paper. ``Machine heterogeneity'' means that an operation has several optional machines and the processing time varies with the machine; ``coupling frequency'' means the number and direction of times the routing result enters the schedule; the last column is the content fed back to the schedule. This paper evaluates every candidate by the makespan after conflict-free routing, and chooses a vehicle by reservation-table-aware dispatching. This paper implements three interfaces---realized time, the yield record, and a surcharge on corridor--time slots---and reports each by its cost and its gain}{table.caption.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}Problem statement and model}{9}{section.3}\protected@file@percent }
+\newlabel{sec:Chapter_III}{{3}{9}{Problem statement and model}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Problem statement}{9}{subsection.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Modelling assumptions}{9}{subsection.3.2}\protected@file@percent }
+\newlabel{sec:assumptions}{{3.2}{9}{Modelling assumptions}{subsection.3.2}{}}
+\citation{gui2023dynamic,xiong2024dynamic}
+\citation{xin2025review}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Notation.}}{10}{table.caption.4}\protected@file@percent }
+\newlabel{tab:notation}{{2}{10}{Notation}{table.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Decision variables and induced transport tasks}{11}{subsection.3.3}\protected@file@percent }
+\newlabel{eq:tasks}{{1}{11}{Decision variables and induced transport tasks}{equation.3.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Timing relations and feasibility}{11}{subsection.3.4}\protected@file@percent }
+\newlabel{eq:assign}{{2}{11}{Timing relations and feasibility}{equation.3.2}{}}
+\newlabel{eq:dur}{{3}{11}{Timing relations and feasibility}{equation.3.3}{}}
+\newlabel{eq:material}{{4}{11}{Timing relations and feasibility}{equation.3.4}{}}
+\newlabel{eq:disj}{{5}{11}{Timing relations and feasibility}{equation.3.5}{}}
+\newlabel{eq:load}{{6}{11}{Timing relations and feasibility}{equation.3.6}{}}
+\newlabel{eq:walk}{{7}{11}{Timing relations and feasibility}{equation.3.7}{}}
+\newlabel{eq:excl}{{8}{11}{Timing relations and feasibility}{equation.3.8}{}}
+\citation{vanos2026exact}
+\citation{lyu2019approach}
+\citation{dauzereperes2024fjsp}
+\citation{gao2023mapf}
+\citation{vanos2026exact}
+\newlabel{eq:obj}{{9}{12}{Timing relations and feasibility}{equation.3.9}{}}
+\newlabel{eq:bind}{{10}{12}{Timing relations and feasibility}{equation.3.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.5}Relation to FJSP\_PT}{12}{subsection.3.5}\protected@file@percent }
+\newlabel{sec:fjsppt}{{3.5}{12}{Relation to FJSP\_PT}{subsection.3.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.6}Computational complexity}{12}{subsection.3.6}\protected@file@percent }
+\newlabel{prop:np_hard}{{1}{12}{}{prop.1}{}}
+\citation{xin2025review}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.7}Instance features}{13}{subsection.3.7}\protected@file@percent }
+\newlabel{sec:features}{{3.7}{13}{Instance features}{subsection.3.7}{}}
+\citation{zhang2024memetic}
+\newlabel{eq:lbcut}{{11}{14}{Instance features}{equation.3.11}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Closed-loop bilevel framework}{14}{section.4}\protected@file@percent }
+\newlabel{sec:Chapter_IV}{{4}{14}{Closed-loop bilevel framework}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}Overview: routing-in-the-loop evaluation and the decision path}{14}{subsection.4.1}\protected@file@percent }
+\newlabel{sec:overview}{{4.1}{14}{Overview: routing-in-the-loop evaluation and the decision path}{subsection.4.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces The closed-loop bilevel framework. The upper level searches over assignment and sequencing with a memetic algorithm; the lower level performs conflict-free routing by time-window reservation; an event-driven decoder in the middle translates an upper-level candidate into a sequence of transport tasks. The two feedback paths are distinguished by colour and enter the upper level at different places: path\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces 1 (blue, marked 1) returns the completed conflict-free timetable as fitness, once per candidate; path\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces 2 (orange, marked 2) runs a two-leg trial query on the reservation table for the earliest feasible delivery time before a vehicle is chosen, once per transport task; the trial query does not write the final timetable. The four-level baseline ladder of Section\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces \ref {sec:Chapter_V} is arranged by whether these two paths are open.}}{15}{figure.caption.5}\protected@file@percent }
+\newlabel{fig:framework}{{2}{15}{The closed-loop bilevel framework. The upper level searches over assignment and sequencing with a memetic algorithm; the lower level performs conflict-free routing by time-window reservation; an event-driven decoder in the middle translates an upper-level candidate into a sequence of transport tasks. The two feedback paths are distinguished by colour and enter the upper level at different places: path~1 (blue, marked 1) returns the completed conflict-free timetable as fitness, once per candidate; path~2 (orange, marked 2) runs a two-leg trial query on the reservation table for the earliest feasible delivery time before a vehicle is chosen, once per transport task; the trial query does not write the final timetable. The four-level baseline ladder of Section~\ref {sec:Chapter_V} is arranged by whether these two paths are open}{figure.caption.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}Lower level: time-window reservation and conflict-free routing}{15}{subsection.4.2}\protected@file@percent }
+\newlabel{sec:router}{{4.2}{15}{Lower level: time-window reservation and conflict-free routing}{subsection.4.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.1}Reservation table}{15}{subsubsection.4.2.1}\protected@file@percent }
+\citation{kasaura2022sipp}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces \textsc  {Route}: conflict-free planning of a single leg}}{16}{algorithm.1}\protected@file@percent }
+\newlabel{alg:route}{{1}{16}{\textsc {Route}: conflict-free planning of a single leg}{algorithm.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.2.2}Time-window Dijkstra}{16}{subsubsection.4.2.2}\protected@file@percent }
+\newlabel{lem:label}{{1}{16}{Earliest arrival is sufficient}{lem.1}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces \textsc  {Decode}: fitness from a complete conflict-free simulation}}{17}{algorithm.2}\protected@file@percent }
+\newlabel{alg:decode}{{2}{17}{\textsc {Decode}: fitness from a complete conflict-free simulation}{algorithm.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}Upper level: encoding and event-driven decoding}{17}{subsection.4.3}\protected@file@percent }
+\newlabel{sec:upper}{{4.3}{17}{Upper level: encoding and event-driven decoding}{subsection.4.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.3.1}Chromosome encoding}{17}{subsubsection.4.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.3.2}Event-driven decoder}{17}{subsubsection.4.3.2}\protected@file@percent }
+\citation{li2026framework}
+\citation{lu2022agv}
+\newlabel{prop:decodable}{{2}{18}{Every chromosome is decodable}{prop.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}Reservation-table-aware vehicle dispatching}{18}{subsection.4.4}\protected@file@percent }
+\newlabel{sec:dispatch}{{4.4}{18}{Reservation-table-aware vehicle dispatching}{subsection.4.4}{}}
+\newlabel{eq:rule}{{12}{18}{Reservation-table-aware vehicle dispatching}{equation.4.12}{}}
+\newlabel{sec:interface}{{4.4.1}{19}{Three choices for the inter-layer interface}{subsubsection.4.4.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.4.1}Three choices for the inter-layer interface}{19}{subsubsection.4.4.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Return realized durations only.}{19}{section*.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Return a surcharge on corridor--time slots.}{19}{section*.7}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Return the yield record.}{19}{section*.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}Low overhead: admissible lower-bound pruning and winner-path reuse}{20}{subsection.4.5}\protected@file@percent }
+\newlabel{sec:speedup}{{4.5}{20}{Low overhead: admissible lower-bound pruning and winner-path reuse}{subsection.4.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Admissible lower-bound pruning.}{20}{section*.9}\protected@file@percent }
+\newlabel{eq:lb_dispatch}{{13}{20}{Admissible lower-bound pruning}{equation.4.13}{}}
+\@writefile{toc}{\contentsline {paragraph}{Winner-path reuse.}{20}{section*.10}\protected@file@percent }
+\newlabel{prop:speedup_equiv}{{3}{20}{The two speed-ups do not change the selected vehicle or the timetable}{prop.3}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces Labels of the links on the critical chain, and the changes that can be taken. Only the corridor-occupancy class carries a concrete corridor and time slot, and only it can name the transport that first occupied that corridor.}}{21}{table.caption.11}\protected@file@percent }
+\newlabel{tab:attrib}{{3}{21}{Labels of the links on the critical chain, and the changes that can be taken. Only the corridor-occupancy class carries a concrete corridor and time slot, and only it can name the transport that first occupied that corridor}{table.caption.11}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.6}Yield-record-guided local search}{21}{subsection.4.6}\protected@file@percent }
+\newlabel{sec:ls}{{4.6}{21}{Yield-record-guided local search}{subsection.4.6}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.1}Attribution along the critical chain}{21}{subsubsection.4.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.2}Two families of operators}{21}{subsubsection.4.6.2}\protected@file@percent }
+\newlabel{eq:reassign}{{14}{21}{Two families of operators}{equation.4.14}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {3}{\ignorespaces \textsc  {ContentionGuidedSearch}: yield-record-guided local search}}{22}{algorithm.3}\protected@file@percent }
+\newlabel{alg:ls}{{3}{22}{\textsc {ContentionGuidedSearch}: yield-record-guided local search}{algorithm.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {4.6.3}Acceptance rule}{22}{subsubsection.4.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.7}Outer genetic algorithm}{22}{subsection.4.7}\protected@file@percent }
+\citation{homayouni2021production}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.8}Complexity and cost}{23}{subsection.4.8}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {5}Experiments}{23}{section.5}\protected@file@percent }
+\newlabel{sec:Chapter_V}{{5}{23}{Experiments}{section.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}Experimental setup}{23}{subsection.5.1}\protected@file@percent }
+\newlabel{sec:instances}{{5.1}{23}{Experimental setup}{subsection.5.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.1}Controlled instance families}{23}{subsubsection.5.1.1}\protected@file@percent }
+\citation{suh2022spine}
+\citation{rahimikelarijani2020tandem}
+\@writefile{toc}{\contentsline {paragraph}{Comparison with public instances.}{25}{section*.12}\protected@file@percent }
+\newlabel{sec:protocol}{{5.1.2}{25}{Comparison protocol}{subsubsection.5.1.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.2}Comparison protocol}{25}{subsubsection.5.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Common executor: report the realized makespan.}{25}{section*.14}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces Controlled instances. All instances share $12$ jobs, $36$ real operations, $8$ robotic arms, $H=0.3$, and $\bar  {T}_t/\bar  {T}_p\approx 4.0$; the three families vary only layout, the vehicle-to-arm ratio, and flexibility, respectively. Contention intensity is the share of yielding wait in total travel time on the initial random population, read off from the instance structure, not supplied as an input.}}{26}{table.caption.13}\protected@file@percent }
+\newlabel{tab:instances}{{4}{26}{Controlled instances. All instances share $12$ jobs, $36$ real operations, $8$ robotic arms, $H=0.3$, and $\bar {T}_t/\bar {T}_p\approx 4.0$; the three families vary only layout, the vehicle-to-arm ratio, and flexibility, respectively. Contention intensity is the share of yielding wait in total travel time on the initial random population, read off from the instance structure, not supplied as an input}{table.caption.13}{}}
+\@writefile{toc}{\contentsline {paragraph}{Equal wall-clock budget, not equal generation count.}{26}{section*.15}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Seeds and paired tests.}{26}{section*.16}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Multiple comparisons and effect sizes.}{27}{section*.17}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Correctness.}{27}{section*.18}\protected@file@percent }
+\newlabel{sec:impl}{{5.1.3}{27}{Implementation and environment}{subsubsection.5.1.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.1.3}Implementation and environment}{27}{subsubsection.5.1.3}\protected@file@percent }
+\citation{li2026framework}
+\citation{sun2023integrated}
+\citation{li2026framework}
+\citation{sun2023integrated}
+\citation{li2026framework}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces The four-level ladder arranged along two factors. Rows are whether the search includes conflict-induced delay; columns are whether a vehicle is chosen by unimpeded time or by a trial query on the reservation table. Only a comparison along the same row or the same column differs in one factor; a diagonal comparison changes two places at once and cannot be read apart.}}{28}{table.caption.19}\protected@file@percent }
+\newlabel{tab:arms}{{5}{28}{The four-level ladder arranged along two factors. Rows are whether the search includes conflict-induced delay; columns are whether a vehicle is chosen by unimpeded time or by a trial query on the reservation table. Only a comparison along the same row or the same column differs in one factor; a diagonal comparison changes two places at once and cannot be read apart}{table.caption.19}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}Four-level baseline ladder}{28}{subsection.5.2}\protected@file@percent }
+\newlabel{sec:arms}{{5.2}{28}{Four-level baseline ladder}{subsection.5.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces Makespans of the four-level ladder under an equal wall-clock budget, and the four pairs that change only one place along the two factors. A negative value means a lower makespan, i.e.\ better. $n=100$ comparisons paired by $(\text  {instance},\text  {seed})$, two-sided Wilcoxon signed-rank tests; $p$-values have received a Holm correction over the five contrasts of this table ($^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$). The HL column is the Hodges--Lehmann pseudomedian of pairwise relative gains and its $95\%$ distribution-free confidence interval, a different convention from the mean on the left (see Section\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces \ref {sec:protocol}): the mean is convenient for adding across tables; the pseudomedian is of the same source as the test in the same row and carries precision. Throughout the paper, tables mark the configuration of this paper by a \emph  {bold header}; numbers themselves are never bold---B2 is not best on every instance, and on the vehicle-to-arm-ratio instances $1.0$ and $2.0$ B1 is faster; per-instance readings are in Table\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces \ref {tab:bytag}.}}{29}{table.caption.20}\protected@file@percent }
+\newlabel{tab:main}{{6}{29}{Makespans of the four-level ladder under an equal wall-clock budget, and the four pairs that change only one place along the two factors. A negative value means a lower makespan, i.e.\ better. $n=\NPairs $ comparisons paired by $(\text {instance},\text {seed})$, two-sided Wilcoxon signed-rank tests; $p$-values have received a Holm correction over the five contrasts of this table ($^{*}p<0.05$, $^{**}p<0.01$, $^{***}p<0.001$). The HL column is the Hodges--Lehmann pseudomedian of pairwise relative gains and its $95\%$ distribution-free confidence interval, a different convention from the mean on the left (see Section~\ref {sec:protocol}): the mean is convenient for adding across tables; the pseudomedian is of the same source as the test in the same row and carries precision. Throughout the paper, tables mark the configuration of this paper by a \emph {bold header}; numbers themselves are never bold---B2 is not best on every instance, and on the vehicle-to-arm-ratio instances $1.0$ and $2.0$ B1 is faster; per-instance readings are in Table~\ref {tab:bytag}}{table.caption.20}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}Aggregate comparison on the ladder}{29}{subsection.5.3}\protected@file@percent }
+\newlabel{sec:main}{{5.3}{29}{Aggregate comparison on the ladder}{subsection.5.3}{}}
+\@writefile{toc}{\contentsline {paragraph}{Closed-loop evaluation.}{29}{section*.21}\protected@file@percent }
+\citation{li2026framework}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Convergence curves on a single \texttt  {funnel} instance; the horizontal axis is wall-clock time, the curves are the time-wise mean over seeds, and the shaded band is the seed-to-seed \emph  {range} (this figure has only three seeds, not enough to support quartiles). The solid lines (B1, B2) are the realized makespan from the first instant; the dashed line is the open loop's own surrogate objective, i.e.\ the quantity it is actually optimizing; crosses and pluses mark where the same plan sits after conflict-free routing. The gap between the end of the dashed line and the cross is the optimistic margin of that instance: the open loop does not fail to converge; it converges to a surrogate that cannot be realized. This figure takes only three instances and three seeds and carries no statistical claim; every statistic in this chapter is taken from the main batch of $10$ instances $\times $ $10$ seeds. The wall-clock budget of this figure is $46.3$ seconds, different from the $90$ seconds of the main batch.}}{30}{figure.caption.22}\protected@file@percent }
+\newlabel{fig:convergence}{{3}{30}{Convergence curves on a single \texttt {funnel} instance; the horizontal axis is wall-clock time, the curves are the time-wise mean over seeds, and the shaded band is the seed-to-seed \emph {range} (this figure has only three seeds, not enough to support quartiles). The solid lines (B1, B2) are the realized makespan from the first instant; the dashed line is the open loop's own surrogate objective, i.e.\ the quantity it is actually optimizing; crosses and pluses mark where the same plan sits after conflict-free routing. The gap between the end of the dashed line and the cross is the optimistic margin of that instance: the open loop does not fail to converge; it converges to a surrogate that cannot be realized. This figure takes only three instances and three seeds and carries no statistical claim; every statistic in this chapter is taken from the main batch of $\NCases $ instances $\times $ $\NSeeds $ seeds. The wall-clock budget of this figure is $46.3$ seconds, different from the $90$ seconds of the main batch}{figure.caption.22}{}}
+\citation{sun2023integrated}
+\citation{li2026framework}
+\citation{sun2023integrated}
+\@writefile{toc}{\contentsline {paragraph}{Reservation-table-aware dispatching.}{31}{section*.23}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{End-to-end.}{31}{section*.24}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}Near-additivity and non-substitutability}{31}{subsection.5.4}\protected@file@percent }
+\newlabel{sec:complement}{{5.4}{31}{Near-additivity and non-substitutability}{subsection.5.4}{}}
+\@writefile{toc}{\contentsline {paragraph}{Interaction.}{31}{section*.25}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Non-substitutability.}{31}{section*.26}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Relation to schedule-then-resolve.}{31}{section*.27}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}Three-factor scans and per-instance resolution}{32}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:whichcongestion}{{5.5}{32}{Three-factor scans and per-instance resolution}{subsection.5.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Per-instance resolution.}{32}{section*.28}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces Per-instance four-level ladder results and the two effects of the closed loop and of dispatching, blocked by the three families (each instance is $n=10$ comparisons paired by seed). Significance marks are given by the \textbf  {Holm-corrected} $p$ (two-sided Wilcoxon signed-rank test); the family is the $10$ instances of one effect: $^{*}p<0.05$, $^{**}p<0.01$; $^{\dagger }$ means significant before correction and not significant after, and the sign of that instance is not taken as a conclusion. Contention intensity is read off from the instance structure. A negative value means a lower makespan. The two gain columns use the same estimator as Table\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces \ref {tab:main} (the mean of pairwise relative gains over seeds); the mean of the ten instances equals the aggregate of that table within rounding (the digit-wise recomputation uses unrounded values); the column cannot be recovered by dividing the two means in the same row. \texttt  {A funnel} is at once $N_A/N_M=1.5$ of Family\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces B and $F=0.6$ of Family\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces C; it is run only once and occupies only one row.}}{33}{table.caption.29}\protected@file@percent }
+\newlabel{tab:bytag}{{7}{33}{Per-instance four-level ladder results and the two effects of the closed loop and of dispatching, blocked by the three families (each instance is $n=\NSeeds $ comparisons paired by seed). Significance marks are given by the \textbf {Holm-corrected} $p$ (two-sided Wilcoxon signed-rank test); the family is the $\NCases $ instances of one effect: $^{*}p<0.05$, $^{**}p<0.01$; $^{\dagger }$ means significant before correction and not significant after, and the sign of that instance is not taken as a conclusion. Contention intensity is read off from the instance structure. A negative value means a lower makespan. The two gain columns use the same estimator as Table~\ref {tab:main} (the mean of pairwise relative gains over seeds); the mean of the ten instances equals the aggregate of that table within rounding (the digit-wise recomputation uses unrounded values); the column cannot be recovered by dividing the two means in the same row. \texttt {A funnel} is at once $N_A/N_M=1.5$ of Family~B and $F=0.6$ of Family~C; it is run only once and occupies only one row}{table.caption.29}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Distribution of the closed loop and of dispatching on the three families. Left: Family\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces A (layout), horizontal axis contention intensity; middle: vehicle-to-arm ratio $N_A/N_M$; right: flexibility. Families\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces B and\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces C include the shared base point ($1.5$ and $0.6$ at the hollow vertical lines), also listed as \texttt  {A funnel} in Family\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces A. A filled marker remains significant after Holm correction ($p<0.05$, the family being the $10$ instances of one effect); a hollow marker is not significant. Error bars are the standard error of the mean of pairwise relative gains over the $10$ seeds of that instance. The closed loop is significant on 9{} instances and rises roughly with contention; after correction dispatching is significant on \emph  {no instance}, the error bars cross zero on every instance, and the sign still alternates across the four vehicle-to-arm-ratio levels. What this figure is to be read for is whether the two curves can be distinguished from zero, not the shape of the dispatching curve.}}{33}{figure.caption.30}\protected@file@percent }
+\newlabel{fig:prediction3}{{4}{33}{Distribution of the closed loop and of dispatching on the three families. Left: Family~A (layout), horizontal axis contention intensity; middle: vehicle-to-arm ratio $N_A/N_M$; right: flexibility. Families~B and~C include the shared base point ($1.5$ and $0.6$ at the hollow vertical lines), also listed as \texttt {A funnel} in Family~A. A filled marker remains significant after Holm correction ($p<0.05$, the family being the $\NCases $ instances of one effect); a hollow marker is not significant. Error bars are the standard error of the mean of pairwise relative gains over the $\NSeeds $ seeds of that instance. The closed loop is significant on \CellsSigLoopAdj {} instances and rises roughly with contention; after correction dispatching is significant on \emph {no instance}, the error bars cross zero on every instance, and the sign still alternates across the four vehicle-to-arm-ratio levels. What this figure is to be read for is whether the two curves can be distinguished from zero, not the shape of the dispatching curve}{figure.caption.30}{}}
+\@writefile{toc}{\contentsline {paragraph}{An independent batch of self-generated instances.}{34}{section*.31}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Heterogeneity does not inflate the closed-loop gain.}{34}{section*.32}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}Ablations and controlled negative controls}{35}{subsection.5.6}\protected@file@percent }
+\newlabel{sec:pricing}{{5.6}{35}{Ablations and controlled negative controls}{subsection.5.6}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.6.1}Yield-record-guided local search}{35}{subsubsection.5.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.6.2}Surcharge on corridor--time slots}{35}{subsubsection.5.6.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces A surcharge on corridor--time slots. A positive value means worse. Under equal wall-clock time (left), the makespan worsening appears as soon as the surcharge is turned on, then stays flat over a ten-fold range of $\theta $, in step with the cost per evaluation on the right axis; under an equal number of evaluations (right) the worsening disappears. The damage comes from a higher cost per evaluation and fewer evaluations inside the same budget, not from the price choosing the wrong path. Markers are means, error bars are the standard error of the mean, and the number of runs per point is marked in the figure footer; ``significant'' means a two-sided Wilcoxon signed-rank test of each $\theta $ against $\theta =0$, paired by seed. This figure uses two instances of $8$ jobs $\times \,4$ machines $\times \,4$ vehicles, which do \emph  {not} belong to Families A/B/C of Table\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces \ref {tab:instances} (those are uniformly $12\times 8\times 12$); the legend labels \texttt  {high}/\texttt  {funnel} are layout tags only, and they are not the same instances as the like-named pair in Family\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces A. The left panel has $10$ seeds and the right panel $5$ (a subset of the former); the wall-clock budgets are $48.9$ and $60.7$ seconds, both different from the $90$ seconds of the main batch. The batch was collected \emph  {before} the two speed-ups of Section\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces \ref {sec:speedup}; the surcharge mechanism was not changed before or after the speed-ups, and its cost is independent of pruning (pruning acts on the dispatching trial query, not on multi-label routing), so the judgement of this section still holds, but it cannot be placed beside the other tables of this chapter instance by instance.}}{36}{figure.caption.33}\protected@file@percent }
+\newlabel{fig:theta}{{5}{36}{A surcharge on corridor--time slots. A positive value means worse. Under equal wall-clock time (left), the makespan worsening appears as soon as the surcharge is turned on, then stays flat over a ten-fold range of $\theta $, in step with the cost per evaluation on the right axis; under an equal number of evaluations (right) the worsening disappears. The damage comes from a higher cost per evaluation and fewer evaluations inside the same budget, not from the price choosing the wrong path. Markers are means, error bars are the standard error of the mean, and the number of runs per point is marked in the figure footer; ``significant'' means a two-sided Wilcoxon signed-rank test of each $\theta $ against $\theta =0$, paired by seed. This figure uses two instances of $8$ jobs $\times \,4$ machines $\times \,4$ vehicles, which do \emph {not} belong to Families A/B/C of Table~\ref {tab:instances} (those are uniformly $12\times 8\times 12$); the legend labels \texttt {high}/\texttt {funnel} are layout tags only, and they are not the same instances as the like-named pair in Family~A. The left panel has $10$ seeds and the right panel $5$ (a subset of the former); the wall-clock budgets are $48.9$ and $60.7$ seconds, both different from the $90$ seconds of the main batch. The batch was collected \emph {before} the two speed-ups of Section~\ref {sec:speedup}; the surcharge mechanism was not changed before or after the speed-ups, and its cost is independent of pruning (pruning acts on the dispatching trial query, not on multi-label routing), so the judgement of this section still holds, but it cannot be placed beside the other tables of this chapter instance by instance}{figure.caption.33}{}}
+\newlabel{sec:whycost}{{5.6.3}{36}{Dilution and overhead}{subsubsection.5.6.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.6.3}Dilution and overhead}{36}{subsubsection.5.6.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Where the extra evaluations are spent.}{36}{section*.34}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Dilution along the critical chain.}{37}{section*.35}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Why dispatching changes sign before and after the speed-ups.}{37}{section*.36}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}The cost law and the effect of the two speed-ups}{37}{subsection.5.7}\protected@file@percent }
+\newlabel{sec:costlaw}{{5.7}{37}{The cost law and the effect of the two speed-ups}{subsection.5.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Two budget conventions.}{37}{section*.37}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces A fixed wall-clock budget locks the cost of a single evaluation and the number of evaluations completed onto a hyperbola; the grey line is the $90$-second cap shared by every configuration. Sitting on the line means cost $\times $ count equals that configuration's wall-clock time. The two closed-loop configurations sit on the line---every run uses the full budget; the open loop sits \emph  {below} the line, because it stops of its own after a little over four hundred generations without improvement, converging in about $17$ seconds, and is not cut off by the budget (Section\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces \ref {sec:protocol}). B0 and B0$^+$ share the same open-loop search and therefore share a point; they differ only in how they are executed. Pale small points are the per-instance readings of three instances; the filled large point is their geometric mean: on a log axis only the geometric mean preserves ``cost $\times $ count $=$ that configuration's wall-clock time''. The orange arrow is the on/off pair of pruning and winner-path reuse---Proposition\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces \ref {prop:speedup_equiv} guarantees that one can move along that line \emph  {without changing the output}, so this displacement is only a saving of compute.}}{38}{figure.caption.38}\protected@file@percent }
+\newlabel{fig:protocol}{{6}{38}{A fixed wall-clock budget locks the cost of a single evaluation and the number of evaluations completed onto a hyperbola; the grey line is the $90$-second cap shared by every configuration. Sitting on the line means cost $\times $ count equals that configuration's wall-clock time. The two closed-loop configurations sit on the line---every run uses the full budget; the open loop sits \emph {below} the line, because it stops of its own after a little over four hundred generations without improvement, converging in about $17$ seconds, and is not cut off by the budget (Section~\ref {sec:protocol}). B0 and B0$^+$ share the same open-loop search and therefore share a point; they differ only in how they are executed. Pale small points are the per-instance readings of three instances; the filled large point is their geometric mean: on a log axis only the geometric mean preserves ``cost $\times $ count $=$ that configuration's wall-clock time''. The orange arrow is the on/off pair of pruning and winner-path reuse---Proposition~\ref {prop:speedup_equiv} guarantees that one can move along that line \emph {without changing the output}, so this displacement is only a saving of compute}{figure.caption.38}{}}
+\@writefile{toc}{\contentsline {paragraph}{The cost law.}{38}{section*.40}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces The same set of comparisons under two budget conventions. Each row is named by the mechanism it isolates, not by a pair of configurations. The difference between the two markers comes from the convention: reservation-table-aware dispatching is 2.90\%{} under equal generation count ($p=0.0269$) and falls to 0.03\%{} under equal wall-clock time ($p=0.8799$), i.e.\ to zero. The batch ran \emph  {before} the two speed-ups of Section\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces \ref {sec:speedup}, so this row is also the motivation for the control below that moves only the speed-ups.}}{39}{figure.caption.39}\protected@file@percent }
+\newlabel{fig:protocols}{{7}{39}{The same set of comparisons under two budget conventions. Each row is named by the mechanism it isolates, not by a pair of configurations. The difference between the two markers comes from the convention: reservation-table-aware dispatching is \GainProbeSameGen {} under equal generation count ($p\PProbeSameGen $) and falls to \GainProbeSameClock {} under equal wall-clock time ($p\PProbeSameClock $), i.e.\ to zero. The batch ran \emph {before} the two speed-ups of Section~\ref {sec:speedup}, so this row is also the motivation for the control below that moves only the speed-ups}{figure.caption.39}{}}
+\@writefile{toc}{\contentsline {paragraph}{Turning the two speed-ups on and off.}{39}{section*.41}\protected@file@percent }
+\citation{homayouni2021production}
+\citation{fattahi2007mathematical}
+\citation{lim2023twophase}
+\citation{homayouni2021production}
+\citation{lim2023twophase}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces Changing only pruning and winner-path reuse. ``Off''/``on'' means whether the two are enabled; the bold header is the setting adopted in this paper. The two settings produce bit-identical output (already passed the equivalence self-check), so the difference comes only from the compute that was saved. Same instances, same seeds, same wall-clock time; $n=60$ pairs, two-sided Wilcoxon signed-rank test ($^{***}p<0.001$); the aggregate row lists wins/losses/ties and $p$. Both ratio columns have the \emph  {off} setting as denominator, in opposite directions: evaluations as on/off, time per evaluation as off/on.}}{40}{table.caption.42}\protected@file@percent }
+\newlabel{tab:prune}{{8}{40}{Changing only pruning and winner-path reuse. ``Off''/``on'' means whether the two are enabled; the bold header is the setting adopted in this paper. The two settings produce bit-identical output (already passed the equivalence self-check), so the difference comes only from the compute that was saved. Same instances, same seeds, same wall-clock time; $n=60$ pairs, two-sided Wilcoxon signed-rank test ($^{***}p<0.001$); the aggregate row lists wins/losses/ties and $p$. Both ratio columns have the \emph {off} setting as denominator, in opposite directions: evaluations as on/off, time per evaluation as off/on}{table.caption.42}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}Case study: Gantt chart and critical chain on the funnel instance}{40}{subsection.5.8}\protected@file@percent }
+\newlabel{sec:casestudy}{{5.8}{40}{Case study: Gantt chart and critical chain on the funnel instance}{subsection.5.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.9}Degenerate comparison on public benchmarks}{40}{subsection.5.9}\protected@file@percent }
+\newlabel{sec:external}{{5.9}{40}{Degenerate comparison on public benchmarks}{subsection.5.9}{}}
+\@writefile{toc}{\contentsline {paragraph}{What is compared.}{40}{section*.45}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces B0 (top) and B2 (bottom) on the same funnel instance. Robotic arms and vehicles share the time axis; vehicle rows distinguish empty and loaded legs, and two kinds of gap. A gap between the two legs of the same transport task: the vehicle is held at a berth by an occupied corridor, i.e.\ yielding wait, the delay this paper treats. A gap between different tasks: the vehicle has nothing to do. The two are coloured separately, so that idle time is not read as yielding wait.}}{41}{figure.caption.43}\protected@file@percent }
+\newlabel{fig:case_gantt}{{8}{41}{B0 (top) and B2 (bottom) on the same funnel instance. Robotic arms and vehicles share the time axis; vehicle rows distinguish empty and loaded legs, and two kinds of gap. A gap between the two legs of the same transport task: the vehicle is held at a berth by an occupied corridor, i.e.\ yielding wait, the delay this paper treats. A gap between different tasks: the vehicle has nothing to do. The two are coloured separately, so that idle time is not read as yielding wait}{figure.caption.43}{}}
+\@writefile{toc}{\contentsline {paragraph}{Instances and protocol.}{41}{section*.46}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Results.}{41}{section*.47}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Links of the critical chain coloured by Table\hspace  {0.25em plus 0.125em minus 0.08em}\ignorespaces \ref {tab:attrib}. Top: composition of the two critical chains; the title places ``corridor wait removed'' beside ``makespan actually recovered'', and the difference is the part absorbed by the constraint that came to the top. Bottom: the same chain in place on the time axis, showing that the bars above are the decomposition of one chain, not a histogram of unrelated events. In the closed-loop solution \texttt  {corridor} largely disappears, and what comes to the top is the arm and the upstream operation.}}{42}{figure.caption.44}\protected@file@percent }
+\newlabel{fig:case_chain}{{9}{42}{Links of the critical chain coloured by Table~\ref {tab:attrib}. Top: composition of the two critical chains; the title places ``corridor wait removed'' beside ``makespan actually recovered'', and the difference is the part absorbed by the constraint that came to the top. Bottom: the same chain in place on the time axis, showing that the bars above are the decomposition of one chain, not a histogram of unrelated events. In the closed-loop solution \texttt {corridor} largely disappears, and what comes to the top is the arm and the upstream operation}{figure.caption.44}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces Degenerate comparison on public benchmarks (exclusivity constraint removed; the same problem as the literature). In the ``reference'' column, \textsc  {opt} is a MILP-proven optimum and \textsc  {bk} is a published best-known; the gap is computed from the best solution over 10{} seeds. An asterisk marks instances whose best solution is identical bit for bit to the reference. Data: \texttt  {experiments\_database/gap\_ideal.csv}.}}{43}{table.caption.48}\protected@file@percent }
+\newlabel{tab:external}{{9}{43}{Degenerate comparison on public benchmarks (exclusivity constraint removed; the same problem as the literature). In the ``reference'' column, \textsc {opt} is a MILP-proven optimum and \textsc {bk} is a published best-known; the gap is computed from the best solution over \NSeeds {} seeds. An asterisk marks instances whose best solution is identical bit for bit to the reference. Data: \texttt {experiments\_database/gap\_ideal.csv}}{table.caption.48}{}}
+\@writefile{toc}{\contentsline {paragraph}{The gap is search capability, not an insufficient budget.}{43}{section*.49}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Where the gap between the composite lower bound and the best solution comes from.}{43}{section*.50}\protected@file@percent }
+\citation{vanos2026exact}
+\@writefile{toc}{\contentsline {section}{\numberline {6}Conclusion}{44}{section.6}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}Findings and contributions}{44}{subsection.6.1}\protected@file@percent }
+\newlabel{sec:contributions}{{6.1}{44}{Findings and contributions}{subsection.6.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}Limitations}{45}{subsection.6.2}\protected@file@percent }
+\newlabel{sec:limitations}{{6.2}{45}{Limitations}{subsection.6.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}Future work}{46}{subsection.6.3}\protected@file@percent }
+\newlabel{sec:future_work}{{6.3}{46}{Future work}{subsection.6.3}{}}
+\citation{vanos2026exact}
+\citation{gui2023dynamic,xiong2024dynamic,dauzereperes2024fjsp}
+\bibstyle{ACM-Reference-Format}
+\bibdata{reference-base}
+\bibcite{dauzereperes2024fjsp}{{1}{2024}{{Dauz{\`e}re-P{\'e}r{\`e}s et~al\mbox  {.}}}{{}}}
+\bibcite{fattahi2007mathematical}{{2}{2007}{{Fattahi et~al\mbox  {.}}}{{}}}
+\bibcite{fragapane2021planning}{{3}{2021}{{Fragapane et~al\mbox  {.}}}{{}}}
+\bibcite{fu2025integrated}{{4}{2025}{{Fu et~al\mbox  {.}}}{{}}}
+\bibcite{gao2023mapf}{{5}{2023}{{Gao et~al\mbox  {.}}}{{}}}
+\bibcite{gui2023dynamic}{{6}{2023}{{Gui et~al\mbox  {.}}}{{}}}
+\bibcite{homayouni2021production}{{7}{2021}{{Homayouni and Fontes}}{{}}}
+\bibcite{kasaura2022sipp}{{8}{2022}{{Kasaura et~al\mbox  {.}}}{{}}}
+\bibcite{kim2026congestion}{{9}{2026}{{Kim and Kim}}{{}}}
+\bibcite{li2026framework}{{10}{2026}{{Li et~al\mbox  {.}}}{{}}}
+\bibcite{lim2023twophase}{{11}{2023}{{Lim and Moon}}{{}}}
+\bibcite{lu2022agv}{{12}{2022}{{Lu et~al\mbox  {.}}}{{}}}
+\@writefile{toc}{\contentsline {section}{References}{47}{section*.52}\protected@file@percent }
+\bibcite{lyu2019approach}{{13}{2019}{{Lyu et~al\mbox  {.}}}{{}}}
+\bibcite{meng2025cp}{{14}{2025}{{Meng et~al\mbox  {.}}}{{}}}
+\bibcite{otala2021graph}{{15}{2021}{{Otala et~al\mbox  {.}}}{{}}}
+\bibcite{qin2026knowledge}{{16}{2026}{{Qin et~al\mbox  {.}}}{{}}}
+\bibcite{rahimikelarijani2020tandem}{{17}{2020}{{Rahimikelarijani et~al\mbox  {.}}}{{}}}
+\bibcite{suh2022spine}{{18}{2022}{{Suh and Choi}}{{}}}
+\bibcite{sun2023integrated}{{19}{2023}{{Sun et~al\mbox  {.}}}{{}}}
+\bibcite{tamssaouet2023neighborhood}{{20}{2023}{{Tamssaouet and Dauz{\`e}re-P{\'e}r{\`e}s}}{{}}}
+\bibcite{vanos2026exact}{{21}{2026}{{van Os and Basten}}{{}}}
+\bibcite{xin2025review}{{22}{2025}{{Xin et~al\mbox  {.}}}{{}}}
+\bibcite{xiong2024dynamic}{{23}{2022}{{Xiong et~al\mbox  {.}}}{{}}}
+\bibcite{zhang2024memetic}{{24}{2024b}{{Zhang et~al\mbox  {.}}}{{}}}
+\bibcite{zhang2024guidance}{{25}{2024a}{{Zhang et~al\mbox  {.}}}{{}}}
+\newlabel{tocindent-1}{0pt}
+\newlabel{tocindent0}{0pt}
+\newlabel{tocindent1}{4.185pt}
+\newlabel{tocindent2}{10.34999pt}
+\newlabel{tocindent3}{18.198pt}
+\newlabel{tocindent4}{0pt}
+\newlabel{tocindent5}{0pt}
+\newlabel{TotPages}{{48}{48}{}{page.48}{}}
+\gdef \@abspage@last{48}

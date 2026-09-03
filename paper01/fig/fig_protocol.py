@@ -95,13 +95,16 @@ def main() -> None:
         pr = None
     if pr:
         pts = {}
-        for label in ("开", "关"):
+        # prune_ablation.csv tags the two settings as 开/关; look up by those
+        # keys and never print them -- the arrow label below is English.
+        prune_on, prune_off = "开", "关"
+        for label in (prune_on, prune_off):
             rs = [r for r in pr if r["arm"] == label]
             if rs:
                 pts[label] = (gmean([r["ms_per_eval"] for r in rs]),
                               gmean([r["decodes"] for r in rs]))
         if len(pts) == 2:
-            (x0, y0), (x1, y1) = pts["关"], pts["开"]
+            (x0, y0), (x1, y1) = pts[prune_off], pts[prune_on]
             ax.annotate("", xy=(x1, y1), xytext=(x0, y0),
                         arrowprops=dict(arrowstyle="-|>", color="#d95f02",
                                         linewidth=1.3))

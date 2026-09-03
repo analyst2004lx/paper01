@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-"""图 1 动机算例:常数运输时间矩阵与无冲突路由给出相反的指派次序。
+"""Figure 1, motivating instance: the constant travel-time matrix and
+conflict-free routing rank the same two assignments in opposite order.
 
-数据来自 clbs/output/motivating.json,由 clbs/tools/motivating.py 用与论文同一套解码器
-算出——(b) 的四个数不是示意值。(a) 的几何形状与该算例逐一对应。
+Data come from clbs/output/motivating.json, computed by clbs/tools/motivating.py
+with the same decoder as the paper -- the four numbers in (b) are not schematic.
+The geometry in (a) matches that instance one-to-one.
 """
 from __future__ import annotations
 
@@ -28,10 +30,35 @@ plt.rcParams.update({
     "ps.fonttype": 42,
 })
 
-C_FAST = "#2e7d32"      # 快臂 M1
-C_SLOW = "#ef6c00"      # 慢臂 M2
-C_TRUNK = "#c62828"     # 排他干道
+C_FAST = "#2e7d32"      # fast arm M1
+C_SLOW = "#ef6c00"      # slow arm M2
+C_TRUNK = "#c62828"     # exclusive trunk
 C_GREY = "#7a7a7a"
+
+# Default (English) figure copy.  fig_motivating_CN.py passes STRINGS_CN.
+STRINGS = {
+    "title_a": "(a) The only path to the fast arm is an exclusive trunk",
+    "trunk_tau": "τ = {tau:.0f} (exclusive)",
+    "avoids_trunk": "avoids the trunk",
+    "fast_arm": "fast arm  t$^P$={proc:.0f}",
+    "slow_arm": "slow arm  t$^P$={proc:.0f}",
+    "m3_jobs": "{n:.0f} jobs that can only be processed on M3",
+    "m3_yield": "Jobs that can only use M3 cross the trunk repeatedly → yielding wait",
+    "two_assign": (
+        "Two assignments of the same operation: "
+        "fast arm M1, round trip {t1:.0f} + processing {p1:.0f}  |  "
+        "slow arm M2, round trip {t2:.0f} + processing {p2:.0f}"
+    ),
+    "title_b": "(b) The same pair of assignments: constant matrix vs. conflict-free routing",
+    "group_ideal": "constant travel-time\nmatrix",
+    "group_routed": "conflict-free\nrouting",
+    "chosen": "chosen",
+    "reversal": (
+        "The ranking reverses: the constant matrix chooses M{a} (fast arm); "
+        "conflict-free routing chooses M{b} (slow arm)"
+    ),
+    "ylabel": "makespan $C_{\\max}$",
+}
 
 
 def node(ax, x, y, label, fc="#ffffff", ec="#444444", r=0.30, fs=9, bold=False):
@@ -47,8 +74,9 @@ def edge(ax, p, q, tau, color=C_GREY, lw=1.6, ls="-", off=(0.0, 0.22), fs=8.5):
             bbox=dict(boxstyle="round,pad=0.14", fc="white", ec="none", alpha=0.9))
 
 
-def panel_layout(ax, p) -> None:
-    ax.set_title("(a) 通往快臂的唯一通路是一条排他干道",
+def panel_layout(ax, p, S=None) -> None:
+    S = STRINGS if S is None else S
+    ax.set_title(S["title_a"],
                  fontsize=10.5, fontweight="bold", pad=10)
     ax.set_xlim(-0.6, 9.4)
     ax.set_ylim(-0.4, 5.0)
@@ -59,12 +87,12 @@ def panel_layout(ax, p) -> None:
          "m1": (8.5, 3.9), "m2": (0.9, 3.9), "m3": (8.5, 0.7)}
 
     edge(ax, P["v0"], P["v1"], "1")
-    edge(ax, P["v1"], P["v2"], f"τ = {p['trunk_tau']:.0f}（排他）",
+    edge(ax, P["v1"], P["v2"], S["trunk_tau"].format(tau=p["trunk_tau"]),
          color=C_TRUNK, lw=3.4, off=(0.0, 0.34), fs=9)
     edge(ax, P["v2"], P["m1"], "1")
     edge(ax, P["v2"], P["m3"], "1")
     edge(ax, P["v1"], P["m2"], "2", color=C_SLOW, lw=2.0)
-    ax.text(0.12, 3.05, "不经过干道", ha="left", va="center",
+    ax.text(0.12, 3.05, S["avoids_trunk"], ha="left", va="center",
             fontsize=8, color=C_SLOW)
 
     node(ax, *P["v0"], "LU", fc="#dceaf8", ec="#08519c", r=0.36, bold=True)
@@ -74,28 +102,29 @@ def panel_layout(ax, p) -> None:
     node(ax, *P["m2"], "M2", fc="#fff3e0", ec=C_SLOW, r=0.36, bold=True)
     node(ax, *P["m3"], "M3", fc="#f0f0f0", ec=C_GREY, r=0.36)
 
-    ax.text(8.5, 4.48, f"快臂  t$^P$={p['proc_fast']:.0f}", ha="center",
+    ax.text(8.5, 4.48, S["fast_arm"].format(proc=p["proc_fast"]), ha="center",
             fontsize=8.5, color=C_FAST, fontweight="bold")
-    ax.text(0.9, 4.48, f"慢臂  t$^P$={p['proc_slow']:.0f}", ha="center",
+    ax.text(0.9, 4.48, S["slow_arm"].format(proc=p["proc_slow"]), ha="center",
             fontsize=8.5, color=C_SLOW, fontweight="bold")
-    ax.text(8.5, 0.16, f"{p['n_background']:.0f} 个只能上 M3 加工的工件",
+    ax.text(8.5, 0.16, S["m3_jobs"].format(n=p["n_background"]),
             ha="center", va="top", fontsize=8, color=C_GREY)
-    ax.text(4.7, 1.68, "只能上 M3 的工件反复穿越干道 → 让行等待",
+    ax.text(4.7, 1.68, S["m3_yield"],
             ha="center", fontsize=8.5, color=C_TRUNK)
 
     ax.text(4.4, -0.30,
-            f"同一道工序的两个指派：快臂 M1 往返行程 {p['travel_M1_round']:.0f} + 加工 "
-            f"{p['proc_fast']:.0f}　|　慢臂 M2 往返行程 {p['travel_M2_round']:.0f} + 加工 "
-            f"{p['proc_slow']:.0f}",
+            S["two_assign"].format(
+                t1=p["travel_M1_round"], p1=p["proc_fast"],
+                t2=p["travel_M2_round"], p2=p["proc_slow"]),
             ha="center", va="center", fontsize=8.5, color="#222222",
             bbox=dict(boxstyle="round,pad=0.3", fc="#f7f7f7", ec="#999999"))
 
 
-def panel_reversal(ax, d) -> None:
-    ax.set_title("(b) 同一对指派：常数矩阵与无冲突路由",
+def panel_reversal(ax, d, S=None) -> None:
+    S = STRINGS if S is None else S
+    ax.set_title(S["title_b"],
                  fontsize=10.5, fontweight="bold", pad=10)
-    groups = [("常数运输时间\n矩阵", "ideal"),
-              ("无冲突路由", "routed")]
+    groups = [(S["group_ideal"], "ideal"),
+              (S["group_routed"], "routed")]
     xs = [0.0, 1.45]
     w = 0.42
 
@@ -122,12 +151,12 @@ def panel_reversal(ax, d) -> None:
             if chosen:
                 ax.plot([gx + off], [-top * 0.055], marker="^", ms=7, color=col,
                         clip_on=False, zorder=5)
-                ax.text(gx + off, -top * 0.105, "选中", ha="center", va="top",
+                ax.text(gx + off, -top * 0.105, S["chosen"], ha="center", va="top",
                         fontsize=9, color=col, fontweight="bold")
         ax.text(gx, -top * 0.24, glabel, ha="center", va="top", fontsize=9.5)
 
     ax.text((xs[0] + xs[1]) / 2, top * 1.31,
-            f"优劣对调：常数矩阵选 M{picks[0]}（快臂），无冲突路由选 M{picks[1]}（慢臂）",
+            S["reversal"].format(a=picks[0], b=picks[1]),
             ha="center", va="center", fontsize=10, fontweight="bold", color="#111111",
             bbox=dict(boxstyle="round,pad=0.34", fc="#fff8f0", ec="#d95f02", lw=1.2))
     ax.text((xs[0] + xs[1]) / 2, top * 1.15,
@@ -135,7 +164,7 @@ def panel_reversal(ax, d) -> None:
             f"   →   {d['M1']['routed'] - d['M2']['routed']:+.0f}",
             ha="center", va="center", fontsize=9, color="#444444")
 
-    ax.set_ylabel("完工时间 $C_{\\max}$", fontsize=9.5)
+    ax.set_ylabel(S["ylabel"], fontsize=9.5)
     ax.set_ylim(0, top * 1.44)
     ax.set_xlim(-0.70, 2.15)
     ax.set_xticks([])
@@ -147,7 +176,7 @@ def panel_reversal(ax, d) -> None:
 
 def main() -> None:
     if not os.path.exists(DATA):
-        raise SystemExit(f"缺 {DATA};先在 clbs/ 下跑 py -m tools.motivating --sweep")
+        raise SystemExit(f"missing {DATA}; from clbs/ run: py -m tools.motivating --sweep")
     with open(DATA, encoding="utf-8") as f:
         d = json.load(f)
 

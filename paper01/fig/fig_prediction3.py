@@ -51,7 +51,7 @@ try:                                                            # noqa: E402
     from algorithm.stats import holm, wilcoxon_signed_rank
     from tools.abc_matrix import BASE
 except Exception as exc:                                        # pragma: no cover
-    raise SystemExit("需要 clbs/ 在 sys.path 上以取显著性与基点水平:%s" % exc)
+    raise SystemExit("need clbs/ on sys.path for significance and base levels: %s" % exc)
 
 HINT = "py -u -m tools.baseline_ladder --budget 90 --seeds 42,7,2024,13,1,99,123,777,31415,8"
 
@@ -84,7 +84,7 @@ def level(case: str, family: str, cont: float) -> float:
         return BASE_LEVEL[family]
     m = re.search(r"([0-9]*\.?[0-9]+)\s*$", case)
     if not m:
-        raise SystemExit("算例名 %r 末尾没有因子水平,无法定位横轴" % case)
+        raise SystemExit("case name %r has no trailing factor level; cannot place the x-axis" % case)
     return float(m.group(1))
 
 

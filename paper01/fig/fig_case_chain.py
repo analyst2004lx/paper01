@@ -47,19 +47,19 @@ def load_arms():
     d = os.path.join(OUTPUT, "case_study")
     files = sorted(glob.glob(os.path.join(d, "*.json")))
     if not files:
-        raise SystemExit("缺少 %s/*.json\n  在 clbs/ 目录下运行:%s" % (d, HINT))
+        raise SystemExit("missing %s/*.json\n  from clbs/ run: %s" % (d, HINT))
     out = {}
     for p in files:
         with open(p, encoding="utf-8") as f:
             j = json.load(f)
         if not j.get("chain"):
             raise SystemExit(
-                "%s 里没有 chain 字段:请用当前版本的 tools/ladder_diag.py 重新落盘"
+                "%s has no chain field: re-export with the current tools/ladder_diag.py"
                 % os.path.basename(p))
         out[j["arm"]] = j
     for arm in ("B0", "B2"):
         if arm not in out:
-            raise SystemExit("案例数据里缺少 %s 档" % arm)
+            raise SystemExit("case data is missing arm %s" % arm)
     return out
 
 

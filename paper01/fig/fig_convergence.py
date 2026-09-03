@@ -96,7 +96,7 @@ def main() -> None:
     cases = sorted({r["case"] for r in conv})
     case = want or ("A funnel" if "A funnel" in cases else cases[0])
     if case not in cases:
-        raise SystemExit("算例 %r 不在收敛数据里,可选:%s" % (case, cases))
+        raise SystemExit("case %r is not in the convergence data; available: %s" % (case, cases))
     conv = [r for r in conv if r["case"] == case]
     cost = [r for r in cost if r["case"] == case]
     seeds = sorted({r["seed"] for r in conv})
