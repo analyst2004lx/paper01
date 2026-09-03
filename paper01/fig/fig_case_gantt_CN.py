@@ -15,6 +15,7 @@ use_cjk()
 
 C_OP, C_LOADED, C_EMPTY = src.C_OP, src.C_LOADED, src.C_EMPTY
 C_YIELD, C_IDLE = src.C_YIELD, src.C_IDLE
+C_LABEL = src.C_LABEL
 
 
 def draw(ax, tt, title, xmax):
@@ -43,7 +44,7 @@ def draw(ax, tt, title, xmax):
         if o["finish"] - o["start"] >= 0.04 * xmax:
             ax.text(0.5 * (o["start"] + o["finish"]),
                     ypos[("M", o["machine"])], "J%s-%s" % (o["job"], o["i"]),
-                    ha="center", va="center", fontsize=5.2, color="white",
+                    ha="center", va="center", fontsize=5.2, color=C_LABEL,
                     zorder=4)
 
     for s in segs:
@@ -63,8 +64,9 @@ def draw(ax, tt, title, xmax):
             n_yield += gap
 
     ax.axvline(tt["makespan"], color="#111111", linewidth=1.0, zorder=6)
-    ax.text(tt["makespan"], y - 0.4, " $C_{\\max}=%.0f$" % tt["makespan"],
-            fontsize=7, va="top", fontweight="bold")
+    ax.text(tt["makespan"], 0.11, " $C_{\\max}=%.0f$" % tt["makespan"],
+            fontsize=7, va="bottom", fontweight="bold",
+            transform=ax.get_xaxis_transform(), clip_on=False, zorder=7)
     if tt.get("surrogate"):
         ax.axvline(tt["surrogate"], color="#d62728", linewidth=0.9,
                    linestyle=(0, (3, 1.6)), zorder=6)

@@ -41,6 +41,8 @@ KINDS = [
     ("operation", "processing", "#08519c"),
 ]
 OTHER = ("other", "other", "#cccccc")
+# Same grey for every amount label: readable on a colour slice and on white.
+NUM = "#555555"
 
 
 def load_arms():
@@ -74,6 +76,46 @@ def compose(chain):
     return agg
 
 
+def _label_slices(ax, x, slices, stack_total):
+    """In-bar numbers on thick slices; leader labels on thin ones, to the left.
+
+    The stack is the sum of attributed chain amounts, not Cmax (links can
+    overlap in calendar time, and the chain need not cover [0, Cmax]).
+    Thin slices cannot hold a numeral; a leader to the left keeps them off
+    the legend.  Every amount uses the same grey.
+    """
+    leaders = []
+    for bottom, v, _colour in slices:
+        if v < 4.0 or v < 0.08 * stack_total:
+            leaders.append((bottom + 0.5 * v, v))
+        else:
+            ax.text(x, bottom + 0.5 * v, "%.0f" % v, ha="center",
+                    va="center", fontsize=6.2, color=NUM,
+                    fontweight="bold", zorder=4)
+    if not leaders:
+        return
+    leaders.sort(key=lambda t: t[0])
+    ymin, ymax = ax.get_ylim()
+    # Large enough that the three B0 leaders stay apart when this panel
+    # is the short bottom strip of the merged fig_case.
+    gap = max(7.2, 0.13 * (ymax - ymin))
+    text_y = [leaders[0][0]]
+    for mid, _v in leaders[1:]:
+        text_y.append(max(mid, text_y[-1] + gap))
+    half = 0.275
+    for (mid, v), ty in zip(leaders, text_y):
+        ax.annotate(
+            "%.0f" % v,
+            xy=(x - half, mid),
+            xytext=(x - 0.40, ty),
+            ha="right", va="center",
+            fontsize=6.2, color=NUM, fontweight="bold",
+            arrowprops=dict(arrowstyle="-", color="#777777", lw=0.7,
+                            shrinkA=0, shrinkB=0),
+            annotation_clip=False, zorder=5,
+        )
+
+
 def main() -> None:
     arms = load_arms()
     order = ["B0", "B2"]
@@ -84,8 +126,15 @@ def main() -> None:
     fig, (ax, ax2) = plt.subplots(2, 1, figsize=(COL, 3.5),
                                   gridspec_kw={"height_ratios": [1.5, 1]})
 
+    stack_max = max(sum(comps[a].values()) for a in order)
+    # Headroom for the legend.  Cmax is not the bar height (chain amounts can
+    # overlap in time and need not cover [0, Cmax]); it sits in the tick label.
+    ax.set_ylim(0, 1.62 * stack_max)
+
     for x, arm in enumerate(order):
         bottom = 0.0
+        slices = []
+        stack = sum(comps[arm].values())
         for k, label, colour in kinds:
             v = comps[arm][k]
             if v <= 1e-9:
@@ -93,13 +142,9 @@ def main() -> None:
             ax.bar(x, v, bottom=bottom, width=0.55, color=colour,
                    edgecolor="white", linewidth=0.6,
                    label=label if x == 0 else None, zorder=3)
-            if v >= 0.06 * sum(comps[arm].values()):
-                ax.text(x, bottom + v / 2, "%.0f" % v, ha="center",
-                        va="center", fontsize=6.2, color="white",
-                        fontweight="bold", zorder=4)
+            slices.append((bottom, v, colour))
             bottom += v
-        ax.text(x, bottom, "  $C_{\\max}=%.0f$" % arms[arm]["makespan"],
-                ha="center", va="bottom", fontsize=7, fontweight="bold")
+        _label_slices(ax, x, slices, stack)
 
     # The comparison the section turns on: corridor waiting removed, versus
     # makespan actually recovered.  If the second is smaller, the difference was
@@ -107,19 +152,25 @@ def main() -> None:
     d_corr = comps["B0"]["corridor"] - comps["B2"]["corridor"]
     d_mk = arms["B0"]["makespan"] - arms["B2"]["makespan"]
     ax.set_xticks(range(len(order)))
-    ax.set_xticklabels(["B0\nopen loop", "B2\nproposed"], fontsize=7)
+    ax.set_xticklabels(
+        ["B0\nopen loop\n$C_{\\max}=%.0f$" % arms["B0"]["makespan"],
+         "B2\nproposed\n$C_{\\max}=%.0f$" % arms["B2"]["makespan"]],
+        fontsize=7)
     ax.set_ylabel("critical-chain composition\n(time units)")
-    # Headroom for the legend.  At the 7pt floor the four entries are wide
-    # enough to land on the B2 bar's segment labels, and a legend that covers
-    # the numbers it explains is worse than a shorter bar.
-    ax.set_ylim(0, 1.62 * max(sum(comps[a].values()) for a in order))
+    ax.set_xlim(-0.5, 1.5)
     ax.legend(loc="upper right", fontsize=FS_LEG, labelspacing=0.3)
     ax.set_title("corridor waiting removed %.0f,  makespan recovered %.0f"
                  % (d_corr, d_mk), fontsize=7.6, loc="left")
 
     # The chain itself, so the bars are visibly a decomposition of one path.
+    # A light track to Cmax makes the horizon explicit: attributed links are a
+    # subset of [0, Cmax] (gaps and unimpeded travel are not typed items).
     colour_of = {k: c for k, _l, c in kinds}
     for y, arm in enumerate(order):
+        mk = arms[arm]["makespan"]
+        ax2.broken_barh([(0, mk)], (y - 0.3, 0.6),
+                        facecolors="#eeeeee", edgecolor="#c8c8c8",
+                        linewidth=0.4, zorder=1)
         for it in arms[arm]["chain"]:
             k = it["kind"] if it["kind"] in colour_of else OTHER[0]
             w = max(it["t_end"] - it["t_start"], 0.0)
@@ -128,12 +179,14 @@ def main() -> None:
             ax2.broken_barh([(it["t_start"], w)], (y - 0.3, 0.6),
                             facecolors=colour_of.get(k, OTHER[2]),
                             edgecolor="white", linewidth=0.3, zorder=3)
-        ax2.axvline(arms[arm]["makespan"], color="#111111", linewidth=0.7,
-                    zorder=2)
+        ax2.axvline(mk, color="#111111", linewidth=0.7, zorder=2)
+        ax2.text(mk + 0.8, y, r"$C_{\max}=%.0f$" % mk,
+                 ha="left", va="center", fontsize=6.2, color="#111111")
     ax2.set_yticks(range(len(order)))
     ax2.set_yticklabels(["B0", "B2"], fontsize=7)
     ax2.set_ylim(len(order) - 0.5, -0.5)
-    ax2.set_xlabel("time  (the chain, in place)")
+    ax2.set_xlim(0, 1.22 * max(arms[a]["makespan"] for a in order))
+    ax2.set_xlabel(r"time  (attributed links $\subset [0,C_{\max}]$)")
     ax2.grid(axis="y", visible=False)
 
     fig.text(0.005, 0.005, "instance %s,  seed %s"

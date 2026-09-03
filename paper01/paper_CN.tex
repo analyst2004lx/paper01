@@ -1994,15 +1994,15 @@ that are not members of the paper's A/B/C families.}
 \Description{A log-log scatter of cost per evaluation against evaluations
 completed. A grey hyperbola marks the 90-second budget cap. The two closed-loop
 configurations sit on it, while the open-loop configuration sits well below it
-because it stalls after about seventeen seconds. An arrow shows the pruning
-ablation moving one configuration along the line without changing its output.}
+because it stalls after about seventeen seconds. Orange markers are the
+pruning ablation off and on; a callout marks the on setting.}
 \caption{固定挂钟预算把单次评价开销与完成的评价次数锁成一条双曲线；灰线为各档共享的 $90$ 秒上限。
 贴在线上，表示开销 $\times$ 次数等于该档挂钟。两个闭环配置贴在线上——每一次都跑满预算；开环落在线\emph{下方}，因为约四百余代后不再改进而自行停止，约 $17$ 秒即收敛，并非被预算打断（第~\ref{sec:protocol}~节）。
 B0 与 B0$^+$ 共用同一次开环搜索，故共用一个点，差别只在执行方式。淡色小点为三个算例的逐个读数，实心大点取其几何平均：对数轴上只有几何平均保持「开销 $\times$ 次数 $=$ 该档挂钟」。
-橙色箭头是剪枝与胜者路径复用的开关两档——命题~\ref{prop:speedup_equiv} 保证\emph{不改变输出}即可沿该线移动，故这段位移只是算力节省。}
+橙色圆点是剪枝与胜者路径复用的开关两档（引出线标出开档）——命题~\ref{prop:speedup_equiv} 保证\emph{不改变输出}即可沿该线移动，故这段位移只是算力节省。}
 \label{fig:protocol}
 %% 由 fig/fig_protocol_CN.py 生成(输出名 fig_protocol_CN),数据源 clbs/output/ladder_cost.csv
-%% 与 prune_ablation.csv;后者缺失时脚本自动省略橙色箭头而不报错。
+%% 与 prune_ablation.csv;后者缺失时脚本自动省略橙色圆点而不报错。
 \end{figure}
 
 图~\ref{fig:protocols} 把同一组比较在两种口径下各做一遍。同代数不为多出的单次开销付费，因而偏袒单次评价开销更高的配置：预约表感知派遣相对规则派车为 \GainProbeSameGen{}（$p\PProbeSameGen$）；同挂钟下、加速之前，同一比较只剩 \GainProbeSameClock{}（$p\PProbeSameClock$），几乎归零。

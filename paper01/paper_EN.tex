@@ -2026,17 +2026,17 @@ Neither convention is presented on its own.
 \Description{A log-log scatter of cost per evaluation against evaluations
 completed. A grey hyperbola marks the 90-second budget cap. The two closed-loop
 configurations sit on it, while the open-loop configuration sits well below it
-because it stalls after about seventeen seconds. An arrow shows the pruning
-ablation moving one configuration along the line without changing its output.}
+because it stalls after about seventeen seconds. Orange markers are the
+pruning ablation off and on; a callout marks the on setting.}
 \caption{A fixed wall-clock budget locks the cost of a single evaluation and the number of evaluations completed onto a hyperbola; the grey line is the $90$-second cap shared by every configuration.
 Sitting on the line means cost $\times$ count equals that configuration's wall-clock time.
 The two closed-loop configurations sit on the line---every run uses the full budget; the open loop sits \emph{below} the line, because it stops of its own after a little over four hundred generations without improvement, converging in about $17$ seconds, and is not cut off by the budget (Section~\ref{sec:protocol}).
 B0 and B0$^+$ share the same open-loop search and therefore share a point; they differ only in how they are executed.
 Pale small points are the per-instance readings of three instances; the filled large point is their geometric mean: on a log axis only the geometric mean preserves ``cost $\times$ count $=$ that configuration's wall-clock time''.
-The orange arrow is the on/off pair of pruning and winner-path reuse---Proposition~\ref{prop:speedup_equiv} guarantees that one can move along that line \emph{without changing the output}, so this displacement is only a saving of compute.}
+Orange markers are the on/off pair of pruning and winner-path reuse (the callout marks the on setting)---Proposition~\ref{prop:speedup_equiv} guarantees that one can move along that line \emph{without changing the output}, so this displacement is only a saving of compute.}
 \label{fig:protocol}
 %% From fig/fig_protocol.py; ladder_cost.csv and prune_ablation.csv.
-%% If the latter is missing the script omits the orange arrow.
+%% If the latter is missing the script omits the orange markers.
 \end{figure}
 
 Figure~\ref{fig:protocols} runs the same set of comparisons once under each convention.

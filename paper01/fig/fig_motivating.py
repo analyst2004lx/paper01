@@ -42,19 +42,20 @@ STRINGS = {
     "avoids_trunk": "avoids the trunk",
     "fast_arm": "fast arm  t$^P$={proc:.0f}",
     "slow_arm": "slow arm  t$^P$={proc:.0f}",
-    "m3_jobs": "{n:.0f} jobs that can only be processed on M3",
-    "m3_yield": "Jobs that can only use M3 cross the trunk repeatedly → yielding wait",
+    "m3_jobs": "{n:.0f} jobs that can only\nbe processed on M3",
+    "m3_yield": "Jobs that can only use M3\ncross the trunk repeatedly\n→ yielding wait",
     "two_assign": (
-        "Two assignments of the same operation: "
-        "fast arm M1, round trip {t1:.0f} + processing {p1:.0f}  |  "
-        "slow arm M2, round trip {t2:.0f} + processing {p2:.0f}"
+        "Two assignments of the same operation\n"
+        "fast arm M1: round trip {t1:.0f} + processing {p1:.0f}\n"
+        "slow arm M2: round trip {t2:.0f} + processing {p2:.0f}"
     ),
     "title_b": "(b) The same pair of assignments: constant matrix vs. conflict-free routing",
     "group_ideal": "constant travel-time\nmatrix",
     "group_routed": "conflict-free\nrouting",
     "chosen": "chosen",
     "reversal": (
-        "The ranking reverses: the constant matrix chooses M{a} (fast arm); "
+        "The ranking reverses\n"
+        "constant matrix chooses M{a} (fast arm);\n"
         "conflict-free routing chooses M{b} (slow arm)"
     ),
     "ylabel": "makespan $C_{\\max}$",
@@ -79,7 +80,9 @@ def panel_layout(ax, p, S=None) -> None:
     ax.set_title(S["title_a"],
                  fontsize=10.5, fontweight="bold", pad=10)
     ax.set_xlim(-0.6, 9.4)
-    ax.set_ylim(-0.4, 5.0)
+    # Extra bottom room when the assignment caption is wrapped (English).
+    ylim_lo = -1.05 if "\n" in S["two_assign"] else -0.4
+    ax.set_ylim(ylim_lo, 5.0)
     ax.axis("off")
     ax.set_aspect("equal")
 
@@ -106,16 +109,22 @@ def panel_layout(ax, p, S=None) -> None:
             fontsize=8.5, color=C_FAST, fontweight="bold")
     ax.text(0.9, 4.48, S["slow_arm"].format(proc=p["proc_slow"]), ha="center",
             fontsize=8.5, color=C_SLOW, fontweight="bold")
-    ax.text(8.5, 0.16, S["m3_jobs"].format(n=p["n_background"]),
-            ha="center", va="top", fontsize=8, color=C_GREY)
-    ax.text(4.7, 1.68, S["m3_yield"],
-            ha="center", fontsize=8.5, color=C_TRUNK)
+    ax.text(8.5, 0.18, S["m3_jobs"].format(n=p["n_background"]),
+            ha="center", va="top", fontsize=8, color=C_GREY, linespacing=1.15)
+    # English yield note is three lines: sit it in the open bay below the trunk.
+    y_yield = 1.05 if "\n" in S["m3_yield"] else 1.68
+    ax.text(4.7, y_yield, S["m3_yield"],
+            ha="center", va="center", fontsize=8.5, color=C_TRUNK,
+            linespacing=1.2,
+            bbox=dict(boxstyle="round,pad=0.22", fc="white", ec="none", alpha=0.88))
 
-    ax.text(4.4, -0.30,
+    y_assign = -0.62 if "\n" in S["two_assign"] else -0.30
+    ax.text(4.4, y_assign,
             S["two_assign"].format(
                 t1=p["travel_M1_round"], p1=p["proc_fast"],
                 t2=p["travel_M2_round"], p2=p["proc_slow"]),
             ha="center", va="center", fontsize=8.5, color="#222222",
+            linespacing=1.25,
             bbox=dict(boxstyle="round,pad=0.3", fc="#f7f7f7", ec="#999999"))
 
 
@@ -155,17 +164,20 @@ def panel_reversal(ax, d, S=None) -> None:
                         fontsize=9, color=col, fontweight="bold")
         ax.text(gx, -top * 0.24, glabel, ha="center", va="top", fontsize=9.5)
 
-    ax.text((xs[0] + xs[1]) / 2, top * 1.31,
-            S["reversal"].format(a=picks[0], b=picks[1]),
-            ha="center", va="center", fontsize=10, fontweight="bold", color="#111111",
+    n_rev = S["reversal"].count("\n") + 1
+    # Keep the reversal box inside panel (b); long English must wrap, not spill left.
+    ax.text(0.50, 0.98, S["reversal"].format(a=picks[0], b=picks[1]),
+            transform=ax.transAxes, ha="center", va="top",
+            fontsize=9 if n_rev > 1 else 10, fontweight="bold", color="#111111",
+            linespacing=1.25, clip_on=True,
             bbox=dict(boxstyle="round,pad=0.34", fc="#fff8f0", ec="#d95f02", lw=1.2))
-    ax.text((xs[0] + xs[1]) / 2, top * 1.15,
+    ax.text((xs[0] + xs[1]) / 2, top * (1.12 if n_rev > 1 else 1.15),
             f"$C$(M1)$-$$C$(M2)：{d['M1']['ideal'] - d['M2']['ideal']:+.0f}"
             f"   →   {d['M1']['routed'] - d['M2']['routed']:+.0f}",
             ha="center", va="center", fontsize=9, color="#444444")
 
     ax.set_ylabel(S["ylabel"], fontsize=9.5)
-    ax.set_ylim(0, top * 1.44)
+    ax.set_ylim(0, top * (1.58 if n_rev > 1 else 1.44))
     ax.set_xlim(-0.70, 2.15)
     ax.set_xticks([])
     for side in ("top", "right", "bottom"):
@@ -180,7 +192,7 @@ def main() -> None:
     with open(DATA, encoding="utf-8") as f:
         d = json.load(f)
 
-    fig, axes = plt.subplots(1, 2, figsize=(11.4, 4.15),
+    fig, axes = plt.subplots(1, 2, figsize=(11.4, 4.70),
                              gridspec_kw={"width_ratios": [1.32, 1.0]})
     panel_layout(axes[0], d["params"])
     panel_reversal(axes[1], d)

@@ -42,6 +42,8 @@ JOBS = [
     ("fig_case_gantt_CN.py", "fig_case_gantt_CN", ["case_study"]),
     ("fig_case_chain.py", "fig_case_chain", ["case_study"]),
     ("fig_case_chain_CN.py", "fig_case_chain_CN", ["case_study"]),
+    ("fig_case.py", "fig_case", ["case_study"]),
+    ("fig_case_CN.py", "fig_case_CN", ["case_study"]),
 ]
 
 
