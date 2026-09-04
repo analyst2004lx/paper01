@@ -1,5 +1,6 @@
 #Requires -Version 5.1
 <#
+用到的工具：Pandoc；下载地址：https://github.com/jgm/pandoc/releases/tag/3.11
 .SYNOPSIS
   Convert a LaTeX paper to Word (native equations) via Pandoc.
 
