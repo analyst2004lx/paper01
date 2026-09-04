@@ -22,16 +22,28 @@ OUT = os.path.join(ROOT, "clbs", "output")
 
 # (script, output stem, required paths relative to clbs/output or absolute markers)
 JOBS = [
-    ("fig_framework.py", "fig_framework", []),  # schematic, no data
+    ("fig_framework.py", "fig_framework", []),
+    ("fig_framework_CN.py", "fig_framework_CN", []),
     ("fig_motivating.py", "fig_motivating", ["motivating.json"]),
+    ("fig_motivating_CN.py", "fig_motivating_CN", ["motivating.json"]),
     ("fig_prediction3.py", "fig_prediction3", ["baseline_ladder.csv"]),
+    ("fig_prediction3_CN.py", "fig_prediction3_CN", ["baseline_ladder.csv"]),
     ("fig_convergence.py", "fig_convergence_closedloop",
      ["ladder_convergence.csv", "ladder_cost.csv"]),
+    ("fig_convergence_CN.py", "fig_convergence_closedloop_CN",
+     ["ladder_convergence.csv", "ladder_cost.csv"]),
     ("fig_protocol.py", "fig_protocol", ["ladder_cost.csv"]),
-    ("fig_protocols.py", "fig_protocols", []),  # reads clbs/experiments/protocols.csv
-    ("fig_theta.py", "fig_theta", []),          # reads theta_sweep CSVs under experiments/
+    ("fig_protocol_CN.py", "fig_protocol_CN", ["ladder_cost.csv"]),
+    ("fig_protocols.py", "fig_protocols", []),
+    ("fig_protocols_CN.py", "fig_protocols_CN", []),
+    ("fig_theta.py", "fig_theta", []),
+    ("fig_theta_CN.py", "fig_theta_CN", []),
     ("fig_case_gantt.py", "fig_case_gantt", ["case_study"]),
+    ("fig_case_gantt_CN.py", "fig_case_gantt_CN", ["case_study"]),
     ("fig_case_chain.py", "fig_case_chain", ["case_study"]),
+    ("fig_case_chain_CN.py", "fig_case_chain_CN", ["case_study"]),
+    ("fig_case.py", "fig_case", ["case_study"]),
+    ("fig_case_CN.py", "fig_case_CN", ["case_study"]),
 ]
 
 

@@ -295,6 +295,18 @@ def mark_draft(reason):
     _DRAFT_REASONS.append(str(reason))
 
 
+def use_cjk():
+    """Switch matplotlib to a CJK-capable font for the ``*_CN`` figure scripts."""
+    plt.rcParams.update({
+        "font.family": "sans-serif",
+        "font.sans-serif": ["Microsoft YaHei", "SimHei",
+                            "Noto Sans CJK SC", "DejaVu Sans"],
+        "axes.unicode_minus": False,
+        "pdf.fonttype": 42,
+        "ps.fonttype": 42,
+    })
+
+
 def save(fig, stem):
     # A figure drawn from an under-powered run must never be mistaken for a
     # final one, so draft mode stamps the reason across the artwork itself

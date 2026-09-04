@@ -35,7 +35,7 @@ HINT = "py -u -m tools.ladder_diag --budget 90 --seeds 42,7,2024"
 # twice would suggest two searches were run.  B0+ therefore appears only as a
 # second landing point on the same dashed line.
 CURVES = [("B1", "#6baed6", "-", "B1  closed loop, rule dispatch"),
-          ("B2", "#08519c", "-", "B2  closed loop, probing dispatch")]
+          ("B2", "#08519c", "-", "B2  closed loop, reservation-aware dispatch")]
 LANDING = [("B0", "#525252", "X", "B0  executed"),
            ("B0+", "#969696", "P", "B0$^+$  executed")]
 
@@ -96,7 +96,7 @@ def main() -> None:
     cases = sorted({r["case"] for r in conv})
     case = want or ("A funnel" if "A funnel" in cases else cases[0])
     if case not in cases:
-        raise SystemExit("算例 %r 不在收敛数据里,可选:%s" % (case, cases))
+        raise SystemExit("case %r is not in the convergence data; available: %s" % (case, cases))
     conv = [r for r in conv if r["case"] == case]
     cost = [r for r in cost if r["case"] == case]
     seeds = sorted({r["seed"] for r in conv})

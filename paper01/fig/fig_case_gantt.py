@@ -35,13 +35,15 @@ C_LOADED = "#08519c"      # travel, loaded
 C_EMPTY = "#9ecae1"       # travel, empty
 C_YIELD = "#d62728"       # waiting because a corridor was occupied
 C_IDLE = "#e8e8e8"        # waiting with nothing assigned
+# Job labels on short processing bars: white vanishes against the page.
+C_LABEL = "#555555"
 
 
 def load_case():
     d = os.path.join(OUTPUT, "case_study")
     files = sorted(glob.glob(os.path.join(d, "*.json")))
     if not files:
-        raise SystemExit("缺少 %s/*.json\n  在 clbs/ 目录下运行:%s" % (d, HINT))
+        raise SystemExit("missing %s/*.json\n  from clbs/ run: %s" % (d, HINT))
     tt = {}
     for p in files:
         with open(p, encoding="utf-8") as f:
@@ -49,7 +51,7 @@ def load_case():
         tt[j["arm"]] = j
     for arm in ("B0", "B2"):
         if arm not in tt:
-            raise SystemExit("案例时刻表里缺少 %s 档" % arm)
+            raise SystemExit("case timetable is missing arm %s" % arm)
     return tt
 
 
@@ -71,7 +73,8 @@ def agv_gaps(segments):
     return out
 
 
-def draw(ax, tt, title, xmax):
+def draw(ax, tt, title, xmax, arm_label="arm %s", agv_label="AGV %s",
+         yield_suffix="   (yielding total %.0f time units)"):
     ops = tt["operations"]
     segs = tt["agv_segments"]
     machines = sorted({o["machine"] for o in ops})
@@ -84,12 +87,12 @@ def draw(ax, tt, title, xmax):
     y = 0
     for m in machines:
         ypos[("M", m)] = y
-        labels.append("arm %s" % m)
+        labels.append(arm_label % m)
         y += 1
     y += 0.6
     for a in agvs:
         ypos[("A", a)] = y
-        labels.append("AGV %s" % a)
+        labels.append(agv_label % a)
         y += 1
 
     for o in ops:
@@ -100,7 +103,7 @@ def draw(ax, tt, title, xmax):
         if o["finish"] - o["start"] >= 0.04 * xmax:
             ax.text(0.5 * (o["start"] + o["finish"]),
                     ypos[("M", o["machine"])], "J%s-%s" % (o["job"], o["i"]),
-                    ha="center", va="center", fontsize=5.2, color="white",
+                    ha="center", va="center", fontsize=5.2, color=C_LABEL,
                     zorder=4)
 
     for s in segs:
@@ -120,8 +123,10 @@ def draw(ax, tt, title, xmax):
             n_yield += gap
 
     ax.axvline(tt["makespan"], color="#111111", linewidth=1.0, zorder=6)
-    ax.text(tt["makespan"], y - 0.4, " $C_{\\max}=%.0f$" % tt["makespan"],
-            fontsize=7, va="top", fontweight="bold")
+    # x in data, y in axes fraction: sit just above the spine, not on it.
+    ax.text(tt["makespan"], 0.11, " $C_{\\max}=%.0f$" % tt["makespan"],
+            fontsize=7, va="bottom", fontweight="bold",
+            transform=ax.get_xaxis_transform(), clip_on=False, zorder=7)
     if tt.get("surrogate"):
         ax.axvline(tt["surrogate"], color="#d62728", linewidth=0.9,
                    linestyle=(0, (3, 1.6)), zorder=6)
@@ -132,7 +137,7 @@ def draw(ax, tt, title, xmax):
     ax.set_yticklabels(labels, fontsize=FS_TICK_SM)
     ax.set_ylim(y - 0.2, -0.8)
     ax.set_xlim(0, xmax)
-    ax.set_title("%s   (yielding total %.0f time units)" % (title, n_yield),
+    ax.set_title(title + (yield_suffix % n_yield),
                  fontsize=8.5, loc="left")
     ax.grid(axis="x", alpha=0.25)
     ax.grid(axis="y", visible=False)
@@ -144,7 +149,7 @@ def main() -> None:
     xmax = 1.06 * max(tt[a]["makespan"] for a in ("B0", "B2"))
     fig, axes = plt.subplots(2, 1, figsize=(FULL, 5.0), sharex=True)
     draw(axes[0], tt["B0"], "B0  open loop, rule dispatch", xmax)
-    draw(axes[1], tt["B2"], "B2  closed loop, probing dispatch (proposed)",
+    draw(axes[1], tt["B2"], "B2  closed loop, reservation-aware dispatch (proposed)",
          xmax)
     axes[1].set_xlabel("time")
 

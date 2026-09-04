@@ -15,45 +15,45 @@ Reallocated singl_function (elt_size=4) to 100 items from 50.
 Warning--empty publisher in zhang2024guidance
 Warning--empty address in zhang2024guidance
 Warning--page numbers missing in both pages and numpages fields in zhang2024guidance
-You've used 14 entries,
+You've used 25 entries,
             6273 wiz_defined-function locations,
-            1694 strings with 22604 characters,
-and the built_in function-call counts, 17742 in all, are:
-= -- 2740
-> -- 594
+            1766 strings with 25257 characters,
+and the built_in function-call counts, 31626 in all, are:
+= -- 4984
+> -- 1014
 < -- 0
-+ -- 218
-- -- 206
-* -- 1281
-:= -- 1625
-add.period$ -- 69
-call.type$ -- 14
-change.case$ -- 114
-chr.to.int$ -- 14
-cite$ -- 17
-duplicate$ -- 1398
-empty$ -- 967
-format.name$ -- 262
-if$ -- 4603
-int.to.chr$ -- 2
++ -- 365
+- -- 345
+* -- 2258
+:= -- 2847
+add.period$ -- 124
+call.type$ -- 25
+change.case$ -- 199
+chr.to.int$ -- 24
+cite$ -- 28
+duplicate$ -- 2509
+empty$ -- 1727
+format.name$ -- 444
+if$ -- 8292
+int.to.chr$ -- 3
 int.to.str$ -- 1
-missing$ -- 57
-newline$ -- 162
-num.names$ -- 98
-pop$ -- 503
+missing$ -- 101
+newline$ -- 261
+num.names$ -- 174
+pop$ -- 873
 preamble$ -- 1
-purify$ -- 226
+purify$ -- 397
 quote$ -- 0
-skip$ -- 508
+skip$ -- 923
 stack$ -- 0
-substring$ -- 1253
-swap$ -- 171
+substring$ -- 2287
+swap$ -- 327
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 238
+type$ -- 411
 warning$ -- 3
-while$ -- 83
+while$ -- 145
 width$ -- 0
-write$ -- 314
+write$ -- 534
 (There were 3 warnings)
