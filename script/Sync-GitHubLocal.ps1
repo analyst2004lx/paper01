@@ -68,9 +68,10 @@ $Config = @{
     GitPath       = ''
     # GitHub fetch: idle timeout (no pack growth) vs absolute cap.
     # Slow WireGuard still counts as progress, so do not kill a growing download.
+    # Idle is measured on THIS run's tmp_pack only (stale leftover packs are ignored).
     FetchRetries     = 5
     FetchRetrySec    = 6
-    FetchTimeoutSec  = 90
+    FetchTimeoutSec  = 180
     FetchMaxSec      = 600
 }
 # =============================================================
@@ -192,14 +193,18 @@ function Invoke-Git {
         [int]$TimeoutSec = 0,
         [int]$MaxSec = 0,
         [string]$ProgressDir = '',
-        [string]$ProgressFilter = 'tmp_pack*'
+        [string]$ProgressFilter = 'tmp_pack*',
+        $ProgressSince = $null
     )
 
     function Get-ProgressBytes {
         if ([string]::IsNullOrWhiteSpace($ProgressDir) -or -not (Test-Path -LiteralPath $ProgressDir)) { return [int64]0 }
         $sum = [int64]0
         Get-ChildItem -LiteralPath $ProgressDir -Filter $ProgressFilter -Force -ErrorAction SilentlyContinue |
-            ForEach-Object { $sum += [int64]$_.Length }
+            ForEach-Object {
+                if ($null -ne $ProgressSince -and $_.LastWriteTime -lt $ProgressSince.AddSeconds(-2)) { return }
+                $sum += [int64]$_.Length
+            }
         return $sum
     }
     $git = $script:GitExe
@@ -247,6 +252,7 @@ function Invoke-Git {
 
         $sw = [System.Diagnostics.Stopwatch]::StartNew()
         $lastBeat = 0
+        if ($null -eq $ProgressSince) { $ProgressSince = Get-Date }
         $lastBytes = Get-ProgressBytes
         $lastProgressSec = 0
         $watchProgress = -not [string]::IsNullOrWhiteSpace($ProgressDir)
@@ -580,6 +586,20 @@ try {
                 Write-Log ('Cannot remove lock {0}: {1}' -f $lk.Name, $_.Exception.Message) -Level WARN
             }
         }
+        # Leftover tmp_pack from killed fetches inflate "pack=XX MB" and confuse idle detection
+        $packDir = Join-Path $gitMeta 'objects\pack'
+        if (Test-Path -LiteralPath $packDir) {
+            foreach ($tp in @(Get-ChildItem -LiteralPath $packDir -Filter 'tmp_pack*' -Force -ErrorAction SilentlyContinue)) {
+                $age = ((Get-Date) - $tp.LastWriteTime).TotalSeconds
+                if ($age -lt [Math]::Max(5, $MinAgeSec)) { continue }
+                try {
+                    Remove-Item -LiteralPath $tp.FullName -Force -ErrorAction Stop
+                    Write-Log ('Removed stale tmp pack: {0} ({1:N1} MB, age {2:N0}s)' -f $tp.Name, ($tp.Length / 1MB), $age) -Level WARN
+                } catch {
+                    Write-Log ('Cannot remove tmp pack {0}: {1}' -f $tp.Name, $_.Exception.Message) -Level WARN
+                }
+            }
+        }
     }
     Clear-StaleGitLocks -RepoRoot $Config.LocalFolder
 
@@ -678,37 +698,63 @@ try {
         Write-Log ('preflight failed (exit={0}): {1}' -f $preflight.ExitCode, $preflight.Output) -Level WARN
         Write-Log 'GitHub may be slow or blocked; fetch will still be attempted.' -Level WARN
     }
+    $fetchBranch = $Config.Branch
+    if ([string]::IsNullOrWhiteSpace($fetchBranch)) { $fetchBranch = 'main' }
     $fetchOk = $false
+    # If GitHub tip already matches local origin/<branch>, skip pack download
+    # (avoids a multi-minute stalled fetch when there is nothing new).
+    if ($preflight.ExitCode -eq 0 -and -not [string]::IsNullOrWhiteSpace($preflight.Output)) {
+        $wantRef = 'refs/heads/' + $fetchBranch
+        $remoteTip = $null
+        foreach ($line in ($preflight.Output -split "`r?`n")) {
+            if ($line -match '^([0-9a-f]{40})\s+(\S+)$' -and $Matches[2] -eq $wantRef) {
+                $remoteTip = $Matches[1]
+                break
+            }
+        }
+        if ($remoteTip) {
+            $localTip = Invoke-Git -GitArgs @('rev-parse', '--verify', ('origin/{0}' -f $fetchBranch)) -AllowFail
+            if ($localTip.ExitCode -eq 0) {
+                $localSha = $localTip.Output.Trim()
+                Write-Log ('preflight tip: remote {0}={1}; local origin/{0}={2}' -f $fetchBranch, $remoteTip.Substring(0, 8), $localSha.Substring(0, [Math]::Min(8, $localSha.Length)))
+                if ($localSha -eq $remoteTip) {
+                    Write-Log 'origin already at GitHub tip; skip fetch pack download'
+                    $fetchOk = $true
+                }
+            }
+        }
+    }
     $fetch = $null
     $maxTry = [Math]::Max(1, [int]$Config.FetchRetries)
     $fetchIdle = [Math]::Max(30, [int]$Config.FetchTimeoutSec)
     $fetchMax = [Math]::Max($fetchIdle, [int]$Config.FetchMaxSec)
     $packDir = Join-Path $Config.LocalFolder '.git\objects\pack'
-    $fetchBranch = $Config.Branch
-    if ([string]::IsNullOrWhiteSpace($fetchBranch)) { $fetchBranch = 'main' }
-    for ($i = 1; $i -le $maxTry; $i++) {
-        Write-Log ('fetch attempt {0}/{1} (idle={2}s, max={3}s, ref={4})...' -f $i, $maxTry, $fetchIdle, $fetchMax, $fetchBranch)
-        if ($i -le 2) {
-            # Single branch + no tags: smaller pack than `fetch origin --prune`
-            $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', 'origin', $fetchBranch)
-        } else {
-            Write-Log 'Using shallow fetch fallback (depth=1; smaller download)...' -Level WARN
-            $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', '--depth', '1', 'origin', $fetchBranch)
-        }
-        $fetch = Invoke-Git -GitArgs $fetchArgs -AllowFail -HeartbeatSec 15 `
-            -TimeoutSec $fetchIdle -MaxSec $fetchMax -ProgressDir $packDir
-        if ($fetch.ExitCode -eq 0) {
-            $fetchOk = $true
-            Write-Log ('fetch ok on attempt {0}' -f $i)
-            break
-        }
-        Write-Log ('fetch attempt {0} failed (exit={1}): {2}' -f $i, $fetch.ExitCode, $fetch.Output) -Level WARN
-        # Clear locks left by killed/stalled fetch
+    if (-not $fetchOk) {
         Clear-StaleGitLocks -RepoRoot $Config.LocalFolder -MinAgeSec 0
-        if ($i -lt $maxTry) {
-            $wait = [int]$Config.FetchRetrySec * $i
-            Write-Log ('Wait {0}s then retry (WireGuard/VPN recommended)...' -f $wait) -Level WARN
-            Start-Sleep -Seconds $wait
+        for ($i = 1; $i -le $maxTry; $i++) {
+            Write-Log ('fetch attempt {0}/{1} (idle={2}s, max={3}s, ref={4})...' -f $i, $maxTry, $fetchIdle, $fetchMax, $fetchBranch)
+            if ($i -le 2) {
+                # Single branch + no tags: smaller pack than `fetch origin --prune`
+                $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', 'origin', $fetchBranch)
+            } else {
+                Write-Log 'Using shallow fetch fallback (depth=1; smaller download)...' -Level WARN
+                $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', '--depth', '1', 'origin', $fetchBranch)
+            }
+            $fetch = Invoke-Git -GitArgs $fetchArgs -AllowFail -HeartbeatSec 15 `
+                -TimeoutSec $fetchIdle -MaxSec $fetchMax -ProgressDir $packDir
+            if ($fetch.ExitCode -eq 0) {
+                $fetchOk = $true
+                Write-Log ('fetch ok on attempt {0}' -f $i)
+                break
+            }
+            Write-Log ('fetch attempt {0} failed (exit={1}): {2}' -f $i, $fetch.ExitCode, $fetch.Output) -Level WARN
+            # Clear locks / leftover tmp_pack left by killed/stalled fetch
+            Clear-StaleGitLocks -RepoRoot $Config.LocalFolder -MinAgeSec 0
+            if ($i -lt $maxTry) {
+                $wait = [int]$Config.FetchRetrySec * $i
+                Write-Log ('Wait {0}s then retry (WireGuard/VPN recommended)...' -f $wait) -Level WARN
+                Start-Sleep -Seconds $wait
+            }
         }
     }
     if (-not $fetchOk) {
