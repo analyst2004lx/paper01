@@ -95,19 +95,35 @@ def main() -> None:
         pr = None
     if pr:
         pts = {}
-        for label in ("开", "关"):
+        # prune_ablation.csv tags the two settings as 开/关; look up by those
+        # keys and never print them -- the arrow label below is English.
+        prune_on, prune_off = "开", "关"
+        for label in (prune_on, prune_off):
             rs = [r for r in pr if r["arm"] == label]
             if rs:
                 pts[label] = (gmean([r["ms_per_eval"] for r in rs]),
                               gmean([r["decodes"] for r in rs]))
         if len(pts) == 2:
-            (x0, y0), (x1, y1) = pts["关"], pts["开"]
-            ax.annotate("", xy=(x1, y1), xytext=(x0, y0),
-                        arrowprops=dict(arrowstyle="-|>", color="#d95f02",
-                                        linewidth=1.3))
-            ax.text(x1, y1, "  pruning +\n  winner reuse\n  (identical output)",
-                    fontsize=FS_ANNOT, color="#d95f02", va="top",
-                    fontweight="bold")
+            (x0, y0), (x1, y1) = pts[prune_off], pts[prune_on]
+            # Markers stay on the hyperbola; the shaft must not — it sat on
+            # the budget line and hid both the line and the label.
+            ax.plot([x0, x1], [y0, y1], "o", color="#d95f02",
+                    markersize=5.0, markeredgecolor="white",
+                    markeredgewidth=0.6, zorder=6)
+            ax.annotate(
+                "pruning +\nwinner reuse\n(identical output)",
+                xy=(x1, y1),
+                xytext=(58, 8200),
+                textcoords="data",
+                ha="left", va="center",
+                fontsize=FS_ANNOT, color="#d95f02", fontweight="bold",
+                arrowprops=dict(
+                    arrowstyle="-|>", color="#d95f02", lw=1.2,
+                    connectionstyle="arc3,rad=-0.45",
+                    shrinkA=4, shrinkB=5,
+                ),
+                annotation_clip=False, zorder=7,
+            )
 
     ax.set_xscale("log")
     ax.set_yscale("log")

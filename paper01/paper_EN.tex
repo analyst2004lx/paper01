@@ -507,24 +507,40 @@ A slower arm with better connectivity may then be the better choice; and on the 
 The trade-off requires both ingredients at once: heterogeneous optional arms give the scheduler a destination it can change, and distinct paths on the corridor network make the vehicles' corridor contention different.
 
 Figure~\ref{fig:motivating} shows, on a recomputable minimal instance, that the same pair of assignments ranks the fast arm better under a constant travel-time matrix and the slow arm better under conflict-free routing.
-The only path to the fast arm M1 is an exclusive trunk; the slow arm M2 hangs on its own branch; three background jobs cross the trunk repeatedly and occupy it.
-Under the constant travel-time matrix the fast arm wins $41$ to $54$---a purely arithmetic comparison; yielding wait is invisible to the matrix.
-Evaluating the same two assignments by conflict-free routing changes the readings to $95$ versus $60$, and the slow arm is then better.
-Neither decision has changed; only the way they are evaluated has changed.
-It should be stressed that the heterogeneity here is already the smallest value that allows the reversal: choosing the fast arm on the unimpeded matrix requires $2\tau+4+t^P_{\text{fast}}<6+t^P_{\text{slow}}$, so with $\tau=6$ and $t^P_{\text{fast}}=3$ the smallest admissible $t^P_{\text{slow}}$ is $14$, not a value chosen to amplify the effect.
+The instance has $4$ jobs and $2$ AGVs: the focal job J1 has one operation that may use M1 ($t^P=3$) or M2 ($t^P=14$); three background jobs can use only M3; finished jobs return to the load/unload station.
+The only path to the fast arm M1 is an exclusive trunk; the slow arm M2 hangs on its own branch; the background jobs cross the trunk repeatedly and occupy it.
+
+The two readings in Figure~\ref{fig:motivating} are not interchangeable.
+The first is the unimpeded chain of the focal job J1: J1 leaves LU, is processed, and returns to LU, with travel times taken from shortest paths and no other vehicles counted.
+Assigned to M1 the path is $\mathrm{LU}\to v_1\to v_2\to\mathrm{M1}$, one way $1+\tau+1=8$, round trip $16$, plus processing $3$, hence $19$;
+assigned to M2 it is $\mathrm{LU}\to v_1\to\mathrm{M2}$, one way $1+2=3$, round trip $6$, plus processing $14$, hence $20$.
+On the unimpeded matrix the fast arm wins this comparison if and only if $19<20$, so with $\tau=6$ and $t^P_{\text{fast}}=3$ the smallest admissible $t^P_{\text{slow}}$ is $14$. That heterogeneity is the lower bound at which a reversal can occur, not a value chosen to amplify the effect.
+The box at the bottom of Figure~\ref{fig:motivating}(a) reports this chain; it is not the instance $C_{\max}$ shown by the bars in (b).
+
+The second reading is the instance makespan, obtained from the same decoder as the rest of the paper and shown by the bars in Figure~\ref{fig:motivating}(b).
+$C_{\max}$ is the time at which the last finished job returns to LU; it is neither the sum of the four jobs' processing times nor $19$ or $20$ plus the background processing.
+All four jobs start from LU and return; J2, J3, and J4 may be processed only on M3 (empty and loaded legs $8$ each, processing $3$ each); two AGVs may work in parallel.
+
+Under the constant matrix, vehicles do not interfere and yielding wait does not enter the evaluation.
+If J1 is assigned to M1, then $C_{\max}=41$: in the first wave J1$\to$M1 and J2$\to$M3 run in parallel, each with outbound $8$, processing $3$, and return $8$, and both are back at LU at $t=19$;
+in the second wave J3 and J4 both go to M3, leave at $t=19$, arrive at $t=27$ after outbound $8$, J3 processes $27$--$30$ and returns at $38$, and J4 waits for M3 until $30$, finishes at $33$, and returns after $8$, so the last return is $41$.
+If J1 is assigned to M2, then $C_{\max}=54$: J1 has outbound $3$, processing $14$, and return $3$; AGV1 waits at M2 until $t=17$ and is back at LU at $t=20$; J2 still returns at $19$.
+The two vehicles then cease to stay in step; J4 reaches M3 at $43$ and returns to LU at $54$. The matrix still prefers the fast arm, but $41$ and $54$ cannot be read off from $19$ versus $20$.
+
+The same pair of assignments is then evaluated by conflict-free routing.
+With J1 on M1, $C_{\max}=95$: J1's unimpeded chain is still $19$, but the outbound leg occupies the trunk on $[1,7)$ and the return on $[12,18)$, so J2 yields $17$ at the trunk entrance and reaches M3 at $25$; J2--J4 then serialize on the trunk, and J4 returns to LU at $95$.
+With J1 on M2, $C_{\max}=60$: J1 takes the branch and does not occupy the trunk; J2 yields only $1$ on $\mathrm{LU}$--$v_1$; the background jobs still yield to one another, and J4 returns to LU at $60$. The slow arm is then better.
+Neither the machine assignment nor the operation sequence has changed; only the evaluation has.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{fig/fig_motivating.pdf}
-\Description{Two panels. The left panel is a small shop network in which the only
-route to a fast arm passes through an exclusive trunk corridor, while a slow arm
-hangs on its own branch. The right panel shows makespan for the same two machine
-assignments evaluated twice: under a constant travel-time matrix the fast arm
-wins, under conflict-free routing the slow arm wins, so the ranking reverses.}
-\caption{Motivating instance: the same assignment decision, ranked in opposite order by two evaluations.
-(a)~The only path to the fast arm M1 is an exclusive trunk ($\tau=6$); the slow arm M2 sits on a short corridor that avoids the trunk; three further jobs that can only be processed on M3 must cross the trunk repeatedly.
-(b)~The fast-arm and slow-arm assignments of the same operation, each evaluated by the constant matrix and by conflict-free routing.
-The constant travel-time matrix contains no yielding wait, so it chooses the fast arm by ``shorter processing $+$ longer travel''; evaluating the same assignments by conflict-free routing makes the slow arm better.
+\Description{Two panels. The left is a small shop network whose only path to the fast arm is an exclusive trunk; the slow arm hangs on its own branch; the bottom box gives the focal job's unimpeded chain, $19$ versus $20$. The right panel is the instance makespan of the same pair: under the constant matrix the fast arm wins $41$ to $54$; under conflict-free routing the ranking becomes $95$ versus $60$ and the slow arm wins.}
+\caption{Motivating instance: the same assignment ranked in opposite order by two evaluations.
+(a)~The only path to the fast arm M1 is an exclusive trunk ($\tau=6$); the slow arm M2 sits on a short corridor that avoids it; three jobs that can only use M3 cross the trunk repeatedly.
+The bottom box is the unimpeded chain of the focal job J1 from LU and back: M1 is the path $\mathrm{LU}\to v_1\to v_2\to\mathrm{M1}$, round trip $2(1+6+1)=16$ plus processing $3$, hence $19$; M2 is $\mathrm{LU}\to v_1\to\mathrm{M2}$, round trip $2(1+2)=6$ plus processing $14$, hence $20$. That chain sets the smallest heterogeneity at which a reversal can occur; it is not the bar height in (b).
+(b)~Each bar is the time the last job returns to LU ($4$ jobs, $2$ AGVs, same decoder as the paper), including the moves of J2--J4 to M3; it is not the sum of the jobs' processing times.
+The constant matrix contains no yielding wait, so $C_{\max}$ is $41$ versus $54$ and the fast arm is chosen; conflict-free routing on the same pair gives $95$ versus $60$ and the slow arm is chosen.
 The difference flips from $-13$ to $+35$.
 This figure is an \emph{existence demonstration}, not a statistical conclusion---it shows that the reversal can occur, not that it must; of $1200$ parameter combinations around this instance, $205$ ($17\%$) reverse, so it is not an isolated point in the parameter space.}
 \label{fig:motivating}

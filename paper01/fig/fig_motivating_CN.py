@@ -22,15 +22,28 @@ STRINGS_CN = {
     "m3_jobs": "{n:.0f} 个只能上 M3 加工的工件",
     "m3_yield": "只能上 M3 的工件反复穿越干道 → 让行等待",
     "two_assign": (
-        "同一道工序的两个指派：快臂 M1 往返行程 {t1:.0f} + 加工 {p1:.0f}　|　"
-        "慢臂 M2 往返行程 {t2:.0f} + 加工 {p2:.0f}"
+        "工件从 LU 出发，加工后再运回（只算 J1，无阻挡、不计其他车）\n"
+        "快臂 M1：路径 LU–$v_1$–$v_2$–M1，单程 $1+{tau:.0f}+1={one1:.0f}$，"
+        "往返 ${t1:.0f}$，+加工 ${p1:.0f}$ $=${s1:.0f}\n"
+        "慢臂 M2：路径 LU–$v_1$–M2，单程 $1+2={one2:.0f}$，"
+        "往返 ${t2:.0f}$，+加工 ${p2:.0f}$ $=${s2:.0f}"
     ),
-    "title_b": "(b) 同一对指派：常数矩阵与无冲突路由",
+    "assign_ylim_lo": -1.70,
+    "assign_y": -1.08,
+    "title_b": "(b) 同一对指派的整例 $C_{\\max}$：常数矩阵与无冲突路由",
     "group_ideal": "常数运输时间\n矩阵",
     "group_routed": "无冲突路由",
     "chosen": "选中",
-    "reversal": "优劣对调：常数矩阵选 M{a}（快臂），无冲突路由选 M{b}（慢臂）",
-    "ylabel": "完工时间 $C_{\\max}$",
+    "reversal": (
+        "优劣对调（柱高是含三个背景工件的整例 $C_{{\\max}}$）\n"
+        "常数矩阵选 M{a}（快臂）；无冲突路由选 M{b}（慢臂）"
+    ),
+    "ylabel": "整例完工时间 $C_{\\max}$",
+    "delta_y_mult": 1.40,
+    "delta_x": 0.55,
+    "ylim_mult": 1.70,
+    "bars_note_at": "below_delta",
+    "bars_note": "柱高是最后一件回 LU 的时刻",
 }
 
 
@@ -40,7 +53,7 @@ def main() -> None:
     with open(src.DATA, encoding="utf-8") as f:
         d = json.load(f)
 
-    fig, axes = plt.subplots(1, 2, figsize=(11.4, 4.15),
+    fig, axes = plt.subplots(1, 2, figsize=(11.4, 5.35),
                              gridspec_kw={"width_ratios": [1.32, 1.0]})
     src.panel_layout(axes[0], d["params"], STRINGS_CN)
     src.panel_reversal(axes[1], d, STRINGS_CN)

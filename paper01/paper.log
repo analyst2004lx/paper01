@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.8.28)  7 SEP 2026 16:39
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.8.28)  8 SEP 2026 16:51
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1421,105 +1421,103 @@ tine/lbtn_oexx6f.enc}{c:/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn
 _nh77jq.enc}{c:/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_naooyc.e
 nc}]
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/m/n' will be
-(Font)              scaled to size 9.0pt on input line 508.
+(Font)              scaled to size 9.0pt on input line 506.
 LaTeX Font Info:    Font shape `OT1/LinuxLibertineT-TLF/sb/n' will be
-(Font)              scaled to size 9.0pt on input line 508.
+(Font)              scaled to size 9.0pt on input line 506.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/n' will be
 (Font)              scaled to size 7.3pt on input line 508.
-<fig/fig_motivating.pdf, id=212, 803.39148pt x 325.14996pt>
+<fig/fig_motivating.pdf, id=212, 776.35254pt x 342.18097pt>
 File: fig/fig_motivating.pdf Graphic file (type pdf)
 <use fig/fig_motivating.pdf>
-Package pdftex.def Info: fig/fig_motivating.pdf  used on input line 512.
-(pdftex.def)             Requested size: 430.00462pt x 174.03041pt.
+Package pdftex.def Info: fig/fig_motivating.pdf  used on input line 516.
+(pdftex.def)             Requested size: 430.00462pt x 189.5263pt.
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
 (Font)              scaled to size 8.0pt on input line 521.
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/it' will be
 (Font)              scaled to size 8.0pt on input line 521.
-
-Underfull \vbox (badness 5359) has occurred while \output is active []
-
  [2.2 <./fig/fig_motivating.pdf>]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
 (Font)              scaled to size 9.0pt on input line 543.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
 (Font)              scaled to size 9.0pt on input line 552.
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
  [3.3]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/b/n' will be
-(Font)              scaled to size 7.0pt on input line 638.
- [4.4]
-Underfull \vbox (badness 2401) has occurred while \output is active []
+(Font)              scaled to size 7.0pt on input line 642.
 
- [5.5]
-[6.6]
+[4.4] [5.5]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [6.6]
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 9.0pt on input line 786.
-LaTeX Font Info:    Trying to load font information for T1+zi4 on input line 81
-6.
- (c:/texlive/2024/texmf-dist/tex/latex/inconsolata/t1zi4.fd
+(Font)              scaled to size 9.0pt on input line 790.
+LaTeX Font Info:    Trying to load font information for T1+zi4 on input line 82
+0.
+
+(c:/texlive/2024/texmf-dist/tex/latex/inconsolata/t1zi4.fd
 File: t1zi4.fd 2018/01/14 T1/zi4 (Inconsolata)
 )
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 9.0pt on input line 816.
+(Font)              scaled to size 9.0pt on input line 820.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `zi4' (encoding: T1).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
- [7.7{c:/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}{c:/
-texlive/2024/texmf-dist/fonts/enc/dvips/inconsolata/i4-t1-4.enc}]
+ [7.7{c:/texlive/2024/texmf-dist/fonts/enc/dvips/libertine/lbtn_ncsllp.enc}]
 <fig/fig_framework.pdf, id=405, 394.95557pt x 192.09367pt>
 File: fig/fig_framework.pdf Graphic file (type pdf)
 <use fig/fig_framework.pdf>
-Package pdftex.def Info: fig/fig_framework.pdf  used on input line 846.
+Package pdftex.def Info: fig/fig_framework.pdf  used on input line 850.
 (pdftex.def)             Requested size: 344.005pt x 167.31946pt.
- [8.8 <./fig/fig_framework.pdf>]
+
+Underfull \vbox (badness 5460) has occurred while \output is active []
+
+ [8.8{c:/texlive/2024/texmf-dist/fonts/enc/dvips/inconsolata/i4-t1-4.enc} <./fi
+g/fig_framework.pdf>]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 893.
+put line 897.
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
-(Font)              scaled to size 7.0pt on input line 906.
+(Font)              scaled to size 7.0pt on input line 910.
  [9.9]
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 7.0pt on input line 956.
+(Font)              scaled to size 7.0pt on input line 960.
  [10.10]
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/it' will be
-(Font)              scaled to size 9.0pt on input line 1012.
+(Font)              scaled to size 9.0pt on input line 1016.
  [11.11] [12.12]
 LaTeX Font Info:    Font shape `T1/zi4/m/n' will be
-(Font)              scaled to size 8.0pt on input line 1088.
- [13.13] (./tab/tab_instances_EN.tex)
-[14.14] [15.15]
+(Font)              scaled to size 8.0pt on input line 1092.
+ [13.13] [14.14]
+(./tab/tab_instances_EN.tex) [15.15]
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
-(Font)              scaled to size 6.2pt on input line 1251.
+(Font)              scaled to size 6.2pt on input line 1255.
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/n' will be
-(Font)              scaled to size 5.5pt on input line 1251.
- (./tab/tab_main_EN.tex) [16.16] (./tab/tab_bytag_EN.tex)
-<fig/fig_prediction3.pdf, id=663, 496.57582pt x 168.94061pt>
+(Font)              scaled to size 5.5pt on input line 1255.
+ (./tab/tab_main_EN.tex) [16.16]
+(./tab/tab_bytag_EN.tex)
+<fig/fig_prediction3.pdf, id=664, 496.57582pt x 168.94061pt>
 File: fig/fig_prediction3.pdf Graphic file (type pdf)
 <use fig/fig_prediction3.pdf>
-Package pdftex.def Info: fig/fig_prediction3.pdf  used on input line 1306.
+Package pdftex.def Info: fig/fig_prediction3.pdf  used on input line 1310.
 (pdftex.def)             Requested size: 430.00462pt x 146.294pt.
-
-Underfull \vbox (badness 1292) has occurred while \output is active []
-
- [17.17]
-[18.18 <./fig/fig_prediction3.pdf>]
-<fig/fig_protocol.pdf, id=773, 223.12447pt x 166.16705pt>
+ [17.17] [18.18 <./fig/fig_prediction3.pdf>]
+<fig/fig_protocol.pdf, id=774, 232.71764pt x 166.52632pt>
 File: fig/fig_protocol.pdf Graphic file (type pdf)
 <use fig/fig_protocol.pdf>
-Package pdftex.def Info: fig/fig_protocol.pdf  used on input line 1385.
-(pdftex.def)             Requested size: 301.00192pt x 224.19412pt.
-
-Underfull \vbox (badness 2556) has occurred while \output is active []
-
+Package pdftex.def Info: fig/fig_protocol.pdf  used on input line 1389.
+(pdftex.def)             Requested size: 301.00192pt x 215.41443pt.
  [19.19]
 (./tab/tab_prune_EN.tex)
-<fig/fig_case.pdf, id=794, 493.67818pt x 446.49985pt>
+<fig/fig_case.pdf, id=795, 493.67818pt x 446.49985pt>
 File: fig/fig_case.pdf Graphic file (type pdf)
 <use fig/fig_case.pdf>
-Package pdftex.def Info: fig/fig_case.pdf  used on input line 1439.
+Package pdftex.def Info: fig/fig_case.pdf  used on input line 1443.
 (pdftex.def)             Requested size: 430.00462pt x 388.92183pt.
  [20.20 <./fig/fig_protocol.pdf>]
 LaTeX Font Info:    Font shape `T1/LinuxBiolinumT-TLF/m/sc' will be
-(Font)              scaled to size 8.0pt on input line 1470.
+(Font)              scaled to size 8.0pt on input line 1474.
 
 (./tab/tab_external_EN.tex
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
@@ -1527,14 +1525,12 @@ LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/sc' will be
 ) [21.21] [22.22 <./fig/fig_case.pdf>] [23.23{c:/texlive/2024/texmf-dist/fonts/
 enc/dvips/libertine/lbtn_omcwp2.enc}] (./paper.bbl
 LaTeX Font Info:    Font shape `T1/LinuxLibertineT-TLF/m/it' will be
-(Font)              scaled to size 7.0pt on input line 43.
+(Font)              scaled to size 7.0pt on input line 46.
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [24.24])
+[24.24])
 
 Class acmart Warning: \vspace should only be used to provide space above/below 
-surrounding objects on input line 1555.
+surrounding objects on input line 1560.
 
 
 Class acmart Warning: CCS concepts are mandatory for papers over two pages.
@@ -1554,13 +1550,13 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
 (rerunfilecheck)             Checksum: 89909E1508004D12A840EB60B7094E58;8373.
  ) 
 Here is how much of TeX's memory you used:
- 35579 strings out of 474115
- 665293 string characters out of 5747696
- 1959190 words of memory out of 5000000
+ 35594 strings out of 474115
+ 665674 string characters out of 5747696
+ 1958190 words of memory out of 5000000
  56075 multiletter control sequences out of 15000+600000
- 862444 words of font info for 712 fonts, out of 8000000 for 9000
+ 863803 words of font info for 722 fonts, out of 8000000 for 9000
  1302 hyphenation exceptions out of 8191
- 90i,17n,131p,1002b,710s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,17n,131p,1002b,704s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2024/texmf-dist/fonts/type1/public/inconsolata/Inconsolata-zi4r.p
 fb><c:/texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI.pfb><c:
 /texlive/2024/texmf-dist/fonts/type1/public/newtx/LibertineMathMI5.pfb><c:/texl
@@ -1577,10 +1573,10 @@ TXMI7.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/newtx/txexs.pfb><c:/te
 xlive/2024/texmf-dist/fonts/type1/public/newtx/txmiaX.pfb><c:/texlive/2024/texm
 f-dist/fonts/type1/public/newtx/txsym.pfb><c:/texlive/2024/texmf-dist/fonts/typ
 e1/public/newtx/txsys.pfb>
-Output written on paper.pdf (25 pages, 24711456 bytes).
+Output written on paper.pdf (25 pages, 24705238 bytes).
 PDF statistics:
- 1172 PDF objects out of 1200 (max. 8388607)
- 776 compressed objects within 8 object streams
+ 1145 PDF objects out of 1200 (max. 8388607)
+ 773 compressed objects within 8 object streams
  143 named destinations out of 1000 (max. 500000)
  164278 words of extra memory for PDF output out of 184870 (max. 10000000)
 
