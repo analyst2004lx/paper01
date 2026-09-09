@@ -1249,14 +1249,47 @@ try {
 
             if ($behindN -gt 0) {
                 Write-Log ('Remote ahead by {0} commit(s); merging {1} before push...' -f $behindN, $remoteRef) -Level WARN
+
+                # Dirty tracked files block merge ("would be overwritten"). Stash them first.
+                $dirty = Invoke-Git -GitArgs @('status', '--porcelain', '-uno') -AllowFail
+                $didStash = $false
+                if ($dirty.ExitCode -eq 0 -and $dirty.Output -match '(?m)^.[MADRCU]') {
+                    $stashMsg = 'auto-sync pre-merge stash {0:yyyy-MM-dd HH:mm:ss}' -f (Get-Date)
+                    Write-Log 'Working tree has uncommitted tracked changes; stashing before merge...' -Level WARN
+                    $stash = Invoke-Git -GitArgs @('stash', 'push', '-u', '-m', $stashMsg) -AllowFail
+                    # Prefer tracked-only stash if -u unsupported / fails
+                    if ($stash.ExitCode -ne 0) {
+                        $stash = Invoke-Git -GitArgs @('stash', 'push', '-m', $stashMsg) -AllowFail
+                    }
+                    if ($stash.ExitCode -eq 0 -and ($stash.Output -notmatch 'No local changes to save')) {
+                        $didStash = $true
+                        Write-Log 'stash ok'
+                    } else {
+                        Write-Log ('stash skipped/failed: {0}' -f $stash.Output) -Level WARN
+                    }
+                }
+
                 $merge = Invoke-Git -GitArgs @('merge', '--no-edit', $remoteRef) -AllowFail -WithCommitIdentity
                 if ($merge.ExitCode -ne 0) {
                     Write-Log ('merge failed: {0}' -f $merge.Output) -Level ERROR
                     Write-Log 'Resolve conflicts manually, then re-run the script.' -Level ERROR
+                    if ($didStash) {
+                        Write-Log 'Attempting to restore stashed local changes...' -Level WARN
+                        [void](Invoke-Git -GitArgs @('stash', 'pop') -AllowFail)
+                    }
                     $pushOk = $false
                 } else {
                     Write-Log 'merge ok'
                     $aheadN = 1
+                    if ($didStash) {
+                        $pop = Invoke-Git -GitArgs @('stash', 'pop') -AllowFail
+                        if ($pop.ExitCode -ne 0) {
+                            Write-Log ('stash pop had conflicts/issues (stash kept): {0}' -f $pop.Output) -Level WARN
+                            Write-Log 'Inspect with: git stash list / git status' -Level WARN
+                        } else {
+                            Write-Log 'stash pop ok (local uncommitted changes restored)'
+                        }
+                    }
                 }
             }
 
