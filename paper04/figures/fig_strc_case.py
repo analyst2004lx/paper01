@@ -57,20 +57,20 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
 
     # t_now
     ax.axvline(t_now, color="#8b1e1e", ls="--", lw=1.0, zorder=4)
-    ax.text(t_now, len(machines) - 0.15, r"$t_{\mathrm{now}}$",
+    ax.text(t_now + 1.2, len(machines) - 0.42, r"$t_{\mathrm{now}}$",
             ha="left", va="bottom", fontsize=7, color="#8b1e1e")
 
     # block window as translucent band
     cid, t0, t1 = block
     ax.axvspan(t0, t1, color="#e8a0a0", alpha=0.35, zorder=0)
-    ax.text((t0 + t1) / 2, -0.85, f"block on {cid}",
+    ax.text((t0 + t1) / 2, -0.95, f"block on {cid}",
             ha="center", va="top", fontsize=6.5, color="#8b1e1e")
 
     ax.set_yticks(list(ymap.values()))
     ax.set_yticklabels([f"M{m}" for m in machines], fontsize=8)
     ax.set_xlabel("time", fontsize=8)
     ax.set_title(title, fontsize=9)
-    ax.set_ylim(-1.1, len(machines) - 0.2)
+    ax.set_ylim(-1.25, len(machines) + 0.05)
     xmax = max(rec.finish for rec in ops) * 1.05
     ax.set_xlim(0, xmax)
     ax.spines["top"].set_visible(False)
@@ -80,7 +80,7 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
             Patch(facecolor="#1f4e79", edgecolor="#222", label="op in Cl (released)"),
             Patch(facecolor="#b0b8c0", edgecolor="#222", label="op outside (frozen)"),
             Patch(facecolor="#e8a0a0", alpha=0.5, label="corridor block window"),
-        ], loc="upper right", fontsize=6.5, frameon=False)
+        ], loc="lower right", fontsize=6.5, frameon=False)
 
 
 def main() -> None:
@@ -125,7 +125,7 @@ def main() -> None:
     )
     # annotate T_impact empty
     axes[0].text(
-        0.01, 0.98,
+        0.01, 0.90,
         r"$T_{\mathrm{impact}}=\varnothing$ (task graph); repair uses Cl",
         transform=axes[0].transAxes, ha="left", va="top", fontsize=7,
         color="#1f4e79",

@@ -35,9 +35,9 @@ def arrow(ax, x1, y1, x2, y2, color=C_EDGE, lw=1.2):
 
 
 def main() -> None:
-    fig, ax = plt.subplots(figsize=(7.2, 3.5))
+    fig, ax = plt.subplots(figsize=(7.6, 3.7))
     ax.set_xlim(0, 14)
-    ax.set_ylim(0, 8)
+    ax.set_ylim(-0.15, 8)
     ax.axis("off")
 
     # Input
@@ -89,8 +89,11 @@ def main() -> None:
         "Outputs\nfeasibility, ms, $C_{\\max}$,\nreservation change",
         fc="#eef2f6", fs=7.5)
 
-    ax.text(7.0, 0.35,
-            "Same conflict-free executor; only the release set / search policy differs.",
+    ax.text(7.0, 0.32,
+            "Same conflict-free executor;",
+            ha="center", fontsize=7.5, color="#555", style="italic")
+    ax.text(7.0, 0.02,
+            "only the release set / search policy differs.",
             ha="center", fontsize=7.5, color="#555", style="italic")
 
     fig.tight_layout()
