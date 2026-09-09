@@ -45,20 +45,35 @@ STRINGS = {
     "m3_jobs": "{n:.0f} jobs that can only\nbe processed on M3",
     "m3_yield": "Jobs that can only use M3\ncross the trunk repeatedly\n→ yielding wait",
     "two_assign": (
-        "Two assignments of the same operation\n"
-        "fast arm M1: round trip {t1:.0f} + processing {p1:.0f}\n"
-        "slow arm M2: round trip {t2:.0f} + processing {p2:.0f}"
+        "The job starts at LU, is processed, then returns (J1 only; unimpeded, no other vehicles)\n"
+        "Fast arm M1: LU--$v_1$--$v_2$--M1, one way $1+{tau:.0f}+1={one1:.0f}$, "
+        "round trip ${t1:.0f}$, + processing ${p1:.0f}$ $=${s1:.0f}\n"
+        "Slow arm M2: LU--$v_1$--M2, one way $1+2={one2:.0f}$, "
+        "round trip ${t2:.0f}$, + processing ${p2:.0f}$ $=${s2:.0f}"
     ),
-    "title_b": "(b) The same pair of assignments: constant matrix vs. conflict-free routing",
-    "group_ideal": "constant travel-time\nmatrix",
-    "group_routed": "conflict-free\nrouting",
+    "assign_ylim_lo": -1.70,
+    "assign_y": -1.08,
+    "title_b": "(b) Instance $C_{\\max}$: constant matrix vs. conflict-free routing",
+    "group_ideal": "constant travel-time matrix",
+    "group_routed": "conflict-free routing",
     "chosen": "chosen",
     "reversal": (
         "The ranking reverses\n"
-        "constant matrix chooses M{a} (fast arm);\n"
-        "conflict-free routing chooses M{b} (slow arm)"
+        "(instance $C_{{\\max}}$; three background jobs)\n"
+        "matrix chooses M{a} (fast); routing chooses M{b} (slow)"
     ),
-    "ylabel": "makespan $C_{\\max}$",
+    "ylabel": "instance makespan $C_{\\max}$",
+    "delta_y_mult": 1.18,
+    "delta_x": 0.72,
+    "delta_y_axes": 0.795,
+    "note_y_axes": 0.745,
+    "note_delta_gap": 0.08,
+    "ylim_mult": 1.62,
+    "reversal_fs": 8,
+    "reversal_pad": 0.22,
+    "reversal_ls": 1.15,
+    "bars_note_at": "below_delta",
+    "bars_note": "A bar is the time the last job returns to LU",
 }
 
 
@@ -81,7 +96,10 @@ def panel_layout(ax, p, S=None) -> None:
                  fontsize=10.5, fontweight="bold", pad=10)
     ax.set_xlim(-0.6, 9.4)
     # Extra bottom room when the assignment caption is wrapped (English).
-    ylim_lo = -1.05 if "\n" in S["two_assign"] else -0.4
+    # Localized copies may override the two coordinates.
+    ylim_lo = S.get("assign_ylim_lo")
+    if ylim_lo is None:
+        ylim_lo = -1.05 if "\n" in S["two_assign"] else -0.4
     ax.set_ylim(ylim_lo, 5.0)
     ax.axis("off")
     ax.set_aspect("equal")
@@ -95,7 +113,7 @@ def panel_layout(ax, p, S=None) -> None:
     edge(ax, P["v2"], P["m1"], "1")
     edge(ax, P["v2"], P["m3"], "1")
     edge(ax, P["v1"], P["m2"], "2", color=C_SLOW, lw=2.0)
-    ax.text(0.12, 3.05, S["avoids_trunk"], ha="left", va="center",
+    ax.text(0.0, 2.85, S["avoids_trunk"], ha="left", va="center",
             fontsize=8, color=C_SLOW)
 
     node(ax, *P["v0"], "LU", fc="#dceaf8", ec="#08519c", r=0.36, bold=True)
@@ -118,11 +136,18 @@ def panel_layout(ax, p, S=None) -> None:
             linespacing=1.2,
             bbox=dict(boxstyle="round,pad=0.22", fc="white", ec="none", alpha=0.88))
 
-    y_assign = -0.62 if "\n" in S["two_assign"] else -0.30
+    y_assign = S.get("assign_y")
+    if y_assign is None:
+        y_assign = -0.62 if "\n" in S["two_assign"] else -0.30
     ax.text(4.4, y_assign,
             S["two_assign"].format(
+                tau=p["trunk_tau"],
                 t1=p["travel_M1_round"], p1=p["proc_fast"],
-                t2=p["travel_M2_round"], p2=p["proc_slow"]),
+                t2=p["travel_M2_round"], p2=p["proc_slow"],
+                one1=p["travel_M1_round"] / 2.0,
+                one2=p["travel_M2_round"] / 2.0,
+                s1=p["travel_M1_round"] + p["proc_fast"],
+                s2=p["travel_M2_round"] + p["proc_slow"]),
             ha="center", va="center", fontsize=8.5, color="#222222",
             linespacing=1.25,
             bbox=dict(boxstyle="round,pad=0.3", fc="#f7f7f7", ec="#999999"))
@@ -166,19 +191,64 @@ def panel_reversal(ax, d, S=None) -> None:
 
     n_rev = S["reversal"].count("\n") + 1
     # Keep the reversal box inside panel (b); long English must wrap, not spill left.
-    ax.text(0.50, 0.98, S["reversal"].format(a=picks[0], b=picks[1]),
+    ax.text(0.50, 0.98, S["reversal"].format(
+            a=picks[0], b=picks[1],
+            c1=d["M1"]["ideal"], c2=d["M2"]["ideal"],
+            c3=d["M1"]["routed"], c4=d["M2"]["routed"]),
             transform=ax.transAxes, ha="center", va="top",
-            fontsize=9 if n_rev > 1 else 10, fontweight="bold", color="#111111",
-            linespacing=1.25, clip_on=True,
-            bbox=dict(boxstyle="round,pad=0.34", fc="#fff8f0", ec="#d95f02", lw=1.2))
-    ax.text((xs[0] + xs[1]) / 2, top * (1.12 if n_rev > 1 else 1.15),
-            f"$C$(M1)$-$$C$(M2)：{d['M1']['ideal'] - d['M2']['ideal']:+.0f}"
-            f"   →   {d['M1']['routed'] - d['M2']['routed']:+.0f}",
-            ha="center", va="center", fontsize=9, color="#444444")
+            fontsize=S.get("reversal_fs", 9 if n_rev > 1 else 10),
+            fontweight="bold", color="#111111",
+            linespacing=S.get("reversal_ls", 1.25), clip_on=True,
+            bbox=dict(boxstyle="round,pad=%s" % S.get("reversal_pad", 0.34),
+                      fc="#fff8f0", ec="#d95f02", lw=1.2))
+    delta_mult = S.get("delta_y_mult")
+    if delta_mult is None:
+        delta_mult = 1.12 if n_rev > 1 else 1.15
+    delta_x = S.get("delta_x", (xs[0] + xs[1]) / 2)
+    delta_y_axes = S.get("delta_y_axes")
+    if delta_y_axes is not None:
+        ax.text(0.50, delta_y_axes,
+                f"$C$(M1)$-$$C$(M2)：{d['M1']['ideal'] - d['M2']['ideal']:+.0f}"
+                f"   →   {d['M1']['routed'] - d['M2']['routed']:+.0f}",
+                transform=ax.transAxes, ha="center", va="center",
+                fontsize=9, color="#444444")
+    else:
+        ax.text(delta_x, top * delta_mult,
+                f"$C$(M1)$-$$C$(M2)：{d['M1']['ideal'] - d['M2']['ideal']:+.0f}"
+                f"   →   {d['M1']['routed'] - d['M2']['routed']:+.0f}",
+                ha="center", va="center", fontsize=9, color="#444444")
 
     ax.set_ylabel(S["ylabel"], fontsize=9.5)
-    ax.set_ylim(0, top * (1.58 if n_rev > 1 else 1.44))
+    ylim_mult = S.get("ylim_mult")
+    if ylim_mult is None:
+        ylim_mult = 1.58 if n_rev > 1 else 1.44
+    ax.set_ylim(0, top * ylim_mult)
     ax.set_xlim(-0.70, 2.15)
+    note = S.get("bars_note")
+    if note:
+        formatted = note.format(
+                c1=d["M1"]["ideal"], c2=d["M2"]["ideal"],
+                c3=d["M1"]["routed"], c4=d["M2"]["routed"])
+        note_at = S.get("bars_note_at", "below_axes")
+        if note_at == "below_delta":
+            note_y_axes = S.get("note_y_axes")
+            if note_y_axes is not None:
+                ax.text(0.50, note_y_axes, formatted,
+                        transform=ax.transAxes, ha="center", va="top",
+                        fontsize=8, color="#333333", linespacing=1.2)
+            else:
+                gap = S.get("note_delta_gap", 0.09)
+                ax.text(delta_x, top * (delta_mult - gap),
+                        formatted, ha="center", va="top",
+                        fontsize=8, color="#333333", linespacing=1.2)
+        elif note_at == "above_delta":
+            ax.text(delta_x, top * (delta_mult + 0.06),
+                    formatted, ha="center", va="bottom",
+                    fontsize=8, color="#333333", linespacing=1.2)
+        else:
+            ax.text(0.50, -0.42, formatted,
+                    transform=ax.transAxes, ha="center", va="top",
+                    fontsize=7.6, color="#333333", linespacing=1.25)
     ax.set_xticks([])
     for side in ("top", "right", "bottom"):
         ax.spines[side].set_visible(False)
@@ -192,7 +262,7 @@ def main() -> None:
     with open(DATA, encoding="utf-8") as f:
         d = json.load(f)
 
-    fig, axes = plt.subplots(1, 2, figsize=(11.4, 4.70),
+    fig, axes = plt.subplots(1, 2, figsize=(11.4, 4.90),
                              gridspec_kw={"width_ratios": [1.32, 1.0]})
     panel_layout(axes[0], d["params"])
     panel_reversal(axes[1], d)
@@ -208,3 +278,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

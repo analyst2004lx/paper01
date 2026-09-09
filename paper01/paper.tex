@@ -503,21 +503,21 @@ Under a constant matrix the comparison is arithmetic (shorter processing plus lo
 With corridor contention the wait on the path to a fast arm is invisible to the matrix, so a slower arm with better connectivity may be better---and the ranking may flip again at a different congestion level.
 The trade-off needs both ingredients: heterogeneous optional arms, and distinct paths on which vehicles contend.
 
-Figure~\ref{fig:motivating} shows the reversal on a recomputable minimal instance: the same two assignments rank the fast arm better under the constant matrix and the slow arm better under conflict-free routing.
-Neither decision has changed; only the evaluation has.
-The heterogeneity is already the smallest value that allows the reversal: with $\tau=6$ and $t^P_{\text{fast}}=3$, choosing the fast arm on the unimpeded matrix requires $t^P_{\text{slow}}\ge 14$, not a value chosen to amplify the effect.
+Figure~\ref{fig:motivating} reports two readings on a recomputable instance ($4$ jobs, $2$ AGVs).
+The first is the unimpeded chain of J1 alone (panel~(a)): $\mathrm{LU}\to v_1\to v_2\to\mathrm{M1}$ is $2(1+\tau+1)+3=19$; $\mathrm{LU}\to v_1\to\mathrm{M2}$ is $2(1+2)+14=20$.
+The fast arm wins that comparison iff $19<20$, so $\tau=6$ and $t^P_{\text{fast}}=3$ already force $t^P_{\text{slow}}\ge 14$.
+The second is instance $C_{\max}$ (panel~(b)): last return to LU, same decoder, not $19$ or $20$ and not a sum of processing times.
+On the constant matrix the two AGVs stay in step if J1 goes to M1 (last return $41$) and one AGV is held at M2 if J1 goes there (last return $54$).
+Conflict-free routing on the same pair occupies the exclusive trunk when J1 uses M1 (last return $95$) and avoids it when J1 uses M2 (last return $60$).
+Neither assignment nor sequence has changed; only the evaluation has.
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{fig/fig_motivating.pdf}
-\Description{Two panels. The left panel is a small shop network in which the only
-route to a fast arm passes through an exclusive trunk corridor, while a slow arm
-hangs on its own branch. The right panel shows makespan for the same two machine
-assignments evaluated twice: under a constant travel-time matrix the fast arm
-wins, under conflict-free routing the slow arm wins, so the ranking reverses.}
-\caption{Motivating instance: the same assignment ranked in opposite order by two evaluations.
-(a)~The only path to the fast arm M1 is an exclusive trunk ($\tau=6$); the slow arm M2 sits on a short corridor that avoids it.
-(b)~Under the constant matrix the fast arm wins $41$ to $54$; conflict-free routing reverses the ranking to $95$ versus $60$.
+\Description{Two panels. The left panel is a shop network and J1's unimpeded chain ($19$ vs $20$). The right panel is instance makespan (last return to LU) for the same two assignments: $41$ vs $54$ on the constant matrix, $95$ vs $60$ under conflict-free routing.}
+\caption{Motivating instance: two readings of the same pair of assignments.
+(a)~J1's unimpeded chain: exclusive trunk to M1 ($2(1+6+1)+3=19$) versus the short corridor to M2 ($2(1+2)+14=20$); the bottom box is this comparison, not the bars in~(b).
+(b)~Instance $C_{\max}$ (last return to LU): the constant matrix ranks M1 better ($41$ vs $54$); conflict-free routing ranks M2 better ($95$ vs $60$).
 An \emph{existence demonstration}: of $1200$ nearby parameter combinations, $205$ ($17\%$) reverse.}
 \label{fig:motivating}
 %% From fig/fig_motivating.py and clbs/output/motivating.json
@@ -563,7 +563,11 @@ After Holm correction by family, the closed loop remains significant on \CellsSi
 With \NSeeds{} seeds per instance the sample is not sufficient to identify on which class of instances the dispatching gain is stable.
 The protocol is in Section~\ref{sec:protocol}; per-instance readings are in Section~\ref{sec:whichcongestion}.
 
-The contribution is the solver~\cite{vanos2026exact}: a controllable characterization of contention intensity; a measurement of routing-in-the-loop evaluation; reservation-table-aware dispatching with two output-preserving speed-ups; and a separate reading of the two effects---the closed loop larger and per-instance robust, dispatching significant only in the aggregate.
+The contribution is the solver, not the problem definition, in four claims that Section~\ref{sec:contributions} restates with the supporting numbers:
+\textbf{(1)}~a controllable characterization of contention intensity---how high contention must be before counting yielding wait in the schedule yields a gain;
+\textbf{(2)}~routing-in-the-loop evaluation, so every candidate is ranked by the makespan after conflict-free routing;
+\textbf{(3)}~reservation-table-aware dispatching with two output-preserving speed-ups, so a trial query remains affordable under the same wall-clock;
+\textbf{(4)}~a separate reading of the two effects---the closed loop larger and per-instance robust, dispatching significant only in the aggregate, the two near-additive and not substitutes.
 
 The notation of the paper is collected in Table~\ref{tab:notation}.
 
@@ -1492,7 +1496,8 @@ The bilevel framework connects the two levels along an evaluation path and a dec
 \subsection{Findings and contributions}
 \label{sec:contributions}
 
-The contribution is the solver, not the problem definition~\cite{vanos2026exact}.
+The four claims of Section~\ref{sec:Chapter_I} are restated with the numbers that support them.
+This paper adopts the problem class of~\cite{vanos2026exact}; the contribution is the solver, not the problem definition, together with a controllable characterization of contention intensity (Section~\ref{sec:whichcongestion}).
 \begin{enumerate}[leftmargin=*,topsep=2pt,itemsep=2pt]
 \item Routing-in-the-loop evaluation reduces makespan by $\GainLoopRule$ under rule-based dispatching ($p\PLoopRule$) and by $\GainLoopProbe$ under reservation-table-aware dispatching ($p\PLoopProbe$).
 Proposition~\ref{prop:decodable} and Lemma~\ref{lem:label} guarantee that every chromosome is decodable and that the evaluation matches the conflict model of Section~\ref{sec:Chapter_III}.
@@ -1528,7 +1533,7 @@ The four largest average \PubGapBig{}, and \PubBudgetRatio{} times the compute b
 On the \PubNOpt{} proven-optimum instances the search shortfall is at most $\PubLBResidMax$ percentage points; almost all of the gap is slack in the bound.
 On the self-generated instances the bound contains no contention, so the median gap \LBGapMed{} must not be read as a search gap.
 A few-percentage-point effect such as \GainProbeLoop{} is of the same order as that unknown distance.
-A follow-up is to separate slack from a search shortfall on contended instances; exact solutions by logic-based Benders decomposition~\cite{vanos2026exact} are the comparison at small size.
+A follow-up is to separate slack from a search shortfall on contended instances; exact solutions by logic-based Benders decomposition are the comparison at small size.
 
 \textbf{(4) The two thicker interfaces must be remeasured if their own cost is pressed down.}
 The surcharge and yield-record-guided local search were judged in the same codebase and under the same wall-clock budget.
