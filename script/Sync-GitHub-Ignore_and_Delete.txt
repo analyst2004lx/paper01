@@ -93,6 +93,7 @@ paper03\Latex\fig\tikz_protocol.tex
 paper03\Latex\fig\tikz_protocol.pdf
 paper03\Latex\fig\tikz_protocol.aux
 paper03\Latex\fig\tikz_protocol.log
-
+paper03\Latex\fig\tikz_system.aux
+paper03\Latex\fig\tikz_system.log
 
 </Delete>
