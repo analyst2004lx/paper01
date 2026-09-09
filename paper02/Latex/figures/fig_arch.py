@@ -92,8 +92,10 @@ def main() -> None:
         box(ax, x, y_on, wi, h2, lab, fc, fs=8.6)
     for i in range(4):
         arrow(ax, (xs2[i] + ws2[i], y_on + h2 / 2), (xs2[i + 1], y_on + h2 / 2))
+    ax.text(xs2[1] + ws2[1] + gap2 / 2, y_on + h2 + 0.16, "Online",
+            ha="center", va="bottom", fontsize=10.5, color="#222")
     ax.text(xs2[2] + ws2[2] / 2, y_on - 0.18,
-            r"Online, $O(1)$; Bonferroni split $\alpha/3$",
+            r"$O(1)$; Bonferroni split $\alpha/3$",
             ha="center", va="top", fontsize=8.4, color=C_NOTE)
 
     fig.savefig(OUT + ".pdf", bbox_inches="tight", pad_inches=0.06)
