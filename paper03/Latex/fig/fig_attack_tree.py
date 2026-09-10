@@ -56,7 +56,7 @@ def arrow(ax, p, q):
 def main() -> None:
     fig, ax = plt.subplots(figsize=(9.6, 7.6))
     ax.set_xlim(-0.15, 14.7)
-    ax.set_ylim(-0.45, 11.0)
+    ax.set_ylim(-0.70, 11.0)
     ax.axis("off")
 
     root = rbox(ax, 7.2, 10.15, 4.3, 1.05,
@@ -97,7 +97,8 @@ def main() -> None:
     ax.text(9.75, 1.20, "yes", fontsize=7.2, color=C_NOTE, ha="left")
 
     ax.text(7.2, -0.08,
-            "No winning branch when corroboration\nand silence are combined",
+            "P1--P3: no winning branch iff a counterpart exists;\n"
+            "gap: P3 still escapes; P4 only defers",
             ha="center", va="top", fontsize=7.4, color="#777")
 
     fig.savefig(OUT + ".pdf", bbox_inches="tight", pad_inches=0.06)

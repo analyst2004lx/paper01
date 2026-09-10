@@ -31,10 +31,14 @@ def parse_args() -> argparse.Namespace:
     ap.add_argument("--skip-e6", action="store_true")
     ap.add_argument("--only-e5", action="store_true",
                     help="只跑 E5。用于复核 A2 越界列而不重生成其余读数")
+    ap.add_argument("--only-e6", action="store_true",
+                    help="只跑 E6(四类扰动的边界+修复维)")
     ap.add_argument("--out-dir", default=OUT)
     args = ap.parse_args()
     if args.only_e5:
         args.skip_scale = args.skip_e6 = True
+    if args.only_e6:
+        args.skip_scale = args.skip_e5 = True
     return args
 
 
@@ -237,7 +241,7 @@ def _run_e5(inst_path, inst_name, seed, t_frac, rows):
     def _past(rep):
         """按假设 A2,t_end <= t_now 的预约不得被改写,这里数它被改了几条。
 
-        全局重解臂从 t=0 重新解码,不受 A2 约束,其完工时间因此只能读作参考下界;
+        默认 R0+ 走固定前缀解码;此列在拥堵例上仍可能为 1(同工件后道已出车)。
         把越界条数与该臂的读数记在同一行,是为了让这层口径不必回到正文去找。
         """
         if not rep.feasible or rep.result is None:
@@ -275,12 +279,8 @@ def _run_e5(inst_path, inst_name, seed, t_frac, rows):
 def _run_e6_types(inst_path, inst_name, seed, t_frac, rows):
     """E6:扰动类型 x 边界定义。填的是覆盖矩阵里那一大片「未测」。
 
-    为什么这一组只测边界、不测修复。四类扰动里只有走廊阻断被修复引擎正确建模
-    ——阻断被注入为 Router 上的一段强制占用。降速在 block_context 里被当成整段
-    阻断处理(过近似),车辆故障与机械臂故障则根本没有注入通道,重放时那台车/那台
-    机器仍然可用。所以对后三类跑「可行率」得到的会是假阳性。本组因此只报**边界**:
-    任务图影响域有多大、预约闭包有多大、后者是否包含前者。这恰好是覆盖矩阵要回答
-    的问题——「任务图边界看不看得见这类扰动」——而不需要修复语义。
+    边界维四类都报。修复维四类都开口:阻断/降速仍只改路;车辆故障换车、机械臂故障改派
+    (假设 A5 对 A 类开口)。
 
     A/B 之分按 algorithm.disturbance.TOUCHES_TASK_GRAPH:
       B 类(不碰任务图):corridor_block、corridor_slowdown
@@ -351,6 +351,7 @@ def _run_e6_types(inst_path, inst_name, seed, t_frac, rows):
     }
 
     n_alive = sum(1 for r in bundle.reservations if r.t_end > t_now)
+    from algorithm.repair import repair_with_strc
     for label, dist in cases:
         t_impact = task_graph_impact(dist, job_succ, theta=2, schedule_meta=meta)
         r1 = release_set_r1(bundle, dist, theta=2)
@@ -359,6 +360,15 @@ def _run_e6_types(inst_path, inst_name, seed, t_frac, rows):
             seeds, bundle.reservations, horizon=bundle.makespan + 1.0,
             t_now=t_now, machine_chains=chains)
         cl = closure.as_set()
+        r2_feas = r2_ms = r2_exp = None
+        rep = repair_with_strc(inst, net, bundle, dist, expand_on_fail=False)
+        r2_feas = rep.feasible
+        r2_ms = None if rep.makespan is None else round(rep.makespan, 2)
+        if r2_feas:
+            r2_exp = True
+        else:
+            repx = repair_with_strc(inst, net, bundle, dist, expand_on_fail=True)
+            r2_exp = repx.feasible
         rows.append({
             "instance": inst_name, "seed": seed,
             "dist_type": label, "dist_class": dist.class_label,
@@ -371,6 +381,9 @@ def _run_e6_types(inst_path, inst_name, seed, t_frac, rows):
             "R1_empty": len(r1) == 0,
             "R2_covers_R1": all(r in cl for r in r1),
             "R2_strictly_larger": len(cl) > len(set(r1)),
+            "R2_feasible": r2_feas,
+            "R2_makespan": r2_ms,
+            "R2_feasible_expand": r2_exp,
         })
 
 
@@ -498,6 +511,12 @@ def _summarize_e6(out_dir, e6) -> None:
             f"{sum(r['closure_frac'] for r in rs)/n:.3f} | "
             f"{sum(1 for r in rs if r['R2_covers_R1'])}/{n} |"
         )
+        feas = [r for r in rs if r.get("R2_feasible") is not None]
+        if feas:
+            lines.append(
+                f"  repair `{t}`: R2 feas "
+                f"{sum(1 for r in feas if r['R2_feasible'])}/{len(feas)}"
+            )
     path = os.path.join(out_dir, "summary.md")
     with open(path, "a", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
@@ -509,7 +528,7 @@ def main() -> int:
     os.makedirs(args.out_dir, exist_ok=True)
     e1, e2, e3, scale, e5, e6 = [], [], [], [], [], []
 
-    if not args.only_e5:
+    if not args.only_e5 and not args.only_e6:
         print("=== expand_batch: E1/E2/E3 ===")
         for name, path in _instances():
             if not os.path.isfile(path):
@@ -547,12 +566,15 @@ def main() -> int:
     _write(os.path.join(args.out_dir, "e3_boundary.csv"), e3)
     _write(os.path.join(args.out_dir, "scale_compare.csv"), scale)
     _write(os.path.join(args.out_dir, "e5_cross_curve.csv"), e5)
-    md = _summarize_md(args.out_dir, e1, e2, e3, scale, e5)
-    _summarize_e6(args.out_dir, e6)
-    print(f"wrote summary {md}")
-    print(f"E1 C1 pass {sum(1 for r in e1 if r['pass_C1'])}/{len(e1)}")
-    print(f"E2b pass {sum(1 for r in e2 if r['pass_E2b'])}/{len(e2)}")
-    print(f"E3 R2 feas {sum(1 for r in e3 if r['R2_feasible'])}/{len(e3)}")
+    if e1:
+        md = _summarize_md(args.out_dir, e1, e2, e3, scale, e5)
+        _summarize_e6(args.out_dir, e6)
+        print(f"wrote summary {md}")
+        print(f"E1 C1 pass {sum(1 for r in e1 if r['pass_C1'])}/{len(e1)}")
+        print(f"E2b pass {sum(1 for r in e2 if r['pass_E2b'])}/{len(e2)}")
+        print(f"E3 R2 feas {sum(1 for r in e3 if r['R2_feasible'])}/{len(e3)}")
+    elif e6:
+        print(f"E6 rows {len(e6)}")
     return 0
 
 

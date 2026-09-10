@@ -659,29 +659,75 @@ def fit_baseline(name: str, train):
     return REGISTRY[name]().fit(train)
 
 
-def judge(benign_parts, attack_parts, labels, *, alpha: float,
-          budget: int = 10, weights=None):
-    """所有方法共用的判决口径,返回 (逐消息 DR, FPR, 序贯 DR, 序贯 FPR)。
+@dataclass
+class JudgeDetail:
+    """judge 的逐次存档。箱线图与 ARL0 表只读这里,不读汇总标量。
 
-    `*_parts` 是**每个子检测器一条**分数流(越大越异常)。规则对所有方法
-    一视同仁:每个子检测器各自转良性经验 p 值、各自持一个 CUSUM,alpha 预算
-    在子检测器间均分,任一触发即算告警。
-
-    为什么不能把子检测器压成一条 min-p 流:那样每条消息的分数都被其它子
-    检测器的噪声污染,弱信号在累积时被稀释(结论二十五)。实测把本方法三
-    通道压成 min-p 后,A4 的序贯检出率从 0.42 掉到 0.17、反被似然型基线
-    超过——那是口径造成的,不是方法造成的。基线同样有 2-3 个子检测器,
-    并行是双方都适用的规则,不是给自己开的后门。
-
-    本方法与基线**必须走这同一个函数**。否则一边用检测器自带的 h、另一边
-    现场反解,比的就不是通道设计而是两套阈值机器。
-
-    `weights` 给出 alpha 在子检测器间的**非均分**配额(需和为 1,长度与
-    `*_parts` 相同,取 0 即完全不给该路预算、该路不参与判决)。默认 None
-    即均分。E2 已证明均分不是最优:互锁、Fisher 合成、路线协变量三项的净
-    贡献为负(结论四十二至四十四),它们白吃的预算本可以给时序通道。
-    **权重只能在校准折上选,在测试折上调即为作弊**,见 tools/alloc.py。
+    `delays` 与阳性消息一一对应:预算内检出为延迟(消息数),否则 None。
+    未检出是删失,不进箱线;箱线与净检出率必须分列。
+    `benign_gaps` 是纯良性流上相邻序贯告警的间隔,均值即实测 ARL0。
     """
+    dr: float
+    fpr: float
+    seq_dr: float
+    seq_fpr: float
+    floor: float
+    delays: list
+    benign_gaps: list
+    n_pos: int
+    n_benign: int
+
+    @property
+    def seq_net(self) -> float:
+        return self.seq_dr - self.floor
+
+    @property
+    def detected_delays(self) -> list:
+        return [d for d in self.delays if d is not None]
+
+    @property
+    def arl0(self) -> float:
+        if not self.benign_gaps:
+            return float("inf")
+        return float(sum(self.benign_gaps) / len(self.benign_gaps))
+
+    def as_tuple(self):
+        return self.dr, self.fpr, self.seq_dr, self.seq_fpr, self.floor
+
+    def to_dict(self) -> dict:
+        return {
+            "dr": self.dr, "fpr": self.fpr,
+            "seq": self.seq_dr, "seq_fpr": self.seq_fpr,
+            "seq_net": self.seq_net, "floor": self.floor,
+            "delays": self.delays,
+            "detected_delays": self.detected_delays,
+            "benign_gaps": self.benign_gaps,
+            "arl0": None if self.arl0 == float("inf") else self.arl0,
+            "n_pos": self.n_pos, "n_benign": self.n_benign,
+            "n_detected": len(self.detected_delays),
+        }
+
+
+def _alarm_gaps(fired, n: int) -> list:
+    """从 0 起算到每个告警位置的间隔;无告警则空(ARL0 记为无穷)。"""
+    if not fired:
+        return []
+    prev, gaps = -1, []
+    for j in sorted(fired):
+        gaps.append(int(j - prev))
+        prev = j
+    return gaps
+
+
+def _first_at_least(sorted_idx, i):
+    import bisect
+    k = bisect.bisect_left(sorted_idx, i)
+    return sorted_idx[k] if k < len(sorted_idx) else None
+
+
+def judge_detail(benign_parts, attack_parts, labels, *, alpha: float,
+                 budget: int = 10, weights=None) -> JudgeDetail:
+    """与 judge 同一口径,额外留下逐次延迟与良性告警间隔。"""
     m = len(benign_parts)
     if weights is None:
         ws = [1.0 / m] * m
@@ -715,10 +761,45 @@ def judge(benign_parts, attack_parts, labels, *, alpha: float,
     n_b = len(benign_parts[0])
     dr = sum(i in hit_msg for i in pos) / len(pos) if pos else float("nan")
     fpr = sum(i in fp_msg for i in neg) / len(neg) if neg else float("nan")
-    sdr = (sum(1 for i in pos if any(i <= j <= i + budget for j in fired))
-           / len(pos)) if pos else float("nan")
+    fired_s = sorted(fired)
+    delays = []
+    for i in pos:
+        j = _first_at_least(fired_s, i)
+        delays.append(int(j - i) if j is not None and j - i <= budget else None)
+    sdr = (sum(d is not None for d in delays) / len(pos)) if pos else float("nan")
     sfpr = len(fp_seq) / max(n_b, 1)
-    return dr, fpr, sdr, sfpr, chance_floor(sfpr, budget)
+    return JudgeDetail(
+        dr=dr, fpr=fpr, seq_dr=sdr, seq_fpr=sfpr,
+        floor=chance_floor(sfpr, budget),
+        delays=delays, benign_gaps=_alarm_gaps(fp_seq, n_b),
+        n_pos=len(pos), n_benign=n_b)
+
+
+def judge(benign_parts, attack_parts, labels, *, alpha: float,
+          budget: int = 10, weights=None):
+    """所有方法共用的判决口径,返回 (逐消息 DR, FPR, 序贯 DR, 序贯 FPR)。
+
+    `*_parts` 是**每个子检测器一条**分数流(越大越异常)。规则对所有方法
+    一视同仁:每个子检测器各自转良性经验 p 值、各自持一个 CUSUM,alpha 预算
+    在子检测器间均分,任一触发即算告警。
+
+    为什么不能把子检测器压成一条 min-p 流:那样每条消息的分数都被其它子
+    检测器的噪声污染,弱信号在累积时被稀释(结论二十五)。实测把本方法三
+    通道压成 min-p 后,A4 的序贯检出率从 0.42 掉到 0.17、反被似然型基线
+    超过——那是口径造成的,不是方法造成的。基线同样有 2-3 个子检测器,
+    并行是双方都适用的规则,不是给自己开的后门。
+
+    本方法与基线**必须走这同一个函数**。否则一边用检测器自带的 h、另一边
+    现场反解,比的就不是通道设计而是两套阈值机器。
+
+    `weights` 给出 alpha 在子检测器间的**非均分**配额(需和为 1,长度与
+    `*_parts` 相同,取 0 即完全不给该路预算、该路不参与判决)。默认 None
+    即均分。E2 已证明均分不是最优:互锁、Fisher 合成、路线协变量三项的净
+    贡献为负(结论四十二至四十四),它们白吃的预算本可以给时序通道。
+    **权重只能在校准折上选,在测试折上调即为作弊**,见 tools/alloc.py。
+    """
+    return judge_detail(benign_parts, attack_parts, labels, alpha=alpha,
+                        budget=budget, weights=weights).as_tuple()
 
 
 def chance_floor(fpr: float, budget: int) -> float:
@@ -785,24 +866,19 @@ def run_baseline(name: str, train, calib, benign, attacked, labels, *,
     pa = m.parts_stream(st)
 
     m = len(pb[0])
-    dr, fpr, seq_dr, seq_fpr, floor = judge(
+    detail = judge_detail(
         [[r[j] for r in pb] for j in range(m)],
         [[r[j] for r in pa] for j in range(m)], lab, alpha=alpha)
 
     s_b = combine_parts(pb, pb)
     thr_c = _quantile(combine_parts(pb, pc), 1.0 - alpha)
-    return {
+    out = {
         "name": name,
-        "dr": dr,
-        "fpr": fpr,
-        "seq": seq_dr,
-        "seq_fpr": seq_fpr,
-        "seq_net": seq_dr - floor,
-        "floor": floor,
         "fpr_calib": sum(s > thr_c for s in s_b) / len(s_b),
-        "n_pos": sum(lab),
         "n_neg": len(s_b),
     }
+    out.update(detail.to_dict())
+    return out
 
 
 def empirical_p(benign_scores, scores) -> list[float]:

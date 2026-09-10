@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""调度层命令/状态回环（中文版，paper02 fig:system）。"""
+"""命令/事件回环（中文版，paper02 fig:system）。"""
 from __future__ import annotations
 
 import os
@@ -53,7 +53,7 @@ def main() -> None:
     dx, dy, dw, dh = 0.55, 0.95, 3.35, 1.45
     tx, ty, tw, th = 6.85, 3.25, 3.85, 1.45
 
-    box(ax, sx, sy, sw, sh, r"调度系统 $\mathcal{C}$", r"命令账本 $\mathcal{L}$", C_SCHED)
+    box(ax, sx, sy, sw, sh, r"上位系统 $\mathcal{C}$", r"指派事件 $\mathcal{L}$", C_SCHED)
     box(ax, dx, dy, dw, dh, r"现场设备 $\mathcal{D}$", "物理过程", C_DEV)
     box(ax, tx, ty, tw, th, "检测器", "硬层 / 时序 / 结构", C_DET)
 

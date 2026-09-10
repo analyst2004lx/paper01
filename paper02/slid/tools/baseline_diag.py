@@ -19,7 +19,7 @@ import argparse
 
 import numpy as np
 
-from algorithm import attacks, baselines, ingest, metrics, procmodel
+from algorithm import archive, attacks, baselines, ingest, procmodel
 from algorithm.detector import Detector, DetectorConfig
 
 FAMILIES = ("A1", "A2", "A3", "A4", "A5", "A6")
@@ -86,10 +86,15 @@ def ours(det, benign, attacked, labels, alpha, rng, weights=None):
     """
     pb = _parts(det, benign, np.random.default_rng(rng.integers(1 << 30)))
     pa = _parts(det, attacked, rng)
-    dr, fpr, sdr, sfpr, floor = baselines.judge(pb, pa, labels, alpha=alpha,
-                                                weights=weights)
-    return {"dr": dr, "fpr": fpr, "seq": sdr, "seq_fpr": sfpr,
-            "seq_net": sdr - floor, "floor": floor}
+    return baselines.judge_detail(pb, pa, labels, alpha=alpha,
+                                  weights=weights).to_dict()
+
+
+def _parse_rates(s: str, fallback: float) -> list:
+    if not s:
+        return [fallback]
+    out = [float(x) for x in s.split(",") if x.strip()]
+    return out or [fallback]
 
 
 def main() -> int:
@@ -98,9 +103,13 @@ def main() -> int:
     ap.add_argument("--bpmn", default=procmodel.default_bpmn_glob())
     ap.add_argument("--alpha", type=float, default=0.01)
     ap.add_argument("--rate", type=float, default=0.2)
+    ap.add_argument("--rates", default="",
+                    help="逗号分隔的注入率扫描;空则只跑 --rate")
     ap.add_argument("--rho", type=float, default=0.30)
     ap.add_argument("--seeds", type=int, default=3)
+    ap.add_argument("--archive", default=archive.E1_PATH)
     args = ap.parse_args()
+    rates = _parse_rates(args.rates, args.rate)
 
     raw = ingest.read_xes(args.xes)
     live = ingest.valid(raw, drop_failure=True)
@@ -122,7 +131,7 @@ def main() -> int:
     names = list(baselines.IMPLEMENTED)
     fitted = {n: baselines.fit_baseline(n, train) for n in names}
     print(f"=== E1 同一误报预算下的检出率(alpha={args.alpha}, "
-          f"rho={args.rho}, 注入率={args.rate}, {args.seeds} 个种子) ===")
+          f"rho={args.rho}, 注入率={rates}, {args.seeds} 个种子) ===")
     print(f"  训练 {len(train)} / 选择 {len(calib)} / 测试 {len(test)} 个活动,"
           f"时间序划分;本方法与基线**同用 train 拟合**")
     print(f"  阈值一律定在**同一批 case 的未注入版本**上使经验误报为 alpha,")
@@ -143,30 +152,52 @@ def main() -> int:
     print()
     cols = names + ["ours"]
     keys = ("msg", "seq", "seq_net", "seq_fpr", "floor")
+    records = []
+    primary = args.rate if args.rate in rates else rates[0]
     tally = {c: {k: [] for k in keys} for c in cols}
     drift = {n: [] for n in names}
     raw = {}
-    for fam in FAMILIES:
-        acc = {c: {k: [] for k in keys} for c in cols}
-        for s in range(args.seeds):
-            stream, lab = attack_stream(test, fam, s, args.rate, args.rho,
-                                        det.struct, det.model)
-            for n in names:
-                r = baselines.run_baseline(n, train, calib, benign, stream,
-                                           lab, alpha=args.alpha,
-                                           model=fitted[n])
-                for k in keys:
-                    acc[n][k].append(r[{"msg": "dr"}.get(k, k)])
-                drift[n].append(r["fpr_calib"])
-            o = ours(det, benign, stream, lab, args.alpha,
-                     np.random.default_rng(300 + s), weights=w)
-            for k in keys:
-                acc["ours"][k].append(o[{"msg": "dr"}.get(k, k)])
-        raw[fam] = {c: {k: float(np.mean(v)) for k, v in d.items()}
-                    for c, d in acc.items()}
-        for c in cols:
-            for k in keys:
-                tally[c][k].append(raw[fam][c][k])
+    for rate in rates:
+        for fam in FAMILIES:
+            acc = {c: {k: [] for k in keys} for c in cols} if rate == primary else None
+            for s in range(args.seeds):
+                stream, lab = attack_stream(test, fam, s, rate, args.rho,
+                                            det.struct, det.model)
+                for n in names:
+                    r = baselines.run_baseline(n, train, calib, benign, stream,
+                                               lab, alpha=args.alpha,
+                                               model=fitted[n])
+                    rec = {"family": fam, "seed": s, "rate": rate,
+                           "method": n, **r}
+                    records.append(rec)
+                    if acc is not None:
+                        for k in keys:
+                            acc[n][k].append(r[{"msg": "dr"}.get(k, k)])
+                        drift[n].append(r["fpr_calib"])
+                o = ours(det, benign, stream, lab, args.alpha,
+                         np.random.default_rng(300 + s), weights=w)
+                records.append({"family": fam, "seed": s, "rate": rate,
+                                "method": "ours", **o})
+                if acc is not None:
+                    for k in keys:
+                        acc["ours"][k].append(o[{"msg": "dr"}.get(k, k)])
+            if acc is not None:
+                raw[fam] = {c: {k: float(np.mean(v)) for k, v in d.items()}
+                            for c, d in acc.items()}
+                for c in cols:
+                    for k in keys:
+                        tally[c][k].append(raw[fam][c][k])
+
+    path = archive.dump(args.archive, {
+        "meta": {
+            "alpha": args.alpha, "rho": args.rho, "rates": rates,
+            "primary_rate": primary, "seeds": args.seeds, "budget": 10,
+            "n_train": len(train), "n_calib": len(calib), "n_test": len(test),
+            "keep_paths": [PATHS[i] for i in keep],
+        },
+        "runs": records,
+    })
+    print(f"  存档 {path}  ({len(records)} 条 run)")
 
     for mode, title in (
             ("msg", "逐消息判决"),
@@ -197,7 +228,7 @@ def main() -> int:
     print()
     nb = len(benign)
     per = args.alpha / 4
-    print(f"  ⚠ 逐消息一行的分辨率上限:良性参照流 {nb} 条,经验 p 下界 "
+    print(f"  [!] 逐消息一行的分辨率上限:良性参照流 {nb} 条,经验 p 下界 "
           f"{1/(nb+1):.5f};")
     print(f"  四路均分后每路 {per:.5f},阈值下仅容 {int(per*(nb+1))} 个良性秩位。"
           f"每路 alpha 不分时")
@@ -215,6 +246,21 @@ def main() -> int:
     print()
     todo = tuple(n for n in baselines.BASELINES if n not in names)
     print(f"  未实现的基线 {todo} 一律不报告数字。")
+    print()
+    print(f"=== 实测 ARL0(纯良性流告警间隔,目标 1/alpha={1/args.alpha:.0f}) ===")
+    print(f"  {'方法':<12}{'中位':>10}{'均值':>10}{'告警次数':>10}")
+    for c in cols:
+        gaps = [g for rec in records
+                if rec["method"] == c and rec["rate"] == primary
+                for g in rec.get("benign_gaps") or []]
+        arls = [rec["arl0"] for rec in records
+                if rec["method"] == c and rec["rate"] == primary
+                and rec.get("arl0") is not None]
+        n_al = len(gaps)
+        med = float(np.median(gaps)) if gaps else float("inf")
+        mean = float(np.mean(arls)) if arls else float("inf")
+        print(f"  {c:<12}{med:>10.1f}{mean:>10.1f}{n_al:>10}")
+    print("  与攻击流里的序贯误报不是同一个量:后者含级联触发。")
     return 0
 
 

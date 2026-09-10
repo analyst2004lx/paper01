@@ -61,17 +61,18 @@ def reservation_delta_before(
     全局重解臂从 t=0 重新解码,不受该约束,故用这个量把它越界的程度量出来——
     否则「改动比例」按全表统计时,越界与合法改动混在一列里看不出来。
     """
-    aft: Dict[Tuple[str, int, str], ReservationRef] = {_res_key(r): r for r in after}
+    aft: Dict[Tuple[str, int, str], list] = {}
+    for r in after:
+        aft.setdefault(_res_key(r), []).append(r)
     changed = 0
     total = 0
     for r in before:
         if r.t_end > t_now + EPS:
             continue
         total += 1
-        r2 = aft.get(_res_key(r))
-        if r2 is None:
-            changed += 1
-        elif abs(r2.t_start - r.t_start) > EPS or abs(r2.t_end - r.t_end) > EPS:
+        cand = aft.get(_res_key(r), [])
+        if not any(abs(c.t_start - r.t_start) <= EPS
+                   and abs(c.t_end - r.t_end) <= EPS for c in cand):
             changed += 1
     return changed, total
 

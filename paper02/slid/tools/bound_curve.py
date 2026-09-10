@@ -28,7 +28,7 @@ from math import log, sqrt
 
 import numpy as np
 
-from algorithm import conformal, ingest, sequential, timing
+from algorithm import archive, conformal, ingest, sequential, timing
 
 RHOS = (0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50)
 MIN_ROUTE_N = 8
@@ -272,6 +272,7 @@ def main() -> int:
            f"{'p90 延迟':>9}")
     print(hdr)
     print("  " + "-" * (len(hdr) - 2))
+    e4_rows = []
     for rho in RHOS:
         d = log(1 - rho)
         streams = []
@@ -287,6 +288,17 @@ def main() -> int:
         print(f"  {rho:>6.2f} {single:>8.3f} {prof['dr']:>8.3f} "
               f"{prof.get('median_delay', float('nan')):>9.1f} "
               f"{prof.get('p90_delay', float('nan')):>9.1f}")
+        e4_rows.append({
+            "rho": rho, "single": single, "cusum_dr": prof["dr"],
+            "delays": prof.get("delays", []), "n_streams": prof["n"],
+            "median_delay": prof.get("median_delay"),
+            "p90_delay": prof.get("p90_delay"),
+        })
+    archive.dump(archive.E4_PATH, {
+        "meta": {"alpha": alpha, "arl0": args.arl0, "h": h, "seed": args.seed,
+                 "budget": 40, "n_cal": len(cal), "n_test": len(test)},
+        "rows": e4_rows,
+    })
     return 0
 
 

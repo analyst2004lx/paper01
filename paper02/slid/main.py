@@ -74,6 +74,9 @@ def load(dataset: str):
         return ingest.valid(raw, drop_failure=True), model
     if dataset == "hai":
         return ingest.read_hai(root), None
+    if dataset == "sim":
+        from algorithm import plant
+        return plant.generate("A"), plant.reference_model()
     return ingest.read_xes(os.path.join(root, "scenario.xes")), None
 
 

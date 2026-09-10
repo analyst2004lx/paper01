@@ -4,4 +4,4 @@
 numpy>=1.24
 scipy>=1.10          # Student-t 分位数、Wilcoxon 配对检验
 matplotlib>=3.7      # 仅 tools/ 出图用,算法核心不依赖
-pytest>=7.0          # 仅 tests/ 用,跑 T1–T14 断言集
+pytest>=7.0          # 仅 tests/ 用,跑 T1–T43 断言集

@@ -1,36 +1,65 @@
 # -*- coding: utf-8 -*-
-"""Per-message processing time percentiles."""
+"""E8: per-message latency boxplot and M-scale."""
 from __future__ import print_function, division
 
+import json
 import os
 import sys
 
-import numpy as np
 import matplotlib.pyplot as plt
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-from _style import FP_TINY, C_OURS, apply_style, save, set_cjk  # noqa: E402
+from _style import (  # noqa: E402
+    FP_SM, C_OURS, C_LINE, apply_style, save, set_cjk,
+)
+
+ARCHIVE = os.path.abspath(os.path.join(
+    HERE, "..", "..", "slid", "output", "e8_latency.json"))
+
+
+def draw(blob, labels, out_name):
+    apply_style()
+    fig, axes = plt.subplots(1, 2, figsize=(6.8, 3.15))
+    ax = axes[0]
+    xs = blob["latency_us"]
+    bp = ax.boxplot([xs], widths=0.45, patch_artist=True, showfliers=True,
+                    flierprops={"marker": ".", "markersize": 3,
+                                "markerfacecolor": C_OURS,
+                                "markeredgecolor": C_OURS, "alpha": 0.35})
+    for box in bp["boxes"]:
+        box.set(facecolor=C_OURS, edgecolor="white", linewidth=0.6, alpha=0.85)
+    for med in bp["medians"]:
+        med.set(color=C_LINE, linewidth=1.0)
+    ax.set_xticklabels([labels["box"]])
+    ax.yaxis.grid(True, linestyle=":", color="#DDDDDD")
+    ax.set_axisbelow(True)
+    set_cjk(ax, ylabel=labels["ylabel"])
+    ax.set_title(labels["title_a"], fontproperties=FP_SM, loc="left")
+
+    ax2 = axes[1]
+    Ms = [r["M"] for r in blob["scale"]]
+    ys = [r["median_us"] for r in blob["scale"]]
+    ax2.plot(Ms, ys, "o-", color=C_OURS, linewidth=1.8, markersize=6)
+    ax2.set_xticks(Ms)
+    ax2.set_ylim(0, max(ys + [80]) * 1.25)
+    ax2.yaxis.grid(True, linestyle=":", color="#DDDDDD")
+    ax2.set_axisbelow(True)
+    set_cjk(ax2, xlabel=r"$M$", ylabel=labels["ylabel"])
+    ax2.set_title(labels["title_b"], fontproperties=FP_SM, loc="left")
+    fig.tight_layout()
+    save(fig, out_name)
 
 
 def main():
-    apply_style()
-    labels = [u"Median", u"$p_{95}$", u"$p_{99}$"]
-    vals = np.array([81.0, 116.0, 159.0])
-    fig, ax = plt.subplots(figsize=(3.6, 3.1))
-    ax.bar([0, 1, 2], vals, color=C_OURS, width=0.55, edgecolor="white")
-    for i, v in enumerate(vals):
-        ax.text(i, v + 4, u"%d $\\mu$s" % int(v), ha="center",
-                fontproperties=FP_TINY)
-    ax.set_xticks([0, 1, 2])
-    ax.set_xticklabels(labels)
-    ax.set_ylim(0, 200)
-    ax.yaxis.grid(True, linestyle=":", color="#DDDDDD")
-    ax.set_axisbelow(True)
-    set_cjk(ax, ylabel=u"Per-message latency")
-    fig.tight_layout()
-    save(fig, "fig_latency")
+    with open(ARCHIVE, encoding="utf-8") as f:
+        blob = json.load(f)
+    draw(blob, {
+        "box": "per-message", "ylabel": r"Latency ($\mu$s)",
+        "title_a": "(a) Latency distribution",
+        "title_b": r"(b) Scale with $M$ devices",
+    }, "fig_latency")
 
 
 if __name__ == "__main__":

@@ -80,13 +80,20 @@ def build_dependence_graph(
 
     graph: Dict[ReservationRef, List[ReservationRef]] = defaultdict(list)
 
-    # 1) 让行边:同走廊时间重叠 → 先到者挡后到者(按 enter 次序)
+    # 1) 让行边:同走廊、异车、时间重叠或半开区间接壤。
+    # 接壤 (a.t_end == b.t_start) 在排他语义下合法,原先不画边;但 a 稍一延后
+    # b 就必须让路,差分试探里全部泄漏都是这一条。
     for cid, lst in by_corridor.items():
         for i, a in enumerate(lst):
             for b in lst[i + 1:]:
-                if b.t_start >= a.t_end - EPS:
+                gap = b.t_start - a.t_end
+                if gap > EPS:
                     break
-                if a.overlaps(b.t_start, b.t_end) and a.agv != b.agv:
+                if a.agv == b.agv:
+                    continue
+                if abs(gap) <= EPS:
+                    graph[a].append(b)
+                elif a.overlaps(b.t_start, b.t_end):
                     if a.t_start <= b.t_start + EPS:
                         graph[a].append(b)
                     else:

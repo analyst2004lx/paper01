@@ -183,11 +183,6 @@
 \begin{document}
 
 %%
-%% The "title" command has an optional parameter,
-%% allowing the author to define a "short title" to be used in page headers.
-\title{Kinematic Spatiotemporal Constraint-Based Detection and Adaptive Isolation of Byzantine False Messages in Industrial Multi-Agent Systems}
-
-%%
 %% The "author" command and its associated commands are used to define
 %% the authors and their affiliations.
 %% Of note is the shared affiliation of the first two authors, and the
@@ -260,9 +255,9 @@
 \begin{abstract}
 被劫持的现场设备可如实上报物理量、只伪造离散任务状态；此类谎言不产生物理残差，单观测者族（看门狗以外的残差、过程一致性与虚假数据注入检测）在构造上无法检出。
 事件触发通信下的沉默攻击面已有文献指出，见证式位置证明多按地理邻居选人，工业心跳多只管通信活性——仍缺少用\textbf{任务耦合对手方}否证完成类谎言、以及\textbf{不依赖共识分歧}的沉默归责。
-本文提出两条互补通道：由任务图导出 $O(1)$ 见证集上的耦合互证，以及哈希链锚定的可问责沉默；二者合用堵住攻击者决策树，心跳间隔 $T_{\mathrm{hb}}$ 由安全预算反解而非自选。
-串谋代价由互证超图前向闭包给出结构下界；检测时延的无条件上界 $r\,T_{\mathrm{hb}}$ 接入危害模型导出的时间预算（定理只接沉默通道；运动危害仅作预算量级校准）。
-在 Fischertechnik Trier 工业物联网事件日志上：同协议仅更换见证选取时，空间邻居原则约恢复 52\% 检出；谎报且维持心跳（P3）仅互证有效；最严心跳带宽约 7.7\,KB/s，约为 5\,Hz 全网 PBFT 的 $1/131$。
+本文提出两条互补通道：由任务图导出 $O(1)$ 见证集上的耦合互证，以及哈希链锚定的可问责沉默；\textbf{在 $H$ 上有对手方的交接}上合用后 P1--P3 无获胜支，无对手方缺口上 P3 仍可逃，P4 一跳串谋只推迟判决；心跳间隔 $T_{\mathrm{hb}}$ 由安全预算反解而非自选。
+串谋代价由互证超图前向闭包基数量化（中位 5，最坏为 1）；检测时延的无条件上界 $r\,T_{\mathrm{hb}}$ 接入危害模型导出的时间预算（定理只接沉默通道；运动危害仅作预算量级校准）。
+在 Fischertechnik Trier 工业物联网事件日志上：同协议仅更换见证选取时，空间邻居原则约恢复 52\% 检出；谎报且维持心跳（P3）仅互证有效；对照规模 $n{=}28$ 下最严心跳带宽约 7.7\,KB/s，约为 5\,Hz 全网 PBFT 的 $1/131$。
 \end{abstract}
 
 \keywords{任务状态伪造, 耦合互证, 可问责沉默, 工业调度, 被劫持设备, 带宽--安全权衡}
@@ -273,6 +268,8 @@
 \section{引言}
 \label{sec:introduction}
 
+\subsection{研究背景与动机}
+
 工业生产调度系统由中央调度器与一组异构现场设备构成：设备执行下行命令并上报上行状态，派工决策依赖调度器维护的\textbf{任务状态视图}。
 攻击面因而落在污染该视图以骗取派工，而非攻破设备连续控制回路。
 被劫持设备可以如实上报位置与运动学量，只将``完成/可用''等离散结果位翻真——此类\textbf{任务状态伪造}不产生物理残差，残差类虚假数据注入（FDI）检测、数字孪生 KPI 异常检测与单观测者计划一致性检验在构造上对其失效。
@@ -281,53 +278,61 @@
 其一，离散任务状态可在无物理残差下伪造，单观测者可见字段甚至可与良性样本逐字段一致。
 其二，任务交接是\textbf{双方物理事件}：是否交付发生，证据在诚实对手方的到料/取件等本地传感中，攻击者控制不了。
 其三，合格见证者由\textbf{任务图}而非无线拓扑决定，规模为 $O(1)$ 且任务下发时已知。
-其四，事件触发语义下``无完成消息''本可按预测推进，沉默因此免费——除非沉默本身被承诺为可证伪声明。
+其四，事件触发语义下``无完成消息''本可按预测推进，沉默因此免费——除非原像缺失本身被承诺为可归因事件（管在线，不管结果位）。
 另有：互证 pending 由命令打开而非由完成声明打开；谎言要存活到物料被消耗，须沿任务链买通前向可达闭包。
 
-\paragraph{引导例（攻击者决策树）。}
+\subsection{与已有工作的差距}
+
+单观测者残差/FDI 一支假定伪造会扰动连续物理量~\cite{ditof2024,dtmpc2025}；PeerReview 承认无法确定性归责``该发不发''~\cite{peerreview2007}；Polygraph/ABC 的归责绑定在共识分歧之后~\cite{polygraph2021,abc2023}；TESLA 明确不提供不可否认性~\cite{tesla2001,rfc4082}；IEC 61850 GOOSE 心跳只管通信活性；COLAW/Vouch+ 等位置证明按地理邻居选人~\cite{colaw2020,vouch2019}；DIAT 等依赖 TEE 与软件完整性~\cite{diat2019}。
+仍缺的是：以任务耦合对手方否证离散完成声明，以及不依赖分歧的沉默归责。
+
+\subsection{本文方法}
+
 考虑 AGV--机械臂车间：调度器命令 AGV-7 将工件送至机械臂 R3 交接。
 AGV-7 已被劫持，目标是骗取``已完成、我空闲''以持续套取派单。
 攻击者只有四条路：（P1）谎报完成且不维持心跳；（P2）完全沉默；（P3）谎报完成但按时披露心跳原像；（P4）与对手方一跳串谋。
-两条通道各有对方覆盖不到的缺口：\textbf{仅沉默}抓不住按时披露原像的谎报（P3）；\textbf{仅互证}虽因命令开窗仍能发现沉默，但时延受派发排队支配（数十～数百秒），无法给出无条件安全时延界。
-\textbf{二者合用}后决策树无获胜支：说谎被对手方否证，沉默被缺失原像在约秒级判定，假称合法则自证其罪。
+两条通道各有对方覆盖不到的缺口：\textbf{仅沉默}抓不住按时披露原像的谎报（P3）；\textbf{仅互证}对有对手方的沉默仍可因命令开窗而超时检出（全活动分母上并非全检出），但时延受派发排队支配（数十～数百秒），无法给出无条件安全时延界。
+\textbf{二者合用}后，在有对手方的交接上 P1--P3 无获胜支：说谎被对手方否证，沉默被缺失原像在约秒级判定；按时披露仍谎报（P3）只能由互证抓住。
+无对手方缺口上互证关闭、P3 维持心跳，该支仍可逃（第~\ref{sec:covdesign}~节）。
+P4 一跳串谋只推迟判决，代价由前向闭包基数 $k$ 计价。
 本文用该叙事讲清威胁；实验在 Fischertechnik Trier 日志上实例化同一形式化对象（无 AGV、无通信层处，心跳/危害预算参数另行标注来源）。
 图~\ref{fig:attack-tree} 概括四路决策与对应检出通道。
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig/fig_attack_tree.pdf}
+  \includegraphics[width=\columnwidth]{fig/fig_attack_tree_CN.pdf}
   \Description{Attacker decision tree with branches P1--P4 and detecting mechanisms.}
-  \caption{攻击者决策树（P1--P4）。合用耦合互证与可问责沉默后无获胜支；P3 仅互证可抓。}
+  \caption{攻击者决策树（P1--P4）。有对手方时合用后 P1--P3 无获胜支；缺口上 P3 仍可逃；P4 只推迟。}
   \label{fig:attack-tree}
 \end{figure}
 
-\paragraph{公开缺口。}
-单观测者残差/FDI 一支假定伪造会扰动连续物理量~\cite{ditof2024,dtmpc2025}；PeerReview 承认无法确定性归责``该发不发''~\cite{peerreview2007}；Polygraph/ABC 的归责绑定在共识分歧之后~\cite{polygraph2021,abc2023}；TESLA 明确不提供不可否认性~\cite{tesla2001,rfc4082}；IEC 61850 GOOSE 心跳只管通信活性；COLAW/Vouch+ 等位置证明按地理邻居选人~\cite{colaw2020,vouch2019}；DIAT 等依赖 TEE 与软件完整性~\cite{diat2019}。
-仍缺的是：以任务耦合对手方否证离散完成声明，以及不依赖分歧的沉默归责。
+\subsection{主要结果}
 
-\paragraph{贡献。}
+在 Fischertechnik Trier 工业物联网事件日志上：同协议仅更换见证选取时，空间邻居原则约恢复 52\% 检出；谎报且维持心跳（P3）仅互证有效；对照规模 $n{=}28$ 下最严心跳带宽约 7.7\,KB/s，约为 5\,Hz 全网 PBFT 的 $1/131$。
+有对手方时合用后 P1--P3 无获胜支；无对手方缺口上 P3 仍可逃。
+
+\subsection{贡献}
+
 问题设定（无残差的任务状态伪造）用于框定 Introduction，不单独计为技术贡献。本文贡献三条：
 \begin{enumerate}[leftmargin=*,itemsep=2pt]
   \item \textbf{耦合互证的见证选取原则与串谋界。} 见证集由任务图诱导的互证超图导出；同协议下仅换选取规则时，空间邻居原则约恢复 52\% 检出且见证集更大，说明增量在选取原则而非``有见证者''。
-  \item \textbf{可问责沉默。} 一次签名锚定的哈希链 + 有界心跳，把沉默升级为可证伪、可归因声明，给出不依赖分歧的归责路径。
+  \item \textbf{可问责沉默。} 一次签名锚定的哈希链 + 有界心跳，把原像缺失变成不依赖分歧的确定性归因（归责的是``该披露却未披露''，不是结果位为真）。
   \item \textbf{带宽--安全裕度权衡。} 危害模型 $\to$ 时间预算 $\to$ 可行 $(r,T_{\mathrm{hb}})$ $\to$ 带宽；定理只接沉默通道的无条件时延上界 $r\,T_{\mathrm{hb}}$。运动碰撞危害仅用于校准预算量级，主安全论断仍是调度损害下的可检测性。
 \end{enumerate}
 非对称密码预算（高频 MAC/哈希链，稀有事件才用签名）作为工程附带，不作主创新头条。
 
-第~\ref{sec:related}~节划界相关工作；第~\ref{sec:model}~节给出系统与威胁模型及覆盖矩阵；第~\ref{sec:method}~节描述方法；第~\ref{sec:theory}~节给出串谋界与带宽定理；第~\ref{sec:eval}~节报告实验；第~\ref{sec:conclusion}~节总结局限与结论。
+第~\ref{sec:related}~节划界相关工作；第~\ref{sec:model}~节给出问题与威胁模型及覆盖矩阵；第~\ref{sec:method}~节描述方法（含串谋界与带宽定理）；第~\ref{sec:eval}~节报告实验；第~\ref{sec:conclusion}~节给出结论、局限与未来工作。命题~\ref{prop:nr}~的归约见附录~\ref{app:nr}。
 
 %=============================================================================
 \section{相关工作}
 \label{sec:related}
 
-\subsection{事件触发与拜占庭共识}
+\subsection{事件触发通信与沉默攻击面}
 
 PISTIS 等自称事件触发的实时拜占庭协议，其``事件''是消息到达与连通性变化~\cite{pistis2021}；控制论一支则以连续状态偏差超阈为触发条件~\cite{tac2025el,hdetm2024}。
 工业侧轻量 PBFT 工作多压缩单轮消息数 $M$ 与阶段数~\cite{ccgridw2023pbft,sensors2024aloha}，共识频率 $R$ 仍由外部周期决定。
-本文事件位于工艺/任务语义层，优化轴明确放在 $R$；``事件触发 + BFT''大方向不新，不作为创新点。
+本文事件位于工艺/任务语义层，不把``事件触发 + BFT''或压低共识频率 $R$ 当作创新点。
 PISTIS 不消费任务事件，不宜作本数据上的数值基线；等协议对照改由见证选取族承担。
-
-\subsection{非触发攻击面}
 
 文献已提出并分析利用触发机制本身的 non-triggering misbehavior~\cite{nontrigger2022}：受损智能体已偏离期望却不产生事件；相关工作亦在事件触发框架内做抗欺骗控制器综合~\cite{asjc2023contain,ijrnc2023deception}。
 既有工作止于性能分析与鲁棒控制补偿，不给出``这段沉默是否合法''的可验证判定。
@@ -339,15 +344,13 @@ PeerReview 提供通用可问责层，但明确无法确定性揭发``该发不�
 Polygraph/ABC 在分歧已发生时输出不可反驳证据~\cite{polygraph2021,abc2023}。
 TESLA 用延迟密钥披露做源认证，但声明不提供不可否认性~\cite{tesla2001,rfc4082}；后续 Inf-TESLA 等仍沿用同一原语边界~\cite{inftesla2022}。
 IEC~61850 GOOSE 心跳语义是通信活性（MaxTime / TAL），无密码绑定，丢失只触发 fail-safe~\cite{goose615}。
-US-AID 等``不在场证明''证明的是设备物理在场，而非任务状态落在可行域~\cite{usaid}。
-本文增量：在松散时间同步与有界心跳假设下，用预承诺哈希链把沉默变成确定性可归因行为，且不依赖分歧已发生。
+US-AID 等``不在场证明''证明的是设备物理在场~\cite{usaid}；本文沉默通道证明的是会话仍在线（原像按槽披露），\textbf{不}证明任务状态落在可行域。
+本文增量：在松散时间同步与有界心跳假设下，用预承诺哈希链把原像缺失变成确定性可归因行为，且不依赖分歧已发生。
 
-\subsection{协作认证与见证式互证}
+\subsection{见证选取与任务状态伪造}
 
 DIAT 等依赖 TEE/软件完整性~\cite{diat2019}；COLAW/Vouch+ 由地理邻居见证位置~\cite{colaw2020,vouch2019}；车联网集体感知亦强调多见证者冗余~\cite{etsi460}；DiToF 用数字孪生偏差相关性分类 FDI~\cite{ditof2024}。
-本文见证者是任务耦合的物理对手方，见证内容是离散状态迁移是否发生；见证集由任务图预先确定，并导出串谋结构下界。
-
-\subsection{工业调度层的逻辑状态伪造}
+本文见证者是任务耦合的物理对手方，见证内容是离散状态迁移是否发生；见证集由任务图预先确定，串谋代价由前向闭包基数量化。
 
 AGV 数字孪生 KPI、LSTM 孪生 MPC 与电网 FDI 检测等~\cite{dtmpc2025,agvkpi2022,fdi2024frontiers}共同前提是单观测者对连续物理量做残差检测；亦有专利将事件触发与多 AGV 抗 FDI 路径跟踪结合做控制补偿而非归责~\cite{cn120578205b}。
 如实上报位置、只伪造任务状态的攻击不产生残差，对该族结构性免疫——这正是标题强调``任务状态''的原因。
@@ -361,16 +364,16 @@ AGV 数字孪生 KPI、LSTM 孪生 MPC 与电网 FDI 检测等~\cite{dtmpc2025,a
     方法类 & 核心前提 & 相对本文 \\
     \midrule
     残差/FDI/孪生 & 连续物理量异常 & 无残差任务伪造失效 \\
-    GOOSE 式心跳 & 通信活性 & 无状态声明、无归责 \\
+    GOOSE 式心跳 & 通信活性 & 无身份绑定、无归责 \\
     Polygraph/ABC & 共识已分歧 & 沉默无分歧时不可用 \\
     地理邻居见证 & 无线拓扑选人 & 非任务耦合、$|W|$ 不可预知 \\
-    \textbf{本文} & 任务图见证 + 承诺式沉默 & --- \\
+    \textbf{本文} & 任务图见证 + 原像心跳归责 & --- \\
     \bottomrule
   \end{tabular}
 \end{table}
 
 %=============================================================================
-\section{系统模型与威胁模型}
+\section{问题描述与威胁模型}
 \label{sec:model}
 
 \subsection{系统构成与形式化对象}
@@ -382,11 +385,32 @@ $S$ 持有命令账本 $c$（已下发、未撤销的命令）；账本是调度
 活动/任务实例记为 $a$；工艺模型导出任务图 $G=(V,E)$，进而导出互证超图 $H$（跨设备类、同位置的交付--取件对），见证集 $W(a)$ 由 $H$ 确定。
 互证窗口 $\Delta$ 须容纳派发排队；心跳间隔 $T_{\mathrm{hb}}$ 与连续缺失判决数 $r$ 由安全预算反解。
 
-引导例用 AGV--臂交接讲清语义；实验用 Trier 的工位交接实例化同一对象（如 VGR 交付至某位置、下游取走对应 $H$ 上的边）。
+引导例用 AGV--臂交接讲清语义；实验用 Trier 的工位交接实例化同一对象（表~\ref{tab:symbols}）。二者不是两套系统。
+
+\begin{table}[t]
+  \centering
+  \caption{形式化对象及其 Trier 实例化}
+  \label{tab:symbols}
+  \begin{tabular}{@{}llp{0.42\columnwidth}@{}}
+    \toprule
+    符号 & 含义 & Trier 填法 \\
+    \midrule
+    $S$ & 调度器 & 日志中的派工时刻 \\
+    $\mathcal{D}$ & 设备实例 & \texttt{vgr\_1}、\texttt{hbw\_2}、\texttt{mm\_1} 等（15 资源） \\
+    $u$ & 下行命令 & \texttt{assigned} + 计划时长 + URL 起终点 \\
+    $c$ & 命令账本 & 由派工字段重建（非贡献） \\
+    $a$ & 活动实例 & 合并后的 Activity \\
+    $G,H$ & 任务图 / 互证超图 & 16 个 BPMN；185 条见证边 \\
+    $W(a)$ & 见证集 & 中位 $|W|{=}1$，最大 6 \\
+    $\Delta$ & 互证容差 & 260\,s（排队 p95 ${\approx}218$\,s） \\
+    $T_{\mathrm{hb}},r$ & 心跳参数 & 由预算反解；回放口径 $0.2$\,s / $9$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig/fig_system.pdf}
+  \includegraphics[width=\columnwidth]{fig/fig_system_CN.pdf}
   \Description{Scheduler issues commands that open corroboration pending; devices send completion reports and heartbeat preimages; counterparts confirm or refute.}
   \caption{系统构成与消息回环：下行命令打开互证 pending；完成类声明走耦合互证，心跳原像走可问责沉默。}
   \label{fig:system}
@@ -415,7 +439,7 @@ $S$ 持有命令账本 $c$（已下发、未撤销的命令）；账本是调度
 \textbf{根本非对称性：}攻击者控制上行声明的内容与是否发送，但不控制物理交接是否真实发生，也不控制他机原像与 $S$ 侧归档。
 
 \begin{assumption}[显式假设]
-松散时间同步（误差计入 skew）；交接相关设备具备到料/取件类本地传感（否则落入覆盖缺口）；不假设 TEE；本机命令默认可见（不做更弱知识等级）。
+松散时间同步（误差计入 skew）；交接相关设备\textbf{默认}具备到料/取件类本地传感（覆盖矩阵与第一档互证列按此口径）；无传感与无对手方不是同一缺口（第~\ref{sec:corr}~节）；不假设 TEE；本机命令默认可见（不做更弱知识等级）。
 \end{assumption}
 
 \subsection{攻击类型与检测通道覆盖矩阵}
@@ -423,12 +447,15 @@ $S$ 持有命令账本 $c$（已下发、未撤销的命令）；账本是调度
 
 表~\ref{tab:coverage} 同时是威胁分类、方法必要性与消融设计依据。
 数字来自 Trier 注入实验（注入率 0.2，种子 42；互证容差 260\,s）。
-表中沉默时延采用检测回放口径 $r{=}9,\,T_{\mathrm{hb}}{=}0.2$\,s（中位约 1.8\,s）；第~\ref{sec:bw}~节预算求解则另解可行 $(r,T_{\mathrm{hb}})$，两套口径勿混读。
+\textbf{分母须分开读：}P1/P3/P4 只从有实测对手方的声明抽取（各 363 / 363 / 375 条），合用 DR${=}1.000$ 不是覆盖率声称；P2 从全部声明抽取（527 条），故仅互证 DR${=}0.746$——少掉的约四分之一正是无对手方缺口。
+互证列默认对手方可显式否证（到料/取件传感）；关掉传感后的褐地口径见第~\ref{sec:corr}~节，不与本表 $1.000/54.6$ 混读。
+表中沉默时延采用检测回放口径 $r{=}9,\,T_{\mathrm{hb}}{=}0.2$\,s（中位约 1.8\,s），只保证突发误报预算，\textbf{不}满足运动危害检测段 $0.60$\,s；落入该预算须改用表~\ref{tab:budget} 最严点 $(r,T_{\mathrm{hb}})=(10,0.058\,\mathrm{s})$。
+第~\ref{sec:bw}~节预算求解另解可行 $(r,T_{\mathrm{hb}})$，两套口径勿混读。
 格内为检出率 / 时延中位（秒）。
 
 \begin{table*}[t]
   \centering
-  \caption{攻击类型与检测通道覆盖矩阵（DR / 时延中位）}
+  \caption{攻击类型与检测通道覆盖矩阵（DR / 时延中位）。P1/P3/P4 分母为有对手方活动；P2 为全活动。}
   \label{tab:coverage}
   \begin{tabular}{@{}lllll@{}}
     \toprule
@@ -441,32 +468,33 @@ $S$ 持有命令账本 $c$（已下发、未撤销的命令）；账本是调度
     \bottomrule
   \end{tabular}
   \begin{tablenotes}
-    \item $^{\dagger}$分母为主受害者伪造声明；串谋方随后交付被下游否证，DR $0.750$。良性：互证误报 $2.25\%$，看门狗约 $4.2\%$。
+    \item $^{\dagger}$P4 分母为主受害者伪造声明；串谋方随后交付被下游否证，DR $0.750$。良性：互证误报 $2.25\%$，看门狗约 $4.2\%$。P1/P3/P4 注入只抽有对手方声明；P2 抽全部。合用 1.000 不是覆盖率。
   \end{tablenotes}
 \end{table*}
 
 \textbf{读表要点：}
-（1）P3 是最关键一行——老练谎报者维持心跳时沉默通道 DR${=}0$，只有互证能抓；
-（2）P1/P2 说明沉默不可省，时延从数十～数百秒压到约 1.8\,s；
+（1）P3 是最关键一行——老练谎报者维持心跳时沉默通道 DR${=}0$，只有互证能抓（合用时延 $54.6$\,s 是互证检出，不是秒级沉默界）；无对手方缺口上互证亦关，P3 仍可逃；
+（2）P1/P2 说明沉默不可省：有对手方时互证也能抓沉默，但全活动分母上仅互证为 $0.746$；合用把时延压到约 1.8\,s；
 （3）看门狗对 P2 有效、对 P1/P3/P4 为 0，不是稻草人；
 （4）P4 是承认的边界：一跳串谋只推迟判决，代价由串谋界量化。
 单观测者残差/一致性族对 P1/P3 的结构性 0 见第~\ref{sec:eval}~节第一档，不与本表四列赛马。
 
 %=============================================================================
-\section{检测方法}
+\section{耦合互证与可问责沉默}
 \label{sec:method}
 
-\subsection{总体架构}
+\subsection{框架总览}
 \label{sec:arch}
 
-实现对应开源原型 TESSERA。离线：由日志与 BPMN 重建活动与账本、导出 $G\!\to\!H$、估计覆盖与串谋界、由危害模型求解可行 $(r,T_{\mathrm{hb}})$；设备注册时一次签名锚定哈希链承诺根。
-在线：命令打开 pending；完成类声明走耦合互证；心跳槽走可问责沉默；任一通道告警则冻结派单。
-基线与攻击注入器只用于评估，不进入生产热路径。
+实现对应开源原型 TESSERA。模块与代码一一对应：M1~\texttt{ingest} 重建活动与账本；M2~\texttt{taskgraph} 导出 $G\!\to\!H$ 与 $W(a)$；M3~\texttt{corroborate} 在线互证；M4~\texttt{silence}+\texttt{crypto} 承诺根与心跳判定；M5~\texttt{coverage} 覆盖与无对手方区间；M6~\texttt{collusion} 前向闭包；M7~\texttt{budget} 求解可行 $(r,T_{\mathrm{hb}})$。
+离线跑 M1--M2--M5--M6--M7；设备注册时一次签名锚定哈希链承诺根。
+在线：命令打开 pending；完成类声明走 M3，心跳槽走 M4；任一通道告警则冻结派单。
+\texttt{baselines.py} 与 \texttt{attacks.py} 只用于评估，不进入生产热路径。
 总体数据流见图~\ref{fig:architecture}。
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=0.92\textwidth]{fig/fig_architecture.pdf}
+  \includegraphics[width=0.92\textwidth]{fig/fig_architecture_CN.pdf}
   \Description{Offline modules M1--M7 and online corroboration parallel silence pipeline.}
   \caption{方法总图（M1--M7）。离线导出见证集与 $(r,T_{\mathrm{hb}})$；在线 M3 与 M4 并行合用。}
   \label{fig:architecture}
@@ -482,13 +510,16 @@ $S$ 持有命令账本 $c$（已下发、未撤销的命令）；账本是调度
 Trier 上见证边 185 条，中位 $|W|{=}1$，最大 6。
 协议采用双截止：看门狗截止（命令打开）与互证截止（对手方确认窗口），时序见图~\ref{fig:protocol}；判定过程见算法~\ref{alg:corr}。
 结果为确认、显式否证或逾窗判定；证据可转移归档。
+默认表口径假定对手方可显式否证：P1/P3 的 $349/363$ 条判决在取件时刻产生，时延中位 $54.6$\,s，远早于窗口到期。
+关掉传感后褐地对手方只能等超时，P1 检出降至 $0.860$（$312/363$），时延中位约 $365$\,s。
+传感器覆盖度决定互证时延，不改变见证选取原则。
 \textbf{贡献在选取原则}：同协议对象下仅替换见证策略即可对照地理邻居、随机提名、全网询证与 PBFT 式法定人数（第~\ref{sec:eval}~节第二档）。
 
 互证时延受派发排队支配（本日志排队 p95 约 218\,s，容差取 260\,s），故只有\textbf{条件}上界——在对手方被派发之后；不代入功能安全时间预算。
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig/fig_protocol.pdf}
+  \includegraphics[width=\columnwidth]{fig/fig_protocol_CN.pdf}
   \Description{Timeline of command-opened dual deadlines and heartbeat preimage slots.}
   \caption{协议时序：命令打开双截止互证窗口；心跳槽与调度队列解耦。}
   \label{fig:protocol}
@@ -511,15 +542,19 @@ Trier 上见证边 185 条，中位 $|W|{=}1$，最大 6。
     \State 归档 \textsc{Expired}（误报分母仅计此类）
   \EndIf
 \EndUpon
+\Upon{逾 $t_{\mathrm{wd}}$ 且无完成声明}
+  \State 归档看门狗超时（计入 P2 检出；\textbf{不}计入互证误报分母）
+\EndUpon
 \end{algorithmic}
 \end{algorithm}
 
 \subsection{可问责沉默}
 \label{sec:silence}
 
-设备以 Ed25519 签名注册承诺根 $R_d$，绑定身份与会话；哈希链 $h_0,h_1,\dots$ 满足 $h_k=H(h_{k+1})$，元素与槽号一一对应。
-槽 $k$ 截止须披露原像 $h_k$，语义为``槽内状态仍落在预测带内''（算法~\ref{alg:silence}）。
-连续 $r$ 个槽缺失则确定性判定。
+设备以 Ed25519 签名注册承诺根 $R_d$，绑定 $\langle\mathrm{id},\,\mathrm{session},\,h_0,\,N,\,t_0,\,T_{\mathrm{hb}}\rangle$（后两项纳入签名，防止事后改间隔抵赖缺失）；哈希链满足 $h_k=H(h_{k+1})$，槽号与元素一一对应，并拒绝提前披露 $h_{k+1}$（否则可推出 $h_k$，等于预付未来沉默）。
+槽 $k$ 截止须披露原像 $h_k$，语义为``该设备在槽 $k$ 仍承诺本会话''（在线凭证，\textbf{不}编码任务状态；算法~\ref{alg:silence}）。
+连续 $r$ 个槽缺失则确定性判定沉默。
+完成类真伪由互证判定；原像只证明来源，不证明结果位。
 与 TESLA 的关键差别：链上原像直接作为一次性凭证，而非披露后失效的 MAC 密钥。
 
 \begin{algorithm}[t]
@@ -538,58 +573,85 @@ Trier 上见证边 185 条，中位 $|W|{=}1$，最大 6。
 \end{algorithmic}
 \end{algorithm}
 
-\begin{proposition}[原像披露的不可否认性（归约草图）]
+\begin{proposition}[原像披露的不可否认性]
 \label{prop:nr}
-设（i）$R_d$ 由设备私钥对 $\langle\mathrm{id},\,\mathrm{session},\,h_0\rangle$ 签名锚定；（ii）槽号与链元素一一绑定；（iii）松散同步保证接收方对截止 $t_k^\star$ 的判定一致。
-则任何第三方持有 $(R_d,h_k)$ 均可验证``$h_k$ 只能由承诺者产生''；攻击者若在截止后伪造合法 $h_k$，则可破哈希单向性或伪造 Ed25519 签名。
+设（i）$R_d$ 由设备私钥对 $\langle\mathrm{id},\,\mathrm{session},\,h_0,\,N,\,t_0,\,T_{\mathrm{hb}}\rangle$ 签名锚定；（ii）槽号与链元素一一绑定且拒绝提前披露；（iii）松散同步保证接收方对截止 $t_k^\star$ 的判定一致。
+则任何第三方持有 $(R_d,h_k)$ 均可验证``$h_k$ 只能由承诺者产生''（来源不可否认，不是任务状态为真）；在截止后输出通过验证的 $h_k'$ 可归约到打破 $H$ 的单向性或伪造 Ed25519 签名。
 \end{proposition}
-\begin{proof}[草图]
-验证即检查签名绑定与 $H^{(k)}(h_k)=h_0$。
-若敌手在不知 $h_{k+1}$ 时输出通过验证的 $h_k'$，则给出对 $H$ 的原像；若改绑定身份，则需伪造根签名。
-与 TESLA 不同，披露后第三方\emph{不能}用已公开密钥重算 MAC 冒充源，因为凭证本身即原像而非对称密钥。
-完整归约见附录（投稿版可展开）。
-\end{proof}
+证明见附录~\ref{app:nr}。
 
-心跳与调度队列解耦，故 $T_{\mathrm{detect}}\le r\,T_{\mathrm{hb}}$ 为\textbf{无条件}上界（检测回放口径下中位约 1.8\,s），接入第~\ref{sec:theory}~节定理。
+心跳与调度队列解耦，故 $T_{\mathrm{detect}}\le r\,T_{\mathrm{hb}}$ 为\textbf{无条件}上界（检测回放口径下中位约 1.8\,s），接入第~\ref{sec:bw}~节定理。
 
 \subsection{合用与归因}
 \label{sec:compose}
 
-仅互证：对 P2 沉默仍可因命令开窗而超时检出，但时延中位达数百秒，且无法代入无条件 FHI 预算。
+仅互证：对有对手方的 P2 仍可因命令开窗超时检出，全活动分母上 DR 仅 $0.746$，时延中位达数百秒，且无法代入无条件 FHI 预算。
 仅沉默：P3 按时披露原像同时谎报完成，DR${=}0$——这是互证不可被替代的直接证据。
-合用后无获胜支：P1/P2 由沉默压到约 1.8\,s，P3 由互证兜住。
-另有实测收益：沉默设备会拒绝为上游作证，导致诚实上游声明超时；沉默通道直接指认沉默者，避免冤枉上游。
+合用后，\textbf{仅在有对手方的交接上} P1--P3 无获胜支：P1/P2 由沉默压到约 1.8\,s（回放口径，不满足运动危害段 $0.60$\,s）；P3 由互证兜住，时延中位 $54.6$\,s 是互证检出而非秒级沉默界。
+无对手方缺口上互证关闭，P3 维持心跳则该支仍可逃。
+P4 只推迟，见覆盖矩阵。
+第二条合用理由是归因：沉默设备同时拒绝为上游作证，诚实上游声明会超时；沉默通道直接指认沉默者，避免冻结核实上游（第~\ref{sec:ablation}~节给出 277/69 的实测）。
 
 \subsection{覆盖与串谋界的设计面}
 \label{sec:covdesign}
 
-无对手方区间可用按需主动互证探测补洞；先知传感器天花板给出覆盖缺口上界（约 $29.95\%$）。
-串谋界可反用为派工约束（只下发互证路径足够长的分解）：实测可改善分布均值，但抬不动最小值与中位时须诚实陈述，不可写成提高了安全保证下界。
+无对手方区间（入库后无人接手、原地多工步、case 末位等）在 $H$ 上无超边。
+本实现\textbf{不}在热路径插入探测动作；先知传感器天花板（U1）给出缺口上界约 $29.95\%$（917 条），即若要补洞的靶区，不是已部署能力。
+这些区间的完成类谎言互证通道关闭，只靠沉默通道管活性：P1/P2 仍可被原像缺失抓住，P3 维持心跳则该支获胜。
+U1 是该缺口的上界，不是已部署补丁。
 
-\subsection{复杂度与密码预算}
-\label{sec:budget_eng}
+串谋界可反用为派工约束（只消除非相邻设备复用）。
+表~\ref{tab:dispatch} 表明：可达理想下 $k_{\min}$ 与中位纹丝不动，仅均值由 $5.13$ 抬至 $5.80$（约 $13\%$）；$1{,}282$ 条可改善链中原本 $k\le 2$ 的只有 14 条，增益几乎落在已安全的长链上。
+无约束理想会把 $k_{\min}$ 虚报成 2，而 23 条 $k{=}1$ 的链全是相邻同设备接手，排产改不动。
+故本项定位是``不牺牲产能下改善分布均值''，\textbf{不可}写成提高了安全保证下界；抬高保证只能靠造出原本不存在的见证事件。
 
-每条完成声明查 $W(a)$（中位 $O(1)$）并作常数次验签/归档；每槽一次原像披露与哈希核对。
-带宽 $n L/T_{\mathrm{hb}}$ 由预算反解。
-高频路径用链路层认证 + MAC，可问责沉默用哈希链令牌，稀有事件与视图切换才用签名。
-
-%=============================================================================
-\section{理论分析}
-\label{sec:theory}
+\begin{table}[t]
+  \centering
+  \caption{串谋界作为派工约束（Trier）}
+  \label{tab:dispatch}
+  \begin{tabular}{@{}lccc@{}}
+    \toprule
+     & 实际 & 可达理想 & 无约束理想 \\
+    \midrule
+    $k_{\min}$ & 1 & 1 & 2 \\
+    $k$ 中位 & 5 & 5 & 6 \\
+    $k$ 均值 & 5.13 & 5.80 & --- \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \subsection{串谋界}
 \label{sec:collusion}
 
-在互证超图上定义``下一对手方''关系的前向可达闭包。
-要使谎言存活至物料被消耗，联盟须覆盖闭包上每一跳。
-形式化对象是该闭包长度 $k$，而非最小顶点割。
-Trier 上实测 $k_{\min}{=}1$、中位 $5$、最大 $13$，$k\ge 3$ 约占 $81\%$。
-一跳串谋（P4）只推迟判决：主受害者可因串谋方背书而通过，串谋方随后交付仍被下游诚实设备否证。
-图~\ref{fig:collusion} 给出作用域内链的 $k$ 直方图。
+\begin{definition}[下一对手方与前向闭包]
+\label{def:closure}
+在互证超图 $H$ 上，活动 $a$ 的\textbf{下一对手方}是与 $a$ 同处一条交付--取件超边、并接手工件的设备。
+从被伪造活动出发，沿该关系迭代直至工件离开可互证链，所得设备集合称为该起点的\textbf{前向可达闭包}；记其基数为 $k$。
+谎言存活至物料被消耗，当且仅当被劫持联盟覆盖闭包上每一跳。
+形式化对象是闭包基数 $k$，而非把谎言与诚实观测者隔开的最小顶点割。
+\end{definition}
+
+作用域须保留同设备接手的 \textsc{SelfOnly} 链（228 条），否则会剔掉全部 23 条 $k{=}1$ 的最坏样本；本 case 内无人接手的 \textsc{NoRealized}（183 条）属覆盖缺口，不计入串谋界分母。
+表~\ref{tab:kdist} 与图~\ref{fig:collusion} 给出分布：任务状态伪造要永久隐藏，中位需五台设备同时被劫持，$81\%$ 的情形需三台以上；最坏 23 条链只需一台。
+一跳串谋（P4）只推迟判决：主受害者可因串谋方背书而通过（DR $0.184$），串谋方随后交付仍被下游诚实设备否证（DR $0.750$，逃脱率 $25.0\%$）。
+结构上 $k\le 2$ 约占 $19.0\%$，与该逃脱率同量级、可互为佐证，\textbf{不}写成定量吻合。
+
+\begin{table}[t]
+  \centering
+  \caption{串谋界 $k$ 的分布（前向闭包；2\,373 条在作用域内的链）}
+  \label{tab:kdist}
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+    $k_{\min}$ & 中位 & 最大 & $k\ge 3$ & $k{=}1$ 最坏链 \\
+    \midrule
+    1 & 5 & 13 & $80.99\%$ & 23 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig/fig_collusion.pdf}
+  \includegraphics[width=\columnwidth]{fig/fig_collusion_CN.pdf}
   \Description{Histogram of collusion bound k over in-scope chains.}
   \caption{串谋界 $k$ 的分布（前向闭包；数据由 \texttt{tessera} 现场导出）。}
   \label{fig:collusion}
@@ -606,15 +668,16 @@ Trier 上实测 $k_{\min}{=}1$、中位 $5$、最大 $13$，$k\ge 3$ 约占 $81\
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig/fig_budget_chain.pdf}
+  \includegraphics[width=\columnwidth]{fig/fig_budget_chain_CN.pdf}
   \Description{Four-stage chain from hazard model to bandwidth lower bound.}
   \caption{带宽--安全裕度四段链。定理只接沉默通道的无条件时延上界。}
   \label{fig:budget-chain}
 \end{figure}
 
-直接借用汽车领域 FHI${=}2.43$\,s 会导致假合规：留给检测的时间可使低速 AGV 驶出防护场。
-应由危害模型反推，例如防护场 $1.275$\,m、$v{=}1.5$\,m/s 时 $\mathrm{FHI}{=}\mathrm{field}/v{=}0.85$\,s。
-ISO~13855 / 3691-4 的距离公式作为第一段输入~\cite{iso13855,iso3691}；主威胁是调度损害时，该换算用于校准预算量级而非充当安全论断。
+直接借用汽车领域 $\mathrm{FHI}{=}2.43$\,s（DLR 算例~\cite{ase2023fhi}，反应段 $0.25$\,s）会导致\textbf{假合规}：留给检测 $2.18$\,s，而 $1.5$\,m/s 的低速 AGV 在这段时间走出 $3.27$\,m，为 ISO~3691-4 算例防护场 $1.275$\,m 的 $256\%$——车已冲出包络，预算却仍判满足。
+防护场由 ISO~13855 的 $S{=}KT{+}C$ 与 ISO~3691-4 给出第一段输入~\cite{iso13855,iso3691}（扫描仪 $0.10$\,s + 制动器 $0.15$\,s，反应 $0.375$\,m，加制动 $0.65$\,m 与裕度 $0.25$\,m，得 $1.275$\,m）。
+正确接法是由危害模型反推：$\mathrm{FHI}{=}\mathrm{field}/v{=}0.85$\,s，留给检测 $0.60$\,s，对应行驶 $0.90$\,m（防护场的 $71\%$）。
+主威胁是调度损害时，该换算只校准预算量级，\textbf{不}充当本文的安全论断。
 
 \begin{theorem}[带宽受安全约束限制]
 \label{thm:bw}
@@ -628,39 +691,92 @@ ISO~13855 / 3691-4 的距离公式作为第一段输入~\cite{iso13855,iso3691}�
 \end{theorem}
 \begin{proof}[草图]
 沉默判定至多等待 $r$ 个槽，故 $T_{\mathrm{detect}}\le r\,T_{\mathrm{hb}}$；要求其不超过 $T_{\mathrm{budget}}$ 即得（a）。
-误报由丢包导致的虚假缺失决定：独立丢包下可用二项尾，突发下用相关模型抬高有效 $r$（实现见 \texttt{budget.py}）。
+误报由丢包导致的虚假缺失决定：独立丢包下槽缺失服从二项尾 $\Pr[X\ge r]$；突发丢包用相关系数 $\rho$ 抬高有效连丢概率，从而抬高满足 $\Lambda$ 所需的最小 $r$。
 在可行集上极大化 $T_{\mathrm{hb}}$ 等价于极小化 $B=nL/T_{\mathrm{hb}}$。
-最优落在（a）边界当且仅当安全预算比误报预算更紧——这是``带宽受安全约束''的操作化定义，可由求解器返回的 binding 标签核验。
+最优落在（a）边界当且仅当安全预算比误报预算更紧——这是``带宽受安全约束''的操作化定义。
 互证窗口 $\Delta$ 不含于本定理：其由派发排队支配、无通用上界。
 \end{proof}
 
-实测（28 台设备、丢包 1\%、误报预算 1 次/h）：突发容忍相对独立丢包约 $3.32\times$ 带宽代价；预算由汽车口径收紧至运动危害约 $4.59\times$；最严口径（运动危害 + 突发）$7675$\,B/s，仍为 5\,Hz PBFT 量级的 $1/131$。
-FHI、反应时间与丢包率为引用或仿真参数（Trier 无 AGV/通信层），须在表注标注来源。
+表~\ref{tab:budget} 给出 28 台设备、丢包 $1\%$、误报预算 1 次/h 的求解结果。
+四个口径中三个顶在安全边界（余量 ${<}1.5\%$）；汽车+突发同时顶满安全与误报两条约束。
+突发容忍相对独立丢包约 $3.32\times$ 带宽代价；预算由汽车口径收紧至运动危害约 $4.59\times$。
+论文报最严口径（运动危害 + 突发）$7{,}675$\,B/s，仍为 5\,Hz PBFT 量级的 $1/131$；不用最松的 $621$\,B/s 夸大倍数。
+参数来源见表~\ref{tab:params}：FHI、反应时间与丢包率均为引用或仿真（Trier 无 AGV、无通信层）。
+
+\begin{table}[t]
+  \centering
+  \caption{带宽--安全裕度可行点（$n{=}28$，$L{=}16$\,B，$\Lambda{=}1$/h）}
+  \label{tab:budget}
+  \begin{tabular}{@{}llcccc@{}}
+    \toprule
+    危害 & 丢包 & $T_{\mathrm{hb}}$ & $r$ & 带宽 & 顶在 \\
+    \midrule
+    汽车 $2.43$\,s & 独立 & $0.722$\,s & 3 & $621$\,B/s & 安全 \\
+    汽车 $2.43$\,s & 突发 $\rho{=}0.3$ & $0.268$\,s & 8 & $1{,}672$\,B/s & 两条同时 \\
+    运动 $0.85$\,s & 独立 & $0.194$\,s & 3 & $2{,}311$\,B/s & 安全 \\
+    运动 $0.85$\,s & 突发 $\rho{=}0.3$ & $0.058$\,s & 10 & $7{,}675$\,B/s & 安全 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{复杂度与密码预算}
+\label{sec:budget_eng}
+
+每条完成声明查 $W(a)$（中位 $O(1)$）并作常数次验签/归档；每槽一次原像披露与哈希核对。
+带宽 $n L/T_{\mathrm{hb}}$ 由预算反解。
+高频路径用链路层认证 + MAC，可问责沉默用哈希链令牌，稀有事件与视图切换才用签名。
 
 %=============================================================================
-\section{实验评估}
+\section{实验与结果分析}
 \label{sec:eval}
 
 \subsection{实验设置}
 \label{sec:setup}
 
 \textbf{主数据：}Fischertechnik Trier IoT 事件日志 + 16 个 BPMN~\cite{trier2022}，自建攻击注入器 P1--P4（默认注入率 0.2、种子 42）。
-\textbf{叙事/数据/参数分离：}AGV 叙事只用于威胁说明；心跳与 FHI 参数非本日志实测。
-\textbf{指标：}检出率（DR）、误报率（FAR）、判别力、检测时延、见证集规模、串谋界 $k$、带宽。
-\textbf{铁律：}每次对比声明等带宽或等误报率。
+注入器知识等级固定为 \texttt{ledger}：攻击者可见发往本机的命令，伪造时如实回答账本、只把结果位翻真；不提供更弱知识等级（弱注入会把第一档结构性 0 测成假象）。
+\textbf{叙事/数据/参数分离：}AGV 叙事只用于威胁说明；心跳、FHI 与丢包参数非本日志实测，来源见表~\ref{tab:params}。
+\textbf{指标：}检出率（DR）、误报率（FAR）、判别力（DR${-}${FAR}）、检测时延、见证集规模、串谋界 $k$、带宽、悬而未决条数。
+\textbf{公平性：}赛马式对比（第三档 H1）声明等带宽或等误报率；第二档是等协议、只换见证选取，不要求等带宽或等 FAR。
 基线按\textbf{消耗的信息}分档，不按论文分组。
-\textbf{复现：}协议与基线实现于开源原型 TESSERA（\texttt{paper03/tessera}）；一键入口 \texttt{py main.py}，断言集 \texttt{tests/test\_all.py}（63 条）锚定本文主表数字。
+W1 表中 $\overline{|W|}$ 与本文同为协议见证集均值 2.18，\textbf{不含}共识副本；其代价是全网共识消息带宽。
+协议与基线实现于开源原型 TESSERA；复现入口见文末可用性说明。
+
+\begin{table}[t]
+  \centering
+  \caption{预算与回放参数来源（Trier 无 AGV、无通信层）}
+  \label{tab:params}
+  \begin{tabular}{@{}llp{0.38\columnwidth}@{}}
+    \toprule
+    参数 & 取值 & 来源 \\
+    \midrule
+    $n$ & 28 & 引导例规模；带宽对照用 \\
+    $L$ & 16\,B & 截断原像（实现） \\
+    防护场 / $v$ & $1.275$\,m / $1.5$\,m/s & ISO~3691-4 算例~\cite{iso3691} \\
+    汽车 FHI / $T_{\mathrm{react}}$ & $2.43$\,s / $0.25$\,s & ASE 算例~\cite{ase2023fhi} \\
+    运动 FHI & $0.85$\,s & $\mathrm{field}/v$（校准量级） \\
+    $p$, $\rho$ & $1\%$, $0.3$ & 仿真；工业无线成簇丢包 \\
+    $\Lambda$ & 1 次/h & 误报预算（设定） \\
+    回放 $T_{\mathrm{hb}},r$ & $0.2$\,s, $9$ & 突发口径下满足 $\Lambda$ \\
+    互证容差 $\Delta$ & 260\,s & 良性流排队 p95 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \subsection{第一档：单观测者结构性失效}
 \label{sec:tier1}
 
-伪造声明在单观测者可见字段上可与良性一致。
-看门狗 S1、计划一致性残差 S2（通用 FDI 类）、对齐式过程一致性 S3 对 P1/P3 检出为结构性 0（或判别力约 0）；对 P2 能发现沉默。
-该档证明必须引入物理对手方，不是与本文赛马（图~\ref{fig:tier1}）。
+P1 伪造声明在单观测者可见的 7 个字段上与良性逐字段一致，时长 100\% 落在该（设备, 操作）的良性四分位距内。
+因此看门狗 S1、计划一致性残差 S2（通用 FDI 类）、对齐式过程一致性 S3 对 P1/P3 的失效是\textbf{构造性的}，不是阈值没调好。
+为防``没实现好''的质疑：阈值按纯良性流标定；看门狗与本文同窗口、同 260\,s 容差；S3 不用朴素 case 内相邻顺序（并发物料链、XOR 可选后继与残缺 BPMN 会带来约 $28\%$ 假误报），只保留全局非法活动与交接对上的严格逆序，修好后 $\mathrm{FAR}{=}0$ 且 $\mathrm{DR}{=}0$。
+R0 为匹配告警率的随机指控，作地板。
+P1 与 P3 在本档必须同数（差别只在原像字段，单观测者不可见）；P2 列如实报看门狗/残差/一致性也能发现沉默。
+该档互证列与覆盖矩阵同为有传感口径（P1/P3 DR${=}1.000$）；无传感褐地见第~\ref{sec:corr}~节。
+该档证明必须引入物理对手方，不是与本文赛马（图~\ref{fig:tier1}、表~\ref{tab:tier1}）。
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig/fig_tier1.pdf}
+  \includegraphics[width=\columnwidth]{fig/fig_tier1_CN.pdf}
   \Description{Bar chart of tier-1 baseline detection rates on P1 P2 P3.}
   \caption{第一档基线：单观测者族对 P1/P3 结构性失效，对 P2 仍可发现沉默。}
   \label{fig:tier1}
@@ -668,16 +784,17 @@ FHI、反应时间与丢包率为引用或仿真参数（Trier 无 AGV/通信层
 
 \begin{table}[t]
   \centering
-  \caption{第一档基线（P1；与本文同窗口口径）}
+  \caption{第一档基线（与本文同窗口口径；判别力 ${=}$P1 DR${-}${FAR}）}
   \label{tab:tier1}
-  \begin{tabular}{@{}lcccc@{}}
+  \begin{tabular}{@{}lccccc@{}}
     \toprule
-    方法 & FAR & P1 DR & P3 DR & P2 DR \\
+    方法 & FAR & P1 DR & P3 DR & P2 DR & 判别力 \\
     \midrule
-    S1 看门狗 & 0.042 & 0.000 & 0.000 & 1.000 \\
-    S2 计划残差 & 0.004 & 0.003 & 0.003 & 1.000 \\
-    S3 一致性检验 & 0.000 & 0.000 & 0.000 & 1.000 \\
-    \textbf{耦合互证} & 0.023 & \textbf{1.000} & \textbf{1.000} & 1.000 \\
+    R0 随机指控 & 0.019 & 0.014 & 0.014 & 0.000 & $-0.005$ \\
+    S1 看门狗 & 0.042 & 0.000 & 0.000 & 1.000 & $-0.042$ \\
+    S2 计划残差 & 0.004 & 0.003 & 0.003 & 1.000 & $-0.001$ \\
+    S3 一致性检验 & 0.000 & 0.000 & 0.000 & 1.000 & 0.000 \\
+    \textbf{耦合互证} & 0.023 & \textbf{1.000} & \textbf{1.000} & 0.746 & \textbf{0.977} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -685,46 +802,51 @@ FHI、反应时间与丢包率为引用或仿真参数（Trier 无 AGV/通信层
 \subsection{第二档：见证选取原则（主结果）}
 \label{sec:tier2}
 
-同一互证协议、同一窗口与容差，仅替换见证策略（图~\ref{fig:witness}）：
+同一互证协议、同一密码学、同一窗口与 260\,s 容差，仅替换 \texttt{WitnessPolicy}（图~\ref{fig:witness}、表~\ref{tab:tier2}）。
+攻击参数与覆盖矩阵一致（P1，注入率 0.2，种子 42）。
 
 \begin{figure*}[t]
   \centering
-  \includegraphics[width=0.88\textwidth]{fig/fig_witness.pdf}
+  \includegraphics[width=0.88\textwidth]{fig/fig_witness_CN.pdf}
   \Description{P1 detection rate and mean witness set size for OURS and W1--W4.}
-  \caption{第二档主结果：同协议下只换见证选取。空间邻居（W4）约恢复本文 52\% 检出且见证集更大。}
+  \caption{第二档主结果：同协议下只换见证选取。空间邻居（W4）恢复 $0.518$ 检出且见证集更大。}
   \label{fig:witness}
 \end{figure*}
 
 \begin{table}[t]
   \centering
-  \caption{第二档：同协议下见证选取对照（P1）}
+  \caption{第二档：同协议下只换见证选取（P1）}
   \label{tab:tier2}
-  \begin{tabular}{@{}lccc@{}}
+  \small
+  \begin{tabular}{@{}lccccc@{}}
     \toprule
-    策略 & DR & 相对 $|W|$ 均值 & 备注 \\
+    策略 & $\overline{|W|}$ & FAR & P1 DR & 判别力 & 悬而未决 \\
     \midrule
-    W1 PBFT 式法定人数 & 0.000 & ${\approx}1\times^{\dagger}$ & 无物理证据 \\
-    W2 全体询证 & ${\approx}$本文 & $4.13\times$ & 零增益 \\
-    W3 随机 $k$ 见证 & 0.105 & ${\approx}1\times$ & 崩塌 \\
-    W4 空间邻居 & ${\approx}0.52$ & $1.34\times$ & 主对照 \\
-    \textbf{任务图 $W(a)$} & \textbf{1.000} & $1\times$ & 本文 \\
+    \textbf{任务图对手方} & 2.18 & 0.023 & \textbf{1.000} & \textbf{0.977} & 401 \\
+    W1 法定人数 & 2.18 & 0.000 & 0.000 & 0.000 & 0 \\
+    W2 全体询证 & 9.00 ($4.13\times$) & 0.023 & 1.000 & 0.977 & 900 \\
+    W3 随机 $k$ & 1.00 & 0.002 & 0.105 & 0.103 & 2\,162 \\
+    W4 空间邻居 & 2.92 ($1.34\times$) & 0.000 & 0.518 & 0.518 & 1\,331 \\
     \bottomrule
   \end{tabular}
   \begin{tablenotes}
-    \item $^{\dagger}$W1 的见证集规模与本文同为均值 2.18；其额外代价是全网共识消息带宽约为沉默心跳的 $131\times$，不是 $|W|$ 放大。
+    \item W1 的 $\overline{|W|}$ 是协议见证集（不含共识副本）；额外代价是全网共识消息带宽约为沉默心跳的 $131\times$。
   \end{tablenotes}
 \end{table}
 
-头条主张：贡献在任务图选取原则；``更多见证者''或``有见证''本身不够。W1 说明付高带宽换一致性仍检不出任务状态伪造。
+读表：（1）\textbf{W4 是主对照}---空间邻接是静态的，与当前 case 的工艺路线无关，只恢复 $0.518$ 检出却多付 $34\%$ 见证集，说明增量在任务图选取原则；（2）\textbf{W1} 确认的是消息一致而非物理事实，检出恰为 0，能力等于看门狗，带宽约 $131\times$---付高带宽换一个看门狗。操作化上不给它互证窗口或否证通道：给了会白捡约 $0.136$ 的检出，等于把耦合互证交给它，不是对照共识；（3）\textbf{W2} 与本文检出、误报逐位相同，零增益；悬而未决由 401 涨到 900 是覆盖率假象（双截止使从未派发的对手方不装填窗口，故不产生假指控）；（4）\textbf{W3} 崩到 $0.105$，失败形态是结算不了（2\,162 条）而非乱指控。``有见证者''不等于``有正确的见证者''。
 
 \subsection{消融与覆盖矩阵}
 \label{sec:ablation}
 
 表~\ref{tab:coverage} 即消融；热力图见图~\ref{fig:ablation}：去掉互证则 P3 完全逃脱；去掉沉默则 P1/P2 时延恶化一到两个数量级。
+另有一项合用收益：P2 下有 277 条诚实声明因其下游沉默而超时（良性流仅 69 条）。
+这不是协议误报，而是攻击的真实后果---沉默者同时拒绝为上游作证。
+沉默通道直接指认沉默者，上游未确认声明才能被正确归因而非被冤枉。
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig/fig_ablation.pdf}
+  \includegraphics[width=\columnwidth]{fig/fig_ablation_CN.pdf}
   \Description{Heatmap of detection rate and latency across attacks and channels.}
   \caption{消融/覆盖矩阵热力图（格内为 DR 与时延中位）。P3 行表明互证不可替代。}
   \label{fig:ablation}
@@ -733,13 +855,31 @@ FHI、反应时间与丢包率为引用或仿真参数（Trier 无 AGV/通信层
 \subsection{第三、四档与预算扫参}
 \label{sec:tier34}
 
-等带宽周期性全量上报（H1）时延约 $8\times$，最严口径超出检测预算（图~\ref{fig:heartbeat}）；无密码绑定的 GOOSE 式心跳（H2）有活性无归责；TESLA 式延迟密钥（H3）披露后可伪造，归责失败。
-先知传感器预言机（U1）覆盖 100\%，相对实现覆盖的缺口约 $29.95\%$（图~\ref{fig:coverage}）。
-沉默带宽相对 5\,Hz PBFT 的倍数见图~\ref{fig:budget-bw}；丢包率扫参见图~\ref{fig:loss}（含 $p{=}50\%$ 地标，突发下约 $27502$\,B/s）。
+本档不比 P1 检出率（那是第一档的结构性 0），只接带宽定理与归责划界。
+等带宽周期性全量上报（H1）时延约为报文比 $8\times$（128\,B 状态帧 / 16\,B 原像），最严口径下周期上报需 $4.68$\,s 才能判沉默，而运动危害只留给检测 $0.60$\,s---同带宽下对方在安全预算内不可行（图~\ref{fig:heartbeat}）。
+H2/H3 与本文的归责差别见表~\ref{tab:h23}：GOOSE 式心跳有活性、无身份绑定、不能抗伪心跳；TESLA 式延迟密钥在披露后第三方可重算 MAC，RFC~4082 明确不提供不可否认性。
+先知传感器预言机（U1）覆盖 100\%，相对实现覆盖的缺口约 $29.95\%$（917 条；图~\ref{fig:coverage}），即第~\ref{sec:covdesign}~节按需探测的靶区上界，本实现未插入探测动作；该缺口上 P3 维持心跳则合用仍抓不住。
+沉默带宽相对 5\,Hz PBFT 的倍数见图~\ref{fig:budget-bw}；丢包率扫参见图~\ref{fig:loss}（含 $p{=}50\%$ 地标，突发下约 $27{,}502$\,B/s，仍为 PBFT 的 $1/36$）。
+
+\begin{table}[t]
+  \centering
+  \caption{第三档：沉默归责划界（不比 P1 检出率）}
+  \label{tab:h23}
+  \begin{tabular}{@{}lcccc@{}}
+    \toprule
+     & 发现沉默 & 身份绑定 & 披露后不可伪造 & 可转移证据 \\
+    \midrule
+    H1 等带宽周期上报 & 是（时延 ${\approx}8\times$） & --- & --- & --- \\
+    H2 GOOSE 式心跳 & 是 & 否 & --- & 否 \\
+    H3 TESLA 式密钥 & 是 & 有 & \textbf{否} & 否 \\
+    本文可问责沉默 & 是（$r T_{\mathrm{hb}}$） & 根签名 & 原像作一次性凭证 & 是 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig/fig_heartbeat.pdf}
+  \includegraphics[width=\columnwidth]{fig/fig_heartbeat_CN.pdf}
   \Description{Equal-bandwidth periodic detection delay versus accountable silence.}
   \caption{第三档 H1：等带宽周期全量上报的检测时延约为沉默通道的 $8\times$，且超出运动危害检测预算。}
   \label{fig:heartbeat}
@@ -747,7 +887,7 @@ FHI、反应时间与丢包率为引用或仿真参数（Trier 无 AGV/通信层
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig/fig_budget_bw.pdf}
+  \includegraphics[width=\columnwidth]{fig/fig_budget_bw_CN.pdf}
   \Description{Silence heartbeat bandwidth under three regimes versus PBFT ratio.}
   \caption{可问责沉默心跳带宽。论文应报最严口径（运动+突发，$\approx$ PBFT$/131$）。}
   \label{fig:budget-bw}
@@ -755,7 +895,7 @@ FHI、反应时间与丢包率为引用或仿真参数（Trier 无 AGV/通信层
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig/fig_loss_sweep.pdf}
+  \includegraphics[width=\columnwidth]{fig/fig_loss_sweep_CN.pdf}
   \Description{Required bandwidth versus packet loss probability.}
   \caption{丢包率扫参（数据：\texttt{tessera/experiments/loss\_sweep.csv}）。}
   \label{fig:loss}
@@ -763,29 +903,85 @@ FHI、反应时间与丢包率为引用或仿真参数（Trier 无 AGV/通信层
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig/fig_coverage.pdf}
+  \includegraphics[width=\columnwidth]{fig/fig_coverage_CN.pdf}
   \Description{Fraction of activities corroborated versus oracle gap.}
-  \caption{第四档 U1：先知覆盖与实现覆盖之差即按需主动互证靶区。}
+  \caption{第四档 U1：先知覆盖与实现覆盖之差（$29.95\%$）为按需探测靶区上界；本实现未插入探测。}
   \label{fig:coverage}
 \end{figure}
 
 %=============================================================================
-\section{局限与结论}
+\section{结论}
 \label{sec:conclusion}
 
+本文针对被劫持设备的无残差任务状态伪造，提出任务图诱导的耦合互证与不依赖分歧的可问责沉默，并把心跳间隔接到危害模型导出的时间预算。
+
+\subsection{结论与贡献}
+\label{sec:contributions}
+
+有对手方时合用后 P1--P3 无获胜支；无对手方缺口上 P3 仍可逃。
+Trier 上：单观测者族对 P1/P3 结构性失效；同协议只换选取时空间邻居恢复 $0.518$ 检出；P3 证明互证不可替代；对照规模 $n{=}28$ 下最严心跳带宽 $7.7$\,KB/s，约为 5\,Hz 全网 PBFT 的 $1/131$。
+部署含义：$T_{\mathrm{hb}}$ 由安全预算解出，见证按任务图配置。
+
 \subsection{局限}
+\label{sec:discussion}
 
-需要松散时间同步与有界心跳，否则归责退回异步不可归因困境。
-同一超边上对手方同时被劫持时，该跳互证失效——这是应由串谋界量化的边界，不是实现缺陷。
-不假设 TEE，故不检测软件篡改本身，只检测其在任务状态上的外显后果。
-存在无对手方覆盖缺口；FHI/丢包非 Trier 实测；主危害是调度损害。
+W4 只恢复约一半检出，是因为空间邻接与当前工件走哪条工艺路线无关：既漏掉图上不相邻的真对手方，又纳入大量无关设备；本文规则由任务图与当前 case 共同确定，是动态的。
+覆盖缺口 $29.95\%$ 不是实现失败：每个 case 末位活动无下游接手是结构上界；去掉末位后链中覆盖约 $77\%$。
+剩余缺口（入库后无人接手、原地多工步）排产改不动，本实现也未插入探测，故这些区间完成类谎言不在互证范围内：P3 维持心跳则该支获胜。
+无传感是另一条部署约束：有对手方但无到料/取件传感时，P1 只能靠逾窗，检出降至 $0.860$、时延中位约 $365$\,s；主表 $1.000/54.6$ 是有传感口径。
 
-\subsection{结论}
+运动危害下的 FHI 只校准心跳预算量级；主危害叙事仍是调度损害（骗完成/空闲、下游饥饿），不得把 ISO 距离公式读成已证明碰撞安全。
+一跳串谋是定义~\ref{def:closure} 量化的结构边界，不是漏检：谎言要活到物料消耗须买通前向闭包上每一跳；$k_{\min}{=}1$ 的 23 条链必须报出。
 
-本文针对被劫持设备的任务状态伪造，提出任务图诱导的耦合互证与不依赖分歧的可问责沉默，并给出带宽--安全裕度权衡。
-Trier 实验表明：单观测者族对无残差伪造结构性失效；见证选取原则决定检出能力；P3 证明互证不可替代；最严心跳带宽仍较周期性全网 PBFT 低两个数量级。
-部署含义：$T_{\mathrm{hb}}$ 由安全预算解出；见证按任务图配置。
-未来工作包括在柔性车间上最大化互证覆盖的派工，以及实网丢包与时间同步标定。
+局限还包括：需要松散时间同步与有界心跳，否则归责退回异步不可归因困境；不假设 TEE，故不检测软件篡改本身，只检测其在任务状态上的外显后果；FHI、丢包率与突发系数均非 Trier 实测；主实验仅一套日志、默认注入率与多种子未扫。
+
+\subsection{未来工作}
+\label{sec:future}
+
+对应上述局限：在柔性车间插入低成本可观测动作，以补无对手方缺口并抬高 $k_{\min}$；在实网上标定丢包与时间同步；对注入率与多种子作扫参。
+
+\begin{acks}
+感谢 Fischertechnik Trier 日志维护者提供公开事件数据~\cite{trier2022}。
+原型 TESSERA 与断言集随论文开源。
+\end{acks}
+
+\paragraph{数据与代码可用性。}
+协议、基线与注入器实现于开源原型 TESSERA（\texttt{paper03/tessera}）。
+一键入口为 \texttt{py main.py}；断言集 \texttt{tests/test\_all.py}（63 条）锚定本文主表。
+主数据为公开的 Trier IoT 事件日志与 16 个 BPMN~\cite{trier2022}。
+
+%=============================================================================
+\appendix
+\section{命题~\ref{prop:nr} 的归约}
+\label{app:nr}
+
+记单向哈希 $H:\{0,1\}^\ast\to\{0,1\}^\lambda$（实现中 $\lambda{=}128$，原像抗性；域分离标签 $\mathsf{tessera}|\mathrm{id}|\mathrm{session}$ 拌入每一步）。
+设备 $d$ 抽样种子并构造反向链，令 $h_0$ 为承诺根，用 Ed25519 私钥对
+$\sigma\leftarrow\mathrm{Sign}_{sk}(\langle\mathrm{id},\,\mathrm{session},\,h_0,\,N,\,t_0,\,T_{\mathrm{hb}}\rangle)$
+注册 $R_d=(h_0,\sigma)$。
+槽 $k$ 的合法凭证是满足 $H^{(k)}(h_k)=h_0$ 的 $h_k$；验证者拒绝 $k$ 尚未截止时到达的 $h_{k'}$（$k'>k$）。
+
+\textbf{验证。}
+第三方持有 $R_d$ 与 $h_k$ 时检查：（i）$\sigma$ 在 $pk$ 下对上述绑定验证通过；（ii）带域分离的 $H^{(k)}(h_k)=h_0$；（iii）披露时刻 $\le t_k^\star=t_0+k T_{\mathrm{hb}}+\varepsilon$。
+三者同时成立则接受``$d$ 在槽 $k$ 披露过原像''（来源不可否认，不蕴含任务状态为真）。
+
+\textbf{伪造游戏。}
+敌手 $\mathcal{A}$ 不持有种子与 $sk$，可适应性地观察截止前的合法披露 $\{h_j\}_{j<k}$，并输出 $(k^\star,h^\star)$。
+若验证通过且 $h^\star$ 不是 $d$ 在槽 $k^\star$ 的合法原像，则 $\mathcal{A}$ 获胜。
+分两类：
+
+\emph{类型 I（原像）。}
+绑定字段与 $R_d$ 一致，但 $h^\star$ 使 $H^{(k^\star)}(h^\star)=h_0$ 且 $h^\star\neq h_{k^\star}$。
+则 $h^\star$ 是对 $H^{(k^\star)}(\cdot)=h_0$ 的第二原像（或在已知后缀 $h_j$、$j<k^\star$ 时对下一步 $H$ 的原像）。
+由 $H$ 的单向性，该事件可忽略。
+已披露的 $h_j$（$j<k^\star$）不能前向推出 $h_{k^\star}$，因为链按反向生成；提前披露 $h_{k^\star+1}$ 被协议拒绝，故不能预付未来槽。
+
+\emph{类型 II（改绑定）。}
+$\mathcal{A}$ 输出另一身份或另一 $(N,t_0,T_{\mathrm{hb}})$ 上的根 $R'$ 使验证通过。
+则 $\mathcal{A}$ 给出了对 Ed25519 的 EUF-CMA 伪造。
+
+与 TESLA~\cite{tesla2001,rfc4082} 的差别：TESLA 把链元素当作 MAC 密钥，披露后任何人可重算 MAC；此处凭证本身即原像，披露不产生可冒充源的对称密钥。
+因此在（i）--（iii）下，截止后伪造合法 $h_k$ 可归约到打破 $H$ 的单向性或伪造 Ed25519 签名。
 
 %=============================================================================
 \begin{thebibliography}{99}
@@ -915,6 +1111,11 @@ ISO~13855,
 \bibitem{iso3691}
 ISO~3691-4:2023,
 ``Industrial trucks --- Safety requirements and verification --- Part~4: Driverless industrial trucks.''
+
+\bibitem{ase2023fhi}
+J.~S.~Becker, B.~Koopmann, I.~Stierand, and L.~Westhofen,
+``Providing Evidence for Correct and Timely Functioning of Software Safety Mechanisms,''
+in \textit{Proc. Software Engineering 2023 Workshops}, 2023, pp.~66--77, doi:10.18420/se2023-ws-09.
 
 \end{thebibliography}
 

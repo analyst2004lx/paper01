@@ -6,7 +6,7 @@
 k = 4..10(即 8x4x4 到 20x10x10),拥堵档、异构度 H、柔性度 F、运输/加工时长比
 Tt/Tp 与 LU 割、远端割全部同口径(见 `clbs/tools/gen_instances.py` 的标定)。
 
-三条臂与 tools.cheap_baselines 同定义(R2 闭包修复 / RS 全局右移 / RD 原染色体
+三条臂与 tools.cheap_baselines 同定义(R2 闭包修复 / RS 全局右移 / RD 固定前缀
 重解码),扰动协议与 E1--E3 一致。
 
 用法(STRC/ 目录下):

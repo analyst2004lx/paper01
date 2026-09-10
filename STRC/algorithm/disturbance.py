@@ -158,3 +158,18 @@ def schedule_still_valid_under_block(
         if r.corridor == dist.corridor and r.overlaps(t0, t1) and r.t_end > dist.t_now + EPS:
             return False
     return True
+
+
+def schedule_still_valid_under_slowdown(
+    reservations: Sequence[ReservationRef],
+    dist: Disturbance,
+) -> bool:
+    """原排程按未缩放 τ 写出:凡与降速窗重叠的未来占用都已偏短,故不可行。"""
+    if dist.type != "corridor_slowdown" or not dist.corridor:
+        return True
+    t0 = float(dist.t_start if dist.t_start is not None else dist.t_now)
+    t1 = float(dist.t_end if dist.t_end is not None else float("inf"))
+    for r in reservations:
+        if r.corridor == dist.corridor and r.overlaps(t0, t1) and r.t_end > dist.t_now + EPS:
+            return False
+    return True
