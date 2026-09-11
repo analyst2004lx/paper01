@@ -167,9 +167,35 @@ def _build(source) -> list[Activity]:
     return list(by_key.values())
 
 
+#: 数据字典结论。HAI 公开 CSV 是 1 Hz 过程标签,不是调度作业流。
+HAI_DICTIONARY = {
+    "sampling_hz": 1,
+    "processes": ("P1 boiler", "P2 turbine", "P3 water", "P4 HIL"),
+    "record": "continuous process/actuator tags plus an attack flag",
+    "has_case_id": False,
+    "has_command_ledger": False,
+    "has_discrete_ops": False,
+    "interval_branch_needed": True,
+    "scheduling_layer_evaluable": False,
+    "reason": (
+        "HAI 23.05/22.04 每秒一行,列是 P1_/P2_/P3_ 过程量与执行器开度;"
+        "没有 case、没有 scheduled/assigned 命令账本、没有工序级操作名。"
+        "控制回路的设定值不是调度器派工。区间删失分支可以吃 1 Hz 量化,"
+        "但不能把连续标签改写成调度层评测;命令-响应硬层无法实例化。"
+    ),
+}
+
+
+def hai_dictionary_verdict() -> dict:
+    """不读 CSV 也能给出的 E7 前置判定。"""
+    return dict(HAI_DICTIONARY)
+
+
 def read_hai(path: str) -> list[Activity]:
-    """读 HAI。1 Hz 轮询,时序通道须走区间删失分支。"""
-    raise NotImplementedError("HAI 适配器待实现;时序通道须用 interval 分支")
+    """HAI 不能映射为调度层活动流。有 CSV 也不装成作业日志。"""
+    raise NotImplementedError(
+        HAI_DICTIONARY["reason"] + f" path={path}"
+    )
 
 
 def valid(acts: Iterable[Activity], *, drop_failure: bool = True):
@@ -237,3 +263,11 @@ def default_log_path() -> str:
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return os.path.normpath(os.path.join(
         here, "..", "database", "ft_trier_iot_log", "MainProcess_cleaned.xes"))
+
+
+def default_dirty_log_path() -> tuple[str, str]:
+    """含错版 (NTP/重复/缺失) 的 zip 与包内 MainProcess.xes 成员。"""
+    here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    z = os.path.normpath(os.path.join(
+        here, "..", "database", "ft_trier_iot_log", "DQI_Event_Log.zip"))
+    return z, "Data Quality Issues Event Log/MainProcess.xes"

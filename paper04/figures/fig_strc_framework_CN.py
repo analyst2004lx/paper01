@@ -42,9 +42,9 @@ def arrow(ax, x1, y1, x2, y2, color=C_EDGE, lw=1.2):
 
 
 def main() -> None:
-    fig, ax = plt.subplots(figsize=(8.4, 4.0))
+    fig, ax = plt.subplots(figsize=(8.4, 4.1))
     ax.set_xlim(0, 14)
-    ax.set_ylim(0, 8)
+    ax.set_ylim(-0.15, 8)
     ax.axis("off")
 
     box(ax, 0.25, 5.5, 2.7, 1.8,
@@ -91,8 +91,11 @@ def main() -> None:
         "输出\n可行性、耗时、\n$C_{\\max}$、预约改动量",
         fc="#eef2f6", fs=8.5)
 
-    ax.text(7.0, 0.25,
-            "同一无冲突执行器；仅释放集定义 / 搜索策略不同",
+    ax.text(7.0, 0.32,
+            "同一无冲突执行器；",
+            ha="center", fontsize=8, color="#555", style="italic")
+    ax.text(7.0, 0.02,
+            "仅释放集定义 / 搜索策略不同",
             ha="center", fontsize=8, color="#555", style="italic")
 
     fig.tight_layout()

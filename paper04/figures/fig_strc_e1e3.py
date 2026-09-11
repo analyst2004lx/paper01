@@ -52,7 +52,7 @@ def main() -> None:
     r2_feas = [sum(1 for r in by3[n] if r["R2_feasible"] == "True") / len(by3[n])
                for n in names]
 
-    fig, axes = plt.subplots(1, 2, figsize=(7.4, 2.8))
+    fig, axes = plt.subplots(1, 2, figsize=(7.4, 2.9))
 
     ax = axes[0]
     ax.bar(x - w, t_imp, w, label=r"$|T_{\mathrm{impact}}|$", color="#b0b8c0")
@@ -73,8 +73,7 @@ def main() -> None:
     ax.set_ylabel("feasibility rate")
     ax.set_ylim(0, 1.45)
     ax.set_title("E3: same engine, swap boundary")
-    # R2 的柱子在全部五格都顶到 1.0,右上角没有空位放图例,故压在标题下方居中。
-    ax.legend(loc="upper center", fontsize=7, ncol=2, framealpha=0.9)
+    ax.legend(loc="center left", fontsize=7)
     for i, (a, b) in enumerate(zip(r1_feas, r2_feas)):
         ax.text(i - w / 2, a + 0.03, f"{a:.0%}", ha="center", fontsize=7, color="#555")
         ax.text(i + w / 2, b + 0.03, f"{b:.0%}", ha="center", fontsize=7, color="#1f4e79")

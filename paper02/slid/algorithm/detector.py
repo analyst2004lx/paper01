@@ -298,7 +298,7 @@ class Detector:
                 if z is not None:
                     if not self.cfg.one_sided_timing:
                         z = -abs(z)
-                    p_t = 1.0 / (1.0 + math.exp(-z))   # z 越负越接近 0
+                    p_t = 1.0 / (1.0 + math.exp(-max(-60.0, min(60.0, z))))
             else:
                 v = timing.dwell_pvalue(m, act.duration_s, route=act.route,
                                         planned_s=act.planned_s,

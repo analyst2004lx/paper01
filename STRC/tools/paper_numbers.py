@@ -112,6 +112,10 @@ def main() -> int:
     worse = [r for r in e5 if float(r["R2_makespan"]) > float(r["R0_makespan"])]
     print("  R2 worse than R0+ in %d/%d budget points (no crossing)"
           % (len(worse), len(e5)))
+    if e5 and "R0_past_changed" in e5[0]:
+        past = [int(float(r["R0_past_changed"])) for r in e5]
+        print("  R0+ past_changed min=%d max=%d (A2 leak, reservations)"
+              % (min(past), max(past)))
 
     print("\n== scale ==")
     sp = [float(r["speedup"]) for r in scale if r["speedup"]]
@@ -147,6 +151,8 @@ def main() -> int:
 
     pub_section()
     cheap_section()
+    worth_section()
+    extra_section()
     return 0
 
 
@@ -235,7 +241,7 @@ def cheap_section() -> None:
     """便宜对照臂(E7)与算例规模扫描(E8)。
 
     两批都不并入上面的 50 对读数:E7 与 E1--E3 同协议但多了两条臂,E8 换的是算例规模。
-    这里同时打出 RD 的 A2 越界格数——RD 的 Cmax 不带这个数一起读就是误导。
+    RD 默认已走固定前缀;past_changed>0 的格是前缀泄漏,不是「从 t=0 重放」。
     """
     cheap = _read_exp("cheap_baselines.csv")
     if cheap is None:
@@ -352,6 +358,86 @@ def pub_section() -> None:
     ms0 = [float(r["R0_wall_ms"]) for r in e5]
     print("  R2 wall ms %.1f--%.1f   R0+ wall ms %.0f--%.0f"
           % (min(ms2), max(ms2), min(ms0), max(ms0)))
+
+
+def worth_section() -> None:
+    """E7 事后规则:释放占比对稳定性降幅。阈值在本样本上选定。"""
+    cheap = _read_exp("cheap_baselines.csv")
+    if cheap is None:
+        return
+    idx = {(r["instance"], r["seed"], r["arm"]): r for r in cheap}
+    pairs = []
+    for k in sorted({(r["instance"], r["seed"]) for r in cheap}):
+        a, b = idx.get((k[0], k[1], "R2")), idx.get((k[0], k[1], "RA"))
+        if a is None or b is None:
+            continue
+        if not (istrue(a["feasible"]) and istrue(b["feasible"])):
+            continue
+        share = float(a["release_size"]) / float(a["alive_size"])
+        delta = float(b["res_frac"]) - float(a["res_frac"])
+        pairs.append((k[0], share, delta))
+    if not pairs:
+        return
+    thresh = 0.93
+    lo = [d for _i, sh, d in pairs if sh < thresh]
+    hi = [d for _i, sh, d in pairs if sh >= thresh]
+    print("\n== E7 worth rule (post-hoc, thresh=%.2f) ==" % thresh)
+    print("  n=%d  below n=%d mean Δ=%.3f  above n=%d mean Δ=%.3f"
+          % (len(pairs),
+             len(lo), st.mean(lo) if lo else float("nan"),
+             len(hi), st.mean(hi) if hi else float("nan")))
+    by = defaultdict(list)
+    for inst, share, delta in pairs:
+        by[inst].append((share, delta))
+    for inst in ORDER:
+        rs = by.get(inst)
+        if not rs:
+            continue
+        print("  %-16s share %.3f  Δ %.3f"
+              % (inst, st.mean(s for s, _d in rs), st.mean(d for _s, d in rs)))
+
+
+def extra_section() -> None:
+    """边集试探 / 降速修复 / 边权扫描——有 CSV 才打。"""
+    probe = _read_exp("edge_probe.csv")
+    if probe:
+        print("\n== edge probe ==")
+        print("  pairs %d  with delay-leak %d/%d  total leaks %d  abut %d  same-AGV %d"
+              % (len(probe),
+                 sum(1 for r in probe if int(r["n_delay_leaks"]) > 0),
+                 len(probe),
+                 sum(int(r["n_delay_leaks"]) for r in probe),
+                 sum(int(r.get("n_abut") or 0) for r in probe),
+                 sum(int(r["n_same_agv_leaks"]) for r in probe)))
+
+    e6 = None
+    exp6 = os.path.join(EXP, "e6_types.csv")
+    if os.path.isfile(exp6):
+        with open(exp6, encoding="utf-8") as f:
+            e6 = list(csv.DictReader(f))
+    if e6 and e6[0].get("R2_feasible") not in (None, ""):
+        print("\n== E6 repair ==")
+        for t in ("corridor_block", "corridor_slowdown",
+                  "agv_breakdown", "ra_failure"):
+            rs = [r for r in e6 if r["dist_type"] == t and r.get("R2_feasible") not in (None, "")]
+            if not rs:
+                continue
+            print("  %-18s R2 feas %d/%d  expand %s"
+                  % (t, sum(1 for r in rs if istrue(r["R2_feasible"])), len(rs),
+                     ("%d/%d" % (sum(1 for r in rs if istrue(r.get("R2_feasible_expand"))),
+                                 len(rs)))
+                     if rs[0].get("R2_feasible_expand") not in (None, "") else "--"))
+
+    wt = _read_exp("weight_sweep.csv")
+    if wt:
+        print("\n== weight sweep E1/E3 ==")
+        for mode in sorted({r["mode"] for r in wt}):
+            rs = [r for r in wt if r["mode"] == mode]
+            print("  %-10s C1 %d/%d  R1 %d/%d  R2 %d/%d"
+                  % (mode,
+                     sum(1 for r in rs if istrue(r["pass_C1"])), len(rs),
+                     sum(1 for r in rs if istrue(r["R1_feasible"])), len(rs),
+                     sum(1 for r in rs if istrue(r["R2_feasible"])), len(rs)))
 
 
 if __name__ == "__main__":

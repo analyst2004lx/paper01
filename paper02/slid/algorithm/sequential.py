@@ -136,8 +136,8 @@ def detection_profile(streams, make_detector, budget: int) -> dict:
         if d is not None:
             delays.append(d)
     if n == 0:
-        return {"n": 0, "dr": float("nan")}
-    out = {"n": n, "dr": len(delays) / n}
+        return {"n": 0, "dr": float("nan"), "delays": []}
+    out = {"n": n, "dr": len(delays) / n, "delays": [int(d) for d in delays]}
     if delays:
         out["median_delay"] = float(np.median(delays))
         out["p90_delay"] = float(np.percentile(delays, 90))

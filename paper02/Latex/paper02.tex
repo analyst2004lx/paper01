@@ -68,9 +68,6 @@
 \providecommand{\WHILE}{\While}
 \providecommand{\ENDWHILE}{\EndWhile}
 \providecommand{\RETURN}{\State\textbf{return}~}
-\usepackage{tikz}
-% Load common tikz libraries used in figures (positioning provides the "of" syntax)
-\usetikzlibrary{positioning,arrows.meta,calc,shapes,shadows}
 % color support for \textcolor used inside algorithms
 \usepackage{xcolor}
 % Math packages required for \text and bold symbols inside math
@@ -373,21 +370,7 @@ Goldenberg 与 Wool~\cite{goldenberg2013modbus}用确定有限自动机刻画 {M
 
 \begin{figure}[!t]
 \centering
-\begin{tikzpicture}[
-  font=\small,
-  box/.style={draw, rounded corners=2pt, align=center, inner sep=6pt, minimum width=2.4cm},
-  arr/.style={-{Latex}, thick}
-]
-\node[box, fill=black!8] (sched) {调度系统 $\mathcal{C}$\\命令账本 $\mathcal{L}$};
-\node[box, fill=black!4, below=1.6cm of sched] (dev) {现场设备 $\mathcal{D}$\\物理过程};
-\node[box, fill=blue!8, right=2.1cm of sched] (det) {检测器\\硬层 / 时序 / 结构};
-\draw[arr] ([xshift=-8pt]sched.south) -- node[left] {命令 $u_t$} ([xshift=-8pt]dev.north);
-\draw[arr] ([xshift=8pt]dev.north) -- node[right] {状态 $s_t$} ([xshift=8pt]sched.south);
-\draw[arr, dashed] (sched) -- node[above] {只读账本} (det);
-\draw[arr, dashed] ([xshift=12pt]dev.east) |- (det.south);
-\node[font=\footnotesize, text=black!70] at ($(dev.south)+(0,-0.45)$)
-  {攻击者控制 $s_t$ 的内容与时刻，不控制物理节拍与 $\mathcal{L}$、$\mathbf F$};
-\end{tikzpicture}
+\includegraphics[width=0.92\linewidth]{figures/fig_system.pdf}
 \caption{调度层命令/状态回环。检测器只读命令账本与参考模型可行性掩码，对上行状态作在线判决。}
 \label{fig:system}
 \Description{调度系统与现场设备构成命令下行、状态上行的回环，检测器只读命令账本并对上行状态作硬层、时序与结构三路判决。}
@@ -462,30 +445,7 @@ Goldenberg 与 Wool~\cite{goldenberg2013modbus}用确定有限自动机刻画 {M
 
 \begin{figure}[!t]
 \centering
-\begin{tikzpicture}[
-  font=\footnotesize,
-  box/.style={draw, rounded corners=1pt, align=center, inner sep=4pt},
-  arr/.style={-{Latex}}
-]
-\node[box] (log) {正常日志};
-\node[box, right=0.35cm of log] (bpmn) {BPMN};
-\node[box, right=0.35cm of bpmn] (fit) {估计 $\tilde P$、时长核};
-\node[box, right=0.35cm of fit] (cal) {共形阈值、CUSUM 门限};
-\draw[arr] (log) -- (bpmn);
-\draw[arr] (bpmn) -- (fit);
-\draw[arr] (fit) -- (cal);
-\node[above=0.15cm of fit, font=\small] {离线};
-\node[box, fill=black!6, below=1.15cm of log] (msg) {消息 $m_t$};
-\node[box, fill=red!8, right=0.3cm of msg] (hard) {硬层 $\mathbf F$\\+ 账本};
-\node[box, fill=blue!8, right=0.3cm of hard] (stat) {时序 $z$ / 结构 $\tilde P$};
-\node[box, fill=green!8, right=0.3cm of stat] (seq) {CUSUM};
-\node[box, right=0.3cm of seq] (out) {告警或\\门控更新};
-\draw[arr] (msg) -- (hard);
-\draw[arr] (hard) -- (stat);
-\draw[arr] (stat) -- (seq);
-\draw[arr] (seq) -- (out);
-\node[below=0.05cm of stat, font=\small] {在线，$O(1)$；并报警按 $\alpha/3$ 划分};
-\end{tikzpicture}
+\includegraphics[width=0.98\linewidth]{figures/fig_arch.pdf}
 \caption{离线拟合与在线三路并行。硬层在统计通道之前，以免不可行样本污染校准；无互锁统计通道，无跨通道合成。}
 \label{fig:arch}
 \Description{离线阶段由日志与BPMN估计转移、时长核并校准阈值；在线阶段对每条消息依次做硬层否决、时序与结构打分及CUSUM累积。}

@@ -48,14 +48,15 @@ def main() -> None:
         p01_c.append(sum(float(r[c1_key]) for r in rs if r[f1_key] == "True")
                      / max(1, sum(1 for r in rs if r[f1_key] == "True")))
 
-    fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.6))
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.75))
     ax = axes[0]
     ax.plot(phis, p04_t, "o-", label=r"STRC", color="#1f4e79")
     ax.plot(phis, p01_t, "s--", label=r"R0+ (2s)", color="#c45c26")
     ax.set_xlabel(r"affected fraction $\varphi$")
     ax.set_ylabel("wall time (ms)")
     ax.set_yscale("log")
-    ax.legend(loc="best")
+    ax.set_xlim(min(phis) - 0.06, max(phis) + 0.06)
+    ax.legend(loc="center right")
     ax.set_title("Response time")
 
     ax = axes[1]
@@ -63,7 +64,8 @@ def main() -> None:
     ax.plot(phis, p01_c, "s--", label=r"R0+ (2s)", color="#c45c26")
     ax.set_xlabel(r"affected fraction $\varphi$")
     ax.set_ylabel(r"$C_{\max}$ (mean, feasible)")
-    ax.legend(loc="best")
+    ax.set_xlim(min(phis) - 0.06, max(phis) + 0.06)
+    ax.legend(loc="upper left")
     ax.set_title("Makespan")
 
     fig.tight_layout()

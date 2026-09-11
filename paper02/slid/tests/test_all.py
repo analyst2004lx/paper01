@@ -39,6 +39,7 @@
     T36 互锁天花板的 q 必须取部署流实测值      (训练折低估 9 倍)
     T37 配额只能用良性判据选                  (相邻折按攻击表现选会反向)
     T40 A8 必须知模型且落在 F 内的非众数后继  (Fisher 去留的注入器契约)
+    T41 judge 必须留下逐次延迟与良性间隔     (箱线图 / ARL0 的存档)
 
 用法:  py -m pytest tests/test_all.py -v
 """
@@ -51,7 +52,7 @@ import numpy as np
 import pytest
 
 from algorithm import (attacks, conformal, fusion, ingest, interlock,
-                       procmodel, sequential, structural, timing)
+                       plant, procmodel, sequential, structural, timing)
 
 todo = pytest.mark.skip(reason="待实现:该断言依赖尚未落地的模块")
 
@@ -1013,4 +1014,77 @@ def test_t40_a8_is_legal_nonmodal_and_rushed():
         if ranked and attacks._op_of_state(ranked[0][1]) == a.op:
             modal += 1
     assert modal / max(len(hits), 1) < 0.15, modal
+
+
+def test_t41_judge_detail_archives_delays_and_benign_gaps():
+    """逐次延迟与良性间隔必须从 judge 留下,箱线图不得只读中位/p90。
+
+    预算内检出的延迟是 0..budget 的整数;未检出是 None,不进 detected_delays。
+    五元组与旧 judge 对齐,避免存档口径另起一套。
+    """
+    from algorithm.baselines import judge, judge_detail
+
+    rng = np.random.default_rng(11)
+    n = 400
+    labels = [i % 8 == 0 for i in range(n)]
+    benign = [list(rng.normal(0, 1, n))]
+    attack = [v + (2.2 if L else 0.0) for v, L in zip(benign[0], labels)]
+    d = judge_detail(benign, [attack], labels, alpha=0.05, budget=10)
+    assert d.as_tuple() == judge(benign, [attack], labels, alpha=0.05, budget=10)
+    assert d.n_pos == sum(labels)
+    assert len(d.delays) == d.n_pos
+    assert all(x is None or (0 <= x <= 10) for x in d.delays)
+    assert d.detected_delays == [x for x in d.delays if x is not None]
+    assert len(d.detected_delays) == int(round(d.seq_dr * d.n_pos))
+    payload = d.to_dict()
+    assert "benign_gaps" in payload and "arl0" in payload
+    if d.benign_gaps:
+        assert payload["arl0"] == pytest.approx(d.arl0)
+        assert all(g >= 1 for g in d.benign_gaps)
+
+
+def test_t42_plant_stream_obeys_hard_layer():
+    """仿真良性流必须过一元 F 与命令账本,否则迁移实验测的是硬层误报。"""
+    from algorithm.detector import Detector, DetectorConfig
+
+    acts = plant.generate(plant.PlantConfig(
+        "T", n_agv=2, n_arm=1, n_jobs=12, sigma=0.12,
+        dist_arm=8.0, dist_wh=8.0, seed=0))
+    model = plant.reference_model()
+    assert all(a.t_cmd and a.duration_s and a.duration_s > 0 for a in acts)
+    assert all(model.can_perform(a.device, a.op) for a in acts)
+    det = Detector(DetectorConfig(alpha=0.05, online_update=False))
+    det.model = model
+    hard = sum(det._hard_layer(a) is not None for a in acts)
+    assert hard == 0, hard
+    verdict = ingest.hai_dictionary_verdict()
+    assert verdict["scheduling_layer_evaluable"] is False
+    assert verdict["has_command_ledger"] is False
+
+
+def test_t43_transfer_breaks_timing_alpha():
+    """A 上标定的时序核不能当同一个 alpha 用:C 上误报抬高,B 上抢跑功效塌掉。"""
+    from tools.robust_diag import _score_fpr
+    from tools.transfer_diag import _a3_dr, _fit, _split
+
+    model = plant.reference_model()
+    a = plant.generate(plant.PlantConfig(
+        "A", n_agv=2, n_arm=1, n_jobs=80, sigma=0.12,
+        dist_arm=8.0, dist_wh=8.0, seed=1))
+    b = plant.generate(plant.PlantConfig(
+        "B", n_agv=4, n_arm=2, n_jobs=80, sigma=0.12,
+        dist_arm=16.0, dist_wh=12.0, seed=2))
+    c = plant.generate(plant.PlantConfig(
+        "C", n_agv=2, n_arm=1, n_jobs=80, sigma=0.35,
+        dist_arm=8.0, dist_wh=8.0, seed=3))
+    tr_a, _ = _split(a)
+    tr_b, te_b = _split(b)
+    _, te_c = _split(c)
+    src = _fit(tr_a, model, 0)
+    loc_b = _fit(tr_b, model, 0)
+    x_c = _score_fpr(src, te_c, np.random.default_rng(3))
+    assert x_c["time"]["0.01"] >= 0.05, x_c
+    native_b = _a3_dr(loc_b, te_b, model, 0.30, 0)
+    xfer_b = _a3_dr(src, te_b, model, 0.30, 1)
+    assert native_b["dr"] > xfer_b["dr"] + 0.15, (native_b, xfer_b)
 

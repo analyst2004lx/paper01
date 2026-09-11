@@ -5,8 +5,9 @@
 
   RS  全局右移。不改路径/指派/序,把未完成的一切统一后推到阻断窗之后。
       按 A2 可采纳(冻结判据与 R2 相同),O(|R|)。文献里最标准的快速响应做法。
-  RD  原染色体重解码。保持机器指派与扫描序,在装了阻断的路由层上从头解码一遍。
-      **不保证按 A2 可采纳**——它从 t=0 重排,故本工具逐格报它改写了多少历史预约。
+  RD  原染色体重解码。保持机器指派与扫描序,在装了阻断的路由层上解一遍。
+      默认走与 R0+ 同一套固定前缀解码(假设 A2);旧的从 t=0 重放仅在
+      respect_a2=False 时保留。本工具仍逐格报 past_changed。
   RA  不画边界,释放 t_now 之后的全部预约再改路重放。它与 R2 共用同一引擎与同一
       冻结判据,唯一差别是释放集取了平凡上界,故两臂之差可全部归因于闭包本身。
       这一臂回答「既然闭包已占活预约九成,画这条边界还剩多少用」。
@@ -59,28 +60,43 @@ def _instances():
     ]
 
 
-def _redecode(inst, net, bundle, dist):
-    """RD:保持染色体,在装了阻断的路由层上重新解码一遍。"""
+def _redecode(inst, net, bundle, dist, *, respect_a2=True):
+    """RD:保持染色体重解码。默认固定前缀;respect_a2=False 才从 t=0 重放。"""
     from algorithm.block_context import block_windows_from_dist, corridor_block_active
     from algorithm.clbs_bridge import decode, validate
     from algorithm.metrics import evaluate_deviation
+    from algorithm.prefix_decode import decode_from_now
     from algorithm.repair import RepairResult
     from algorithm.schedule_io import reservations_from_result
 
     t0 = time.perf_counter()
-    with corridor_block_active(dist):
-        res = decode(inst, net, bundle.ma, bundle.os_seq,
-                     conflict_free=True, dispatch="exact")
-    errs = validate(inst, res.to_timetable())
-    for cid, a, b in block_windows_from_dist(dist):
-        for r in reservations_from_result(res):
-            if r.corridor == cid and r.overlaps(a, b):
-                errs.append(f"post-redecode still on blocked corridor: {r.task}")
+    if respect_a2:
+        res = decode_from_now(
+            inst, net, bundle.ma, bundle.os_seq, bundle, dist, dispatch="exact")
+    else:
+        with corridor_block_active(dist):
+            res = decode(inst, net, bundle.ma, bundle.os_seq,
+                         conflict_free=True, dispatch="exact")
+    dummy = res.makespan >= 1e17
+    errs = [] if dummy else validate(inst, res.to_timetable())
+    if dummy:
+        errs.append("prefix decode infeasible")
+    else:
+        for cid, a, b in block_windows_from_dist(dist):
+            for r in reservations_from_result(res):
+                if r.corridor == cid and r.overlaps(a, b):
+                    errs.append(f"post-redecode still on blocked corridor: {r.task}")
     wall = (time.perf_counter() - t0) * 1000
+    ok = not errs
     return RepairResult(
-        feasible=not errs, makespan=res.makespan, makespan_ref=bundle.makespan,
-        deviation=evaluate_deviation(bundle.result, res), wall_ms=wall,
-        result=res, errors=errs, meta={"arm": "RD"},
+        feasible=ok,
+        makespan=None if dummy or not ok else res.makespan,
+        makespan_ref=bundle.makespan,
+        deviation=None if dummy or not ok else evaluate_deviation(bundle.result, res),
+        wall_ms=wall,
+        result=None if dummy or not ok else res,
+        errors=errs,
+        meta={"arm": "RD", "respect_a2": respect_a2},
     )
 
 

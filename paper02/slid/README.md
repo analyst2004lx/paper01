@@ -25,6 +25,10 @@ py -m tools.timing_diag                           # M4 时长模型与 rho* 逐�
 py -m tools.fusion_diag                           # M6 通道依赖、校准架构、稀释代价
 py -m tools.a8_fisher                             # A8 红队:Fisher 合成路去留
 py -m tools.online_diag                           # 时间序效度、逐消息时延、抗投毒
+py -m tools.robust_diag                           # 时间序 FPR、含错版 C'、E9 产品切换
+py -m tools.sigma_scan                            # E5 膨胀 sigma
+py -m tools.transfer_diag                         # E6 场景 A/B/C 迁移
+py -m tools.alarm_walkthrough                     # 可解释告警样例
 py -m tools.coverage_matrix                       # 攻击 x 通道覆盖矩阵(实测)
 py -m tools.struct_diag                           # M3 状态粒度(负面结果)
 py -m tools.baseline_diag                         # E1 同误报预算下的基线对比
@@ -32,6 +36,9 @@ py -m tools.run_matrix --preset smoke             # 矩阵批跑自检
 py -m tools.bound_curve                           # 影响-可检测性曲线
 py -m tools.calib_diag                            # 校准可靠性图
 ```
+
+复现论文表：`py -m tools.reproduce` 从已有 JSON 存档汇总 `experiments/*.csv`。
+重跑诊断（不含 E1）加 `--run`；E1 主表另加 `--e1`。图在 `../Latex/figures/` 下跑对应 `fig_*_CN.py`。箱线只读存档里的 `detected_delays`。
 
 依赖见 `requirements.txt`，只有 numpy / scipy / matplotlib。
 
@@ -53,6 +60,7 @@ slid/
     conformal.py       #   M8 随机化 conformal 校准
     detector.py        #   M0/M9 在线回放流水线 + 抗投毒的门控更新
     attacks.py         #   红队注入器 A1–A6 与 A8;A7 不实现即不报告
+    plant.py           #   自建场景 A/B/C(仅 E6,不作主验证)
     baselines.py       #   基线 B1–B5、统一判决口径 judge、六档消融
     metrics.py         #   指标与报告口径
   tools/               # 实验驱动与诊断
@@ -109,12 +117,12 @@ slid/
    （alpha=0.05 下 +0.018）。单侧阈值落在 [2.22, 3.34]，双侧散到
    [2.48, 7.27]。早先记录的"0.338"是最坏种子，不可作为方法优势引用。
 
-6. **报告 conformal 保证必须给时间序口径，不能只给随机折。** 此前全部结论
-   都用随机折（规则 3 要求它来保交换性），但部署只能用过去拟合、对未来
-   判定。实测退化温和但真实：合成通道 alpha=0.01 下 FPR 由 0.011 升到
-   0.018。退化是**通道特异**的——时序通道幸存（0.010 → 0.007，反而保守），
-   结构通道不幸存（0.007 → 0.015）。推论是运维规则：结构通道要周期性
-   重校准，时序通道不用。
+6. **报告 conformal 保证必须给时间序口径，不能只给随机折。** 部署只能用
+   过去拟合、对未来判定。现行残差 z 共形下，alpha=0.01 时序通道由随机折
+   0.006 升到时间序 0.024，结构通道由 0.008 升到 0.012（`tools/robust_diag.py`）。
+   旧记录「时序 0.010→0.007、结构 0.007→0.015」是参数化 p 值时期的数字，
+   不得再抄。运维上两条统计通道都要按时间序解释，产品切换后时序通道必须
+   重校准（E9 未见工作流 time@0.01=0.067）。
 
 7. **在线更新必须门控。** 无门控时 200 条抢跑注入把基线拖走，攻击者白拿
    26.4% 的调度提前量；门控后 1.4%。这是与原专利"无条件 EWMA 更新"的

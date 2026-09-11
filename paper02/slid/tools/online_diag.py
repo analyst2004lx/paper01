@@ -18,7 +18,7 @@ import time
 
 import numpy as np
 
-from algorithm import conformal, fusion, ingest, procmodel
+from algorithm import archive, conformal, fusion, ingest, procmodel
 from algorithm.detector import CHANNELS, Detector, DetectorConfig
 
 ALPHAS = (0.05, 0.01)
@@ -72,6 +72,8 @@ def channel_fpr(det: Detector, test, rng):
 
 def latency(det: Detector, test, rng, reps: int = 3):
     """E8:逐消息处理时延。测的是 observe() 全流程,含硬层与序贯。"""
+    prev = det.cfg.online_update
+    det.cfg.online_update = False
     stream = sorted((x for x in test if x.t_consume is not None),
                     key=lambda x: (x.t_consume, x.order))
     per = []
@@ -82,7 +84,49 @@ def latency(det: Detector, test, rng, reps: int = 3):
             det.observe(a, rng=rng)
             per.append((time.perf_counter() - t0) * 1e6)
     det._reset_online()
+    det.cfg.online_update = prev
     return np.array(per)
+
+
+def _scale_m(det, test, rng, ms=(1, 10, 50, 100)):
+    """把同一段流复制到 M 个设备名上,看逐消息时延是否随 M 涨。
+
+    别名必须挂上原设备的时长表,否则 ``device#m`` 走未见弃权,测到的是
+    快路径而不是生产热路径。
+    """
+    import copy
+    base = sorted((x for x in test if x.t_consume is not None),
+                  key=lambda x: (x.t_consume, x.order))[:80]
+    orig_timing = dict(det.timing)
+    prev = det.cfg.online_update
+    det.cfg.online_update = False
+    out = []
+    for M in ms:
+        extra = {}
+        stream = []
+        for m in range(M):
+            for a in base:
+                b = copy.copy(a)
+                if m:
+                    b.device = f"{a.device}#m{m}"
+                    model = orig_timing.get((a.device, a.op))
+                    if model is not None:
+                        extra[(b.device, a.op)] = model
+                stream.append(b)
+        stream.sort(key=lambda x: (x.t_consume, x.order, x.device))
+        det.timing = {**orig_timing, **extra}
+        det._reset_online()
+        per = []
+        for a in stream:
+            t0 = time.perf_counter()
+            det.observe(a, rng=rng)
+            per.append((time.perf_counter() - t0) * 1e6)
+        out.append({"M": M, "median_us": float(np.median(per)),
+                    "n_seq": len(det._seq), "n_msg": len(stream)})
+        det._reset_online()
+        det.timing = orig_timing
+    det.cfg.online_update = prev
+    return out
 
 
 def poisoning(live, model, seed: int, rho: float = 0.30, n_inject: int = 200):
@@ -175,7 +219,19 @@ def main() -> int:
           f"   p99 {np.percentile(us, 99):.1f} us   n={len(us)}")
     print(f"  等效吞吐 {1e6 / np.median(us):,.0f} 消息/秒(单核)")
     print("  O(1) 由复杂度论证给出,此处只提供常数因子;未做硬件平台实测。")
+    scale = _scale_m(det, test, rng)
+    print("  M 扩展(复制设备链):")
+    for row in scale:
+        print(f"    M={row['M']:<4} 中位 {row['median_us']:.1f} us  "
+              f"CUSUM 状态 {row['n_seq']}")
     print()
+    archive.dump(archive.E8_PATH, {
+        "latency_us": [float(x) for x in us],
+        "scale": scale,
+        "median_us": float(np.median(us)),
+        "p95_us": float(np.percentile(us, 95)),
+        "p99_us": float(np.percentile(us, 99)),
+    })
 
     print("=== Q3 门控更新的抗投毒作用 ===")
     for lbl, r in poisoning(live, model, seed=0).items():
