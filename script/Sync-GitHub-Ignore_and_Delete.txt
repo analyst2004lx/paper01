@@ -33,6 +33,11 @@ paper01/paper-20260818.pdf
 paper01/paper-20260818.tex
 
 # Recently deleted unused graphics / scripts under paper01_new/fig
+paper01/_preview_cn-01.png
+paper01/_preview_cn-02.png
+paper01/_preview_cn-03.png
+paper01/_preview_cn-04.png
+paper01/_preview_cn-05.png
 paper01/paper-20260602.tex
 paper01/fig/fig_ablation.pdf
 paper01/fig/fig_ablation.png
