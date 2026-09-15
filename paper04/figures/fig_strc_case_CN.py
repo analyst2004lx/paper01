@@ -16,10 +16,9 @@ STRC = os.path.abspath(os.path.join(HERE, "..", "..", "STRC"))
 if STRC not in sys.path:
     sys.path.insert(0, STRC)
 
-plt.rcParams.update({
-    "font.sans-serif": ["Microsoft YaHei", "SimHei", "SimSun", "DejaVu Sans"],
-    "axes.unicode_minus": False,
-})
+from _cjk_mpl import setup_cjk
+
+setup_cjk()
 
 
 def _closed_ops(closure_tasks: set[str]) -> set[tuple[int, int]]:
@@ -45,12 +44,12 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
         y = ymap[rec.machine]
         dur = max(1e-6, rec.finish - rec.start)
         ax.barh(y, dur, left=rec.start, height=0.55,
-                color=colors[in_cl], edgecolor="#222", linewidth=0.6,
+                color=colors[in_cl], edgecolor="#222222", linewidth=0.6,
                 alpha=0.92, zorder=2)
         if dur >= 3.5:
             ax.text(rec.start + dur / 2, y, f"J{rec.job}-{rec.i}",
                     ha="center", va="center", fontsize=6.5,
-                    color="white" if in_cl else "#222", zorder=3)
+                    color="white" if in_cl else "#222222", zorder=3)
 
     ax.axvline(t_now, color="#8b1e1e", ls="--", lw=1.0, zorder=4)
     ax.text(t_now + 1.2, len(machines) - 0.42, r"$t_{\mathrm{now}}$",
@@ -72,8 +71,8 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
     ax.spines["right"].set_visible(False)
     if show_legend:
         ax.legend(handles=[
-            Patch(facecolor="#1f4e79", edgecolor="#222", label="闭包内工序（释放）"),
-            Patch(facecolor="#b0b8c0", edgecolor="#222", label="闭包外工序（冻结）"),
+            Patch(facecolor="#1f4e79", edgecolor="#222222", label="影响集内工序（改路）"),
+            Patch(facecolor="#b0b8c0", edgecolor="#222222", label="影响集外工序（保持原计划）"),
             Patch(facecolor="#e8a0a0", alpha=0.5, label="走廊阻断窗口"),
         ], loc="lower right", fontsize=6.5, frameon=False)
 
@@ -115,12 +114,12 @@ def main() -> None:
         axes[1], rep.result, closed_ops,
         t_now=t_now, block=block,
         title=(f"(b) STRC 第 1 级修复后  $C_{{\\max}}={rep.makespan:.0f}$  "
-               f"墙钟={rep.wall_ms:.1f} ms"),
+               f"耗时={rep.wall_ms:.1f} ms"),
         show_legend=False,
     )
     axes[0].text(
         0.01, 0.90,
-        r"$T_{\mathrm{impact}}=\varnothing$（任务图）；修复用闭包",
+        r"$T_{\mathrm{impact}}=\varnothing$（工序依赖图）；修复用预约影响集",
         transform=axes[0].transAxes, ha="left", va="top", fontsize=7,
         color="#1f4e79",
         bbox=dict(boxstyle="round,pad=0.2", fc="#e8eef5", ec="#1f4e79", lw=0.7),

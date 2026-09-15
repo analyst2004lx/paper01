@@ -2,7 +2,7 @@
 %%% Do NOT edit. File created by BibTeX with style
 %%% ACM-Reference-Format-Journals [18-Jan-2012].
 
-\begin{thebibliography}{28}
+\begin{thebibliography}{26}
 
 %%% ====================================================================
 %%% NOTE TO THE USER: you can override these defaults by providing
@@ -52,15 +52,6 @@
 \newblock \bibinfo{journal}{\emph{European Journal of Operational Research}} \bibinfo{volume}{112}, \bibinfo{number}{1} (\bibinfo{year}{1999}), \bibinfo{pages}{81--97}.
 \newblock
 \href{https://doi.org/10.1016/S0377-2217(97)00396-2}{doi:\nolinkurl{10.1016/S0377-2217(97)00396-2}}
-
-
-\bibitem[Bean et~al\mbox{.}(1991)]%
-        {bean1991matchup}
-\bibfield{author}{\bibinfo{person}{James~C. Bean}, \bibinfo{person}{John~R. Birge}, \bibinfo{person}{John Mittenthal}, {and} \bibinfo{person}{Charles~E. Noon}.} \bibinfo{year}{1991}\natexlab{}.
-\newblock \showarticletitle{Matchup scheduling with multiple resources, release dates and disruptions}.
-\newblock \bibinfo{journal}{\emph{Operations Research}} \bibinfo{volume}{39}, \bibinfo{number}{3} (\bibinfo{year}{1991}), \bibinfo{pages}{470--483}.
-\newblock
-\href{https://doi.org/10.1287/opre.39.3.470}{doi:\nolinkurl{10.1287/opre.39.3.470}}
 
 
 \bibitem[Bilge and Ulusoy(1995)]%
@@ -122,15 +113,6 @@
 \newblock \bibinfo{journal}{\emph{Sensors}} \bibinfo{volume}{26}, \bibinfo{number}{2} (\bibinfo{year}{2026}), \bibinfo{pages}{543}.
 \newblock
 \href{https://doi.org/10.3390/s26020543}{doi:\nolinkurl{10.3390/s26020543}}
-
-
-\bibitem[Li et~al\mbox{.}(1993)]%
-        {li1993heuristic}
-\bibfield{author}{\bibinfo{person}{Rong-Kwei Li}, \bibinfo{person}{Yu-Tang Shyu}, {and} \bibinfo{person}{Sadashiv Adiga}.} \bibinfo{year}{1993}\natexlab{}.
-\newblock \showarticletitle{A heuristic rescheduling algorithm for computer-based production scheduling systems}.
-\newblock \bibinfo{journal}{\emph{International Journal of Production Research}} \bibinfo{volume}{31}, \bibinfo{number}{8} (\bibinfo{year}{1993}), \bibinfo{pages}{1815--1826}.
-\newblock
-\href{https://doi.org/10.1080/00207549308956824}{doi:\nolinkurl{10.1080/00207549308956824}}
 
 
 \bibitem[Lyu et~al\mbox{.}(2019)]%

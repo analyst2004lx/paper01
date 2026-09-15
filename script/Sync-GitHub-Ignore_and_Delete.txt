@@ -11,6 +11,11 @@
 <Ignore>
 paper02/database/ft_trier_iot_log/DQI_Event_Log.zip
 paper02/database/ft_trier_iot_log/Cleaned_Event_Log.zip
+paper01/paper.synctex.gz
+paper01/paper_CN.synctex.gz
+paper01/paper_EN.synctex.gz
+paper04/paper04.synctex.gz
+paper04/paper04_CN.synctex.gz
 </Ignore>
 
 

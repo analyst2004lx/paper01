@@ -17,10 +17,9 @@ CSV_FALLBACK = os.path.abspath(os.path.join(
     HERE, "..", "..", "STRC", "experiments", "e5_cross_curve.csv"))
 OUT = os.path.join(HERE, "fig_strc_e5_CN")
 
-plt.rcParams.update({
-    "font.sans-serif": ["Microsoft YaHei", "SimHei", "SimSun", "DejaVu Sans"],
-    "axes.unicode_minus": False,
-})
+from _cjk_mpl import setup_cjk
+
+setup_cjk()
 
 
 def main() -> None:

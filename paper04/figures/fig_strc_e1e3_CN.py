@@ -16,10 +16,9 @@ EXP = os.path.abspath(os.path.join(
     HERE, "..", "..", "STRC", "experiments", "expanded"))
 OUT = os.path.join(HERE, "fig_strc_e1e3_CN")
 
-plt.rcParams.update({
-    "font.sans-serif": ["Microsoft YaHei", "SimHei", "SimSun", "DejaVu Sans"],
-    "axes.unicode_minus": False,
-})
+from _cjk_mpl import setup_cjk
+
+setup_cjk()
 
 ORDER = ("example_3x3x2", "congested_8x4x4", "S8x4x4_high",
          "S8x4x4_funnel", "S8x4x4_mid")
@@ -65,8 +64,8 @@ def main() -> None:
     ax.bar(x + w, cl, w, label=r"$|\mathrm{Cl}|$", color="#1f4e79")
     ax.set_xticks(x)
     ax.set_xticklabels([LABEL[n] for n in names], fontsize=8)
-    ax.set_ylabel(f"均值计数（{n_seeds} 个种子）")
-    ax.set_title("E1：任务图空洞 vs 闭包")
+    ax.set_ylabel(f"均值计数（{n_seeds} 个随机种子）")
+    ax.set_title("E1：工序依赖图为空 vs 预约影响集")
     ax.legend(loc="upper left", fontsize=7)
     ax.set_ylim(0, max(cl) * 1.25)
 
@@ -77,10 +76,10 @@ def main() -> None:
     ax.set_xticklabels([LABEL[n] for n in names], fontsize=8)
     ax.set_ylabel("可行率")
     ax.set_ylim(0, 1.45)
-    ax.set_title("E3：同一引擎，更换边界")
+    ax.set_title("E3：同一套改路，只换划界对象")
     ax.legend(loc="center left", fontsize=7)
     for i, (a, b) in enumerate(zip(r1_feas, r2_feas)):
-        ax.text(i - w / 2, a + 0.03, f"{a:.0%}", ha="center", fontsize=7, color="#555")
+        ax.text(i - w / 2, a + 0.03, f"{a:.0%}", ha="center", fontsize=7, color="#555555")
         ax.text(i + w / 2, b + 0.03, f"{b:.0%}", ha="center", fontsize=7, color="#1f4e79")
 
     fig.tight_layout()

@@ -1,4 +1,4 @@
-"""动机图:走廊阻断下任务图空洞 vs 预约表级联。"""
+"""Motivation figure: empty operation graph vs reservation influence set."""
 from __future__ import annotations
 
 import os
@@ -13,7 +13,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "fig_strc_motivate")
 
 
-def _box(ax, xy, w, h, text, fc, ec="#333", fs=8, bold=False):
+def _box(ax, xy, w, h, text, fc, ec="#333333", fs=8, bold=False):
     x, y = xy
     ax.add_patch(FancyBboxPatch(
         (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.04",
@@ -31,7 +31,7 @@ def main() -> None:
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 10)
     ax.axis("off")
-    ax.set_title("Task graph under corridor block", fontsize=9, pad=10)
+    ax.set_title("Operation graph under corridor block", fontsize=9, pad=10)
 
     # ops
     ops = [
@@ -44,12 +44,12 @@ def main() -> None:
     for (x1, y1, _), (x2, y2, _) in zip(ops, ops[1:]):
         if y1 == y2:
             ax.annotate("", xy=(x2, y2 + 0.55), xytext=(x1 + 1.8, y1 + 0.55),
-                        arrowprops=dict(arrowstyle="->", color="#555", lw=1.0))
+                        arrowprops=dict(arrowstyle="->", color="#555555", lw=1.0))
     ax.text(5, 2.3, r"$T_{\mathrm{direct}}=\varnothing$",
             ha="center", fontsize=10, fontweight="bold", color="#8b1e1e")
-    ax.text(5, 1.2, "Task-graph rule: no reschedule",
+    ax.text(5, 1.2, "Operation-graph rule: no reschedule",
             ha="center", fontsize=8, color="#8b1e1e")
-    _box(ax, (2.3, 8.55), 5.4, 0.95, "Corridor block (no op / no machine hit)",
+    _box(ax, (2.3, 8.55), 5.4, 0.95, "Corridor block (no starting operation)",
          "#f7e6e6", ec="#8b1e1e", fs=7.5)
 
     # ----- Right: reservation cascade -----
@@ -57,10 +57,10 @@ def main() -> None:
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 10)
     ax.axis("off")
-    ax.set_title("Reservation table cascade (STRC)", fontsize=9, pad=10)
+    ax.set_title("Reservation influence set (STRC)", fontsize=9, pad=10)
 
     # time axis
-    ax.plot([1.6, 9.4], [2.0, 2.0], color="#444", lw=1.0)
+    ax.plot([1.6, 9.4], [2.0, 2.0], color="#444444", lw=1.0)
     ax.text(9.5, 2.0, "t", va="center", fontsize=8)
     # corridor lanes
     lanes = [
@@ -76,7 +76,7 @@ def main() -> None:
 
     # reservations
     bars = [
-        (1.6, 6.35, 2.0, 0.8, "r1 seed", "#c45c26"),
+        (1.6, 6.35, 2.0, 0.8, "r1 start", "#c45c26"),
         (6.3, 6.35, 2.0, 0.8, "r2", "#1f4e79"),
         (2.9, 4.65, 2.4, 0.8, "r3 wait", "#1f4e79"),
         (5.6, 4.65, 2.2, 0.8, "r4", "#5a7a9a"),
@@ -85,7 +85,7 @@ def main() -> None:
     for x, y, w, h, lab, c in bars:
         ax.add_patch(FancyBboxPatch(
             (x, y), w, h, boxstyle="round,pad=0.01,rounding_size=0.03",
-            facecolor=c, edgecolor="#222", alpha=0.9))
+            facecolor=c, edgecolor="#222222", alpha=0.9))
         ax.text(x + w / 2, y + h / 2, lab, ha="center", va="center",
                 fontsize=7, color="white", fontweight="bold")
 
@@ -94,17 +94,17 @@ def main() -> None:
                 arrowprops=dict(arrowstyle="->", color="#c45c26", lw=1.3))
     ax.annotate("", xy=(4.6, 3.75), xytext=(4.0, 4.65),
                 arrowprops=dict(arrowstyle="->", color="#c45c26", lw=1.3))
-    ax.text(8.55, 7.55, "closure\nCl(Seeds)", ha="center", fontsize=8,
+    ax.text(8.55, 7.55, "influence set\nCl(S)", ha="center", fontsize=8,
             color="#1f4e79", fontweight="bold",
             bbox=dict(boxstyle="round,pad=0.22", fc="#e8eef5", ec="#1f4e79"))
 
-    ax.text(5, 0.7, "Must repair on reservation closure",
+    ax.text(5, 0.7, "Must repair on the influence set",
             ha="center", fontsize=8, color="#1f4e79", fontweight="bold")
 
     for ax, y, lab in ((axes[1], 6.75, r"corridor $e^\star$"),
                        (axes[1], 5.05, r"corridor $e_2$"),
                        (axes[1], 3.35, r"corridor $e_3$")):
-        ax.text(0.08, y, lab, fontsize=6.5, va="center", color="#444")
+        ax.text(0.08, y, lab, fontsize=6.5, va="center", color="#444444")
 
     fig.tight_layout()
     fig.savefig(OUT + ".pdf")

@@ -14,14 +14,13 @@ from matplotlib.lines import Line2D
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "fig_strc_graphs_CN")
 
-plt.rcParams.update({
-    "font.sans-serif": ["Microsoft YaHei", "SimHei", "SimSun", "DejaVu Sans"],
-    "axes.unicode_minus": False,
-    "figure.dpi": 200,
-})
+from _cjk_mpl import setup_cjk
+
+setup_cjk()
+plt.rcParams.update({"figure.dpi": 200})
 
 
-def _box(ax, xy, w, h, text, fc, ec="#333", fs=7.5):
+def _box(ax, xy, w, h, text, fc, ec="#333333", fs=7.5):
     x, y = xy
     ax.add_patch(FancyBboxPatch(
         (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.04",
@@ -31,7 +30,7 @@ def _box(ax, xy, w, h, text, fc, ec="#333", fs=7.5):
 
 
 def _node(ax, xy, lab, fc, radius=0.42):
-    ax.add_patch(Circle(xy, radius, facecolor=fc, edgecolor="#222", lw=0.9, zorder=3))
+    ax.add_patch(Circle(xy, radius, facecolor=fc, edgecolor="#222222", lw=0.9, zorder=3))
     ax.text(xy[0], xy[1], lab, ha="center", va="center", fontsize=7,
             color="white", fontweight="bold", zorder=4)
 
@@ -51,7 +50,7 @@ def main() -> None:
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 10)
     ax.axis("off")
-    ax.set_title(r"(a) 任务依赖图 $G_T$（顶点 = 工序）", fontsize=9.5, pad=8)
+    ax.set_title(r"(a) 工序依赖图 $G_T$（顶点 = 工序）", fontsize=9.5, pad=8)
 
     ops = [
         (0.7, 6.6, "J1-1"), (3.6, 6.6, "J1-2"), (6.5, 6.6, "J1-3"),
@@ -72,12 +71,12 @@ def main() -> None:
 
     ax.add_patch(Rectangle((2.15, 8.55), 5.7, 1.05, facecolor="#f7e6e6",
                             edgecolor="#8b1e1e", lw=1.0, linestyle="--"))
-    ax.text(5.0, 9.07, "走廊阻断（不命中任何顶点）", ha="center", va="center",
+    ax.text(5.0, 9.07, "走廊阻断（无作为起点的工序）", ha="center", va="center",
             fontsize=8, color="#8b1e1e")
     ax.text(5.0, 1.55, r"$T_{\mathrm{direct}}=\varnothing$",
             ha="center", fontsize=10, fontweight="bold", color="#8b1e1e")
     ax.text(5.0, 0.65, "顶点集与走廊占用不相交",
-            ha="center", fontsize=8, color="#555")
+            ha="center", fontsize=8, color="#555555")
 
     # ---- (b) G_R ----
     ax = axes[1]
@@ -98,7 +97,7 @@ def main() -> None:
     _node(ax, pos["r3"], "r3", "#1f4e79")
     _node(ax, pos["r4"], "r4", "#5a7a9a")
     _node(ax, pos["r5"], "r5", "#5a7a9a")
-    ax.text(1.7, 6.55, "种子", ha="center", fontsize=6.5, color="#8b1e1e")
+    ax.text(1.7, 6.55, "起点", ha="center", fontsize=6.5, color="#8b1e1e")
 
     c_yield, c_agv, c_job, c_mach = "#c45c26", "#1f4e79", "#2e7d4f", "#6b4c7a"
     _arrow(ax, pos["r1"], pos["r3"], c_yield)          # 让行
@@ -111,10 +110,10 @@ def main() -> None:
     ax.text(5.85, 7.85, "同工件", fontsize=7, color=c_job, fontweight="bold")
     ax.text(6.55, 5.85, "同机", fontsize=7, color=c_mach, fontweight="bold")
 
-    ax.text(5.0, 2.15, r"Seeds $\neq\varnothing$，沿四类边级联",
-            ha="center", fontsize=10, fontweight="bold", color="#1f4e79")
-    ax.text(5.0, 1.35, "闭包是这张图上的传递闭包，不是工序邻域",
-            ha="center", fontsize=8, color="#555")
+    ax.text(5.0, 2.15, r"起点占用非空，沿四类边纳入后续占用",
+            ha="center", fontsize=9.5, fontweight="bold", color="#1f4e79")
+    ax.text(5.0, 1.35, "预约影响集由这张图上的传递闭包给出，不是工序邻域",
+            ha="center", fontsize=8, color="#555555")
 
     handles = [
         Line2D([0], [0], color=c_yield, lw=1.6, label="让行（同走廊、异车）"),
