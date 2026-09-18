@@ -1,0 +1,82 @@
+自检对象：paper04\paper04_CN_AI-Modify-26-09-17.tex
+正文汉字 32218｜摘要汉字 2359
+
+== MACRO_UNUSED（8）
+   -          宏 \FeasSlowExpand 定义但正文 0 处引用（常见原因：被展开成写死的数字）
+   -          宏 \ResFracRzero 定义但正文 0 处引用（常见原因：被展开成写死的数字）
+   -          宏 \RzeroPastHi 定义但正文 0 处引用（常见原因：被展开成写死的数字）
+   -          宏 \TBD 定义但正文 0 处引用（常见原因：被展开成写死的数字）
+   -          宏 \WorthVanishN 定义但正文 0 处引用（常见原因：被展开成写死的数字）
+   -          宏 \cmark 定义但正文 0 处引用（常见原因：被展开成写死的数字）
+   -          宏 \omark 定义但正文 0 处引用（常见原因：被展开成写死的数字）
+   -          宏 \xmark 定义但正文 0 处引用（常见原因：被展开成写死的数字）
+
+== HARDCODED_NUM（21）
+   第 366 行    1.5 疑为写死的数字，已有宏 \RedecodeRatio/\ScaleRatioLo
+   第 1366 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
+   第 1374 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
+   第 1524 行   0.92 疑为写死的数字，已有宏 \ClosureShareMean
+   第 1525 行   0.92 疑为写死的数字，已有宏 \ClosureShareMean
+   第 1555 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
+   第 1600 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
+   第 1673 行   0.512 疑为写死的数字，已有宏 \PubCloHi
+   第 1674 行   0.305 疑为写死的数字，已有宏 \PubCloLo
+   第 1682 行   0.497 疑为写死的数字，已有宏 \SelfCloHi
+   第 1684 行   0.446 疑为写死的数字，已有宏 \SelfCloLo
+   第 1766 行   1.5 疑为写死的数字，已有宏 \RedecodeRatio/\ScaleRatioLo
+   第 1863 行   0.92 疑为写死的数字，已有宏 \ClosureShareMean
+   第 1867 行   0.93 疑为写死的数字，已有宏 \WorthThresh
+   第 1945 行   1.5 疑为写死的数字，已有宏 \RedecodeRatio/\ScaleRatioLo
+   第 1946 行   3.2 疑为写死的数字，已有宏 \MsRepairMed
+   第 1950 行   3.2 疑为写死的数字，已有宏 \MsRepairMed
+   第 1951 行   10.4 疑为写死的数字，已有宏 \ScaleMsHi
+   第 1951 行   3.3 疑为写死的数字，已有宏 \ScaleRatioHi
+   第 1985 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
+   第 1998 行   1.5 疑为写死的数字，已有宏 \RedecodeRatio/\ScaleRatioLo
+
+== PLACEHOLDER（5）
+   第 45 行     占位符 \TBD
+   第 214 行    占位符 XXXXXXX
+   第 602 行    占位符 待填
+   第 1233 行   占位符 待填
+   第 1277 行   占位符 待填
+
+== TERM_BANNED（11）
+   第 281 行    禁用词「时空预约影响闭包」→ 应为 时空预约闭包（CONFLICT-1：删「影响」二字）
+   第 314 行    禁用词「影响闭包」→ 应为 时空预约闭包（CONFLICT-1：关键词处）
+   第 380 行    禁用词「工序图」→ 应为 工序依赖图（CONFLICT-4：4 处从未定义的简称）
+   第 406 行    禁用词「时空预约影响闭包」→ 应为 时空预约闭包（CONFLICT-1：删「影响」二字）
+   第 469 行    禁用词「时空预约影响闭包」→ 应为 时空预约闭包（CONFLICT-1：删「影响」二字）
+   第 494 行    禁用词「工序图」→ 应为 工序依赖图（CONFLICT-4：4 处从未定义的简称）
+   第 495 行    禁用词「工序图」→ 应为 工序依赖图（CONFLICT-4：4 处从未定义的简称）
+   第 508 行    禁用词「时空预约影响闭包」→ 应为 时空预约闭包（CONFLICT-1：删「影响」二字）
+   第 563 行    禁用词「工序图」→ 应为 工序依赖图（CONFLICT-4：4 处从未定义的简称）
+   第 888 行    禁用词「时空预约影响闭包」→ 应为 时空预约闭包（CONFLICT-1：删「影响」二字）
+   第 926 行    禁用词「时空预约影响闭包」→ 应为 时空预约闭包（CONFLICT-1：删「影响」二字）
+
+== FLOAT_UNREFERENCED（1）
+   -          \label{tab:instscale} 浮动体从未被正文引用（P10）
+
+== ABS_LEN（1）
+   -          摘要 2359 汉字，超出 §5.11 区间 400–700
+
+== LIMIT_LEN（1）
+   -          局限 2077 字 = 全文 6.4%，超硬约束 5%（≈1610 字）
+
+== INFO_ANCHOR_UNREFERENCED（14）
+   -          \label{prob:recovery} 仅作锚点，未被交叉引用
+   -          \label{rem:agv_class} 仅作锚点，未被交叉引用
+   -          \label{sec:assumptions} 仅作锚点，未被交叉引用
+   -          \label{sec:case} 仅作锚点，未被交叉引用
+   -          \label{sec:closure_def} 仅作锚点，未被交叉引用
+   -          \label{sec:contributions} 仅作锚点，未被交叉引用
+   -          \label{sec:exp_summary} 仅作锚点，未被交叉引用
+   -          \label{sec:introduction} 仅作锚点，未被交叉引用
+   -          \label{sec:recovery_problem} 仅作锚点，未被交叉引用
+   -          \label{sec:rw_ag} 仅作锚点，未被交叉引用
+   -          \label{sec:rw_mapf} 仅作锚点，未被交叉引用
+   -          \label{sec:structure} 仅作锚点，未被交叉引用
+   -          \label{sec:system_brief} 仅作锚点，未被交叉引用
+   -          \label{sec:two_graphs} 仅作锚点，未被交叉引用
+
+告警合计 48 条（另有 14 条 INFO 不计入）
