@@ -1,0 +1,12 @@
+# Fdb version 4
+["xdvipdfmx"] 0 "paper04_CN_AI-Modify-26-09-17.xdv" "paper04_CN_AI-Modify-26-09-17.pdf" "paper04_CN_AI-Modify-26-09-17" 0 -1
+  "paper04_CN_AI-Modify-26-09-17.xdv" 0 -1 0 "xelatex"
+  (generated)
+  "paper04_CN_AI-Modify-26-09-17.pdf"
+  (rewritten before read)
+["xelatex"] 1789705435.7405 "paper04_CN_AI-Modify-26-09-17.tex" "paper04_CN_AI-Modify-26-09-17.xdv" "paper04_CN_AI-Modify-26-09-17" 1789705436.30961 2
+  (generated)
+  "paper04_CN_AI-Modify-26-09-17.aux"
+  "paper04_CN_AI-Modify-26-09-17.log"
+  "paper04_CN_AI-Modify-26-09-17.xdv"
+  (rewritten before read)

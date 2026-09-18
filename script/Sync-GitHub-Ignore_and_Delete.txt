@@ -43,6 +43,8 @@ paper01/_preview_cn-02.png
 paper01/_preview_cn-03.png
 paper01/_preview_cn-04.png
 paper01/_preview_cn-05.png
+paper01/pdflatex6124.fls
+paper01/pdflatex18228.fls
 paper01/paper-20260602.tex
 paper01/fig/fig_ablation.pdf
 paper01/fig/fig_ablation.png
