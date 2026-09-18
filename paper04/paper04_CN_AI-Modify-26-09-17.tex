@@ -17,9 +17,7 @@
 \usepackage{pifont}
 \usepackage{makecell}
 \providecommand{\checkmark}{\ding{51}}
-\newcommand{\cmark}{\ding{51}}
-\newcommand{\xmark}{\ding{55}}
-\newcommand{\omark}{\(\circ\)}
+%% B13 删去 \cmark/\xmark/\omark:定义后全稿 0 处引用(表格未采用勾叉体例)。原值见 git。
 \usepackage{threeparttable}
 \usepackage{tikz}
 \usetikzlibrary{positioning,arrows.meta,calc,shapes,shadows}
@@ -42,7 +40,7 @@
 
 %% 机制缩写:主语是闭包,不是「修复框架」
 \providecommand{\STRC}{\textsc{STRC}}
-\newcommand{\TBD}[1]{\textcolor{red}{\textbf{[待补:} #1\textbf{]}}}
+%% B13 删去 \TBD:全稿 0 处引用,待填项一律用 <待填:...> 明文标记,便于自检抓取。
 
 %% =====================================================================
 %% 主结果数字的单一来源。
@@ -71,16 +69,21 @@
 \newcommand{\FeasRtwo}{\NPairs/\NPairs}      % R2 恢复可行的格数
 \newcommand{\PassClosed}{\NPairs/\NPairs}    % E2a 结构闭合(泄漏为 0)
 \newcommand{\PassInvar}{\NPairs/\NPairs}     % E2b 外侧字段逐条不变
+%% E1 主批次 Cl/|R| 的逐算例极值,出处 tab:e1 表体(0.59/0.57/0.59/0.57/0.56)。
+%% 此前该区间在正文三处各写一个值(0.56--0.59 / 0.54--0.57 / 0.54--0.58),即 CONFLICT-3;
+%% 现统一由本宏出数。**不要**与下列同值但不同源的量混用:
+%%   \ScaleCloHi(0.56) 来自规模扫描 tab:scale 的 k=4 格,是另一批次;
+%%   \PubEoneFracLo/Hi 来自外部布局批次,账本独立。
+\newcommand{\EoneCloLo}{0.56}
+\newcommand{\EoneCloHi}{0.59}
 %% 耗时(E3 批次,第 1 级改路、无扩域)
 \newcommand{\MsRepairMed}{3.2}
 \newcommand{\MsRepairMax}{12.8}
 %% 稳定性:E5 上受 A2 约束后两臂改动比例已同区间;主对照改为 E7 的 R2 vs RA。
 \newcommand{\ResFracRtwo}{50\%--66\%}
-\newcommand{\ResFracRzero}{50\%--66\%}
 %% E5 批次:R0+ 已走固定前缀解码。降级后道改走同车续路后,18 个预算点越界均为 0。
 %% 出处 expanded/e5_cross_curve.csv,`py -m tools.expand_batch --only-e5`。
 \newcommand{\RzeroPastLo}{0}
-\newcommand{\RzeroPastHi}{0}
 %% 规模扫描的加速比区间(跨两算例的逐格极值)
 \newcommand{\SpeedLo}{87}
 \newcommand{\SpeedHi}{3051}
@@ -181,14 +184,12 @@
 \newcommand{\WorthHighN}{23}
 \newcommand{\WorthHighMean}{0.029}
 \newcommand{\WorthVanish}{0.97}
-\newcommand{\WorthVanishN}{8}
 %% 边集差分试探。出处:STRC/experiments/edge_probe.csv (py -m tools.edge_probe --full)
 \newcommand{\ProbeLeakPairs}{0/50}
 \newcommand{\ProbeLeaks}{0}
 %% E6 修复维(第 1 级、不开扩域)。出处:expanded/e6_types.csv 的 R2_feasible 列
 \newcommand{\FeasESixBlock}{\NPairs/\NPairs}
 \newcommand{\FeasSlow}{\NPairs/\NPairs}
-\newcommand{\FeasSlowExpand}{\NPairs/\NPairs}
 \newcommand{\FeasESixAgv}{\NPairs/\NPairs}
 \newcommand{\FeasESixRa}{\NPairs/\NPairs}
 %% 非均匀边权 E1/E3。出处:STRC/experiments/weight_sweep.csv (py -m tools.weight_sweep)
@@ -1345,7 +1346,7 @@ E3 中\emph{必须关闭}失败后扩大范围。若开着,R1 会靠「一路扩
 \end{table}
 
 \(|\mathrm{Cl}|\) 的绝对值随算例变大(\(16.9\)、\(48.4\)、\(82.8\)--\(88.3\)),这是占用总数变多的直接结果;
-而 \(\mathrm{Cl}/|R|\) 在五个算例上都落在 \(0.56\)--\(0.59\),\emph{未能}区分三个 \(\texttt{S8x4x4}\) 布局。
+而 \(\mathrm{Cl}/|R|\) 在五个算例上都落在 \EoneCloLo--\EoneCloHi,\emph{未能}区分三个 \(\texttt{S8x4x4}\) 布局。
 这与第~\ref{sec:e4}~节的结论一致:实验没有给出能可靠预测影响集规模的结构指标。
 就贡献而言,本节只坐实一件事:B 类扰动下按工序依赖图划界得到空范围,而原排程确已不可行;
 \(\mathrm{Cl}/|R|\) 的具体数值不承担任何主张。
@@ -1526,7 +1527,7 @@ A 类额外换车或改派,不改扫描序;是否扩大允许改写的范围,对
 \textbf{这张表也给出了影响集规模的实测}(注~\ref{rem:minimality})。
 走廊阻断下预约影响集覆盖 \(t_{\mathrm{now}}\) 之后尚未结束占用的约 \(\ClosureAliveFrac\);
 相对「把尚未结束的占用全部纳入改写」这一平凡上界只少纳入不足一成。有界修复真正省下的是不改写已经结束的占用与不重开搜索,
-而不是把未来切得很小。第~\ref{sec:e1}~节按全表统计的 \(\mathrm{Cl}/|R|\) 落在 \(0.56\)--\(0.59\)
+而不是把未来切得很小。第~\ref{sec:e1}~节按全表统计的 \(\mathrm{Cl}/|R|\) 落在 \EoneCloLo--\EoneCloHi
 与此不矛盾:全表包含 \(t_{\mathrm{now}}\) 之前已经执行完毕、本就不可改的那一半。
 两个口径都给出。就贡献而言,本节只扩了\emph{覆盖面}——把 A/B 二分与包含性从一种扰动推到四种;
 它没有加强任何一条主张的强度,也没有引入新的划界对象。
@@ -1571,7 +1572,7 @@ E1--E3 给出的是跨随机种子的计数与可行率。为把「工序依赖�
 (\(2024\) 一列上 high 的 \(0.372\) 反高于 funnel 的 \(0.296\))。
 五个随机种子、两个布局,这个差距不足以支撑任何结论。
 第~\ref{sec:e1}~节按繁忙走廊阻断协议在三个同规模布局上得到的
-\(\mathrm{Cl}/|R|\) 亦落在 \(0.56\)--\(0.59\) 的窄带内,同样未能区分布局。
+\(\mathrm{Cl}/|R|\) 亦落在 \EoneCloLo--\EoneCloHi 的窄带内,同样未能区分布局。
 
 \textbf{换一批不由本文设计的布局,这条负结果的成因才分得清.}
 三张同规模布局同属哑铃一族,只差并行通道数,即只差容量、不差几何;"指标太粗"与
@@ -1838,7 +1839,7 @@ Wilcoxon 符号秩双侧 \(p=\RAStabP\)。方向高度一致,\emph{幅度不大}
 \caption{E7 事后规则:允许改写占比与稳定性降幅(\(\NPairs\) 对,R2 对 RA)。
 虚线为样本内阈值 \(\WorthThresh\);纵轴为正表示按影响集划界后改动比例更低。}
 \Description{散点图,横轴为预约影响集占尚未结束占用的比例,纵轴为不按影响集划界相对划界多改的占用比例,
-五个算例用不同颜色区分,一条竖虚线标在 0.93。点大致从左上到右下。}
+五个算例用不同颜色区分,一条竖虚线标在 \WorthThresh。点大致从左上到右下。}
 \label{fig:worth}
 \end{figure}
 
@@ -1927,6 +1928,8 @@ Wilcoxon 符号秩双侧 \(p=\RAStabP\)。方向高度一致,\emph{幅度不大}
 \end{tabular}
 \end{table}
 
+逐档读数见表~\ref{tab:instscale}。
+
 \textbf{影响集占比不随规模增长。} 七档在 \ScaleCloLo--\ScaleCloHi 之间波动、并不单调
 (首末两档略降,中段两档回到 \(0.53\) 以上)。这是本节最要紧的一条:占比始终在半数上下,
 有界性并未随规模被稀释。但须说明这不是一个渐近主张——
@@ -1956,7 +1959,7 @@ E1/E2/E3/E5 的读数与主批次\emph{逐项同向}:
 工序依赖图给出空范围 \PubPassMiss(结构泄漏计 \(0\)),结构包含性 \PubPassClosed,
 集外字段逐条不变 \PubPassInvar;边界消融下第 1 级改路的可行格数为 \PubFeasRone,
 按预约影响集划界为 \PubFeasRtwo。E1 协议下的影响集占比逐布局中位落在
-\PubEoneFracLo--\PubEoneFracHi,整体略低于主批次逐算例的 \(0.56\)--\(0.59\),
+\PubEoneFracLo--\PubEoneFracHi,整体略低于主批次逐算例的 \EoneCloLo--\EoneCloHi,
 两者同处半数上下的量级;本文未对这一偏低作归因。
 与全局重调度的权衡亦无变化:\PubEfiveNoCross\ 个预算点上 R0+ 的 \(C_{\max}\) 更优,
 余下 \(1\) 点两法持平(\texttt{LyuL6\_8m},随机种子 \(2024\),预算 \(0.2\)\,s),交叉点仍不存在。

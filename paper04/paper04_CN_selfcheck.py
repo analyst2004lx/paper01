@@ -96,13 +96,35 @@ def check(path):
             key = re.match(r"^-?\d+(\.\d+)?", v).group(0)
             if len(key) >= 3:
                 numeric.setdefault(key, []).append(name)
+    # 两类豁免，否则本项信噪比为 0：
+    #  (a) tabular/array 表体——协议规定表是数据源，宏由表出数，表体本就该写字面值；
+    #      只豁免 tabular 而非 table，故 caption 与 \Description 仍在检查范围内。
+    #  (b) 长度与版式参数（leftmargin=1.5em、width=0.92\linewidth），与读数无关。
+    TAB_ENVS = ("tabular", "tabularx", "longtable", "array")
+    UNITS = r"(?:em|ex|pt|bp|sp|cm|mm|in|%|\\linewidth|\\textwidth|\\columnwidth|\\baselineskip|\\height|\\width)"
+    depth = 0
+    skipped = 0
     for i, line in enumerate(lines, 1):
+        for env in TAB_ENVS:
+            depth += len(re.findall(r"\\begin\{" + env + r"\*?\}", line))
+            depth -= len(re.findall(r"\\end\{" + env + r"\*?\}", line))
         if line.strip().startswith("%") or "\\newcommand" in line:
             continue
         for key, owners in numeric.items():
-            if re.search(r"(?<![\d.])" + re.escape(key) + r"(?![\d])", line):
-                add("HARDCODED_NUM",
-                    "%s 疑为写死的数字，已有宏 %s" % (key, "/".join("\\" + o for o in owners)), i)
+            m = re.search(r"(?<![\d.])" + re.escape(key) + r"(?![\d])", line)
+            if not m:
+                continue
+            tail = line[m.end():]
+            head = line[:m.start()]
+            if depth > 0 or re.match(r"\s*" + UNITS, tail) or re.search(r"=\s*$", head):
+                skipped += 1
+                continue
+            add("HARDCODED_NUM",
+                "%s 疑为写死的数字，已有宏 %s" % (key, "/".join("\\" + o for o in owners)), i)
+    if skipped:
+        add("INFO_NUM_IN_TABLE",
+            "另有 %d 处同值数字落在表体或长度参数中，按协议豁免（表为数据源）；"
+            "若某读数确实只存在于表体而正文需引用，应加宏而非改表" % skipped)
 
     # ---- 3. 环境与花括号平衡 ----
     stack = []
@@ -247,7 +269,7 @@ def main():
     order = ["ENV_UNBALANCED", "BRACE_UNBALANCED", "REF_DANGLING", "CITE_MISSING",
              "MACRO_UNUSED", "HARDCODED_NUM", "PLACEHOLDER", "TERM_BANNED",
              "STALE_READING", "FLOAT_UNREFERENCED", "ABS_LEN", "LIMIT_LEN",
-             "INFO_ANCHOR_UNREFERENCED"]
+             "INFO_ANCHOR_UNREFERENCED", "INFO_NUM_IN_TABLE"]
     groups = {}
     for w in warn:
         groups.setdefault(w["kind"], []).append(w)
