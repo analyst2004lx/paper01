@@ -545,8 +545,9 @@ A 类故障上另允许换车与改派，仍不改加工顺序。
 
 对机器故障、插单等工序事件,按受影响工序划定重调度范围,在带 AGV 的动态调度中仍被采用。
 Zhang 等~\cite{zhang2023energy} 处理机器故障与插单,恢复范围取故障后尚未加工的工序;
-Tang 等~\cite{tang2026dynamic} 按扰动传播把工序与配送任务分为保留、继续、重构,
+Tang 等~\cite{tang2026dynamic} 按扰动影响把工序与配送任务分为保留、继续、重构,
 并把完全重调度、部分重调度与右移并列,指出右移保住稳定性、让出优化空间。
+本节与下节据以定位的转述,所本原句一并列于表~\ref{tab:refcheck}。
 这一做法可上溯至受影响工序重调度(AOR)~\cite{abumaizar1997rescheduling,subramaniam2003maor}:
 只重排被扰动直接或间接波及的工序。
 沿时间轴划界与失败后扩大范围同样已有文献研究过,包括 match-up~\cite{akturk1999matchup}
@@ -616,7 +617,7 @@ van Os 与 Basten~\cite{vanos2026exact} 形式化了带无冲突运输约束的�
 本文不声称已穷尽文献,因而不把它写成全称否定。可逐篇核对的事实是,
 在本节所引的这些工作里两个条件没有同时出现——有预约表的把执行期故障排除在外,
 处理执行期扰动的则没有预约表。
-以下两处是直接引原文假设的:
+以下两处依据的是原文中的建模假设(原句照录于表~\ref{tab:refcheck}):
 Zhang 等~\cite{zhang2023energy} 在建模假设中写明忽略 AGV 之间的碰撞；
 Sun 等~\cite{sun2023integrated}
 用时间窗 Dijkstra 消解车辆冲突,却在假设中写明不考虑车辆的充电与故障、车辆始终可用,
@@ -629,6 +630,58 @@ Sun 等~\cite{sun2023integrated}
 本文要处理的就是这一情形。需说明的是,\textbf{该反例本身不依赖上述缺口陈述成立}:
 即便已有工作同时纳入了两个条件,第~\ref{sec:e1}~节的读数仍然成立,
 受影响的只是本文的新颖性主张,不是它的正确性。
+
+上面的缺口判断与第~\ref{sec:rw_aor}~节的定位都建立在对他人工作的转述之上,
+而转述可能失真。为使读者不取原文即可核对,这些转述所本的原句列于表~\ref{tab:refcheck}。
+列表的直接起因是其中一条没有通过核对:van Os 与 Basten~\cite{vanos2026exact}
+的结论原先被本文转述为「以分解方法给出可证最优的基准」,而原文限定为多数算例取得最优、
+少数因限时(time boxing)未能保证最优性。这一偏差的方向值得记下——
+它替被引工作加强了结论,而被加强的恰好是本文要对比的基线。
+
+\begin{table}[t]
+\centering
+\caption{定位所依赖的转述与被引原文对照。列出本文\emph{据以划出缺口}的五处转述,
+每处给出被引工作的原句,供读者不取原文即可判断转述是否忠实。
+第 4 行为一处已订正的转述:原表述强于原文,现已按原文收窄(见正文)。
+原文均为英文,此处照录不译,以免二次转述再引入偏差。}
+\label{tab:refcheck}
+\footnotesize
+\begin{tabular}{@{}p{0.23\linewidth}p{0.55\linewidth}p{0.14\linewidth}@{}}
+\toprule
+\textbf{本文的转述} & \textbf{被引原文} & \textbf{原文位置} \\
+\midrule
+Zhang 等~\cite{zhang2023energy} 的恢复范围取故障后尚未加工的工序 &
+\emph{``Rearrange the unprocessed operations of current scheme considering the limit of
+machine breakdown''} &
+重调度流程 \\
+\addlinespace
+Zhang 等~\cite{zhang2023energy} 在建模假设中写明忽略 AGV 之间的碰撞 &
+\emph{``The collision of AGVs are ignored.''} &
+建模假设第 (7) 条 \\
+\addlinespace
+Tang 等~\cite{tang2026dynamic} 按扰动影响把工序与配送任务分为保留、继续、重构 &
+\emph{``an event-driven partial rescheduling strategy is proposed, in which the disrupted
+operations and delivery tasks are classified into three categories: retained, continued,
+and reconstructed''} &
+摘要 \\
+\addlinespace
+van Os 与 Basten~\cite{vanos2026exact} 在多数基准算例上取得可证最优,
+少数因限时未能保证最优性 &
+\emph{``For most benchmark instances, our LBBD-based approach finds optimal makespan
+values. Because of time boxing, only in a few cases, the optimality of the found solution
+cannot be guaranteed.''} &
+摘要 \\
+\addlinespace
+Sun 等~\cite{sun2023integrated} 假定车辆始终可用、不考虑故障与充电,
+并把设备维护与故障列为后续研究 &
+\emph{``It does not consider the charging problem and fault problem of the AGVs, and AGVs
+are always available''}；\emph{``Breakdowns and charging problems are not taken into
+account.''}；\emph{``Future research will investigate the impact of equipment maintenance
+and breakdowns on production scheduling''} &
+假设列表、后续工作 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \subsection{本文定位}
 \label{sec:rw_claim}
@@ -1379,13 +1432,15 @@ E3 中\emph{必须关闭}失败后扩大范围。若开着,R1 会靠「一路扩
 
 本节只问一件事:B 类扰动下两种划界各给出什么范围,不比较修复质量。
 表~\ref{tab:e1} 与图~\ref{fig:e1e3}(左)按第~\ref{sec:protocol}~节的走廊阻断协议汇总命题~\ref{prop:miss} 的扩样结果:
-\(\PassMiss\) 样本上 \(T_{\mathrm{impact}}=0\)、起点占用与预约影响集非空、阻断后原排程不可行,
-结构泄漏均为 \(0\)。
+\(\PassMiss\) 样本上 \(T_{\mathrm{impact}}=0\)、起点占用与预约影响集非空、阻断后原排程不可行。
 
 按命题~\ref{prop:miss} 之后那段话的提醒,读这张表时重量应压在\emph{后半句}上。
-\(T_{\mathrm{impact}}=0\) 这一列是定义~\ref{def:task_impact} 对 B 类约定的推论,
+表~\ref{tab:e1} 把三个条件折进「C1 通过」一列合并计数,而三者的性质并不相同,故须拆开读;
+逐格读数见数据文件 \texttt{e1\_miss.csv} 的
+\texttt{n\_T\_impact} 与 \texttt{feasible\_after\_block} 两列。
+其中 \(T_{\mathrm{impact}}=0\) 是定义~\ref{def:task_impact} 对 B 类约定的推论,
 它把「工序依赖图按定义覆盖不到走廊阻断」显示出来,但本身不是发现。
-非平凡的是\(\texttt{feasible\_after\_block}\) 一列恒为假——排程\emph{确实}已经不可行。
+非平凡的是后一列恒为假——排程\emph{确实}已经不可行。
 两者合起来才构成反例。
 
 \begin{table}[t]
@@ -1778,7 +1833,7 @@ LU 最小割与漏斗占比在整个外部批\emph{取值恒定}。
 \centering
 \caption{E5 与不改写已结束占用的热启动全局重调度(\(3\) 个随机种子均值)。
 「改动比例」为被改写的占用占全表之比。本表只含自建布局,共 \(2\) 算例 \(\times\) \(3\) 随机种子
-\(\times\) \(3\) 预算点,独立格数 \(6\);\(C_{\max}\) 一列 R0+ 在每个预算点上更优。
+\(\times\) \(3\) 预算点,独立格数 \(6\);两列 \(C_{\max}\) 相比,R0+ 在每个预算点上更优。
 连外部布局批次(第~\ref{sec:pubrepro}~节)合读为 \(\EfiveCells\) 格 \(\EfivePts\) 点,
 逐点胜/持平/负 \(\EfiveWLT\)。R2 不随预算变,故每算例三行共用同一个 R2 定点。}
 \label{tab:e5}
@@ -2085,7 +2140,7 @@ Wilcoxon 符号秩双侧 \(p=\RAStabP\)。须说明有效样本量:上述 \(6\) 
 
 第~\ref{sec:protocol}~节第二批把布局出处换成外部来源后,\(\NPubPairs\) 个算例--随机种子对上
 E1/E2/E3/E5 的读数与主批次\emph{逐项同向}:
-工序依赖图给出空范围 \PubPassMiss(结构泄漏计 \(0\)),结构包含性 \PubPassClosed,
+工序依赖图给出空范围 \PubPassMiss,结构包含性(即泄漏计 \(0\))\PubPassClosed,
 集外字段逐条不变 \PubPassInvar;边界消融下第 1 级改路的可行格数为 \PubFeasRone,
 按预约影响集划界为 \PubFeasRtwo。E1 协议下的影响集占比逐布局中位落在
 \PubEoneFracLo--\PubEoneFracHi;同口径的主批次读数是 \NPairs\ 对合池中位 \EoneFracMed
@@ -2145,7 +2200,7 @@ B 类第 1 级均满(\FeasESixBlock / \FeasSlow),车辆故障换车 \FeasESixAgv
 两侧变动的因子数不同,故这只支持「机器配置这一维不可忽略」),而 LU 最小割与漏斗占比
 在整批外部算例上\emph{取值恒定},无从解释这一变动。替代方向指向需求侧的时序密度。
 \item 两批算例承担不同的问题:主批次给出现象与机制,第二批只检验这些现象是否依赖本文
-自选的布局。E1/E2/E3/E5 的读数逐项复现(\(\NPubPairs\) 对,第~\ref{sec:pubrepro}~节),
+自选的布局。E1、E2、E3、E5 的读数逐项复现(\(\NPubPairs\) 对,见第~\ref{sec:pubrepro}~节),
 唯一被第二批改写的是结构可预测性——它也是唯一必须两批合读的一格
 (第~\ref{sec:protocol}~节)。
 \end{itemize}
