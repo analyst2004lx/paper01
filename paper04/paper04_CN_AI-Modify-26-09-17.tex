@@ -1964,7 +1964,9 @@ Wilcoxon 符号秩双侧 \(p=\RAStabP\)。须说明有效样本量:上述 \(6\) 
 逐档读数见表;\(C_{\max}\) 仍全由 R0+ 更优,与第~\ref{sec:e5}~节一致。
 小例 \texttt{example\_3x3x2} 上同样每格可行(\(\NSeeds\) 个随机种子 \(\times\) 五个
 \(\varphi\) 值),有界修复约 \(1\)\,ms 量级,
-加速比 \(\SpeedLo\times\)--\(\SpeedHi\times\)(跨两个算例的逐格极值)。
+耗时比 \(\SpeedLo\times\)--\(\SpeedHi\times\)(跨两个算例的逐格极值)。这里分母是有界修复的
+实测挂钟,分子是 R0+ 的\emph{预算},而 R0+ 在 \(C_{\max}\) 上更优,故它不是「加速比」,
+也不构成同质量下的比较(第~\ref{sec:protocol}~节已声明各法不在同一预算档上比较)。
 
 这里有界修复打开了失败后扩大范围,故与 E3/E5 不可直接比较:扩大范围是把可行率拉到 \(100\%\) 的
 步骤,本身已有成例(第~\ref{sec:rw_aor}~节)。本节\emph{不支撑任何一条贡献},只落一条限定:
@@ -1977,7 +1979,9 @@ Wilcoxon 符号秩双侧 \(p=\RAStabP\)。须说明有效样本量:上述 \(6\) 
 有界修复含扩大范围;R0+ 预算 \(2\)\,s。离散度按四分位距报告:STRC 耗时全扫描极差为
 \ScaleMsMin--\ScaleMsMax\,ms,R0+ \(C_{\max}\) 的逐档 IQR 在 \ScaleCmaxIqrLo--\ScaleCmaxIqrHi
 之间。\textbf{「耗时比」一列在最小两档上的档内 IQR 已超过该列的档间起落,
-故它只作量级读数,不指示随 \(\varphi\) 的趋势。}}
+故它只作量级读数,不指示随 \(\varphi\) 的趋势。}该列为\emph{逐格}比值的档均值(先配对、后统计),
+因此不等于相邻两列档均值之比——两者由 \(1/x\) 的凸性必然不同,复算时请用逐格数据。
+分子是 R0+ 的挂钟\emph{预算}而非其实测耗时,故这不是同质量下的比较(第~\ref{sec:protocol}~节)。}
 \label{tab:scale}
 \small
 \begin{tabular}{@{}rcccc@{}}
@@ -2021,7 +2025,10 @@ Wilcoxon 符号秩双侧 \(p=\RAStabP\)。须说明有效样本量:上述 \(6\) 
 \begin{table}[t]
 \centering
 \caption{E8 算例规模扫描(\(\ScaleKs\) 档 \(\times\) \(\NSeeds\) 个随机种子)。
-「影响集」为预约影响集占全表之比;耗时取中位数。末列为 R2 对 RS 的 \(C_{\max}\) 胜负。}
+「影响集」为预约影响集占\emph{全表}之比,该比的可达上界是 \(|R^{\circ}|/|R|\)、本批均值约
+\ScaleAliveShare;换以可改写集合为分母则为 \ScaleCloAliveLo--\ScaleCloAliveHi(见正文)。
+耗时取中位数,「RD/R2」一列即两列\emph{中位数之比};正文讨论其单调性时用的是逐格配对后的
+档均值,两种口径的档间起落一致但数值不同。末列为 R2 对 RS 的 \(C_{\max}\) 胜负。}
 \label{tab:instscale}
 \small
 \begin{tabular}{@{}lrccccc@{}}
@@ -2081,8 +2088,10 @@ E1/E2/E3/E5 的读数与主批次\emph{逐项同向}:
 工序依赖图给出空范围 \PubPassMiss(结构泄漏计 \(0\)),结构包含性 \PubPassClosed,
 集外字段逐条不变 \PubPassInvar;边界消融下第 1 级改路的可行格数为 \PubFeasRone,
 按预约影响集划界为 \PubFeasRtwo。E1 协议下的影响集占比逐布局中位落在
-\PubEoneFracLo--\PubEoneFracHi,整体略低于主批次逐算例的 \EoneCloLo--\EoneCloHi,
-两者同处半数上下的量级;本文未对这一偏低作归因。
+\PubEoneFracLo--\PubEoneFracHi;同口径的主批次读数是 \NPairs\ 对合池中位 \EoneFracMed
+(\EoneCloLo--\EoneCloHi\ 是逐算例\emph{均值}的极差,口径不同,不宜与上句直接对读)。
+外部批整体略低,但两者同处半数上下的量级,且该偏低与逐算例间差异同量级
+(第~\ref{sec:e1}~节图注);本文未对它作归因。
 与全局重调度的权衡亦无变化:\PubEfiveNoCross\ 个预算点上 R0+ 的 \(C_{\max}\) 更优,
 余下 \(1\) 点两法持平(\texttt{LyuL6\_8m},随机种子 \(2024\),预算 \(0.2\)\,s),无一点更差。
 这批与主批次跑的是同一份 E5 代码、同一组参数,故第~\ref{sec:e5}~节按 \(\EfiveCells\) 个
