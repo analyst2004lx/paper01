@@ -39,7 +39,7 @@
 | **B09** | `F-CONCL` | §7 总结首段 + §7.2 后续工作（两段不连续，合为一块） | `sec:conclusion` | 1942–1967 + 2062–2100 | 65 行 / 1249 字 | G1–G3 | — | **必须整块**；不许出现第 4 条贡献；须与 B06 同构（当前少了 G1 的独立地位） | 依赖 B06 ✓、B08 ✓ | **−107 字**（预算 −150） | **已冻结**；三条贡献同构恢复，静态割 stale 第 5 份（末份）清完 |
 | **B10** | `F-ABS` | 摘要 | `\begin{abstract}` | 256–311 | 56 行 / 2359 字 | C1–C3 | **P01(阻断)**、P12、CONFLICT-2(`297`)、CONFLICT-5(`299`) | **必须整块**；目标 400–700 字；`299` 的 `\MsRepairMed,ms` 缺 `\,` 的排版缺陷随删除一并消除；`301` 与 `304` 重复的"18 个预算点"择一 | 依赖 B06 ✓、B09 ✓ | **−1661 字**（2359 → **698**） | **已冻结**；P01 关闭，CONFLICT-2／5 执行完毕，CONFLICT-1 提前落实一处 |
 | **B11** | `F-TITLE` | `\title[..]{..}` + `\keywords` | `\title` | 222、313 | 2 行 | — | **P02** | 全标题 31 字，超 `F-TITLE` 的 ≤30；**TODO-3 留此轮定**"任务图"在题目中的去留；关键词 5 个须与 CONFLICT-1 的定名同步 | 依赖 B10 ✓ | 实测 **+3 字**（标题 31→29 字） | **已冻结**；TODO-3 关闭、P02 题目一项关闭；§3 定义句的「任务图」转 B13 |
-| **B12** | `F-REF` | `reference-base.bib` 26 键 / 正文 61 处 | `reference-base.bib` | — | 26 键 | — | P15、P18 | **本块只处理标记处**；`586` 的 `[ref_check]`（`vanos2026exact` 是否自称 provably optimal）与 P15 两处标记须在 B07b／B06 施工时插入，否则本块无活可做 | **全文现有 0 处 `[ref_check]`／`[ref_insert]`** | 视标记数 | 待开工 |
+| **B12** | `F-REF` | `reference-base.bib` 26 键 / 正文 61 处 | `reference-base.bib` | — | 26 键 | — | P15、P18 | **本块只处理标记处**；`586` 的 `[ref_check]`（`vanos2026exact` 是否自称 provably optimal）与 P15 两处标记须在 B07b／B06 施工时插入，否则本块无活可做 | B07 已插入 4 处标记 ✓ | 实测 **−31 字** | **已冻结**；4 处全部核到原文，2 处措辞订正，全稿 0 处脚手架 |
 | **B13** | `S4` 全文校验 | 全文 | — | — | — | 全部 | **P02、P03(阻断)**、P12、P16 | CONFLICT-1 改名 6 处 + 关键词、CONFLICT-3 全表残留排查、CONFLICT-4 的"工序图"4 处并入、P12 的宏化，**全部集中在此一次性执行**；同时做 §7 一致性矩阵 | 依赖 B01–B12 | 净 **−6 页**（见 §2 核算） | 待开工 |
 
 **状态取值**：`待开工` → `施工中` → `已冻结`。已冻结的块，后续任何轮次不得再改措辞，除 S4 报出与卡片冲突。
@@ -74,6 +74,8 @@
 | 实测 | B02c 判定本段通过，**未改动**；B02d 已应用 8 条后：正文 31011 → 31096 字，编译仍 **31 页** | +85 |
 | 实测 | B02e 已应用 6 条后：正文 31096 → 31254 字，编译 31 → **32 页（首次跨页）** | +158 |
 | 实测 | **累计已超计划 +1376 字**（B01 +794／计划 +350；B02a +208／±0；B02b +171／±0~−100；B02c ±0／−0~−80；B02d +85／−300；B02e +158／+40）。净计目标从 −2980 修正为 **≈ −1604 字**；而页数已由 30 涨到 **32**，距 24 页目标须净删 **8 页** | |
+
+**B12 实测**：4 处 `[ref\_check]` 全部核完并清除，**全稿现 0 处脚手架**。正文 29844 → **29813 字（−31）**。编译 **31 页**、0 未定义引用、0 错误。自检 **44 条不变**（脚手架本不在自检项内）。
 
 **B11 实测**：全标题 **31 → 29 字**（≤30 ✓，**P02 的题目一项关闭**），短标题 12 字、机制名与全标题一致。正文 29841 → **29844 字（+3）**。编译 **31 页**、0 未定义引用、0 错误。自检 **45 → 44 条**（`TERM_BANNED` 10 → 9，关键词的「影响闭包」已定名）。
 
@@ -172,6 +174,27 @@ F-RELATED 禁止"方法预告"，但同时要求"对最接近的两项工作给�
 
 - **`tab:position` 全表零数字、全文字**（`620–658`，占 `table*` 满宽 + 39 行）。它是 §2 的汇总件，内容与 §2.1–§2.4 的四节正文一一对应，**信息完全重合**，只是换成表格排布。B13 若须再挤页面，这是 F-RELATED 侧唯一的大件（约 **−0.6 页**）；代价是评审失去一眼可比的定位图。**归 B13，需你决定**，我不在本块动。
 - **§2.2 第 563 行有 CONFLICT-4 的第 4 处"工序图"**（另三处在 `380`、`494`、`495`，已全稿核准为仅此四处）。按卡片裁决"S3 各块只登记、不改名，S4 一次性执行"，**本块只登记**。S4 改名时四处须同改，且第 563 行在引号内（"范围画在工序图上、因而漏掉走廊阻断"），是全文该短语最像"术语"的一处，改后读起来会长一截，需一并调整句子。
+
+### B12：四处 `[ref_check]` 逐条核到原文，一条需收窄
+
+本地无被引文献 PDF，`reference-base.bib` 只有元数据。四条 `need=quote` 均按 DOI 回原文核对（三篇开放获取，Elsevier 那篇以出版方摘要页为据）。**核查证据逐条留档如下，供投稿前复查。**
+
+| 标记 | 断言 | 原文依据 | 判定 |
+|---|---|---|---|
+| `328` | `zhang2023energy` 恢复范围取「故障后尚未加工的工序」 | 重调度流程原文：*"Rearrange the **unprocessed operations** of current scheme considering the limit of machine breakdown"*、*"reschedule the **unprocessed operations** of the original scheduling"* | **成立** |
+| `328` | `tang2026dynamic` 取「按扰动**传播**分类后的工序与配送任务」 | 摘要原文：*"an event-driven partial rescheduling strategy is proposed, in which the disrupted operations and delivery tasks are **classified into three categories: retained, continued, and reconstructed**"* | **需改措辞**（见下） |
+| `572` | `vanos2026exact` 自称给出 provably optimal 的基准 | 摘要原文：*"For **most** benchmark instances, our LBBD-based approach finds optimal makespan values. Because of **time boxing**, only in a few cases, the optimality of the found solution **cannot be guaranteed**."* | **偏强，需收窄** |
+| `581` | `zhang2023energy` 在模型中明确忽略 AGV 之间的碰撞 | 建模假设第 (7) 条原文：*"**The collision of AGVs are ignored.**"* | **成立**，措辞准确 |
+| `585` | `sun2023integrated` 假定车辆始终可用、不考虑故障与充电，并把设备维护与故障列为后续研究 | 假设列表原文：*"It does not consider the **charging problem and fault problem** of the AGVs, and **AGVs are always available**"*；另有 *"Breakdowns and charging problems are not taken into account."*；后续工作原文：*"**Future research will investigate the impact of equipment maintenance and breakdowns** on production scheduling"* | **成立**，三处独立印证 |
+
+**两处订正：**
+
+1. **`vanos2026exact` 的「可证最优基准」说过头了。** 原文是"多数基准算例取得最优 makespan，少数因限时（time boxing）无法保证最优性"，不是无条件的可证最优。改为"在多数基准算例上取得可证最优，少数因限时未能保证最优性"。这是 P15 的典型形态——**把被引工作的结论替它加强**，而且加强的方向恰好抬高了本文要对比的基线。
+2. **`tang2026dynamic` 的「按扰动传播分类」不是原文的分类依据。** 原文按扰动**影响状态**分为保留（retained）／继续（continued）／重构（reconstructed）三类，判据不是"传播"。改为"按扰动影响分为保留、继续、重构三类"。
+
+**顺带发现一处归属问题（本块自行订正）：** `tang2026dynamic` 是**批量流混合流水车间**（lot-streaming hybrid flowshop），不是柔性作业车间；而 `325` 开头的框定句是"在考虑运输的柔性作业车间动态调度研究中"。照原样引用等于把一篇流水车间的工作算进柔性作业车间那一支。已在句末加注"（后者为批量流混合流水车间，扰动含车辆故障，但模型中没有预约表）"。
+
+**这处加注同时补强了 §2.5 的缺口论证**：`tang2026dynamic` 明确建模了**车辆故障**，若不说明它没有预约表，读者会以为"已有工作既有车辆侧执行期扰动、又有无冲突运输"，从而直接推翻 `577` 的缺口句。现在两个条件的分离是显式的——有车辆故障的那篇没有预约表，有预约表的那两篇（`vanos2026exact`、`sun2023integrated`）把执行期故障排除在外。
 
 ### B11：题目定名——「级联」是腾出字数的那两个字
 
