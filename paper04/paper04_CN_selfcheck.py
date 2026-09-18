@@ -100,10 +100,15 @@ def check(path):
     #  (a) tabular/array 表体——协议规定表是数据源，宏由表出数，表体本就该写字面值；
     #      只豁免 tabular 而非 table，故 caption 与 \Description 仍在检查范围内。
     #  (b) 长度与版式参数（leftmargin=1.5em、width=0.92\linewidth），与读数无关。
+    #  (c) 行尾标记 % selfcheck:allow-num——「同值不同源」的撞值。宏与字面量数值相同
+    #      但是两个不同的量（如 R2 改动比例的四分位距恰等于剔除恒等格后的平均降幅），
+    #      此时套宏会制造错误的溯源。标记须与撞值理由写在同一行，且计入下面的 INFO。
+    ALLOW = "selfcheck:allow-num"
     TAB_ENVS = ("tabular", "tabularx", "longtable", "array")
     UNITS = r"(?:em|ex|pt|bp|sp|cm|mm|in|%|\\linewidth|\\textwidth|\\columnwidth|\\baselineskip|\\height|\\width)"
     depth = 0
     skipped = 0
+    allowed = 0
     for i, line in enumerate(lines, 1):
         for env in TAB_ENVS:
             depth += len(re.findall(r"\\begin\{" + env + r"\*?\}", line))
@@ -119,12 +124,19 @@ def check(path):
             if depth > 0 or re.match(r"\s*" + UNITS, tail) or re.search(r"=\s*$", head):
                 skipped += 1
                 continue
+            if ALLOW in line:
+                allowed += 1
+                continue
             add("HARDCODED_NUM",
                 "%s 疑为写死的数字，已有宏 %s" % (key, "/".join("\\" + o for o in owners)), i)
     if skipped:
         add("INFO_NUM_IN_TABLE",
             "另有 %d 处同值数字落在表体或长度参数中，按协议豁免（表为数据源）；"
             "若某读数确实只存在于表体而正文需引用，应加宏而非改表" % skipped)
+    if allowed:
+        add("INFO_NUM_IN_TABLE",
+            "另有 %d 处由行尾 %s 就地豁免，属「同值不同源」撞值；"
+            "复核时应逐条确认该行注明的撞值理由仍成立" % (allowed, ALLOW))
 
     # ---- 3. 环境与花括号平衡 ----
     stack = []
