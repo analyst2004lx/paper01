@@ -1,5 +1,5 @@
 自检对象：paper04\paper04_CN_AI-Modify-26-09-17.tex
-正文汉字 32218｜摘要汉字 2359
+正文汉字 31609｜摘要汉字 2359
 
 == MACRO_UNUSED（8）
    -          宏 \FeasSlowExpand 定义但正文 0 处引用（常见原因：被展开成写死的数字）
@@ -60,9 +60,6 @@
 == ABS_LEN（1）
    -          摘要 2359 汉字，超出 §5.11 区间 400–700
 
-== LIMIT_LEN（1）
-   -          局限 2077 字 = 全文 6.4%，超硬约束 5%（≈1610 字）
-
 == INFO_ANCHOR_UNREFERENCED（14）
    -          \label{prob:recovery} 仅作锚点，未被交叉引用
    -          \label{rem:agv_class} 仅作锚点，未被交叉引用
@@ -79,4 +76,4 @@
    -          \label{sec:system_brief} 仅作锚点，未被交叉引用
    -          \label{sec:two_graphs} 仅作锚点，未被交叉引用
 
-告警合计 48 条（另有 14 条 INFO 不计入）
+告警合计 47 条（另有 14 条 INFO 不计入）
