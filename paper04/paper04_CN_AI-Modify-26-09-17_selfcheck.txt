@@ -1,5 +1,5 @@
 自检对象：paper04\paper04_CN_AI-Modify-26-09-17.tex
-正文汉字 31609｜摘要汉字 2359
+正文汉字 31502｜摘要汉字 2359
 
 == MACRO_UNUSED（8）
    -          宏 \FeasSlowExpand 定义但正文 0 处引用（常见原因：被展开成写死的数字）
