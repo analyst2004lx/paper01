@@ -1,5 +1,5 @@
 自检对象：paper04\paper04_CN_AI-Modify-26-09-17.tex
-正文汉字 29813｜摘要汉字 698
+正文汉字 29820｜摘要汉字 698
 
 == MACRO_UNUSED（8）
    -          宏 \FeasSlowExpand 定义但正文 0 处引用（常见原因：被展开成写死的数字）
@@ -13,44 +13,33 @@
 
 == HARDCODED_NUM（21）
    第 342 行    1.5 疑为写死的数字，已有宏 \RedecodeRatio/\ScaleRatioLo
-   第 1339 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
-   第 1347 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
-   第 1497 行   0.92 疑为写死的数字，已有宏 \ClosureShareMean
+   第 1340 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
+   第 1348 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
    第 1498 行   0.92 疑为写死的数字，已有宏 \ClosureShareMean
-   第 1528 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
-   第 1573 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
-   第 1646 行   0.512 疑为写死的数字，已有宏 \PubCloHi
-   第 1647 行   0.305 疑为写死的数字，已有宏 \PubCloLo
-   第 1655 行   0.497 疑为写死的数字，已有宏 \SelfCloHi
-   第 1657 行   0.446 疑为写死的数字，已有宏 \SelfCloLo
-   第 1739 行   1.5 疑为写死的数字，已有宏 \RedecodeRatio/\ScaleRatioLo
-   第 1836 行   0.92 疑为写死的数字，已有宏 \ClosureShareMean
-   第 1840 行   0.93 疑为写死的数字，已有宏 \WorthThresh
-   第 1918 行   1.5 疑为写死的数字，已有宏 \RedecodeRatio/\ScaleRatioLo
-   第 1919 行   3.2 疑为写死的数字，已有宏 \MsRepairMed
-   第 1923 行   3.2 疑为写死的数字，已有宏 \MsRepairMed
-   第 1924 行   10.4 疑为写死的数字，已有宏 \ScaleMsHi
-   第 1924 行   3.3 疑为写死的数字，已有宏 \ScaleRatioHi
-   第 1958 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
-   第 1971 行   1.5 疑为写死的数字，已有宏 \RedecodeRatio/\ScaleRatioLo
+   第 1499 行   0.92 疑为写死的数字，已有宏 \ClosureShareMean
+   第 1529 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
+   第 1574 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
+   第 1647 行   0.512 疑为写死的数字，已有宏 \PubCloHi
+   第 1648 行   0.305 疑为写死的数字，已有宏 \PubCloLo
+   第 1656 行   0.497 疑为写死的数字，已有宏 \SelfCloHi
+   第 1658 行   0.446 疑为写死的数字，已有宏 \SelfCloLo
+   第 1740 行   1.5 疑为写死的数字，已有宏 \RedecodeRatio/\ScaleRatioLo
+   第 1837 行   0.92 疑为写死的数字，已有宏 \ClosureShareMean
+   第 1841 行   0.93 疑为写死的数字，已有宏 \WorthThresh
+   第 1919 行   1.5 疑为写死的数字，已有宏 \RedecodeRatio/\ScaleRatioLo
+   第 1920 行   3.2 疑为写死的数字，已有宏 \MsRepairMed
+   第 1924 行   3.2 疑为写死的数字，已有宏 \MsRepairMed
+   第 1925 行   10.4 疑为写死的数字，已有宏 \ScaleMsHi
+   第 1925 行   3.3 疑为写死的数字，已有宏 \ScaleRatioHi
+   第 1959 行   0.56 疑为写死的数字，已有宏 \ScaleCloHi
+   第 1972 行   1.5 疑为写死的数字，已有宏 \RedecodeRatio/\ScaleRatioLo
 
 == PLACEHOLDER（5）
    第 45 行     占位符 \TBD
    第 214 行    占位符 XXXXXXX
    第 577 行    占位符 待填
-   第 1206 行   占位符 待填
-   第 1250 行   占位符 待填
-
-== TERM_BANNED（9）
-   第 356 行    禁用词「工序图」→ 应为 工序依赖图（CONFLICT-4：4 处从未定义的简称）
-   第 382 行    禁用词「时空预约影响闭包」→ 应为 时空预约闭包（CONFLICT-1：删「影响」二字）
-   第 445 行    禁用词「时空预约影响闭包」→ 应为 时空预约闭包（CONFLICT-1：删「影响」二字）
-   第 470 行    禁用词「工序图」→ 应为 工序依赖图（CONFLICT-4：4 处从未定义的简称）
-   第 471 行    禁用词「工序图」→ 应为 工序依赖图（CONFLICT-4：4 处从未定义的简称）
-   第 484 行    禁用词「时空预约影响闭包」→ 应为 时空预约闭包（CONFLICT-1：删「影响」二字）
-   第 539 行    禁用词「工序图」→ 应为 工序依赖图（CONFLICT-4：4 处从未定义的简称）
-   第 861 行    禁用词「时空预约影响闭包」→ 应为 时空预约闭包（CONFLICT-1：删「影响」二字）
-   第 899 行    禁用词「时空预约影响闭包」→ 应为 时空预约闭包（CONFLICT-1：删「影响」二字）
+   第 1207 行   占位符 待填
+   第 1251 行   占位符 待填
 
 == FLOAT_UNREFERENCED（1）
    -          \label{tab:instscale} 浮动体从未被正文引用（P10）
@@ -71,4 +60,4 @@
    -          \label{sec:system_brief} 仅作锚点，未被交叉引用
    -          \label{sec:two_graphs} 仅作锚点，未被交叉引用
 
-告警合计 44 条（另有 14 条 INFO 不计入）
+告警合计 35 条（另有 14 条 INFO 不计入）
