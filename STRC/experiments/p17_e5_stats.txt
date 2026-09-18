@@ -1,0 +1,167 @@
+========================================================================
+P17-A  tab:e1 / fig:e1e3(左):逐算例 10 种子的离散度
+        源 expanded/e1_miss.csv
+========================================================================
+
+  example_3x3x2         
+     Cl/|R|   n=10  min=0.5000  Q1=0.5714  med=0.5960  Q3=0.6207  max=0.6552  IQR=0.0493  mean=0.5910
+     |R|      n=10  min=28.0  Q1=28.0  med=28.5  Q3=29.0  max=30.0  IQR=1.0  mean=28.6
+     |Cl|     n=10  min=15.0  Q1=16.0  med=17.0  Q3=18.0  max=19.0  IQR=2.0  mean=16.9
+     |Seeds|  n=10  min=4.0  Q1=5.0  med=6.0  Q3=6.0  max=7.0  IQR=1.0  mean=5.6
+
+  congested_8x4x4       
+     Cl/|R|   n=10  min=0.5395  Q1=0.5492  med=0.5731  Q3=0.5800  max=0.6163  IQR=0.0308  mean=0.5692
+     |R|      n=10  min=76.0  Q1=81.5  med=86.5  Q3=88.0  max=91.0  IQR=6.5  mean=85.0
+     |Cl|     n=10  min=41.0  Q1=47.0  med=48.0  Q3=51.0  max=53.0  IQR=4.0  mean=48.4
+     |Seeds|  n=10  min=12.0  Q1=14.0  med=16.0  Q3=16.0  max=16.0  IQR=2.0  mean=15.0
+
+  S8x4x4_high           
+     Cl/|R|   n=10  min=0.5533  Q1=0.5621  med=0.5783  Q3=0.6054  max=0.6392  IQR=0.0434  mean=0.5866
+     |R|      n=10  min=138.0  Q1=147.0  med=150.5  Q3=154.8  max=165.0  IQR=7.8  mean=150.5
+     |Cl|     n=10  min=79.0  Q1=84.0  med=87.0  Q3=90.8  max=101.0  IQR=6.8  mean=88.3
+     |Seeds|  n=10  min=14.0  Q1=15.0  med=15.0  Q3=16.0  max=17.0  IQR=1.0  mean=15.5
+
+  S8x4x4_funnel         
+     Cl/|R|   n=10  min=0.5000  Q1=0.5585  med=0.5693  Q3=0.5934  max=0.6392  IQR=0.0349  mean=0.5720
+     |R|      n=10  min=138.0  Q1=143.8  med=147.5  Q3=153.0  max=165.0  IQR=9.2  mean=149.1
+     |Cl|     n=10  min=74.0  Q1=79.0  med=85.5  Q3=87.0  max=101.0  IQR=8.0  mean=85.4
+     |Seeds|  n=10  min=14.0  Q1=14.2  med=16.0  Q3=16.0  max=17.0  IQR=1.8  mean=15.5
+
+  S8x4x4_mid            
+     Cl/|R|   n=10  min=0.5000  Q1=0.5512  med=0.5614  Q3=0.5751  max=0.6194  IQR=0.0239  mean=0.5613
+     |R|      n=10  min=134.0  Q1=145.2  med=147.0  Q3=150.2  max=158.0  IQR=5.0  mean=147.6
+     |Cl|     n=10  min=73.0  Q1=80.2  med=83.0  Q3=84.8  max=91.0  IQR=4.5  mean=82.8
+     |Seeds|  n=10  min=13.0  Q1=14.0  med=15.0  Q3=15.8  max=18.0  IQR=1.8  mean=15.0
+
+  全部 50 对合池 Cl/|R|: n=50  min=0.5000  Q1=0.5567  med=0.5714  Q3=0.5939  max=0.6552  IQR=0.0372  mean=0.5760
+
+  >>> 逐算例 IQR 的最大值 = 0.0493
+  >>> 逐算例 IQR 的最小值 = 0.0239
+
+========================================================================
+P17-B  fig:scale:phi 扫描逐档离散度   源 expanded/scale_compare.csv
+========================================================================
+  列名: instance, seed, phi, n_affected_ops, n_future_ops, n_closure, strc_feasible, strc_makespan, strc_wall_ms, strc_scope_rounds, r0_feasible, r0_makespan, r0_wall_ms, speedup, ref_makespan
+
+  phi=0.10  (n=10)
+     strc_feasible  10/10 可行
+     strc_wall_ms   n=10  min=2.16  Q1=3.10  med=11.36  Q3=13.42  max=15.95  IQR=10.32  mean=9.08
+     strc_makespan  n=10  min=169.0  Q1=185.2  med=190.0  Q3=200.8  max=212.0  IQR=15.5  mean=190.9
+     r0_makespan    n=10  min=93.0  Q1=97.0  med=101.5  Q3=105.0  max=121.0  IQR=8.0  mean=103.5
+     r0_wall_ms     n=10  min=2011.1  Q1=2059.7  med=2085.9  Q3=2140.5  max=2171.0  IQR=80.8  mean=2095.1
+     speedup        n=10  min=136.1  Q1=153.3  med=188.3  Q3=667.8  max=963.1  IQR=514.6  mean=406.4
+     n_closure      n=10  min=40.0  Q1=41.0  med=45.0  Q3=48.8  max=51.0  IQR=7.8  mean=45.0
+
+  phi=0.25  (n=10)
+     strc_feasible  10/10 可行
+     strc_wall_ms   n=10  min=2.95  Q1=3.86  med=12.44  Q3=17.07  max=19.53  IQR=13.21  mean=11.06
+     strc_makespan  n=10  min=175.0  Q1=189.2  med=202.0  Q3=208.8  max=214.0  IQR=19.5  mean=199.3
+     r0_makespan    n=10  min=97.0  Q1=101.0  med=105.0  Q3=113.8  max=121.0  IQR=12.8  mean=107.0
+     r0_wall_ms     n=10  min=2021.6  Q1=2040.2  med=2135.5  Q3=2160.8  max=2181.3  IQR=120.6  mean=2109.1
+     speedup        n=10  min=110.9  Q1=122.0  med=164.4  Q3=563.0  max=706.9  IQR=441.0  mean=324.9
+     n_closure      n=10  min=41.0  Q1=44.0  med=48.5  Q3=50.8  max=54.0  IQR=6.8  mean=47.7
+
+  phi=0.50  (n=10)
+     strc_feasible  10/10 可行
+     strc_wall_ms   n=10  min=4.89  Q1=5.30  med=5.57  Q3=6.01  max=23.79  IQR=0.71  mean=8.61
+     strc_makespan  n=10  min=199.0  Q1=209.5  med=214.5  Q3=218.0  max=226.0  IQR=8.5  mean=213.4
+     r0_makespan    n=10  min=99.0  Q1=106.5  med=111.5  Q3=114.8  max=134.0  IQR=8.2  mean=111.8
+     r0_wall_ms     n=10  min=2011.2  Q1=2063.9  med=2136.3  Q3=2171.0  max=2178.6  IQR=107.1  mean=2113.0
+     speedup        n=10  min=86.9  Q1=350.9  med=379.6  Q3=405.7  max=445.4  IQR=54.8  mean=332.8
+     n_closure      n=10  min=43.0  Q1=50.0  med=51.0  Q3=53.5  max=55.0  IQR=3.5  mean=50.9
+
+  phi=0.75  (n=10)
+     strc_feasible  10/10 可行
+     strc_wall_ms   n=10  min=6.82  Q1=8.16  med=8.48  Q3=8.66  max=9.99  IQR=0.49  mean=8.37
+     strc_makespan  n=10  min=205.0  Q1=230.8  med=248.0  Q3=251.5  max=256.0  IQR=20.8  mean=240.3
+     r0_makespan    n=10  min=104.0  Q1=109.8  med=123.0  Q3=133.0  max=164.0  IQR=23.2  mean=125.8
+     r0_wall_ms     n=10  min=2004.8  Q1=2072.7  med=2084.3  Q3=2104.4  max=2210.6  IQR=31.8  mean=2098.5
+     speedup        n=10  min=208.3  Q1=233.5  med=247.2  Q3=260.7  max=324.1  IQR=27.3  mean=254.0
+     n_closure      n=10  min=46.0  Q1=50.0  med=51.5  Q3=54.0  max=55.0  IQR=4.0  mean=51.5
+
+  phi=1.00  (n=10)
+     strc_feasible  10/10 可行
+     strc_wall_ms   n=10  min=8.46  Q1=10.00  med=11.26  Q3=11.47  max=11.83  IQR=1.47  mean=10.70
+     strc_makespan  n=10  min=245.0  Q1=270.0  med=282.0  Q3=291.5  max=298.0  IQR=21.5  mean=278.0
+     r0_makespan    n=10  min=103.0  Q1=108.8  med=146.5  Q3=184.2  max=201.0  IQR=75.5  mean=148.1
+     r0_wall_ms     n=10  min=2055.3  Q1=2138.1  med=2163.3  Q3=2171.4  max=2224.9  IQR=33.3  mean=2152.1
+     speedup        n=10  min=178.4  Q1=189.2  med=193.6  Q3=214.1  max=256.0  IQR=24.9  mean=203.2
+     n_closure      n=10  min=46.0  Q1=50.0  med=51.5  Q3=54.0  max=55.0  IQR=4.0  mean=51.5
+
+  --- 跨档汇总(便于写图注) ---
+     strc_wall_ms   逐档 IQR 在 0.5--13.2 之间;全扫描极差 2.2--23.8
+     r0_makespan    逐档 IQR 在 8.0--75.5 之间;全扫描极差 93.0--201.0
+     speedup        逐档 IQR 在 25--515 之间;全扫描极差 87--963
+
+========================================================================
+NEW-05  E5 两批合并:单调性 + 逐格胜负
+        源 expanded/e5_cross_curve.csv(自建布局)
+            pub_layouts/e5_cross_curve.csv(外部布局)
+========================================================================
+
+--- 自建 expanded  (18 行) ---
+  congested_8x4x4  seed=2024   buds=0.2,1,2
+      R0+ Cmax = 281, 275, 273   单调不增=True
+      R2  Cmax = 299, 299, 299   随预算恒定=True
+      逐点 R0+胜/持平/负 = 3/0/0
+  congested_8x4x4  seed=42     buds=0.2,1,2
+      R0+ Cmax = 288, 283, 283   单调不增=True
+      R2  Cmax = 298, 298, 298   随预算恒定=True
+      逐点 R0+胜/持平/负 = 3/0/0
+  congested_8x4x4  seed=7      buds=0.2,1,2
+      R0+ Cmax = 295, 284, 284   单调不增=True
+      R2  Cmax = 300, 300, 300   随预算恒定=True
+      逐点 R0+胜/持平/负 = 3/0/0
+  example_3x3x2    seed=2024   buds=0.2,1,2
+      R0+ Cmax = 84, 84, 84   单调不增=True
+      R2  Cmax = 98, 98, 98   随预算恒定=True
+      逐点 R0+胜/持平/负 = 3/0/0
+  example_3x3x2    seed=42     buds=0.2,1,2
+      R0+ Cmax = 83, 83, 83   单调不增=True
+      R2  Cmax = 86, 86, 86   随预算恒定=True
+      逐点 R0+胜/持平/负 = 3/0/0
+  example_3x3x2    seed=7      buds=0.2,1,2
+      R0+ Cmax = 68, 68, 68   单调不增=True
+      R2  Cmax = 82, 82, 82   随预算恒定=True
+      逐点 R0+胜/持平/负 = 3/0/0
+
+--- 外部 pub_layouts  (18 行) ---
+  LyuL2_4m         seed=2024   buds=0.2,1,2
+      R0+ Cmax = 133, 124, 124   单调不增=True
+      R2  Cmax = 143, 143, 143   随预算恒定=True
+      逐点 R0+胜/持平/负 = 3/0/0
+  LyuL2_4m         seed=42     buds=0.2,1,2
+      R0+ Cmax = 134, 134, 126   单调不增=True
+      R2  Cmax = 156, 156, 156   随预算恒定=True
+      逐点 R0+胜/持平/负 = 3/0/0
+  LyuL2_4m         seed=7      buds=0.2,1,2
+      R0+ Cmax = 133, 128, 127   单调不增=True
+      R2  Cmax = 167.45, 167.45, 167.45   随预算恒定=True
+      逐点 R0+胜/持平/负 = 3/0/0
+  LyuL6_8m         seed=2024   buds=0.2,1,2
+      R0+ Cmax = 147, 137, 135   单调不增=True
+      R2  Cmax = 147, 147, 147   随预算恒定=True
+      逐点 R0+胜/持平/负 = 2/1/0
+  LyuL6_8m         seed=42     buds=0.2,1,2
+      R0+ Cmax = 134, 134, 129   单调不增=True
+      R2  Cmax = 142, 142, 142   随预算恒定=True
+      逐点 R0+胜/持平/负 = 3/0/0
+  LyuL6_8m         seed=7      buds=0.2,1,2
+      R0+ Cmax = 152, 140, 121   单调不增=True
+      R2  Cmax = 158, 158, 158   随预算恒定=True
+      逐点 R0+胜/持平/负 = 3/0/0
+
+========================================================================
+合并结论
+========================================================================
+  算例数              = 4  (LyuL2_4m, LyuL6_8m, congested_8x4x4, example_3x3x2)
+  独立算例--种子格     = 12
+  预算点总数          = 36
+  逐点 R0+ 胜/持平/负 = 35/1/0
+
+  R0+ Cmax 随预算单调不增: 12/12 格成立
+  R2  Cmax 随预算恒定    : 12/12 格成立
+  最小预算点上 R0+ 胜/持平/负: 11/1/0
+
+  => 若 R2 随预算恒定且 R0+ 随预算单调不增,则在 R0+ 于最小预算已不劣的格上,
+     「预算放宽后 R2 反超」在预算维上不可能发生(非统计判断,是构造性判断)。
