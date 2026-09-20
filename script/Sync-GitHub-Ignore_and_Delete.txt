@@ -16,6 +16,7 @@ paper01/paper_CN.synctex.gz
 paper01/paper_EN.synctex.gz
 paper04/paper04.synctex.gz
 paper04/paper04_CN.synctex.gz
+9001_27001
 </Ignore>
 
 
