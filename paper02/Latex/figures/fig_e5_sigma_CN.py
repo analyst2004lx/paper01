@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""E5: 检出率与 rho* 随时序变异增大而塌掉。"""
+"""E5: 检出率与 rho* 随时序变异增大而衰减。"""
 from __future__ import print_function, division
 
 import json

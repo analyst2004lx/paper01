@@ -35,7 +35,7 @@ def box(ax, x, y, w, h, text, fc, fs=8.2):
         (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.04",
         facecolor=fc, edgecolor=C_EDGE, linewidth=1.05, zorder=3))
     ax.text(x + w / 2, y + h / 2, text, ha="center", va="center",
-            fontsize=fs, color="#111", zorder=4, linespacing=1.35,
+            fontsize=fs, color="#111111", zorder=4, linespacing=1.35,
             multialignment="center")
 
 
@@ -70,7 +70,7 @@ def main() -> None:
     for i in range(3):
         arrow(ax, (xs[i] + ws[i], y_off + h / 2), (xs[i + 1], y_off + h / 2))
     ax.text(xs[1] + ws[1] + gap / 2, y_off + h + 0.16, "Offline",
-            ha="center", va="bottom", fontsize=10.5, color="#222")
+            ha="center", va="bottom", fontsize=10.5, color="#222222")
 
     y_on = 0.80
     h2 = 1.42
@@ -93,7 +93,7 @@ def main() -> None:
     for i in range(4):
         arrow(ax, (xs2[i] + ws2[i], y_on + h2 / 2), (xs2[i + 1], y_on + h2 / 2))
     ax.text(xs2[1] + ws2[1] + gap2 / 2, y_on + h2 + 0.16, "Online",
-            ha="center", va="bottom", fontsize=10.5, color="#222")
+            ha="center", va="bottom", fontsize=10.5, color="#222222")
     ax.text(xs2[2] + ws2[2] / 2, y_on - 0.18,
             r"$O(1)$; Bonferroni split $\alpha/3$",
             ha="center", va="top", fontsize=8.4, color=C_NOTE)

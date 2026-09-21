@@ -16,10 +16,10 @@ C_MEAS = "#1f4e79"
 C_REP = "#2d6a4f"
 C_CTRL = "#c45c26"
 C_BOX = "#f7f7f7"
-C_EDGE = "#444"
+C_EDGE = "#444444"
 
 
-def box(ax, x, y, w, h, text, fc=C_BOX, ec=C_EDGE, fs=8, bold=False, tc="#111"):
+def box(ax, x, y, w, h, text, fc=C_BOX, ec=C_EDGE, fs=8, bold=False, tc="#111111"):
     ax.add_patch(FancyBboxPatch(
         (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.05",
         facecolor=fc, edgecolor=ec, linewidth=1.15, zorder=2))
@@ -91,10 +91,10 @@ def main() -> None:
 
     ax.text(7.0, 0.32,
             "Same conflict-free executor;",
-            ha="center", fontsize=7.5, color="#555", style="italic")
+            ha="center", fontsize=7.5, color="#555555", style="italic")
     ax.text(7.0, 0.02,
             "only the release set / search policy differs.",
-            ha="center", fontsize=7.5, color="#555", style="italic")
+            ha="center", fontsize=7.5, color="#555555", style="italic")
 
     fig.tight_layout()
     fig.savefig(OUT + ".pdf")

@@ -37,7 +37,7 @@ def main():
     ax.set_ylim(0.0, 1.0)
     ax.yaxis.grid(True, linestyle=":", color="#DDDDDD", zorder=0)
     ax.set_axisbelow(True)
-    set_cjk(ax, xlabel=u"抢跑量 $\\rho$", ylabel=u"单消息检出率")
+    set_cjk(ax, xlabel=u"相对提前量 $\\rho$", ylabel=u"单消息检出率")
     legend(ax, loc="upper left")
     fig.tight_layout()
     save(fig, "fig_e4_rho_CN")

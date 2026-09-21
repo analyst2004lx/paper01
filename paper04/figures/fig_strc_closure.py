@@ -26,8 +26,8 @@ def main() -> None:
 
     # lanes
     for y, lab in ((5.0, r"$e^\star$"), (3.2, r"$e_2$"), (1.4, r"$e_3$")):
-        ax.text(0.2, y + 0.35, lab, fontsize=8, va="center", color="#444")
-        ax.plot([1.0, 9.5], [y, y], color="#ccc", lw=0.8)
+        ax.text(0.2, y + 0.35, lab, fontsize=8, va="center", color="#444444")
+        ax.plot([1.0, 9.5], [y, y], color="#cccccc", lw=0.8)
 
     # block window
     ax.add_patch(Rectangle((3.4, 4.75), 2.0, 0.9, facecolor="#e8a0a0",
@@ -45,12 +45,12 @@ def main() -> None:
         "r6": (7.5, 1.6, "#9aa8b5", "out"),
     }
     for name, (x, y, c, tag) in nodes.items():
-        ax.add_patch(Circle((x, y), 0.38, facecolor=c, edgecolor="#222",
+        ax.add_patch(Circle((x, y), 0.38, facecolor=c, edgecolor="#222222",
                             lw=0.9, zorder=3))
         ax.text(x, y, name, ha="center", va="center", fontsize=7,
                 color="white", fontweight="bold", zorder=4)
         if tag:
-            ax.text(x, y - 0.65, tag, ha="center", fontsize=6.5, color="#555")
+            ax.text(x, y - 0.65, tag, ha="center", fontsize=6.5, color="#555555")
 
     ax.text(5, 0.35, r"Seeds = reservations overlapping the block on $e^\star$",
             ha="center", fontsize=7.5, color="#8b1e1e")
@@ -80,16 +80,16 @@ def main() -> None:
         x1, y1 = pos[a]
         x2, y2 = pos[b]
         ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
-                    arrowprops=dict(arrowstyle="->", color="#555", lw=1.1,
+                    arrowprops=dict(arrowstyle="->", color="#555555", lw=1.1,
                                     connectionstyle="arc3,rad=0.08"),
                     zorder=1)
     # no edge into r6 from closed in this toy (outside)
     ax.text(7.5, 3.1, "no out-edge\nfrom Cl", ha="center", fontsize=6.5,
-            color="#666")
+            color="#666666")
 
     for name, (x, y) in pos.items():
         ax.add_patch(Circle((x, y), 0.42, facecolor=colors[name],
-                            edgecolor="#222", lw=1.0, zorder=3))
+                            edgecolor="#222222", lw=1.0, zorder=3))
         ax.text(x, y, name, ha="center", va="center", fontsize=7.5,
                 color="white", fontweight="bold", zorder=4)
 
@@ -100,7 +100,7 @@ def main() -> None:
     ax.text(3.6, 6.05, r"$\mathrm{Cl}(\mathrm{Seeds})$", ha="center",
             fontsize=8.5, color="#1f4e79", fontweight="bold")
     ax.text(7.5, 1.2, "outside\n(frozen)", ha="center", fontsize=7,
-            color="#666")
+            color="#666666")
 
     fig.tight_layout()
     fig.savefig(OUT + ".pdf")

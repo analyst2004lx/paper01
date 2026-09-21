@@ -17,7 +17,7 @@ from _style import (  # noqa: E402
 )
 
 ATTACKS = [u"A1", u"A2", u"A3", u"A4", u"A5", u"A6"]
-ATTACK_ZH = [u"重放", u"不可行", u"抢跑", u"模仿", u"漂移", u"抑制"]
+ATTACK_ZH = [u"重放", u"不可行", u"提前", u"模仿", u"漂移", u"抑制"]
 
 
 def main():
@@ -46,7 +46,7 @@ def main():
     ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     ax.yaxis.grid(True, linestyle=":", color="#DDDDDD", zorder=0)
     ax.set_axisbelow(True)
-    set_cjk(ax, ylabel=u"净检出率（已减地板）")
+    set_cjk(ax, ylabel=u"净检出率（已扣偶然告警基线）")
     legend(ax, ncol=5, loc="lower center", bbox_to_anchor=(0.5, 1.02),
            columnspacing=0.55, handlelength=1.15, handletextpad=0.3)
     fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.86))

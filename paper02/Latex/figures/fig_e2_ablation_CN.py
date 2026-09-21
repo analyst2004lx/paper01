@@ -28,7 +28,7 @@ def main():
     series = [
         (u"完整", full, C_OURS),
         (u"去时序", no_t, C_TIME),
-        (u"去硬层", no_f, C_HARD),
+        (u"去硬约束层", no_f, C_HARD),
         (u"去结构", no_s, C_STR),
     ]
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 3.85),
@@ -54,7 +54,7 @@ def main():
 
     ax2 = axes[1]
     deltas = np.array([-0.11, -0.07, -0.04])
-    labels = [u"去时序", u"去硬层", u"去结构"]
+    labels = [u"去时序", u"去硬约束层", u"去结构"]
     cols = [C_TIME, C_HARD, C_STR]
     y = np.arange(3)
     ax2.barh(y, deltas, color=cols, edgecolor="white", height=0.55, zorder=3)

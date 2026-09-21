@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 
 import matplotlib
 
@@ -11,13 +12,18 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
 OUT = os.path.join(HERE, "fig_arch_CN")
+
+from _style import subset_pdf  # noqa: E402
 
 plt.rcParams.update({
     "font.sans-serif": ["Microsoft YaHei", "SimHei", "SimSun", "DejaVu Sans"],
     "axes.unicode_minus": False,
     "mathtext.fontset": "dejavusans",
     "figure.dpi": 200,
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
 })
 
 C_EDGE = "#333333"
@@ -35,7 +41,7 @@ def box(ax, x, y, w, h, text, fc, fs=8.2):
         (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.04",
         facecolor=fc, edgecolor=C_EDGE, linewidth=1.05, zorder=3))
     ax.text(x + w / 2, y + h / 2, text, ha="center", va="center",
-            fontsize=fs, color="#111", zorder=4, linespacing=1.35,
+            fontsize=fs, color="#111111", zorder=4, linespacing=1.35,
             multialignment="center")
 
 
@@ -70,7 +76,7 @@ def main() -> None:
     for i in range(3):
         arrow(ax, (xs[i] + ws[i], y_off + h / 2), (xs[i + 1], y_off + h / 2))
     ax.text(xs[1] + ws[1] + gap / 2, y_off + h + 0.16, "离线",
-            ha="center", va="bottom", fontsize=10.5, color="#222")
+            ha="center", va="bottom", fontsize=10.5, color="#222222")
 
     y_on = 0.80
     h2 = 1.42
@@ -83,7 +89,7 @@ def main() -> None:
         xcur += wi + gap2
     labels_on = [
         (C_MSG, r"消息 $m_t$"),
-        (C_HARD, r"硬层 $\mathbf{F}$" + "\n+ 账本"),
+        (C_HARD, r"硬约束层 $\mathbf{F}$" + "\n+ 指派记录"),
         (C_STAT, r"时序 $z$" + "\n" + r"结构 $\tilde{P}$"),
         (C_SEQ, "CUSUM"),
         (C_OUT, "告警或\n门控更新"),
@@ -93,14 +99,15 @@ def main() -> None:
     for i in range(4):
         arrow(ax, (xs2[i] + ws2[i], y_on + h2 / 2), (xs2[i + 1], y_on + h2 / 2))
     ax.text(xs2[1] + ws2[1] + gap2 / 2, y_on + h2 + 0.16, "在线",
-            ha="center", va="bottom", fontsize=10.5, color="#222")
+            ha="center", va="bottom", fontsize=10.5, color="#222222")
     ax.text(xs2[2] + ws2[2] / 2, y_on - 0.18,
-            r"$O(1)$；合并报警按 $\alpha/3$ 划分",
+            r"$O(1)$；并行告警按 $\alpha/3$ 分摊预算",
             ha="center", va="top", fontsize=8.4, color=C_NOTE)
 
     fig.savefig(OUT + ".pdf", bbox_inches="tight", pad_inches=0.06)
     fig.savefig(OUT + ".png", dpi=200, bbox_inches="tight", pad_inches=0.06)
     plt.close(fig)
+    subset_pdf(OUT + ".pdf")
     print("wrote", OUT + ".pdf")
 
 

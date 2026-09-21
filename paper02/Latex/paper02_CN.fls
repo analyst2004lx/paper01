@@ -1,8 +1,8 @@
-PWD c:/Users/analy/Desktop/AI_Folder/paper02/Latex
+PWD c:/Users/Administrator/Desktop/AI_Folder/paper02/Latex
 INPUT c:/texlive/2024/texmf.cnf
 INPUT c:/texlive/2024/texmf-dist/web2c/texmf.cnf
 INPUT c:/texlive/2024/texmf-var/web2c/pdftex/pdflatex.fmt
-INPUT c:/Users/analy/Desktop/AI_Folder/paper02/Latex/paper02_CN.tex
+INPUT c:/Users/Administrator/Desktop/AI_Folder/paper02/Latex/paper02_CN.tex
 OUTPUT paper02_CN.log
 INPUT ./acmart.cls
 INPUT acmart.cls
@@ -301,6 +301,12 @@ INPUT c:/texlive/2024/texmf-dist/fonts/tfm/public/newtx/ntxbsy5.tfm
 INPUT c:/texlive/2024/texmf-dist/fonts/tfm/public/newtx/ntxbexx.tfm
 INPUT c:/texlive/2024/texmf-dist/fonts/tfm/public/newtx/ntxbexx.tfm
 INPUT c:/texlive/2024/texmf-dist/tex/latex/graphics/color.sty
+INPUT ./paper02_CN.out
+INPUT ./paper02_CN.out
+INPUT paper02_CN.out
+INPUT paper02_CN.out
+INPUT ./paper02_CN.out
+INPUT ./paper02_CN.out
 OUTPUT paper02_CN.out
 INPUT c:/texlive/2024/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 INPUT c:/texlive/2024/texmf-dist/tex/context/base/mkii/supp-pdf.mkii

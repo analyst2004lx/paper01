@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2025.11.5)  10 SEP 2026 13:41
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.8.28)  21 SEP 2026 17:22
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1924,18 +1924,13 @@ LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/b/n' will be
 (Font)              scaled to size 7.47278pt on input line 258.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/b/n' will be
 (Font)              scaled to size 5.60458pt on input line 258.
-
-Missing character: There is no 前 (U+524D) in font [LibertinusMath-Regular.otf]/
-OT:script=math;language=dflt;!
-Missing character: There is no 驱 (U+9A71) in font [LibertinusMath-Regular.otf]/
-OT:script=math;language=dflt;!
-Missing character: There is no 标 (U+6807) in font [LibertinusMath-Regular.otf]/
-OT:script=math;language=dflt;!
-Missing character: There is no 签 (U+7B7E) in font [LibertinusMath-Regular.otf]/
-OT:script=math;language=dflt;!
+LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
+(Font)              scaled to size 7.2pt on input line 258.
+LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
+(Font)              scaled to size 5.4pt on input line 258.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
 (Font)              scaled to size 6.0pt on input line 259.
-[1.1]
+ [1.1]
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [2.2]
@@ -1943,12 +1938,11 @@ LaTeX Font Info:    Font shape `TU/LinLibertine(0)/b/n' will be
 (Font)              scaled to size 7.2pt on input line 286.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/b/n' will be
 (Font)              scaled to size 5.4pt on input line 286.
-LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 7.2pt on input line 287.
-LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 5.4pt on input line 287.
 
-[3.3] [4.4]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [3.3]
+[4.4]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/n' will be
 (Font)              scaled to size 8.0pt on input line 340.
 
@@ -1965,20 +1959,24 @@ LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
 (Font)              scaled to size 5.4pt on input line 383.
 File: figures/fig_system_CN.pdf Graphic file (type pdf)
 <use figures/fig_system_CN.pdf>
+
+Underfull \vbox (badness 3449) has occurred while \output is active []
+
+ [5.5]
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
 (Font)              scaled to size 9.0pt on input line 402.
+
 
 LaTeX Font Warning: Font shape `TU/SimSun(0)/m/it' undefined
 (Font)              using `TU/SimSun(0)/m/n' instead on input line 402.
 
-[5.5]
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
 (Font)              scaled to size 8.0pt on input line 422.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
 (Font)              scaled to size 6.0pt on input line 422.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
 (Font)              scaled to size 5.0pt on input line 422.
-
+[6.6]
 
 Package xeCJK Warning: Unknown CJK family `\CJKttdefault' is being ignored.
 (xeCJK)                
@@ -2001,67 +1999,60 @@ LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/sc' will be
 LaTeX Font Warning: Font shape `TU/SimSun(0)/m/sc' undefined
 (Font)              using `TU/SimSun(0)/m/n' instead on input line 473.
 
-
-Underfull \vbox (badness 3128) has occurred while \output is active []
-
- [6.6]
 [7.7]
 File: figures/fig_arch_CN.pdf Graphic file (type pdf)
 <use figures/fig_arch_CN.pdf>
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
 put line 504.
+ [8.8]
 File: figures/fig_alarm_CN.pdf Graphic file (type pdf)
 <use figures/fig_alarm_CN.pdf>
- [8.8] [9.9] [10.10]
+ [9.9] [10.10] [11.11]
 File: figures/fig_guard_cusum_CN.pdf Graphic file (type pdf)
 <use figures/fig_guard_cusum_CN.pdf>
 
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [11.11]
+ [12.12]
 File: figures/fig_sigma_CN.pdf Graphic file (type pdf)
 <use figures/fig_sigma_CN.pdf>
 
-[12.12]
-Underfull \vbox (badness 6412) has occurred while \output is active []
-
- [13.13]
+[13.13] [14.14]
 File: figures/fig_e1_delay_CN.pdf Graphic file (type pdf)
 <use figures/fig_e1_delay_CN.pdf>
 File: figures/fig_e1_dr_CN.pdf Graphic file (type pdf)
 <use figures/fig_e1_dr_CN.pdf>
 File: figures/fig_e1_rate_CN.pdf Graphic file (type pdf)
 <use figures/fig_e1_rate_CN.pdf>
-
-[14.14]
-
-LaTeX Warning: Text page 15 contains only floats.
-
-[15.15]
+ [15.15]
 File: figures/fig_e2_ablation_CN.pdf Graphic file (type pdf)
 <use figures/fig_e2_ablation_CN.pdf>
+
+Underfull \vbox (badness 2564) has occurred while \output is active []
+
+ [16.16]
+Underfull \vbox (badness 1776) has occurred while \output is active []
+
+ [17.17]
 File: figures/fig_e4_rho_CN.pdf Graphic file (type pdf)
 <use figures/fig_e4_rho_CN.pdf>
 File: figures/fig_delay_CN.pdf Graphic file (type pdf)
 <use figures/fig_delay_CN.pdf>
- [16.16]
-Underfull \vbox (badness 3668) has occurred while \output is active []
 
- [17.17]
+[18.18] [19.19]
+Underfull \vbox (badness 3068) has occurred while \output is active []
 
-LaTeX Warning: Text page 18 contains only floats.
-
-[18.18] [19.19] Processing 'acks' comment.
+ [20.20]
+Processing 'acks' comment.
 \openout3 = `comment.cut'.
 
-
-Comment 'acks' writing to comment.cut. Straight input of comment.cut.
-(./comment.cut) (./paper02_CN.bbl
+ Comment 'acks' writing to comment.cut.
+Straight input of comment.cut. (./comment.cut) (./paper02_CN.bbl
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
 (Font)              scaled to size 7.0pt on input line 46.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
 (Font)              scaled to size 7.0pt on input line 60.
- [20.20])
+ [21.21])
 
 Class acmart Warning: ACM keywords are mandatory for papers over two pages.
 
@@ -2072,7 +2063,7 @@ File: se-pdfdoc.def 2019/11/29 v1.12 stringenc: PDFDocEncoding
 )
 (c:/texlive/2024/texmf-dist/tex/generic/stringenc/se-utf32be.def
 File: se-utf32be.def 2019/11/29 v1.12 stringenc: UTF-32BE
-) [21.21]
+) [22.22]
 (./paper02_CN.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
@@ -2083,15 +2074,15 @@ L3 programming layer <2022/08/05>
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 Package rerunfilecheck Info: File `paper02_CN.out' has not changed.
-(rerunfilecheck)             Checksum: 3151611E56E9F148F04C8A7A01BA38F4;5726.
+(rerunfilecheck)             Checksum: 2912E6547C7A7901F9C298A5109E5A2F;5774.
  ) 
 Here is how much of TeX's memory you used:
- 36113 strings out of 474773
- 736308 string characters out of 5761289
- 1984842 words of memory out of 5000000
- 57602 multiletter control sequences out of 15000+600000
+ 36113 strings out of 474772
+ 736308 string characters out of 5761268
+ 1986842 words of memory out of 5000000
+ 57603 multiletter control sequences out of 15000+600000
  571183 words of font info for 193 fonts, out of 8000000 for 9000
  1509 hyphenation exceptions out of 8191
- 105i,17n,135p,1007b,32979s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 105i,17n,135p,1025b,32979s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on paper02_CN.pdf (21 pages).
+Output written on paper02_CN.pdf (22 pages).

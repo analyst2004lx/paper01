@@ -48,7 +48,7 @@ def main():
     ax.set_ylim(0.0, 1.05)
     ax.yaxis.grid(True, linestyle=":", color="#DDDDDD")
     ax.set_axisbelow(True)
-    set_cjk(ax, xlabel=u"时序变异 $\\sigma$", ylabel=u"抢跑量上界 $\\rho^*$")
+    set_cjk(ax, xlabel=u"时序变异 $\\sigma$", ylabel=u"相对提前量上界 $\\rho^*$")
     legend(ax, loc="lower right")
     fig.tight_layout()
     save(fig, "fig_sigma_CN")
