@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
+import shutil
+import subprocess
 from pathlib import Path
 
 import matplotlib as mpl
@@ -55,6 +58,28 @@ def apply_style_cn() -> None:
         "savefig.bbox": "tight",
         "savefig.pad_inches": 0.05,
     })
+
+
+def subset_pdf(path) -> str:
+    """Re-embed only the glyphs actually used.
+
+    matplotlib < 3.6 writes the whole CJK font file into the PDF with
+    ``pdf.fonttype = 42``, turning a 40 kB figure into a 10 MB one.
+    No-op when pdftocairo is unavailable.
+    """
+    path = str(path)
+    exe = shutil.which("pdftocairo")
+    if exe is None or os.path.getsize(path) < 1024 * 1024:
+        return path
+    tmp = path + ".subset"
+    try:
+        subprocess.check_call([exe, "-pdf", path, tmp])
+        os.remove(path)
+        os.rename(tmp, path)
+    except (subprocess.CalledProcessError, OSError):
+        if os.path.isfile(tmp):
+            os.remove(tmp)
+    return path
 
 
 def load() -> dict:

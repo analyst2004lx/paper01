@@ -10,6 +10,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Rectangle
 
+from _style import subset_pdf
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "fig_architecture_CN")
 
@@ -18,6 +20,7 @@ plt.rcParams.update({
     "axes.unicode_minus": False,
     "mathtext.fontset": "dejavusans",
     "figure.dpi": 200,
+    "pdf.fonttype": 42,
 })
 
 C_EDGE = "#333333"
@@ -31,7 +34,7 @@ def box(ax, x, y, w, h, text, fc, fs=7.8):
         (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.04",
         facecolor=fc, edgecolor=C_EDGE, linewidth=1.0, zorder=3))
     ax.text(x + w / 2, y + h / 2, text, ha="center", va="center",
-            fontsize=fs, color="#111", zorder=4, linespacing=1.2)
+            fontsize=fs, color="#111111", zorder=4, linespacing=1.2)
     return x, y, w, h
 
 
@@ -60,7 +63,7 @@ def main() -> None:
     xs = [0.35 + i * (w + gap) for i in range(5)]
     y_off = 2.35
     labs_off = [
-        "M1 接入",
+        "M1 日志接入",
         r"M2 任务图" + "\n" + r"$G\!\to\!H$",
         "M5 覆盖",
         "M6 串谋",
@@ -109,7 +112,7 @@ def main() -> None:
         (xs2[1] + w2 / 2, y_on + 1.05),
     ])
     ax.text(xs[1] + w / 2 + 0.12, 1.58, r"$W(a)$",
-            ha="left", va="bottom", fontsize=7, color="#777")
+            ha="left", va="bottom", fontsize=7, color="#777777")
 
     routed(ax, [
         (xs[4] + w / 2, y_off),
@@ -118,7 +121,7 @@ def main() -> None:
         (xs2[2] + w2 / 2, y_on + 1.05),
     ])
     ax.text((xs[4] + xs2[2] + w2) / 2, 1.58, r"$T_{hb}$",
-            ha="center", va="bottom", fontsize=7, color="#777")
+            ha="center", va="bottom", fontsize=7, color="#777777")
 
     ax.text(-0.08, y_on + 0.52, "在线", ha="center", va="center",
             fontsize=7.4, color=C_NOTE, fontweight="bold", rotation=90)
@@ -126,6 +129,7 @@ def main() -> None:
     fig.savefig(OUT + ".pdf", bbox_inches="tight", pad_inches=0.06)
     fig.savefig(OUT + ".png", dpi=200, bbox_inches="tight", pad_inches=0.06)
     plt.close(fig)
+    subset_pdf(OUT + ".pdf")
     print("wrote", OUT + ".pdf")
 
 
