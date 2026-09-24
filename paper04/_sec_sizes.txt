@@ -1,0 +1,47 @@
+施工稿分节体量（汉字数 / 行数 / 表 / 图）；估页按 1700 汉字≈1 页正文，每个浮动体另计 0.35 页
+
+label                        标题                    汉字      行    表    图      估页
+sec:introduction             引言                     0      3    0    0    0.00
+-                            背景与动机                512     14    0    0    0.30
+fig:motivate                 任务图覆盖不到的缺口          1490     54    0    1    1.23
+-                            本文主张                1256     49    0    0    0.74
+sec:contributions            贡献                   808     43    0    0    0.48
+-                            篇章结构                 280     15    0    0    0.16
+sec:related_work             相关工作                 155     10    0    0    0.09
+sec:rw_aor                   作业车间的局部重调度           298     17    0    0    0.18
+sec:rw_ag                    排他资源上的占用先后           353     19    0    0    0.21
+sec:rw_mapf                  无冲突多车路径的局部重规划        351     16    0    0    0.21
+sec:rw_position              考虑运输的柔性作业车间调度        519     28    0    0    0.31
+sec:rw_claim                 本文定位                 454     51    0    0    0.27
+sec:problem                  走廊预约设定与执行期恢复问题         0      3    0    0    0.00
+sec:system_brief             系统设定与记号             1102    101    1    1    1.35
+sec:assumptions              执行期假设                322     19    0    0    0.19
+sec:disturbance_classes      扰动二分                 953     71    0    0    0.56
+sec:recovery_problem         恢复问题                 139     17    0    0    0.08
+sec:strc                     时空预约影响闭包               0      3    0    0    0.00
+sec:closure_def              预约依赖边                570     57    0    1    0.69
+sec:containment              包含性                 1336     81    0    0    0.79
+sec:structure                结构可预测性               364     16    0    0    0.21
+sec:repair                   预约影响集上的有界修复          308     21    0    1    0.53
+sec:level1                   允许改写、保持原计划与第 1 级     347     42    0    0    0.20
+sec:scope_escalation         失败后扩大允许改写的范围         376     19    0    0    0.22
+sec:vs_r0                    与全局重调度的对照            579     45    0    0    0.34
+sec:experiments              实验                     0      3    0    0    0.00
+sec:protocol                 协议                  2708    125    0    0    1.59
+sec:e1                       E1:工序依赖图给出空范围        378     42    1    0    0.57
+sec:e2                       E2:包含性              1093     67    1    0    0.99
+sec:e3                       E3:边界消融              529     50    1    1    1.01
+sec:e6                       E6:扰动类型与边界定义的交叉     1025     59    1    0    0.95
+sec:case                     案例甘特                 374     28    0    1    0.57
+sec:e4                       E4:结构(探索)           1299    100    2    0    1.46
+sec:e5                       E5:与全局重调度的权衡         914     67    1    1    1.24
+sec:cheap                    E7:毫秒档内的对照          2084    118    1    1    1.93
+sec:scale                    扰动规模扫描               337     45    1    1    0.90
+sec:instscale                E8:算例规模上的外推          555     51    1    0    0.68
+sec:pubrepro                 外部布局批次的复现            354     19    0    0    0.21
+sec:exp_summary              小结                   901     45    0    0    0.53
+sec:conclusion               总结                   493     25    0    0    0.29
+sec:limitations              局限                  2075     93    0    0    1.22
+sec:future                   后续工作                 750     37    0    0    0.44
+
+合计估页（仅正文节，不含标题页/摘要/参考文献）：23.9

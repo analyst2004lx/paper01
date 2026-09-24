@@ -75,7 +75,7 @@ def main() -> None:
     ax.set_title("E3: same engine, swap boundary")
     ax.legend(loc="center left", fontsize=7)
     for i, (a, b) in enumerate(zip(r1_feas, r2_feas)):
-        ax.text(i - w / 2, a + 0.03, f"{a:.0%}", ha="center", fontsize=7, color="#555")
+        ax.text(i - w / 2, a + 0.03, f"{a:.0%}", ha="center", fontsize=7, color="#555555")
         ax.text(i + w / 2, b + 0.03, f"{b:.0%}", ha="center", fontsize=7, color="#1f4e79")
 
     fig.tight_layout()

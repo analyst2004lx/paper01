@@ -10,6 +10,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
+from _style import subset_pdf
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "fig_budget_chain_CN")
 
@@ -18,6 +20,7 @@ plt.rcParams.update({
     "axes.unicode_minus": False,
     "mathtext.fontset": "dejavusans",
     "figure.dpi": 200,
+    "pdf.fonttype": 42,
 })
 
 C_EDGE = "#333333"
@@ -30,9 +33,9 @@ def box(ax, x, y, w, h, title, sub):
         (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.05",
         facecolor=C_BOX, edgecolor=C_EDGE, linewidth=1.1, zorder=3))
     ax.text(x + w / 2, y + h * 0.64, title, ha="center", va="center",
-            fontsize=10, color="#111", zorder=4)
+            fontsize=10, color="#111111", zorder=4)
     ax.text(x + w / 2, y + h * 0.28, sub, ha="center", va="center",
-            fontsize=8.2, color="#444", zorder=4)
+            fontsize=8.2, color="#444444", zorder=4)
 
 
 def arrow(ax, p, q):
@@ -71,6 +74,7 @@ def main() -> None:
     fig.savefig(OUT + ".pdf", bbox_inches="tight", pad_inches=0.06)
     fig.savefig(OUT + ".png", dpi=200, bbox_inches="tight", pad_inches=0.06)
     plt.close(fig)
+    subset_pdf(OUT + ".pdf")
     print("wrote", OUT + ".pdf")
 
 

@@ -3,6 +3,8 @@
 from __future__ import print_function, division
 
 import os
+import shutil
+import subprocess
 
 import matplotlib
 matplotlib.use("Agg")
@@ -72,6 +74,26 @@ def apply_style():
     })
 
 
+def subset_pdf(path):
+    """Re-embed only the glyphs actually used.
+
+    matplotlib < 3.6 writes the whole CJK font file into the PDF, which turns a
+    25 kB figure into a 10 MB one. No-op when pdftocairo is unavailable.
+    """
+    exe = shutil.which("pdftocairo")
+    if exe is None or os.path.getsize(path) < 1024 * 1024:
+        return path
+    tmp = path + ".subset"
+    try:
+        subprocess.check_call([exe, "-pdf", path, tmp])
+        os.remove(path)
+        os.rename(tmp, path)
+    except (subprocess.CalledProcessError, OSError):
+        if os.path.isfile(tmp):
+            os.remove(tmp)
+    return path
+
+
 def save(fig, name):
     apply_style()
     pdf = os.path.join(HERE, name + ".pdf")
@@ -79,6 +101,7 @@ def save(fig, name):
     fig.savefig(pdf)
     fig.savefig(png)
     plt.close(fig)
+    subset_pdf(pdf)
     print("wrote", pdf)
     return pdf
 

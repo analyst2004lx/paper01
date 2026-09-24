@@ -1,0 +1,31 @@
+自检对象：paper04_CN.tex
+正文汉字 31632｜摘要汉字 697
+
+== PLACEHOLDER（2）
+   第 251 行    占位符 XXXXXXX
+   第 2297 行   占位符 待填
+
+== INFO_ANCHOR_UNREFERENCED（14）
+   -          \label{prob:recovery} 仅作锚点，未被交叉引用
+   -          \label{rem:agv_class} 仅作锚点，未被交叉引用
+   -          \label{sec:assumptions} 仅作锚点，未被交叉引用
+   -          \label{sec:case} 仅作锚点，未被交叉引用
+   -          \label{sec:closure_def} 仅作锚点，未被交叉引用
+   -          \label{sec:contributions} 仅作锚点，未被交叉引用
+   -          \label{sec:exp_summary} 仅作锚点，未被交叉引用
+   -          \label{sec:introduction} 仅作锚点，未被交叉引用
+   -          \label{sec:recovery_problem} 仅作锚点，未被交叉引用
+   -          \label{sec:rw_ag} 仅作锚点，未被交叉引用
+   -          \label{sec:rw_mapf} 仅作锚点，未被交叉引用
+   -          \label{sec:structure} 仅作锚点，未被交叉引用
+   -          \label{sec:system_brief} 仅作锚点，未被交叉引用
+   -          \label{sec:two_graphs} 仅作锚点，未被交叉引用
+
+== INFO_NUM_IN_TABLE（2）
+   -          另有 20 处同值数字落在表体或长度参数中，按协议豁免（表为数据源）；若某读数确实只存在于表体而正文需引用，应加宏而非改表
+   -          另有 2 处由行尾 selfcheck:allow-num 就地豁免，属「同值不同源」撞值；复核时应逐条确认该行注明的撞值理由仍成立
+
+== INFO_TERM_ALLOWED（1）
+   -          另有 4 处由 selfcheck:allow-term 就地豁免（转述文献用语或经裁决保留的同义登记）；复核时应逐条确认标记行注明的理由仍成立
+
+告警合计 2 条（另有 17 条 INFO 不计入）

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import sys
 
 import matplotlib
 
@@ -11,13 +12,18 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HERE)
 OUT = os.path.join(HERE, "fig_system_CN")
+
+from _style import subset_pdf  # noqa: E402
 
 plt.rcParams.update({
     "font.sans-serif": ["Microsoft YaHei", "SimHei", "SimSun", "DejaVu Sans"],
     "axes.unicode_minus": False,
     "mathtext.fontset": "dejavusans",
     "figure.dpi": 200,
+    "pdf.fonttype": 42,
+    "ps.fonttype": 42,
 })
 
 C_EDGE = "#333333"
@@ -32,9 +38,9 @@ def box(ax, x, y, w, h, title, sub, fc):
         (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.05",
         facecolor=fc, edgecolor=C_EDGE, linewidth=1.15, zorder=3))
     ax.text(x + w / 2, y + h * 0.64, title, ha="center", va="center",
-            fontsize=11, color="#111", zorder=4)
+            fontsize=11, color="#111111", zorder=4)
     ax.text(x + w / 2, y + h * 0.28, sub, ha="center", va="center",
-            fontsize=9, color="#333", zorder=4)
+            fontsize=9, color="#333333", zorder=4)
 
 
 def arrow(ax, p, q, color=C_EDGE, lw=1.35, ls="-", ms=12):
@@ -55,7 +61,7 @@ def main() -> None:
 
     box(ax, sx, sy, sw, sh, r"上位系统 $\mathcal{C}$", r"指派事件 $\mathcal{L}$", C_SCHED)
     box(ax, dx, dy, dw, dh, r"现场设备 $\mathcal{D}$", "物理过程", C_DEV)
-    box(ax, tx, ty, tw, th, "检测器", "硬层 / 时序 / 结构", C_DET)
+    box(ax, tx, ty, tw, th, "检测器", "硬约束层 / 时序 / 结构", C_DET)
 
     s_bot_l = (sx + sw * 0.38, sy)
     s_bot_r = (sx + sw * 0.62, sy)
@@ -76,7 +82,7 @@ def main() -> None:
 
     arrow(ax, s_r, t_l, ls=(0, (3.2, 1.8)))
     ax.text((s_r[0] + t_l[0]) / 2, s_r[1] + 0.50,
-            "只读账本", ha="center", va="bottom", fontsize=9, color=C_NOTE)
+            "只读指派事件", ha="center", va="bottom", fontsize=9, color=C_NOTE)
 
     mid = (d_r[0] + 1.70, d_r[1])
     ax.plot([d_r[0], mid[0], mid[0], t_bot[0]],
@@ -94,6 +100,7 @@ def main() -> None:
     fig.savefig(OUT + ".pdf", bbox_inches="tight", pad_inches=0.06)
     fig.savefig(OUT + ".png", dpi=200, bbox_inches="tight", pad_inches=0.06)
     plt.close(fig)
+    subset_pdf(OUT + ".pdf")
     print("wrote", OUT + ".pdf")
 
 

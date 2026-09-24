@@ -15,7 +15,7 @@ def main():
     draw(load_e4(), {
         "single": "单消息",
         "cusum": "CUSUM",
-        "xlabel_rho": r"抢跑量 $\rho$",
+        "xlabel_rho": r"相对提前量 $\rho$",
         "ylabel_dr": "检出率",
         "ylabel_delay": "检测延迟（消息数）",
         "title_a": "(a) 弱信号累积",

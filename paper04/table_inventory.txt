@@ -1,0 +1,21 @@
+line 625    tab:position      数字单元格=0     相关工作按\emph{划界对象}分类:每类工作把扰动后"需要改写什么"定义在哪种对象上。 「边界划在」为
+               已用宏: cite
+line 759    tab:notation      数字单元格=1     本文常用记号} \label{tab:notation} \small \begin{tabular}{
+               已用宏: STRC, cdot, mathcal, tau, theta, varphi
+line 1373   tab:e1            数字单元格=35    E1 走廊阻断下工序依赖图给出空范围(每算例 \(\NSeeds\) 个随机种子,共 \(\NPairs
+               已用宏: NPairs, PassMiss
+line 1415   tab:e2            数字单元格=31    E2 包含性(\(\NSeeds\) 个随机种子/算例;第 1 级可行一列不扩大范围)。 E2a 为结构
+               已用宏: NPairs, PassClosed, PassInvar
+line 1493   tab:e3            数字单元格=40    E3 边界消融(不扩大范围;\(\NInst\) 算例 \(\times\) \(\NSeeds\) 个
+               已用宏: FeasRone, FeasRtwo, NPairs
+line 1542   tab:e6            数字单元格=20    E6 扰动类型 \(\times\) 划界对象(\(\NPairs\) 对/类,共 \(200\) 次划
+               已用宏: FeasESixAgv, FeasESixBlock, FeasESixRa, FeasSlow, circ
+line 1669   tab:e4            数字单元格=17    E4 预约影响集占比 \(\mathrm{Cl}/|R|\)(LU 割边阻断;随机种子 \(42,7,2
+line 1688   tab:e4pub         数字单元格=50    E4 布局出处外部化对照(LU 割边阻断,十个随机种子;\(\mathrm{Cl}/|R|\) 取中位)
+               已用宏: PubCloSpread, PubCloSpreadBig, SelfCloSpread, cmidrule
+line 1741   tab:e5            数字单元格=32    E5 与不改写已结束占用的热启动全局重调度(\(3\) 个随机种子均值)。 「改动比例」为被改写的占用占
+line 1826   tab:cheap         数字单元格=14    E7 毫秒档内对照(\(\NPairs\) 对,协议与 E3 相同:繁忙走廊单窗阻断、 \(t_{\ma
+               已用宏: ClosureShareMean, MsAllFuture, MsCheapRtwo, MsRedecode, MsShift, RedecodeBad, ResFracAllFuture, ResFracCheapRtwo, ResFracRedecode, ResFracShift, ShiftBad
+line 1933   tab:scale         数字单元格=25    扰动规模对照(\texttt{congested\_8x4x4}, \(\NSeeds\) 个随机种子平
+               已用宏: varphi
+line 1980   tab:instscale     数字单元格=63    E8 算例规模扫描(\(\ScaleKs\) 档 \(\times\) \(\NSeeds\) 个随机种

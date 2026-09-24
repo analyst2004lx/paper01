@@ -10,7 +10,7 @@ sys.path.insert(0, HERE)
 
 from fig_e1_rate import METHODS, load_curves, draw  # noqa: E402
 
-ATTACK_ZH = ["重放", "不可行", "抢跑", "模仿", "漂移", "抑制"]
+ATTACK_ZH = ["重放", "不可行", "提前", "模仿", "漂移", "抑制"]
 METHODS_CN = [
     ("butla", "BUTLA", METHODS[0][2]),
     ("tabor", "TABOR式", METHODS[1][2]),
@@ -27,7 +27,7 @@ def main():
     # temporarily swap English method names used inside draw via monkeypatch
     import fig_e1_rate as m
     m.METHODS = METHODS_CN
-    draw(rates, curves, ATTACK_ZH, "净检出率（已减地板）", "fig_e1_rate_CN")
+    draw(rates, curves, ATTACK_ZH, "净检出率（已扣偶然告警基线）", "fig_e1_rate_CN")
 
 
 if __name__ == "__main__":

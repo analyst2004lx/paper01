@@ -43,7 +43,7 @@ def main():
     ax.axhline(mu, color=C_LAB, linestyle="--", linewidth=0.8, zorder=1)
     set_cjk(ax, ylabel=u"停留 $\\tau$")
     ax.set_title(
-        u"示意：$\\rho{=}0.22$ 的同向抢跑全部落在守卫内",
+        u"示意：$\\rho{=}0.22$ 的同向提前上报全部落在守卫内",
         fontproperties=FP_SM, loc="left")
     ax.set_ylim(lo * 0.85, hi * 1.08)
 

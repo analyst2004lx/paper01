@@ -10,6 +10,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Polygon
 
+from _style import subset_pdf
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "fig_attack_tree_CN")
 
@@ -18,6 +20,7 @@ plt.rcParams.update({
     "axes.unicode_minus": False,
     "mathtext.fontset": "dejavusans",
     "figure.dpi": 200,
+    "pdf.fonttype": 42,
 })
 
 C_EDGE = "#333333"
@@ -34,7 +37,7 @@ def rbox(ax, cx, cy, w, h, text, fc, fs=7.6):
         (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.04",
         facecolor=fc, edgecolor=C_EDGE, linewidth=1.0, zorder=3))
     ax.text(cx, cy, text, ha="center", va="center",
-            fontsize=fs, color="#111", zorder=4, linespacing=1.2)
+            fontsize=fs, color="#111111", zorder=4, linespacing=1.2)
     return (cx, cy + h / 2), (cx, cy - h / 2), (cx - w / 2, cy), (cx + w / 2, cy)
 
 
@@ -43,7 +46,7 @@ def diamond(ax, cx, cy, w, h, text, fs=7.2):
     ax.add_patch(Polygon(pts, closed=True, facecolor=C_DEC,
                          edgecolor=C_EDGE, linewidth=1.0, zorder=3))
     ax.text(cx, cy, text, ha="center", va="center", fontsize=fs,
-            color="#111", zorder=4, linespacing=1.15)
+            color="#111111", zorder=4, linespacing=1.15)
     return (cx, cy + h / 2), (cx, cy - h / 2), (cx - w / 2, cy), (cx + w / 2, cy)
 
 
@@ -69,11 +72,11 @@ def main() -> None:
     q2 = diamond(ax, 9.55, 6.45, 2.6, 1.3, "是否维持\n心跳？")
 
     d1 = rbox(ax, 3.45, 4.25, 2.2, 0.95, "合用：\n沉默更快", C_DET, 7.2)
-    p1 = rbox(ax, 6.05, 4.25, 2.25, 0.95, r"$\mathbf{P1}$ 谎报、" + "\n无心跳", C_ATK)
-    p3 = rbox(ax, 10.75, 4.25, 2.25, 0.95, r"$\mathbf{P3}$ 谎报并" + "\n" + r"披露 $h_k$", C_ATK)
+    p1 = rbox(ax, 6.05, 4.25, 2.25, 0.95, r"$\mathbf{P1}$ 伪报、" + "\n无心跳", C_ATK)
+    p3 = rbox(ax, 10.75, 4.25, 2.25, 0.95, r"$\mathbf{P3}$ 伪报并" + "\n" + r"披露 $h_k$", C_ATK)
     d3 = rbox(ax, 13.40, 4.25, 2.30, 0.95, "仅互证\n（沉默 DR${=}0$）", C_DET, 6.6)
 
-    q3 = diamond(ax, 9.55, 2.15, 2.85, 1.35, "是否与对手方\n串谋？")
+    q3 = diamond(ax, 9.55, 2.15, 2.85, 1.35, "是否与对端\n设备串谋？")
     p4 = rbox(ax, 9.35, 0.45, 3.15, 0.85, r"$\mathbf{P4}$ 一跳串谋", C_ATK)
     d4 = rbox(ax, 12.45, 0.45, 2.25, 0.95, "下一跳\n诚实否证", C_DET, 7.2)
 
@@ -97,12 +100,13 @@ def main() -> None:
     ax.text(9.75, 1.20, "是", fontsize=7.2, color=C_NOTE, ha="left")
 
     ax.text(7.2, -0.15,
-            "有对手方时 P1–P3 无获胜支；缺口上 P3 可逃；P4 只推迟",
-            ha="center", va="top", fontsize=7.4, color="#777")
+            "存在对端设备时 P1–P3 无获胜分支；覆盖缺口上 P3 仍可规避；P4 仅延迟判定",
+            ha="center", va="top", fontsize=7.4, color="#777777")
 
     fig.savefig(OUT + ".pdf", bbox_inches="tight", pad_inches=0.06)
     fig.savefig(OUT + ".png", dpi=200, bbox_inches="tight", pad_inches=0.06)
     plt.close(fig)
+    subset_pdf(OUT + ".pdf")
     print("wrote", OUT + ".pdf")
 
 

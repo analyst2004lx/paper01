@@ -15,7 +15,7 @@ sys.path.insert(0, HERE)
 from _style import FP, FP_SM, FP_TINY, C_LINE, apply_style, save  # noqa: E402
 
 ATTACKS = [u"A1", u"A2", u"A3", u"A4", u"A5", u"A6"]
-ATTACK_ZH = [u"重放", u"不可行", u"抢跑", u"模仿", u"漂移", u"抑制"]
+ATTACK_ZH = [u"重放", u"不可行", u"提前", u"模仿", u"漂移", u"抑制"]
 
 
 def main():
@@ -40,7 +40,7 @@ def main():
     ax.set_yticks(np.arange(3))
     ax.set_xticklabels([u"%s %s" % (a, z) for a, z in zip(ATTACKS, ATTACK_ZH)],
                        fontproperties=FP_SM)
-    ax.set_yticklabels([u"硬层 F", u"结构", u"时序"], fontproperties=FP)
+    ax.set_yticklabels([u"硬约束层 F", u"结构", u"时序"], fontproperties=FP)
     ax.spines["top"].set_visible(True)
     ax.spines["right"].set_visible(True)
     for i in range(3):

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""动机图中文版：走廊阻断下任务图空洞 vs 预约级联。原 fig_strc_motivate.* 保留。"""
+"""动机图中文版：走廊阻断下工序依赖图为空 vs 预约影响集。原 fig_strc_motivate.* 保留。"""
 from __future__ import annotations
 
 import os
@@ -13,14 +13,13 @@ from matplotlib.patches import FancyBboxPatch, Rectangle
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "fig_strc_motivate_CN")
 
-plt.rcParams.update({
-    "font.sans-serif": ["Microsoft YaHei", "SimHei", "DejaVu Sans"],
-    "axes.unicode_minus": False,
-    "figure.dpi": 200,
-})
+from _cjk_mpl import setup_cjk
+
+setup_cjk()
+plt.rcParams.update({"figure.dpi": 200})
 
 
-def _box(ax, xy, w, h, text, fc, ec="#333", fs=8, bold=False):
+def _box(ax, xy, w, h, text, fc, ec="#333333", fs=8, bold=False):
     x, y = xy
     ax.add_patch(FancyBboxPatch(
         (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.04",
@@ -37,7 +36,7 @@ def main() -> None:
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 10)
     ax.axis("off")
-    ax.set_title("走廊阻断下的任务依赖图", fontsize=10, pad=10)
+    ax.set_title("走廊阻断下的工序依赖图", fontsize=10, pad=10)
 
     ops = [
         (1.2, 7.2, "J1-1"), (4.2, 7.2, "J1-2"), (7.2, 7.2, "J1-3"),
@@ -48,21 +47,21 @@ def main() -> None:
     for (x1, y1, _), (x2, y2, _) in zip(ops, ops[1:]):
         if y1 == y2:
             ax.annotate("", xy=(x2, y2 + 0.55), xytext=(x1 + 1.8, y1 + 0.55),
-                        arrowprops=dict(arrowstyle="->", color="#555", lw=1.0))
+                        arrowprops=dict(arrowstyle="->", color="#555555", lw=1.0))
     ax.text(5, 2.3, r"$T_{\mathrm{direct}}=\varnothing$",
             ha="center", fontsize=11, fontweight="bold", color="#8b1e1e")
-    ax.text(5, 1.2, "任务图规则：判定无需重调度",
+    ax.text(5, 1.2, "按工序依赖图：判定无需重调度",
             ha="center", fontsize=9, color="#8b1e1e")
-    _box(ax, (2.2, 8.55), 5.6, 0.95, "走廊阻断（未命中任何工序/机器）",
+    _box(ax, (2.2, 8.55), 5.6, 0.95, "走廊阻断（无作为起点的工序）",
          "#f7e6e6", ec="#8b1e1e", fs=8)
 
     ax = axes[1]
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 10)
     ax.axis("off")
-    ax.set_title("预约表上级联（STRC）", fontsize=10, pad=10)
+    ax.set_title("预约表上的影响集（STRC）", fontsize=10, pad=10)
 
-    ax.plot([1.6, 9.4], [2.0, 2.0], color="#444", lw=1.0)
+    ax.plot([1.6, 9.4], [2.0, 2.0], color="#444444", lw=1.0)
     ax.text(9.5, 2.0, "t", va="center", fontsize=8)
     ax.add_patch(Rectangle((3.9, 6.2), 2.2, 1.1, facecolor="#e8a0a0",
                             edgecolor="#8b1e1e", hatch="////", alpha=0.85))
@@ -70,7 +69,7 @@ def main() -> None:
             color="#5a1010", fontweight="bold")
 
     bars = [
-        (1.6, 6.35, 2.0, 0.8, "r1 种子", "#c45c26"),
+        (1.6, 6.35, 2.0, 0.8, "r1 起点", "#c45c26"),
         (6.3, 6.35, 2.0, 0.8, "r2", "#1f4e79"),
         (2.9, 4.65, 2.4, 0.8, "r3 等待", "#1f4e79"),
         (5.6, 4.65, 2.2, 0.8, "r4", "#5a7a9a"),
@@ -79,7 +78,7 @@ def main() -> None:
     for x, y, w, h, lab, c in bars:
         ax.add_patch(FancyBboxPatch(
             (x, y), w, h, boxstyle="round,pad=0.01,rounding_size=0.03",
-            facecolor=c, edgecolor="#222", alpha=0.9))
+            facecolor=c, edgecolor="#222222", alpha=0.9))
         ax.text(x + w / 2, y + h / 2, lab, ha="center", va="center",
                 fontsize=7.5, color="white", fontweight="bold")
 
@@ -87,20 +86,20 @@ def main() -> None:
                 arrowprops=dict(arrowstyle="->", color="#c45c26", lw=1.3))
     ax.annotate("", xy=(4.6, 3.75), xytext=(4.0, 4.65),
                 arrowprops=dict(arrowstyle="->", color="#c45c26", lw=1.3))
-    ax.text(8.55, 7.55, "闭包\nCl(Seeds)", ha="center", fontsize=8.5,
+    ax.text(8.55, 7.55, "预约影响集\nCl(S)", ha="center", fontsize=8.5,
             color="#1f4e79", fontweight="bold",
             bbox=dict(boxstyle="round,pad=0.22", fc="#e8eef5", ec="#1f4e79"))
 
-    ax.text(5, 0.7, "须在预约影响闭包上修复",
+    ax.text(5, 0.7, "须在预约影响集上修复",
             ha="center", fontsize=9, color="#1f4e79", fontweight="bold")
 
     for y, lab in ((6.75, r"走廊 $e^\star$"), (5.05, r"走廊 $e_2$"),
                    (3.35, r"走廊 $e_3$")):
-        ax.text(0.08, y, lab, fontsize=7.0, va="center", color="#444")
+        ax.text(0.08, y, lab, fontsize=7.0, va="center", color="#444444")
 
     fig.tight_layout()
-    fig.savefig(OUT + ".pdf", bbox_inches="tight")
     fig.savefig(OUT + ".png", dpi=200, bbox_inches="tight")
+    fig.savefig(OUT + ".pdf", bbox_inches="tight")
     print("wrote", OUT)
 
 

@@ -48,12 +48,12 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
         y = ymap[rec.machine]
         dur = max(1e-6, rec.finish - rec.start)
         ax.barh(y, dur, left=rec.start, height=0.55,
-                color=colors[in_cl], edgecolor="#222", linewidth=0.6,
+                color=colors[in_cl], edgecolor="#222222", linewidth=0.6,
                 alpha=0.92, zorder=2)
         if dur >= 3.5:
             ax.text(rec.start + dur / 2, y, f"J{rec.job}-{rec.i}",
                     ha="center", va="center", fontsize=6.5,
-                    color="white" if in_cl else "#222", zorder=3)
+                    color="white" if in_cl else "#222222", zorder=3)
 
     # t_now
     ax.axvline(t_now, color="#8b1e1e", ls="--", lw=1.0, zorder=4)
@@ -77,8 +77,8 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
     ax.spines["right"].set_visible(False)
     if show_legend:
         ax.legend(handles=[
-            Patch(facecolor="#1f4e79", edgecolor="#222", label="op in Cl (released)"),
-            Patch(facecolor="#b0b8c0", edgecolor="#222", label="op outside (frozen)"),
+            Patch(facecolor="#1f4e79", edgecolor="#222222", label="op in Cl (released)"),
+            Patch(facecolor="#b0b8c0", edgecolor="#222222", label="op outside (frozen)"),
             Patch(facecolor="#e8a0a0", alpha=0.5, label="corridor block window"),
         ], loc="lower right", fontsize=6.5, frameon=False)
 
@@ -126,7 +126,7 @@ def main() -> None:
     # annotate T_impact empty
     axes[0].text(
         0.01, 0.90,
-        r"$T_{\mathrm{impact}}=\varnothing$ (task graph); repair uses Cl",
+        r"$T_{\mathrm{impact}}=\varnothing$ (operation-precedence graph); repair uses Cl",
         transform=axes[0].transAxes, ha="left", va="top", fontsize=7,
         color="#1f4e79",
         bbox=dict(boxstyle="round,pad=0.2", fc="#e8eef5", ec="#1f4e79", lw=0.7),

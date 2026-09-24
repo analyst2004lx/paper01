@@ -15,10 +15,9 @@ CSV = os.path.abspath(os.path.join(
     HERE, "..", "..", "STRC", "experiments", "cheap_baselines.csv"))
 OUT = os.path.join(HERE, "fig_strc_worth_CN")
 
-plt.rcParams.update({
-    "font.sans-serif": ["Microsoft YaHei", "SimHei", "SimSun", "DejaVu Sans"],
-    "axes.unicode_minus": False,
-})
+from _cjk_mpl import setup_cjk
+
+setup_cjk()
 
 ORDER = ("example_3x3x2", "congested_8x4x4", "S8x4x4_high",
          "S8x4x4_funnel", "S8x4x4_mid")
@@ -72,7 +71,7 @@ def main() -> None:
                    edgecolors="0.25", linewidths=0.4, zorder=3)
     ax.axvline(THRESH, color="0.35", linestyle="--", linewidth=1.0,
                label=rf"事后阈值 ${THRESH:g}$")
-    ax.set_xlabel(r"释放占比 $\mathrm{Cl}/|R^{\circ}|$")
+    ax.set_xlabel(r"允许改写占比 $\mathrm{Cl}/|R^{\circ}|$")
     ax.set_ylabel("稳定性降幅 (RA $-$ R2)")
     ax.set_xlim(0.74, 1.02)
     ax.legend(loc="upper right", fontsize=7, ncol=2, framealpha=0.92)

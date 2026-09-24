@@ -12,10 +12,9 @@ from matplotlib.patches import Circle, FancyBboxPatch, Rectangle
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "fig_strc_closure_CN")
 
-plt.rcParams.update({
-    "font.sans-serif": ["Microsoft YaHei", "SimHei", "SimSun", "DejaVu Sans"],
-    "axes.unicode_minus": False,
-})
+from _cjk_mpl import setup_cjk
+
+setup_cjk()
 
 
 def main() -> None:
@@ -26,11 +25,11 @@ def main() -> None:
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 6.5)
     ax.axis("off")
-    ax.set_title("(a) 被阻断走廊上的种子", fontsize=9)
+    ax.set_title("(a) 被阻断走廊上的起点占用", fontsize=9)
 
     for y, lab in ((5.0, r"$e^\star$"), (3.2, r"$e_2$"), (1.4, r"$e_3$")):
-        ax.text(0.2, y + 0.35, lab, fontsize=8, va="center", color="#444")
-        ax.plot([1.0, 9.5], [y, y], color="#ccc", lw=0.8)
+        ax.text(0.2, y + 0.35, lab, fontsize=8, va="center", color="#444444")
+        ax.plot([1.0, 9.5], [y, y], color="#cccccc", lw=0.8)
 
     ax.add_patch(Rectangle((3.4, 4.75), 2.0, 0.9, facecolor="#e8a0a0",
                             edgecolor="#8b1e1e", hatch="////", alpha=0.9))
@@ -38,7 +37,7 @@ def main() -> None:
             color="#5a1010", fontweight="bold")
 
     nodes = {
-        "r1": (2.2, 5.2, "#c45c26", "种子"),
+        "r1": (2.2, 5.2, "#c45c26", "起点"),
         "r2": (6.2, 5.2, "#1f4e79", ""),
         "r3": (3.5, 3.4, "#1f4e79", "等待"),
         "r4": (6.5, 3.4, "#5a7a9a", ""),
@@ -46,21 +45,21 @@ def main() -> None:
         "r6": (7.5, 1.6, "#9aa8b5", "外侧"),
     }
     for name, (x, y, c, tag) in nodes.items():
-        ax.add_patch(Circle((x, y), 0.38, facecolor=c, edgecolor="#222",
+        ax.add_patch(Circle((x, y), 0.38, facecolor=c, edgecolor="#222222",
                             lw=0.9, zorder=3))
         ax.text(x, y, name, ha="center", va="center", fontsize=7,
                 color="white", fontweight="bold", zorder=4)
         if tag:
-            ax.text(x, y - 0.65, tag, ha="center", fontsize=6.5, color="#555")
+            ax.text(x, y - 0.65, tag, ha="center", fontsize=6.5, color="#555555")
 
-    ax.text(5, 0.35, r"种子 = 与 $e^\star$ 阻断重叠的预约",
+    ax.text(5, 0.35, r"起点占用 = 与 $e^\star$ 阻断窗重叠的占用",
             ha="center", fontsize=7.5, color="#8b1e1e")
 
     ax = axes[1]
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 6.5)
     ax.axis("off")
-    ax.set_title("(b) 依赖边与闭包", fontsize=9)
+    ax.set_title("(b) 依赖边与预约影响集", fontsize=9)
 
     pos = {
         "r1": (2.0, 5.0), "r2": (5.0, 5.0), "r3": (2.0, 3.0),
@@ -75,14 +74,14 @@ def main() -> None:
         x1, y1 = pos[a]
         x2, y2 = pos[b]
         ax.annotate("", xy=(x2, y2), xytext=(x1, y1),
-                    arrowprops=dict(arrowstyle="->", color="#555", lw=1.1,
+                    arrowprops=dict(arrowstyle="->", color="#555555", lw=1.1,
                                     connectionstyle="arc3,rad=0.08"),
                     zorder=1)
-    ax.text(7.5, 3.1, "闭包无出边", ha="center", fontsize=6.5, color="#666")
+    ax.text(7.5, 3.1, "影响集无出边", ha="center", fontsize=6.5, color="#666666")
 
     for name, (x, y) in pos.items():
         ax.add_patch(Circle((x, y), 0.42, facecolor=colors[name],
-                            edgecolor="#222", lw=1.0, zorder=3))
+                            edgecolor="#222222", lw=1.0, zorder=3))
         ax.text(x, y, name, ha="center", va="center", fontsize=7.5,
                 color="white", fontweight="bold", zorder=4)
 
@@ -91,7 +90,7 @@ def main() -> None:
         facecolor="none", edgecolor="#1f4e79", lw=1.4, linestyle="--", zorder=0))
     ax.text(3.6, 6.05, r"$\mathrm{Cl}(\mathrm{Seeds})$", ha="center",
             fontsize=8.5, color="#1f4e79", fontweight="bold")
-    ax.text(7.5, 1.2, "外侧\n（冻结）", ha="center", fontsize=7, color="#666")
+    ax.text(7.5, 1.2, "外侧\n（保持原计划）", ha="center", fontsize=7, color="#666666")
 
     fig.tight_layout()
     fig.savefig(OUT + ".pdf")

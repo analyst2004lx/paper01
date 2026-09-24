@@ -10,6 +10,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
 
+from _style import subset_pdf
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "fig_system_CN")
 
@@ -18,6 +20,7 @@ plt.rcParams.update({
     "axes.unicode_minus": False,
     "mathtext.fontset": "dejavusans",
     "figure.dpi": 200,
+    "pdf.fonttype": 42,
 })
 
 C_SCH = "#dce6f4"
@@ -32,9 +35,9 @@ def box(ax, x, y, w, h, title, sub, fc):
         (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.06",
         facecolor=fc, edgecolor=C_EDGE, linewidth=1.15, zorder=3))
     ax.text(x + w / 2, y + h * 0.62, title, ha="center", va="center",
-            fontsize=10.5, color="#111", zorder=4)
+            fontsize=10.5, color="#111111", zorder=4)
     ax.text(x + w / 2, y + h * 0.28, sub, ha="center", va="center",
-            fontsize=8.2, color="#444", zorder=4)
+            fontsize=8.2, color="#444444", zorder=4)
 
 
 def arrow(ax, p, q, color=C_EDGE, lw=1.35, ls="-", rad=0.0, ms=11):
@@ -66,7 +69,7 @@ def main() -> None:
     bx, by, bw, bh = 8.55, 1.35, 3.75, 1.55
     box(ax, sx, sy, sw, sh, r"调度器 $S$", r"账本 $c$，检测", C_SCH)
     box(ax, dx, dy, dw, dh, r"设备 $d$", "（可能被劫持）", C_DEV)
-    box(ax, bx, by, bw, bh, r"对手方 $d'$", "本地传感", C_DEV)
+    box(ax, bx, by, bw, bh, r"对端设备 $d'$", "本地传感", C_DEV)
 
     s_r = (sx + sw, sy + sh / 2)
     d_l = (dx, dy + dh / 2)
@@ -123,6 +126,7 @@ def main() -> None:
     fig.savefig(OUT + ".pdf", bbox_inches="tight", pad_inches=0.06)
     fig.savefig(OUT + ".png", dpi=200, bbox_inches="tight", pad_inches=0.06)
     plt.close(fig)
+    subset_pdf(OUT + ".pdf")
     print("wrote", OUT + ".pdf/.png")
 
 

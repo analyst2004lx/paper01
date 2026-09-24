@@ -13,7 +13,7 @@ sys.path.insert(0, HERE)
 from fig_e1_delay import METHODS, _load, _draw  # noqa: E402
 from _style import apply_style, save, set_cjk, legend  # noqa: E402
 
-ATTACK_ZH = ["重放", "不可行", "抢跑", "模仿", "漂移", "抑制"]
+ATTACK_ZH = ["重放", "不可行", "提前", "模仿", "漂移", "抑制"]
 METHODS_CN = [
     ("butla", "BUTLA", METHODS[0][2]),
     ("tabor", "TABOR式", METHODS[1][2]),

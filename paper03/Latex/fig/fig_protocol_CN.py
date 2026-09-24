@@ -10,6 +10,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.patches import FancyArrowPatch, Circle
 
+from _style import subset_pdf
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "fig_protocol_CN")
 
@@ -18,6 +20,7 @@ plt.rcParams.update({
     "axes.unicode_minus": False,
     "mathtext.fontset": "dejavusans",
     "figure.dpi": 200,
+    "pdf.fonttype": 42,
 })
 
 C_EDGE = "#333333"
@@ -41,12 +44,12 @@ def main() -> None:
     ax.text(11.85, 0.0, r"$t$", ha="left", va="center", fontsize=9)
 
     ticks = [
-        (0.8, r"$t_u$", r"命令 $u$" + "\n打开 pending", "#111"),
-        (2.2, r"$t_r$", r"声明 $r$" + "\n（可选）", "#111"),
-        (4.0, r"$t_{\mathrm{wd}}$", "", "#111"),
+        (0.8, r"$t_u$", r"命令 $u$" + "\n打开 pending", "#111111"),
+        (2.2, r"$t_r$", r"声明 $r$" + "\n（可选）", "#111111"),
+        (4.0, r"$t_{\mathrm{wd}}$", "", "#111111"),
         (6.2, r"$t_{\mathrm{corr}}$", "确认 /\n否证 / 超时", C_BLUE),
-        (8.7, r"$t_{k}$", "", "#111"),
-        (10.45, r"$t_{k}+T_{\mathrm{hb}}$", "", "#111"),
+        (8.7, r"$t_{k}$", "", "#111111"),
+        (10.45, r"$t_{k}+T_{\mathrm{hb}}$", "", "#111111"),
     ]
     for x, lab, ev, col in ticks:
         ax.plot([x, x], [-0.1, 0.1], color=C_EDGE, lw=1.0)
@@ -70,11 +73,11 @@ def main() -> None:
     ax.text(4.6, -1.28, r"披露 $h_k$", ha="center", va="bottom",
             fontsize=7.2, color=C_GREEN)
     ax.plot([9.4, 10.45], [-1.28, -1.28], color=C_RED, lw=1.5)
-    ax.text(10.55, -0.82, r"连续缺失 $\times r$" + "\n" + r"$\Rightarrow$ 可问责",
+    ax.text(10.55, -1.18, r"连续缺失 $\times r$" + "\n" + r"$\Rightarrow$ 可问责",
             ha="center", va="bottom", fontsize=7.0, color=C_RED)
 
     ax.text(0.05, -2.25,
-            "完成路径（实线）：对手方派发后的条件时延。",
+            "完成路径（实线）：对端设备被派发后的条件时延。",
             ha="left", va="center", fontsize=7.4, color=C_NOTE)
     ax.text(0.05, -2.58,
             r"心跳路径（虚线）：无条件 $T_{\mathrm{detect}}\leq r\,T_{\mathrm{hb}}$。",
@@ -83,6 +86,7 @@ def main() -> None:
     fig.savefig(OUT + ".pdf", bbox_inches="tight", pad_inches=0.06)
     fig.savefig(OUT + ".png", dpi=200, bbox_inches="tight", pad_inches=0.06)
     plt.close(fig)
+    subset_pdf(OUT + ".pdf")
     print("wrote", OUT + ".pdf")
 
 

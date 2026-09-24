@@ -1,1 +1,1 @@
-感谢 {University of Trier} 发布带 {BPMN} 参考模型的 {IoT} 事件日志，使可行性掩码可以外挂而不是从日志里``学''。
+感谢 {University of Trier} 发布带 {BPMN} 参考模型的 {IoT} 事件日志，使可行性掩码得以由外部参考模型提供，而非从日志中学习得到。

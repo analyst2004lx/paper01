@@ -32,9 +32,9 @@ def box(ax, x, y, w, h, title, sub, fc):
         (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.05",
         facecolor=fc, edgecolor=C_EDGE, linewidth=1.15, zorder=3))
     ax.text(x + w / 2, y + h * 0.64, title, ha="center", va="center",
-            fontsize=11, color="#111", zorder=4)
+            fontsize=11, color="#111111", zorder=4)
     ax.text(x + w / 2, y + h * 0.28, sub, ha="center", va="center",
-            fontsize=9, color="#333", zorder=4)
+            fontsize=9, color="#333333", zorder=4)
 
 
 def arrow(ax, p, q, color=C_EDGE, lw=1.35, ls="-", ms=12):
