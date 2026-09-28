@@ -24,6 +24,25 @@
 
 每个解都过一遍独立校验器,并与算例自带的复合下界比对;校验失败会在报告顶部单列,
 不允许被均值掩盖。
+
+Batch-run the seven-arm ablation on the controlled extended instance matrix (spec 12.3.6 main experiment, enforcing both protocols of 8.2).
+
+Usage (from the clbs/ directory):
+
+    py -m tools.run_matrix --preset smoke          # flow check: 2 instances x 7 arms x 2 seeds
+    py -m tools.run_matrix --preset p3             # high/funnel controlled contrast (prediction 3)
+    py -m tools.run_matrix --preset full           # full matrix (4 congestion levels x 4 values of H)
+    py -m tools.run_matrix --preset full --dry-run # estimate task count and runtime only
+    py -m tools.run_matrix --report-only           # rebuild the report from an existing ledger (no run)
+
+Four design conventions, each decided directly by the pitfalls of 13.2:
+
+1. **Same-compute budget** (protocol 1). Default `--budget auto`: for each instance, first run the full method (closed) under the default stopping rule, and take that runtime as the **wall-clock budget shared by every arm** of that instance, while relaxing the early-stop threshold until it is effectively off — this is the A' check arm that 13.2 did by hand, now the default protocol. `--budget gen` keeps the "same generation count" view, which is known to be biased and is only for comparison.
+2. **Multiple seeds + dispersion + paired tests** (protocol 2). Default 10 seeds. The report always gives mean, standard deviation, and range, and runs a paired Wilcoxon on every comparison (paired by seed; see the stats module).
+3. **Interruptible resume**. As soon as one (instance, arm, seed) finishes, one line is appended to the JSONL ledger and flushed. Rerunning the same `--run` skips finished items. Task order is "instance → seed → all arms", so an interrupt leaves **complete paired blocks**, not half a seed.
+4. **Run and report are separate**. The report is recomputed entirely from the ledger, so `--report-only` can produce the current conclusion at any time (including halfway through a run).
+
+Every solution passes an independent validator and is compared with the instance's own composite lower bound. Validation failures are listed alone at the top of the report and are not allowed to hide inside a mean.
 """
 from __future__ import annotations
 
@@ -52,19 +71,24 @@ EXT_DIR = os.path.join(HERE, "input", "ext")
 OUT_ROOT = os.path.join(HERE, "output", "matrix")
 
 # 固定种子池:前三个沿用 13.2 的种子以便与历史数字对照,其余为固定扩充。
+# Fixed seed pool: the first three reuse 13.2's seeds so historical numbers stay comparable; the rest are a fixed extension.
 SEED_POOL = [42, 7, 2024, 3, 11, 19, 23, 31, 47, 53, 61, 71, 83, 97, 101]
 
 # 反馈机制的三个消融对照:closed 相对它们的改进即"该机制的增益"。
+# Three ablation controls for the feedback mechanisms: closed's improvement over each is "that mechanism's gain".
 MECHANISM_ARMS = ("nofeedback", "opendispatch", "nostagger")
 
 PRESETS: Dict[str, dict] = {
     # 流程自检:够快(几分钟),只验证账本、续跑、报告与统计是否正常。
+    # Flow check: fast (a few minutes); only checks that the ledger, resume, report, and statistics work.
     "smoke": {"tags": ["high", "funnel"], "het": [0.3], "n_seeds": 2,
               "budget": "6", "pop": 40},
     # 预测 3 专用:只跑受控对比的两档拥堵度,全部 H,全部种子。
+    # For prediction 3 only: the two controlled congestion levels, every H, every seed.
     "p3": {"tags": ["high", "funnel"], "het": [0.0, 0.15, 0.3, 0.5], "n_seeds": 10,
            "budget": "auto", "pop": 60},
     # 完整主试验(规格 12.3.6)。
+    # Full main experiment (spec 12.3.6).
     "full": {"tags": ["low", "mid", "high", "funnel"], "het": [0.0, 0.15, 0.3, 0.5],
              "n_seeds": 10, "budget": "auto", "pop": 60},
 }
@@ -72,6 +96,7 @@ PRESETS: Dict[str, dict] = {
 
 # --------------------------------------------------------------------------
 # 参数与算例发现
+# Arguments and instance discovery
 # --------------------------------------------------------------------------
 
 def parse_args() -> argparse.Namespace:
@@ -117,7 +142,10 @@ def resolve(args: argparse.Namespace) -> argparse.Namespace:
 
 
 def discover(args: argparse.Namespace) -> List[dict]:
-    """扫描算例目录,按拥堵度档位与异构度过滤,返回 [{path, name, features, data}]。"""
+    """扫描算例目录,按拥堵度档位与异构度过滤,返回 [{path, name, features, data}]。
+
+    Scan the instance directory, filter by congestion level and heterogeneity, and return [{path, name, features, data}].
+    """
     found: List[dict] = []
     for path in sorted(glob.glob(os.path.join(args.input_dir, "*.json"))):
         with open(path, "r", encoding="utf-8") as f:
@@ -132,6 +160,7 @@ def discover(args: argparse.Namespace) -> List[dict]:
         found.append({"path": path, "name": data.get("name", os.path.basename(path)),
                       "features": feat, "data": data})
     # 排序:先按拥堵度档位(实验矩阵的行序),再按 H,便于中断后按行读结果
+    # Sort by congestion level (row order of the experiment matrix), then by H, so an interrupted run can be read row by row.
     order = {t: i for i, t in enumerate(["low", "mid", "high", "funnel"])}
     found.sort(key=lambda r: (order.get(r["features"]["congestion_tag"], 9),
                               r["features"].get("target_heterogeneity") or 0.0,
@@ -141,6 +170,7 @@ def discover(args: argparse.Namespace) -> List[dict]:
 
 # --------------------------------------------------------------------------
 # 账本(JSONL,追加即落盘)
+# Ledger (JSONL; each append is flushed to disk)
 # --------------------------------------------------------------------------
 
 class Ledger:
@@ -161,7 +191,7 @@ class Ledger:
         with open(self.path, "a", encoding="utf-8") as f:
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
             f.flush()
-            os.fsync(f.fileno())      # 断电/强杀也不丢已完成的运行
+            os.fsync(f.fileno())      # 断电/强杀也不丢已完成的运行 / a power loss or kill still keeps finished runs
 
     def results(self) -> List[dict]:
         return [r for r in self.records if r.get("kind") == "result"]
@@ -175,11 +205,15 @@ class Ledger:
 
 # --------------------------------------------------------------------------
 # 运行
+# Run
 # --------------------------------------------------------------------------
 
 def make_cfg(args: argparse.Namespace, seed: int, budget: Optional[float]) -> GAConfig:
     """构造 GA 配置。给定时间预算时把早停实质关闭,否则各档不会真正用完预算,
-    "同算力"就名不副实(13.2 中 A' 档正是靠放宽早停才暴露出机制增益是算力假象)。"""
+    "同算力"就名不副实(13.2 中 A' 档正是靠放宽早停才暴露出机制增益是算力假象)。
+
+    Build the GA configuration. When a time budget is given, early stopping is effectively turned off; otherwise the arms do not really use up the budget and "same compute" is only nominal (in 13.2 the A' arm exposed the mechanism gain as a compute artifact precisely by relaxing early stopping).
+    """
     if budget is None:
         return GAConfig(pop=args.pop, max_gen=args.gen, stall_gen=args.stall, seed=seed)
     return GAConfig(pop=args.pop, max_gen=10 ** 9, stall_gen=10 ** 9, seed=seed,
@@ -191,6 +225,10 @@ def calibrate(inst, net, args: argparse.Namespace, seed: int) -> Tuple[float, di
 
     以 closed 为标定基准而非最快档:预算必须够完整方法收敛,否则等于把所有档
     一起限制在欠收敛区间,比较的就不是机制而是"谁在早期更快"。
+
+    Run the full method once under the default stopping rule; that runtime is the shared budget of every arm of this instance.
+
+    Calibrate on closed rather than the fastest arm: the budget must be enough for the full method to converge, or every arm is confined to the under-converged region and the comparison is "who is faster early", not the mechanisms.
     """
     cfg = GAConfig(pop=args.pop, max_gen=args.gen, stall_gen=args.stall, seed=seed)
     t0 = time.time()
@@ -282,6 +320,9 @@ def run(args: argparse.Namespace, instances: List[dict], ledger: Ledger) -> None
             flag = "" if row["valid"] else "  !! 校验失败"
             # 批跑动辄数小时,输出重定向到文件时 Python 会缓冲 stdout,不显式刷新
             # 就看不到任何进度,也无法判断是在跑还是卡住了
+            # A batch run lasts hours; when stdout is redirected, Python buffers
+            # it, and without an explicit flush there is no progress and no way
+            # to tell a run from a hang.
             print(f"  [{finished}/{len(todo)}] {rec['name']:<34s} {arm:<13s} "
                   f"seed={seed:<5d} C_max={cmax:>7.1f}  {elapsed:>6.1f}s  "
                   f"gen={row['generations'] or '-':<5} ETA {eta/60:.1f}min{flag}",
@@ -293,10 +334,14 @@ def run(args: argparse.Namespace, instances: List[dict], ledger: Ledger) -> None
 
 # --------------------------------------------------------------------------
 # 报告
+# Report
 # --------------------------------------------------------------------------
 
 def _by_arm(results: Sequence[dict]) -> Dict[Tuple[str, str], Dict[int, float]]:
-    """(算例, 档位) -> {种子: C_max}。"""
+    """(算例, 档位) -> {种子: C_max}。
+
+    (instance, arm) -> {seed: C_max}.
+    """
     out: Dict[Tuple[str, str], Dict[int, float]] = {}
     for r in results:
         out.setdefault((r["instance"], r["arm"]), {})[r["seed"]] = r["makespan"]
@@ -304,13 +349,19 @@ def _by_arm(results: Sequence[dict]) -> Dict[Tuple[str, str], Dict[int, float]]:
 
 
 def _paired(a: Dict[int, float], b: Dict[int, float]) -> Tuple[List[float], List[float]]:
-    """取两档共同种子上的配对样本(顺序按种子号,保证可复现)。"""
+    """取两档共同种子上的配对样本(顺序按种子号,保证可复现)。
+
+    Paired samples on seeds shared by both arms (ordered by seed, so it is reproducible).
+    """
     common = sorted(set(a) & set(b))
     return [a[s] for s in common], [b[s] for s in common]
 
 
 def _rel_gain(base: Sequence[float], new: Sequence[float]) -> Optional[float]:
-    """new 相对 base 的平均相对改进(正数表示 new 更好)。"""
+    """new 相对 base 的平均相对改进(正数表示 new 更好)。
+
+    Mean relative improvement of new versus base (positive means new is better).
+    """
     vals = [(x - y) / x for x, y in zip(base, new) if x > 0]
     return mean(vals) if vals else None
 
@@ -321,6 +372,7 @@ def build_report(args: argparse.Namespace, instances: List[dict],
     cells = _by_arm(results)
     inst_feat = {r["name"]: r["features"] for r in instances}
     # 账本里可能有本次过滤范围之外的算例(续跑时换过 preset),一并纳入报告
+    # The ledger may hold instances outside this filter (the preset changed on resume); include them in the report.
     for r in results:
         inst_feat.setdefault(r["instance"], {"congestion_tag": r.get("tag"),
                                              "target_heterogeneity": r.get("het"),
@@ -346,6 +398,7 @@ def build_report(args: argparse.Namespace, instances: List[dict],
     }
 
     # ---- 每算例 x 档位:均值/离散度 + 实际算力(用于核对预算是否真的对齐) ----
+    # ---- Per instance x arm: mean/dispersion + actual compute (to check the budget really lined up) ----
     for n in names:
         for arm in args.arms:
             vals = cells.get((n, arm))
@@ -358,6 +411,10 @@ def build_report(args: argparse.Namespace, instances: List[dict],
             d["mean_evals"] = int(mean(evs)) if evs else None
             # 单次评价成本:同算力下各档评估数的差异**全部**由它解释,
             # 不并列给出就无法判断"评估数多"是机制便宜还是模型被换掉了(见报告注)
+            # Cost per evaluation: under the same compute it explains **all** of
+            # the difference in evaluation counts. Without it side by side, "more
+            # evaluations" cannot be told apart from "the model was swapped"
+            # (see the report note).
             if evs and d["mean_sec"] > 0:
                 d["ms_per_eval"] = round(1000.0 * d["mean_sec"] / mean(evs), 2)
             stops = [r.get("stopped_by") for r in rows if r.get("stopped_by")]
@@ -367,6 +424,7 @@ def build_report(args: argparse.Namespace, instances: List[dict],
             rep["per_cell"][f"{n}|{arm}"] = d
 
     # ---- 集成收益:closed vs twostage,按种子配对 ----
+    # ---- Integrated gain: closed vs twostage, paired by seed ----
     for n in names:
         a, b = cells.get((n, "twostage")), cells.get((n, "closed"))
         if not a or not b:
@@ -385,6 +443,7 @@ def build_report(args: argparse.Namespace, instances: List[dict],
         }
 
     # ---- 机制增益:closed 相对三个消融档 ----
+    # ---- Mechanism gain: closed versus the three ablation arms ----
     for n in names:
         b = cells.get((n, "closed"))
         if not b:
@@ -420,6 +479,13 @@ def audit_budget(rep: dict, names: Sequence[str], args: argparse.Namespace) -> d
     2. **代价不对称**:两阶段第一阶段在**理想模型**下评价(路由退化为查表),单次
        评价可比闭环便宜一两个数量级。故等挂钟时间给它的搜索次数会大出数十倍——
        等时间既不等评估数,等评估数又不等时间,两种口径都不中立,必须并列报告。
+
+    Budget audit: whether the same-compute protocol itself holds.
+
+    Two failures must be reported explicitly, or the phrase "same compute" hides what the comparison really measures:
+
+    1. **Under-converged**: an arm is cut off by the budget (`stopped_by == "budget"`) while its opponent converged naturally (`stall`). That comparison measures "who rises faster early", not which mechanism is better.
+    2. **Asymmetric cost**: the two-stage first stage evaluates on the **ideal model** (routing degenerates to a table lookup), so one evaluation can be one or two orders of magnitude cheaper than closed-loop. Equal wall-clock therefore gives it tens of times more search steps — equal time is not equal evaluations, and equal evaluations are not equal time. Neither protocol is neutral; both must be reported.
     """
     audit: dict = {"undertrained": [], "cost_ratio": {}}
     for n in names:
@@ -449,11 +515,15 @@ def audit_budget(rep: dict, names: Sequence[str], args: argparse.Namespace) -> d
 
 
 def check_predictions(rep: dict, cells, inst_feat, args) -> dict:
-    """检验 12.3.6 的三条预期。每条都给出判定依据,不能判定时明确写"证据不足"。"""
+    """检验 12.3.6 的三条预期。每条都给出判定依据,不能判定时明确写"证据不足"。
+
+    Check the three expectations of 12.3.6. Each states the basis of the verdict, and says "insufficient evidence" when it cannot be decided.
+    """
     gains = rep["integration_gain"]
     out: dict = {}
 
     # 预测 1:拥堵与异构越高,集成收益越大
+    # Prediction 1: the higher the congestion and heterogeneity, the larger the integrated gain.
     by_tag: Dict[str, List[float]] = {}
     by_het: Dict[float, List[float]] = {}
     for g in gains.values():
@@ -470,6 +540,7 @@ def check_predictions(rep: dict, cells, inst_feat, args) -> dict:
     }
 
     # 预测 2:H=0 时改派机制失效,收益应最低
+    # Prediction 2: at H=0 the reassignment mechanism fails, so the gain should be lowest.
     zero = by_het.get(0.0)
     nonzero = [v for k, vs in by_het.items() if k and k > 0 for v in vs]
     if zero and nonzero:
@@ -483,6 +554,7 @@ def check_predictions(rep: dict, cells, inst_feat, args) -> dict:
         out["P2_H0_degenerates"] = {"verdict": "证据不足(缺 H=0 或 H>0 的格子)"}
 
     # 预测 3:high 上的机制增益应大于 funnel 上的(同 H、同种子配对)
+    # Prediction 3: the mechanism gain on high should exceed that on funnel (paired at the same H and seed).
     out["P3_high_vs_funnel"] = _check_p3(cells, inst_feat, args)
     return out
 
@@ -498,7 +570,10 @@ def _verdict_monotone(by_het: Dict[float, List[float]]) -> str:
 
 
 def _pair_instances(inst_feat, tag_a: str, tag_b: str) -> List[Tuple[str, str, float]]:
-    """把两档拥堵度下同 H 的算例配成对(受控对比:仅 LU 出口容量不同)。"""
+    """把两档拥堵度下同 H 的算例配成对(受控对比:仅 LU 出口容量不同)。
+
+    Pair instances of the same H under two congestion levels (controlled contrast: only LU exit capacity differs).
+    """
     idx: Dict[Tuple[str, float], str] = {}
     for n, f in inst_feat.items():
         t, h = f.get("congestion_tag"), f.get("target_heterogeneity")
@@ -517,6 +592,10 @@ def _check_p3(cells, inst_feat, args) -> dict:
     配对方式是这条预测能被判定的关键:high 与 funnel 在同 H、同种子下**只差
     LU 出口容量**(T12 已固化),故 (H, 种子) 就是天然的配对键,两侧增益之差里
     不含任何其他差异。
+
+    Prediction 3: the mechanism gain on high should exceed that on funnel.
+
+    How the pairs are formed is what makes this prediction decidable: at the same H and seed, high and funnel differ **only in LU exit capacity** (frozen by T12), so (H, seed) is the natural pairing key and the gain difference contains no other discrepancy.
     """
     pairs = _pair_instances(inst_feat, "high", "funnel")
     if not pairs:
@@ -525,6 +604,9 @@ def _check_p3(cells, inst_feat, args) -> dict:
     for arm in MECHANISM_ARMS:
         # 按 (H, 种子) 显式建键再取交集:若某格缺失,按列表顺序拼接会让两侧错位,
         # 而错位的配对检验不会报错、只会给出一个看似正常的 p 值
+        # Key explicitly by (H, seed) and then intersect: if a cell is missing,
+        # concatenating in list order misaligns the two sides, and a misaligned
+        # paired test does not error — it only returns a p-value that looks normal.
         gains: Dict[str, Dict[Tuple[float, int], float]] = {"high": {}, "funnel": {}}
         for n_high, n_funnel, h in pairs:
             for side, src in (("high", n_high), ("funnel", n_funnel)):
@@ -557,6 +639,7 @@ def _check_p3(cells, inst_feat, args) -> dict:
 
 # --------------------------------------------------------------------------
 # 输出
+# Output
 # --------------------------------------------------------------------------
 
 def _md_table(header: Sequence[str], rows: Sequence[Sequence[object]]) -> str:

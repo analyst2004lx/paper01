@@ -1,4 +1,7 @@
-"""STRC 运行摘要与闭包规模画像。"""
+"""STRC 运行摘要与闭包规模画像。
+
+STRC run summary and a profile of closure size.
+"""
 from __future__ import annotations
 
 import json

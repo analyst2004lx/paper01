@@ -6,6 +6,15 @@
   C  与 A 同布局, sigma=0.35(变异迁移)
 
 行驶时间显式取对数正态,sigma 可调。每条活动带接收侧时刻与命令账本。
+
+Hand-built discrete-event line: scenarios A/B/C, for transfer and mechanism scans only, not the main validation.
+
+The three configurations share the operation vocabulary and feasibility mask F, and change only scale, travel means, and sojourn-time variation:
+  A  2 AGVs + 1 arm, sigma=0.12, short travel
+  B  4 AGVs + 2 arms, sigma=0.12, long travel (mean shift)
+  C  same layout as A, sigma=0.35 (variance shift)
+
+Travel time is explicitly log-normal, with adjustable sigma. Each activity carries a receive-side timestamp and a command ledger.
 """
 from __future__ import annotations
 
@@ -48,7 +57,10 @@ CONFIGS = {
 
 
 def reference_model(n_agv: int = 4, n_arm: int = 2) -> ProcessModel:
-    """A/B/C 共用的 F:AGV 在两站间往返,臂只加工。"""
+    """A/B/C 共用的 F:AGV 在两站间往返,臂只加工。
+
+    F shared by A/B/C: AGVs shuttle between the two stations; arms only process.
+    """
     m = ProcessModel()
     m.capable["agv"] = {GOTO_ARM, GOTO_WH}
     m.capable["arm"] = {PROCESS}
@@ -71,7 +83,10 @@ def _lognorm(mean_s: float, sigma: float, rng: np.random.Generator) -> float:
 
 
 def generate(cfg: PlantConfig | str) -> list[Activity]:
-    """生成一条良性作业流。作业串行,设备按轮转指派,命令先于开始。"""
+    """生成一条良性作业流。作业串行,设备按轮转指派,命令先于开始。
+
+    Generate one benign job stream. Jobs are serial, devices are assigned round-robin, and the command precedes the start.
+    """
     if isinstance(cfg, str):
         cfg = CONFIGS[cfg]
     rng = np.random.default_rng(cfg.seed)

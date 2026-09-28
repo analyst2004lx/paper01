@@ -9,6 +9,16 @@
      是实测量。这一对照是消融"去掉可问责沉默"的直接材料。
 
 用法(在 paper03/tessera/ 下):  py -m tools.silence_diag
+
+Accountable-silence diagnostics: mechanism self-check, the false-alarm–latency–bandwidth tradeoff, and a latency contrast with coupled corroboration.
+
+Four things:
+  1. Protocol self-check — a normal disclosure passes; a forged preimage, an early disclosure, and a replay are all rejected.
+  2. The closed-form false-alarm–latency–bandwidth tradeoff, including the bursty-loss convention. Data source of the paper's feasible-region figure.
+  3. Contrast with paper02's binary-channel ceiling: if silence were treated as a statistical channel it would fall back onto that ceiling.
+  4. A **data-anchored reference**: how long coupled corroboration alone takes to decide when a device is silent. The log has no communication layer, so heartbeats and loss are simulated, but "how long corroboration waits" comes from the ledger's planned time and is a measurement. This contrast is the direct material for the ablation "drop accountable silence."
+
+Usage (from paper03/tessera/):  py -m tools.silence_diag
 """
 from __future__ import annotations
 
@@ -75,6 +85,14 @@ def tradeoff(n_devices: int, rho: float) -> None:
     **必须按突发口径设计。** 独立丢包下选出的 r 在 rho=0.3 时误报率会高出
     三个数量级——这不是保守起见，是工业无线的实际情形（阴影衰落与信道竞争
     使丢包成簇）。表中"独立 r"一列只用于说明这个差距有多大。
+
+    Choose r separately under independent loss and under bursty loss.
+
+    **Design to the burst convention.** The r chosen under independent loss
+    has a false-alarm rate three orders of magnitude higher at rho=0.3 — not
+    conservatism, the actual case for industrial wireless (shadow fading and
+    channel contention cluster the losses). The "independent r" column only
+    shows how large that gap is.
     """
     print(f"误报—时延—带宽权衡  ({n_devices} 台设备, 误报预算 1 次/小时)")
     print(f"      {'p_loss':>7} {'T_hb':>6} | {'独立r':>5} {'该r在突发下的误报':>18}"
@@ -122,6 +140,12 @@ def vs_corroboration(acts) -> None:
 
     互证的 pending 超时必须以命令账本的计划完成时刻为基准（README 第五之二
     节第 3 条），故该时延 = planned_operation_time。这是实测量。
+
+    How long it takes to decide one silence if only coupled corroboration is used.
+
+    The corroboration pending timeout must be anchored on the ledger's planned
+    completion time (README section 5.2, item 3), so that latency equals
+    planned_operation_time. This is a measurement.
     """
     planned = [a.planned_s for a in acts if a.planned_s]
     dur = [a.duration_s for a in acts if a.duration_s]

@@ -42,6 +42,50 @@
     T41 judge 必须留下逐次延迟与良性间隔     (箱线图 / ARL0 的存档)
 
 用法:  py -m pytest tests/test_all.py -v
+
+SLID assertion set T1–T21.
+
+Each assertion corresponds to a **fact already quantified on the data**. If a regression breaks it, the implementation has left the property the paper claims, rather than merely jittering numerically. The parenthetical is the measured value.
+
+    T1  F has zero violations on benign data                 (953/953, 0.00%)
+    T2  I's violation rate on benign data is <= 2%          (47/2768, 1.70%)
+    T3  reference-model coverage of observed moves >= 95%   (97.4%)
+    T4  additive AFT residuals equal the per-route saturated model (difference 0.000)
+    T5  the route covariate cuts sigma_log by at least half (0.355 -> 0.116)
+    T6  on an unseen route the cold-start prior beats additive extrapolation (0.159 < 0.279)
+    T7  a device-level structural chain carries no information (counterexample guard) (953 transitions, one p-value)
+    T8  a case-level chain meets the support floor on states and transitions (21 states / 2780 transitions)
+    T9  randomised conformal at nominal 0.05 has FPR in [0.04, 0.06] (0.051)
+    T10 plain conformal's FPR runs away on a discrete channel (counterexample guard) (1.000)
+    T11 a lexicographic split breaks exchangeability; a random split repairs it (0.076 -> 0.053)
+    T12 when alpha < 1/(n_calib+1) the report is marked unreachable
+    T13 a one-sided test is strictly more powerful than two-sided under early reporting (0.874 > 0.338)
+    T14 theoretical detection rate versus measurement, deviation <= 0.05 (mean 0.03)
+    T17 fusing before calibration sticks on an atom (counterexample guard) (FPR 0.074, insensitive to alpha)
+    T18 the three channels are nearly independent on Trier, so Fisher's premise holds (correlations -0.030/-0.008/+0.056)
+    T19 under moderate multi-channel evidence only an accumulating statistic can combine them (0.413 vs 0.187)
+    T20 the even-degrees-of-freedom chi-square survival function is correct
+    T21 abstention counts as 1.0: it is not evidence and it does not hide evidence
+    T22 attack numbering matches the paper's coverage matrix (counterexample guard) (once slipped: two numberings of A2/A4)
+    T23 the A3 injector only compresses the sojourn and touches no other field
+    T24 the M9 gate blocks baseline poisoning (drift -0.014 vs -0.307)
+    T25 the timing nonconformity score must be z, not a p-value (A3 detection 0.43 vs 0.03)
+    T26 a binary channel's per-message power is capped by min(1, alpha/q)
+    T27 the A4 injector must know the model, or the headline claim is measured as false
+    T28 unary F covers 100% of messages with zero benign violations (the binary part covers only 31.1%)
+    T29 a finer structural state becomes an out-of-vocabulary abstention (a negative result; do not refine by intuition)
+    T30 the threshold must come from a pure benign stream (otherwise A2's DR falsely goes to zero)
+    T31 an unseen combination occurs benignly; only the reference model can reject it (3.9%, the fundamental reason for BPMN)
+    T32 B5 HSMM's Baum-Welch likelihood is monotone increasing (evidence that it is a real hidden semi-Markov model)
+    T33 the sequential arm must reset and report its own false alarms (the two pitfalls once inflated them 22-fold)
+    T34 delay-budget DR has a chance-alarm floor that must be subtracted (floor 0.43 at alpha=0.05)
+    T35 the number of parallel paths is constrained by m <= alpha*(n_b+1) (the resolution limit of one per-message row)
+    T36 the interlock ceiling's q must be measured on the deployment stream (the training fold underestimates it 9-fold)
+    T37 the allocation may be chosen only by a benign criterion (choosing by attack performance on an adjacent fold reverses it)
+    T40 A8 must know the model and land on an F-legal non-modal successor (the injector contract for keeping or dropping Fisher)
+    T41 judge must keep the per-trial delays and the benign gaps (the archive for the box plot / ARL0)
+
+Usage:  py -m pytest tests/test_all.py -v
 """
 from __future__ import annotations
 
@@ -59,7 +103,10 @@ todo = pytest.mark.skip(reason="待实现:该断言依赖尚未落地的模块")
 
 @functools.lru_cache(maxsize=1)
 def trier():
-    """加载 Trier 良性数据与参考模型。数据缺失时整组跳过而非报错。"""
+    """加载 Trier 良性数据与参考模型。数据缺失时整组跳过而非报错。
+
+    Load the Trier benign data and the reference model. If the data are missing, skip the whole group rather than fail.
+    """
     xes, bpmn = ingest.default_log_path(), procmodel.default_bpmn_glob()
     if not os.path.exists(xes):
         pytest.skip(f"缺少 Trier 主日志: {xes}")
@@ -75,7 +122,10 @@ def trier():
 
 
 def test_t0_parse_matches_reference():
-    """解析口径本身的锚点:偏离说明 M1 的生命周期合并逻辑变了。"""
+    """解析口径本身的锚点:偏离说明 M1 的生命周期合并逻辑变了。
+
+    An anchor for the parsing rule itself: a deviation means M1's lifecycle-merge logic changed.
+    """
     live, model, _ = trier()
     assert len(live) == 3062
     assert len({a.case for a in live}) == 282
@@ -88,6 +138,10 @@ def test_t0b_student_t_cdf_is_correct():
     """自带的 Student-t CDF 是全部时序 p 值的基础,静默出错会污染一切。
 
     对照标准分位数表,并检查 nu -> inf 时收敛到正态。
+
+    The built-in Student-t CDF is the basis of every timing p-value; a silent error contaminates everything.
+
+    Check it against a standard quantile table, and check that it converges to the normal as nu -> inf.
     """
     assert abs(timing.student_t_cdf(0.0, 10) - 0.5) < 1e-12
     for t, nu, want in ((1.812461, 10, 0.95), (2.228139, 10, 0.975),
@@ -100,11 +154,15 @@ def test_t0b_student_t_cdf_is_correct():
 
 
 def test_t0c_rho_star_matches_reported_endpoints():
-    """rho* 公式与结论十八的两个端点精确吻合,可交叉验证 z 的口径为单侧。"""
+    """rho* 公式与结论十八的两个端点精确吻合,可交叉验证 z 的口径为单侧。
+
+    The rho* formula matches the two endpoints of conclusion 18 exactly, which cross-checks that z is one-sided.
+    """
     assert abs(timing.rho_star(0.007) - 0.016) < 0.001
     assert abs(timing.rho_star(1.843) - 0.986) < 0.001
     assert abs(timing.rho_star(0.315) - 0.519) < 0.001
     # 双侧只作对照,绝不能用于抢跑攻击的功效陈述
+    # two-sided is only a control; never state early-reporting power from it
     assert timing.rho_star(0.155, one_sided=False) > timing.rho_star(0.155)
 
 
@@ -113,6 +171,10 @@ def test_t1_feasibility_mask_no_violation():
 
     这条断言同时保护 M2 的两个关键实现细节——传递可达闭包与重试自环。
     任一退化都会让违反率跳到 14% 量级,F 就不能再作硬约束。
+
+    F is the premise of a hard constraint: it must never be violated on benign data.
+
+    This assertion also protects two implementation details of M2 — the transitive reachability closure and the retry self-loop. Either degeneration pushes the violation rate to about 14%, and F can no longer be a hard constraint.
     """
     _, _, s = trier()
     assert s["F_checked"] == 953
@@ -120,7 +182,10 @@ def test_t1_feasibility_mask_no_violation():
 
 
 def test_t2_interlock_violation_rate():
-    """I 只能作软证据,但残余违反必须保持在 2% 以内且成因可解释。"""
+    """I 只能作软证据,但残余违反必须保持在 2% 以内且成因可解释。
+
+    I can only be soft evidence, but the residual violation rate must stay within 2% and the cause must be explainable.
+    """
     _, _, s = trier()
     assert s["I_checked"] == 2768
     assert s["I_rate"] <= 0.02
@@ -129,7 +194,10 @@ def test_t2_interlock_violation_rate():
 
 
 def test_t3_model_coverage():
-    """未建模的移动必须按"未知"处理;覆盖率跌破 95% 说明 BPMN 解析漏了分支。"""
+    """未建模的移动必须按"未知"处理;覆盖率跌破 95% 说明 BPMN 解析漏了分支。
+
+    An unmodelled move must be treated as "unknown"; coverage below 95% means the BPMN parse missed a branch.
+    """
     live, model, _ = trier()
     cov, _ = procmodel.coverage(model, live)
     assert cov >= 0.95
@@ -149,6 +217,10 @@ def test_t4_additive_aft_equals_saturated():
 
     两件事同源:森林 => 每条路线都是桥 => 加性参数化恰好可辨识(与饱和等价),
     但移除任一路线其端点效应即不可辨识(T6 的外推失败)。
+
+    The additive AFT and the per-route saturated model have exactly equal residuals, because the route graph is a forest.
+
+    The two facts share one root: a forest means every route is a bridge, so the additive parameterisation is exactly identifiable (equal to the saturated model), but removing any route makes its endpoint effects unidentifiable (the extrapolation failure of T6).
     """
     _, d = timing_diag()
     assert d["all_forest"] is True
@@ -156,7 +228,10 @@ def test_t4_additive_aft_equals_saturated():
 
 
 def test_t5_route_covariate_reduces_sigma():
-    """路线协变量至少把 sigma_log 降一半,否则 AFT 那一层就不值得加。"""
+    """路线协变量至少把 sigma_log 降一半,否则 AFT 那一层就不值得加。
+
+    The route covariate must cut sigma_log by at least half, or the AFT layer is not worth adding.
+    """
     _, d = timing_diag()
     assert abs(d["pooled"] - 0.355) < 0.005
     assert abs(d["conditioned"] - 0.116) < 0.005
@@ -168,6 +243,10 @@ def test_t6_coldstart_beats_extrapolation():
 
     这条决定了 DwellModel.location 的回落顺序:已见路线走 AFT,未见路线走
     log(plan)+bias,而不是让加性模型硬外推。
+
+    On an unseen route the planned-time prior is strictly better than additive extrapolation.
+
+    That fixes the fallback order of DwellModel.location: a seen route uses the AFT, an unseen route uses log(plan)+bias, rather than forcing the additive model to extrapolate.
     """
     _, d = timing_diag()
     assert abs(d["loo_additive"] - 0.279) < 0.005
@@ -181,6 +260,10 @@ def test_t6b_conditioning_arms_are_not_conflated():
     引用 rho* 时把 probe_bound 的端点(条件化)与 probe_timing 的中位
     (不条件化)拼在一起曾是一处真实错误。这条钉住两个中位确实不同,
     以及条件化确实是收紧而非放松。
+
+    Rule guard: the per-group medians of the conditioned and unconditioned arms must not be mixed.
+
+    Citing rho* by joining the endpoints of probe_bound (conditioned) with the median of probe_timing (unconditioned) was a real error. This pins down that the two medians really differ, and that conditioning really tightens rather than loosens.
     """
     acts, _ = timing_diag()
     base = timing.sigma_summary(timing.group_sigmas(acts))
@@ -193,7 +276,10 @@ def test_t6b_conditioning_arms_are_not_conflated():
 
 
 def test_t6c_manual_station_is_marked_uninformative():
-    """人在回路工序必须被标为时序无信息,不能当作有效证据参与合成。"""
+    """人在回路工序必须被标为时序无信息,不能当作有效证据参与合成。
+
+    A human-in-the-loop operation must be marked timing-uninformative, and must not enter fusion as valid evidence.
+    """
     acts, _ = timing_diag()
     models = timing.fit(acts)
     hw = models[("hw_1", "/hw/human_review")]
@@ -207,6 +293,10 @@ def test_t7_device_level_chain_is_vacuous():
     """反例保护:在无状态服务端点上,设备级结构链没有信息量。
 
     若哪天有人把结构通道改回设备级并声称有效,这条断言会立刻失败。
+
+    Counterexample guard: on a stateless service endpoint the device-level structural chain carries no information.
+
+    If someone later switches the structural channel back to device level and claims it works, this assertion fails at once.
     """
     live, _, _ = trier()
     gran, diag = ingest.chain_granularity(live)
@@ -217,7 +307,10 @@ def test_t7_device_level_chain_is_vacuous():
 
 
 def test_t8_case_level_chain_support():
-    """case 级链要有足够的状态数与转移支撑,Dirichlet 后验才不至于虚化。"""
+    """case 级链要有足够的状态数与转移支撑,Dirichlet 后验才不至于虚化。
+
+    A case-level chain needs enough states and transition support, or the Dirichlet posterior is hollow.
+    """
     live, _, _ = trier()
     chains = ingest.case_chains(live)
     states = {a.op for v in chains.values() for a in v}
@@ -229,7 +322,10 @@ def test_t8_case_level_chain_support():
 
 @functools.lru_cache(maxsize=8)
 def struct_arm(level: str, split: str, randomised: bool, seeds: int = 10):
-    """结构通道在某个对照臂下的经验 FPR,返回 {alpha: (均值, 标准差)}。"""
+    """结构通道在某个对照臂下的经验 FPR,返回 {alpha: (均值, 标准差)}。
+
+    Empirical FPR of the structural channel on one control arm. Returns {alpha: (mean, standard deviation)}.
+    """
     from algorithm import structural
     from tools import calib_diag
     acts, _ = timing_diag()
@@ -251,7 +347,10 @@ def struct_arm(level: str, split: str, randomised: bool, seeds: int = 10):
 
 
 def test_t9_randomised_conformal_calibrated():
-    """随机化 conformal 在名义 0.05 下经验 FPR 落在 [0.04, 0.06]。"""
+    """随机化 conformal 在名义 0.05 下经验 FPR 落在 [0.04, 0.06]。
+
+    Randomised conformal at a nominal 0.05 has an empirical FPR in [0.04, 0.06].
+    """
     for level in ("case", "device"):
         res, uniq = struct_arm(level, "random", True)
         mean, _ = res[0.05]
@@ -266,6 +365,10 @@ def test_t10_plain_conformal_breaks_on_discrete():
     校准分位数落在原子上,FPR 冲到 1.000 / 0.855。而 case 级链有 28~32
     个取值,朴素形式反而接近名义值——所以"必须随机化"的理由不是
     "总是更准",而是"通道离散度未知时它是唯一无条件安全的选择"。
+
+    Counterexample guard: a plain p-value makes the FPR run away on a channel whose **values are extremely coarse**.
+
+    The scope must be stated: a (device, case) chain's p-values take only 1 to 3 values, the calibration quantile lands on an atom, and the FPR shoots to 1.000 / 0.855. A case-level chain has 28 to 32 values, and the plain form is then close to the nominal value — so the reason randomisation is required is not "it is always more accurate", but "when the channel's discreteness is unknown it is the only unconditionally safe choice".
     """
     res_dev, uniq_dev = struct_arm("device", "lex", False)
     assert uniq_dev <= 3
@@ -283,6 +386,12 @@ def test_t11_split_effect_is_confined_to_the_plain_arm():
     平均,两边随机化抽样次数不同,把差距放大了。对等比较下:
         朴素:   字典序 0.073 vs 随机 0.049   (差距明确)
         随机化: 字典序 0.053 vs 随机 0.046   (差距在一个标准差内)
+
+    The damage of a lexicographic split is concentrated on the plain arm; after randomisation the two splits differ little.
+
+    The earlier claim "0.076 -> 0.053" compared one lexicographic split with the mean of 20 random splits, so the two sides did not draw the same number of randomisation samples and the gap was inflated. Under a matched comparison:
+        plain:        lexicographic 0.073 vs random 0.049   (a clear gap)
+        randomised:   lexicographic 0.053 vs random 0.046   (the gap is within one standard deviation)
     """
     plain_lex = struct_arm("case", "lex", False)[0][0.05][0]
     plain_rnd = struct_arm("case", "random", False)[0][0.05][0]
@@ -293,11 +402,15 @@ def test_t11_split_effect_is_confined_to_the_plain_arm():
 
 
 def test_t12_unreachable_alpha_is_flagged():
-    """alpha < 1/(n_calib+1) 时必须被标为不可达,否则"零误报"是假象。"""
+    """alpha < 1/(n_calib+1) 时必须被标为不可达,否则"零误报"是假象。
+
+    When alpha < 1/(n_calib+1) it must be flagged as unreachable, or "zero false alarms" is an illusion.
+    """
     c = conformal.Calibrator(scores=[float(i) for i in range(49)]).freeze()
     assert abs(c.min_alpha - 1 / 50) < 1e-12
     assert c.reachable(0.05) and not c.reachable(0.01)
     # 该校准集根本产生不了小于 1/50 的 p 值
+    # this calibration set cannot produce a p-value below 1/50
     ps = [c.pvalue(1e9, randomised=False) for _ in range(5)]
     assert min(ps) >= c.min_alpha - 1e-12
 
@@ -338,6 +451,10 @@ def test_t13_one_sided_is_more_stable_not_merely_more_powerful():
     最低端。单侧则是 0.872 ± 0.026。病根是混合校准把 sigma 跨越
     0.008~1.846 的分组塞进同一个分位数,|z| 的 99% 分位被少数低 sigma
     组的极端点主导,而左尾阈值不受其影响。
+
+    The real advantage of a one-sided test is **stability**; the mean power gain is far smaller than was claimed earlier.
+
+    It was recorded as "two-sided 0.338 versus one-sided 0.874", which is one fold-split seed. Over 30 seeds the two-sided result is 0.722 ± 0.165, range [0.326, 0.880], and 0.338 sits at the bottom. The one-sided result is 0.872 ± 0.026. The root is that pooled calibration stuffs groups whose sigma spans 0.008 to 1.846 into one quantile: the 99% quantile of |z| is dominated by a few extreme points from low-sigma groups, while the left-tail threshold is not.
     """
     rows = bound_stability(0.01)
     dr1 = np.array([r[0] for r in rows])
@@ -347,14 +464,19 @@ def test_t13_one_sided_is_more_stable_not_merely_more_powerful():
     assert dr1.mean() > 0.80
     assert dr1.mean() > dr2.mean()
     # 稳定性才是主要论据:单侧的离散度显著小于双侧
+    # stability is the real argument: one-sided dispersion is clearly smaller
     assert dr1.std() < dr2.std() / 2
     assert h1.std() < h2.std() / 2
     # 反例保护:不得再声称平均增益有 0.5 那么大
+    # counterexample guard: do not claim a mean gain as large as 0.5 again
     assert (dr1 - dr2).mean() < 0.35
 
 
 def test_t14_bound_matches_measurement():
-    """理论检出率与实测的平均绝对偏差 <= 0.05(实测 0.022)。"""
+    """理论检出率与实测的平均绝对偏差 <= 0.05(实测 0.022)。
+
+    The mean absolute deviation between the theoretical detection rate and the measurement is <= 0.05 (measured 0.022).
+    """
     from math import log as _log
     from tools import bound_curve as bc
     acts, _ = timing_diag()
@@ -373,7 +495,10 @@ def test_t14_bound_matches_measurement():
 
 
 def test_t15_cusum_requires_slack_above_one():
-    """H0 下 E[-log p] = 1,故 CUSUM 的松弛量必须 > 1,否则必然误报。"""
+    """H0 下 E[-log p] = 1,故 CUSUM 的松弛量必须 > 1,否则必然误报。
+
+    Under H0, E[-log p] = 1, so the CUSUM slack must be > 1 or false alarms are inevitable.
+    """
     with pytest.raises(ValueError):
         sequential.CUSUM(k=1.0, h=10.0)
     rng = np.random.default_rng(0)
@@ -382,7 +507,7 @@ def test_t15_cusum_requires_slack_above_one():
     c = sequential.CUSUM(k=1.5, h=h)
     alarms = sum(1 for p in benign if c.update(p) or c.reset())
     assert alarms <= len(benign) / 400
-    # 攻击流:证据持续偏大时应迅速告警
+    # 攻击流:证据持续偏大时应迅速告警 / attack stream: alarm quickly when evidence stays large
     attack = list(rng.random(200) * 0.002)
     d = sequential.run_to_detection(attack, sequential.CUSUM(k=1.5, h=h),
                                     budget=40)
@@ -390,7 +515,10 @@ def test_t15_cusum_requires_slack_above_one():
 
 
 def test_t16_e_process_is_anytime_valid():
-    """e 过程在 H0 下财富是鞅,越界概率受 Ville 不等式约束。"""
+    """e 过程在 H0 下财富是鞅,越界概率受 Ville 不等式约束。
+
+    Under H0 the e-process wealth is a martingale, and the crossing probability is bounded by Ville's inequality.
+    """
     rng = np.random.default_rng(1)
     fired = 0
     trials = 400
@@ -408,10 +536,15 @@ def test_t17_fusion_needs_per_channel_calibration_first():
 
     原始时序 p 值有 ~8% 触到裁剪下界,合成后在底部形成原子。此时
     conformal 阈值落在原子内,FPR 对 alpha 不敏感——这正是失效特征。
+
+    Counterexample guard for rule 1: fuse first and calibrate once, and a min-type statistic sticks on an atom.
+
+    About 8% of the raw timing p-values hit the clipping floor, and fusion then forms an atom at the bottom. The conformal threshold falls inside that atom, and the FPR is insensitive to alpha — that is the signature of the failure.
     """
     rng = np.random.default_rng(0)
     n = 4000
     # 复现失效机理:一个通道有 8% 的质量堆在下界
+    # reproduce the failure: one channel piles 8% of its mass at the lower bound
     floor = rng.random(n) < 0.08
     p_time = np.where(floor, 1e-12, rng.random(n))
     rows = [(float(t), float(s), float(i)) for t, s, i
@@ -420,6 +553,7 @@ def test_t17_fusion_needs_per_channel_calibration_first():
     ca, te = s[: n // 2], s[n // 2:]
     fpr = [float((te <= np.quantile(ca, a)).mean()) for a in (0.05, 0.01)]
     # 两个 alpha 给出几乎相同的 FPR,且都远超名义值
+    # the two alphas give almost the same FPR, both far above the nominal value
     assert abs(fpr[0] - fpr[1]) < 0.02, fpr
     assert fpr[1] > 0.05, fpr
 
@@ -429,6 +563,10 @@ def test_t18_channels_are_near_independent_on_trier():
 
     Trier 上三通道证据的两两相关都在 ±0.06 内,故 Fisher 可用;换产线
     必须重测。这条断言同时保护 dependence() 的口径。
+
+    Fisher's premise is something to measure, not something to assume.
+
+    On Trier the pairwise correlations of the three channels' evidence all lie within ±0.06, so Fisher is usable; a different line must be remeasured. This assertion also protects the rule used by dependence().
     """
     rng = np.random.default_rng(0)
     n = 3000
@@ -436,7 +574,7 @@ def test_t18_channels_are_near_independent_on_trier():
              in zip(rng.random(n), rng.random(n), rng.random(n))]
     d = fusion.dependence(indep)
     assert d["max_abs"] < fusion.INDEPENDENCE_TOL and d["fisher_ok"]
-    # 强相关时必须判定 Fisher 不可用
+    # 强相关时必须判定 Fisher 不可用 / Fisher must be ruled out under strong dependence
     u = rng.random(n)
     dep = [(float(x), float(x), float(y)) for x, y in zip(u, rng.random(n))]
     assert not fusion.dependence(dep)["fisher_ok"]
@@ -450,20 +588,29 @@ def test_t19_fisher_accumulates_where_min_type_cannot():
     通道的 0.05,minp 还要再付 3 倍。这解释了 score-level 多通道扰动下
     0.413 对 0.187;红队 A8 上这条机理仍对,但端到端加合成路无增益
     (结论五十三)。
+
+    The mechanism of rule 3: when each channel carries moderate evidence, only an accumulating statistic can combine them.
+
+    With three channels each at p=0.05, at alpha=0.01 Fisher fires and Simes/minp do not: Fisher adds the three moderate pieces (about 0.006), Simes can at best recover a single channel's 0.05, and minp pays another factor of 3. That explains 0.413 versus 0.187 under score-level multi-channel perturbation; the mechanism still holds on red-team A8, but adding a fusion path end to end gives no gain (conclusion 53).
     """
     moderate = (0.05, 0.05, 0.05)
     assert fusion.fisher(moderate) < 0.01
     assert fusion.simes(moderate) == pytest.approx(0.05)
     assert fusion.minp(moderate) == pytest.approx(0.15)
     # 反过来,单通道极端时 min 型不该输给 Fisher 太多
+    # conversely, with one extreme channel the min-type should not lose much to Fisher
     lopsided = (1e-4, 1.0, 1.0)
     assert fusion.minp(lopsided) < 0.001
     # 合成相对单通道的稀释:min 型要付 k 倍 alpha 的代价
+    # dilution of fusion versus one channel: the min-type pays k times alpha
     assert fusion.minp(lopsided) == pytest.approx(3e-4)
 
 
 def test_t20_chi2_sf_is_correct():
-    """Fisher 依赖偶数自由度卡方生存函数,错了会静默改变所有合成 p 值。"""
+    """Fisher 依赖偶数自由度卡方生存函数,错了会静默改变所有合成 p 值。
+
+    Fisher depends on the chi-square survival function at even degrees of freedom; a bug silently changes every fused p-value.
+    """
     for x, df, want in ((0.0, 2, 1.0), (5.991465, 2, 0.0500),
                         (9.487729, 4, 0.0500), (16.811894, 6, 0.0100),
                         (12.591587, 6, 0.0500), (1.386294, 2, 0.5000)):
@@ -476,19 +623,27 @@ def test_t22_attack_numbering_matches_the_paper():
     代码里曾用过另一套编号(A2=抢跑、A4=重放),而论文口径是 A3=抢跑、
     A4=状态模仿,且"A4 只有互锁通道能抓"是头条主张。错位不会报错,只会
     悄悄让每个 A 编号的结论张冠李戴,故必须钉死。
+
+    Counterexample guard: if the attack numbering slips against the coverage matrix in 新想法.md, every experimental result is void.
+
+    The code once used another numbering (A2 = early reporting, A4 = replay), while the paper's rule is A3 = early reporting and A4 = state mimicry, and "only the interlock channel can catch A4" is the headline claim. A slip does not raise an error; it quietly swaps the conclusion of every A label, so it must be pinned down.
     """
     assert attacks.FAMILY_ZH == {
         "A1": "朴素重放", "A2": "物理不可行注入", "A3": "抢跑重放",
         "A4": "状态模仿", "A5": "渐变漂移", "A6": "消息抑制/延迟",
         "A7": "多设备协同伪造", "A8": "跨通道工序伪造"}
     # 未实现的攻击族必须显式拒绝,不能静默返回良性流冒充攻击结果
+    # an unimplemented attack family must be rejected explicitly, not returned as a benign stream
     for fam in set(attacks.FAMILY_ZH) - set(attacks.IMPLEMENTED):
         with pytest.raises(NotImplementedError):
             attacks.inject([], attacks.AttackSpec(family=fam))
 
 
 def test_t23_advance_attack_only_shortens_duration():
-    """A3 注入器的正确性:只压缩时长,不动 case/device/order 与开始时刻。"""
+    """A3 注入器的正确性:只压缩时长,不动 case/device/order 与开始时刻。
+
+    Correctness of the A3 injector: it only compresses the sojourn, and does not touch case/device/order or the start time.
+    """
     live, _, _ = trier()
     sub = [a for a in live if a.duration_s][:400]
     bad, labels = attacks.inject(
@@ -509,6 +664,10 @@ def test_t24_gating_blocks_baseline_poisoning():
 
     攻击者持续注入抢跑数据试图把基线拉向自己;无门控时基线被拖走,
     门控时几乎不动。这里只验证机制方向与量级差,数值细节见 online_diag。
+
+    The M9 gate is the substantive difference from the original patent's "unconditional online update", and it must be quantifiable.
+
+    An attacker keeps injecting early-reporting data to drag the baseline toward itself; without the gate the baseline is dragged, and with the gate it barely moves. This only checks the direction of the mechanism and the difference in magnitude; the numerical detail is in online_diag.
     """
     live, model, _ = trier()
     drift = {}
@@ -528,6 +687,7 @@ def test_t24_gating_blocks_baseline_poisoning():
             assert det.stats["update_blocked"] > det.stats["update_applied"]
 
     # 断言机制而非魔数:门控把基线漂移压到无门控的几分之一
+    # assert the mechanism, not a magic number: gating cuts baseline drift to a fraction
     assert drift[False] > 0.15, drift
     assert drift[True] < drift[False] / 3, drift
 
@@ -556,10 +716,15 @@ def test_t25_timing_score_must_be_z_not_pvalue():
 
     这个缺陷不报错、不破坏误报率,只是让 A3 抢跑的时序检出率从 0.43 掉到
     0.03。机理是 8.1% 的良性活动 p 值已在下界,尾部再无次序可言。
+
+    Counterexample guard: a p-value saturates at the numerical floor and quietly cuts the detection rate of the core attack by an order of magnitude.
+
+    The defect raises no error and does not break the false-alarm rate; it only drops the timing detection rate of A3 early reporting from 0.43 to 0.03. The mechanism is that 8.1% of benign activities already sit at the floor, so the tail has no order left.
     """
     from algorithm.detector import DetectorConfig
     assert DetectorConfig().timing_score == "z"
     # p 值臂:大量样本堆在下界,分位数无法分辨"更极端"
+    # p-value arm: mass piles at the lower bound, so a quantile cannot tell "more extreme"
     floor = [1e-12] * 80 + [0.5] * 920
     assert len({round(v, 15) for v in floor}) == 2
     c = conformal.Calibrator(scores=[-v for v in floor]).freeze()
@@ -567,6 +732,7 @@ def test_t25_timing_score_must_be_z_not_pvalue():
     hit = np.mean([c.pvalue(-1e-12, rng=rng) <= 0.01 for _ in range(2000)])
     assert hit < 0.2, hit          # 攻击落在原子里,大部分时候够不到 alpha
     # z 臂:同样极端的观测有连续次序,分位数分得开
+    # z arm: equally extreme observations keep a continuous order, so quantiles separate them
     z = list(np.random.default_rng(1).normal(size=1000))
     cz = conformal.Calibrator(scores=z).freeze()
     assert cz.pvalue(6.0, rng=rng) <= 0.01
@@ -576,16 +742,24 @@ def test_t26_binary_channel_power_is_capped_by_alpha_over_q():
     """互锁是二值通道,单消息功效上界 min(1, alpha/q),与不变量质量无关。
 
     这条决定了论文能声称的 alpha 下限,也是"软层升硬层"部署条件的定量理由。
+
+    The interlock is a binary channel; the per-message power is capped by min(1, alpha/q), independent of the invariant's mass.
+
+    This sets the lowest alpha the paper can claim, and it is the quantitative reason for the deployment condition "promote the soft layer to the hard-constraint layer".
     """
     rng = np.random.default_rng(0)
     for q, alpha in ((0.017, 0.01), (0.017, 0.001), (0.05, 0.01)):
         # 违反必然发生时的随机化 p 值:p = U * q
+        # randomised p-value when a violation is certain: p = U * q
         dr = np.mean([rng.random() * q <= alpha for _ in range(20000)])
         assert abs(dr - min(1.0, alpha / q)) < 0.02, (q, alpha, dr)
 
 
 def test_t27_mimicry_attacker_must_use_the_model():
-    """A4 注入器若不知模型就会制造异常重复,把'只有互锁能抓'测成假。"""
+    """A4 注入器若不知模型就会制造异常重复,把'只有互锁能抓'测成假。
+
+    If the A4 injector does not know the model it manufactures abnormal repeats, and the claim 'only the interlock can catch it' is measured as false.
+    """
     live, _, _ = trier()
     sub = [a for a in live if a.duration_s][:600]
     chains = {}
@@ -601,7 +775,10 @@ def test_t27_mimicry_attacker_must_use_the_model():
     assert sum(ln) == sum(ls) > 0
 
     def repeat_rate(stream, labels):
-        """伪造消息与其前一条重复的比例——结构通道正是靠这个抓 A4。"""
+        """伪造消息与其前一条重复的比例——结构通道正是靠这个抓 A4。
+
+    The fraction of forged messages that repeat their predecessor — that is exactly how the structural channel catches A4.
+    """
         prev, n, rep = {}, 0, 0
         for a, hit in zip(stream, labels):
             if hit and prev.get(a.case) == a.op:
@@ -612,7 +789,9 @@ def test_t27_mimicry_attacker_must_use_the_model():
         return rep / max(n, 1)
 
     assert repeat_rate(naive, ln) > 0.9      # 朴素注入器几乎全是重复
+    # a naive injector is almost all repeats
     assert repeat_rate(smart, ls) < 0.5      # 知模型的攻击者不留这个把柄
+    # a model-aware attacker does not leave that handle
 
 
 def test_t28_unary_f_covers_every_message_and_is_benign_clean():
@@ -620,16 +799,20 @@ def test_t28_unary_f_covers_every_message_and_is_benign_clean():
 
     A2 硬层从 0.29 升到 0.98 全靠这一项。能力集必须按设备类归并——按实例
     会把 sm_2 的 44 次 /sm/sort 误判为违反(1.44%)。
+
+    The unary part of F covers 100% of messages and has zero benign violations; the binary part covers only 31%.
+
+    The A2 hard-constraint layer rising from 0.29 to 0.98 is entirely this term. The capability set must be pooled by device class — pooling by instance mislabels sm_2's 44 /sm/sort events as violations (1.44%).
     """
     live, model, _ = trier()
     assert procmodel.device_class("sm_2") == "sm"
     assert procmodel.device_class("hbw") == "hbw"
 
     viol = [a for a in live if not model.can_perform(a.device, a.op)]
-    assert viol == [], viol[:3]                    # 良性零违反
+    assert viol == [], viol[:3]                    # 良性零违反 / zero benign violations
     covered = [a for a in live
                if procmodel.device_class(a.device) in model.capable]
-    assert len(covered) == len(live)                # 一元覆盖 100%
+    assert len(covered) == len(live)                # 一元覆盖 100% / unary coverage 100%
 
     seen, checkable = set(), 0
     for a in sorted(live, key=lambda x: (x.t_consume, x.order)):
@@ -639,6 +822,7 @@ def test_t28_unary_f_covers_every_message_and_is_benign_clean():
     assert 0.29 < checkable / len(live) < 0.33      # 二元覆盖 31%
 
     # 按实例归并会破功:sm_2 拿不到 sm_1 的能力
+    # pooling by instance breaks it: sm_2 cannot inherit sm_1's capability
     inst = {}
     for d, ops in model.capable.items():
         inst[d] = ops
@@ -646,7 +830,10 @@ def test_t28_unary_f_covers_every_message_and_is_benign_clean():
 
 
 def test_t29_finer_structural_states_abstain_instead_of_flagging():
-    """细化状态把可检测异常变成词表外弃权——负面结果,禁止照直觉细化。"""
+    """细化状态把可检测异常变成词表外弃权——负面结果,禁止照直觉细化。
+
+    Finer states turn a detectable anomaly into an out-of-vocabulary abstention — a negative result; do not refine by intuition.
+    """
     live, _, _ = trier()
     sub = [a for a in live if a.duration_s][:800]
     coarse, fine = {}, {}
@@ -659,6 +846,7 @@ def test_t29_finer_structural_states_abstain_instead_of_flagging():
     assert len(tm_f.states) > len(tm_c.states)
 
     # 挑一个"该设备没做过、但别的设备做过"的操作,即 A2 的注入方式
+    # pick an operation this device never did but another device did: A2's injection
     ops_by_dev = {}
     for a in sub:
         ops_by_dev.setdefault(a.device, set()).add(a.op)
@@ -666,9 +854,10 @@ def test_t29_finer_structural_states_abstain_instead_of_flagging():
     alien = next(o for o in {x.op for x in sub}
                  if o not in ops_by_dev[dev])
 
-    # 粗粒度:操作在词表内,可给出 p 值
+    # 粗粒度:操作在词表内,可给出 p 值 / coarse: the operation is in the vocabulary, so a p-value exists
     assert structural.struct_pvalue(tm_c, prev, alien) is not None
     # 细粒度:组合在词表外,弃权(None 或 1.0),异常被悄悄放过
+    # fine: the combination is outside the vocabulary and abstains (None or 1.0); the anomaly is quietly missed
     v = structural.struct_pvalue(tm_f, f"{dev}|{prev}", f"{dev}|{alien}")
     assert v is None or v > 0.5, v
 
@@ -679,15 +868,21 @@ def test_t30_threshold_must_come_from_a_clean_benign_stream():
     A2 原地改写操作名,后继良性消息会拿伪造的前驱去比对,产生攻击引起的
     级联触发;算成误报时若级联率超过 alpha,阈值退化为 +inf、检出率假性
     归零——本方法 A2 的 DR 确实这样被测成过 0.00。
+
+    The threshold must not be set on the benign messages inside the attacked stream.
+
+    A2 rewrites the operation name in place, so a later benign message compares against a forged predecessor and produces an attack-induced cascade. Counted as a false alarm, once the cascade rate exceeds alpha the threshold collapses to +inf and the detection rate falsely goes to zero — this method's A2 DR was in fact once measured as 0.00 that way.
     """
     from algorithm.baselines import dr_at_alpha
     # 受攻击流内部:12% 的良性消息因级联拿到 +inf,阈值随之退化
+    # inside the attacked stream: 12% of benign messages hit +inf via cascade, and the threshold collapses
     contaminated = [float("inf")] * 12 + [0.0] * 88
     thr_bad = sorted(contaminated)[int(0.99 * 100) - 1]
     assert thr_bad == float("inf")
     assert not any(s > thr_bad for s in [float("inf")] * 20)   # 检出归零
+    # detection goes to zero
 
-    # 纯良性流:阈值有限,攻击消息被抓出来
+    # 纯良性流:阈值有限,攻击消息被抓出来 / pure benign stream: the threshold is finite and attack messages are caught
     clean = [0.0] * 100
     dr, fpr = dr_at_alpha(clean, [float("inf")] * 20, 0.01)
     assert dr == 1.0 and fpr <= 0.01
@@ -698,6 +893,10 @@ def test_t31_unseen_pairs_occur_benignly_so_only_the_model_can_reject():
 
     这是用 BPMN 参考模型的根本理由,也同时解释了 B4 打不过 B3、以及细化
     结构状态为何退化成弃权。
+
+    In the log, "never seen" and "not allowed" cannot be told apart, and "never seen" does occur benignly.
+
+    That is the fundamental reason for a BPMN reference model, and it also explains why B4 does not beat B3 and why a finer structural state degenerates into abstention.
     """
     from tools.baseline_diag import split
     live, model, _ = trier()
@@ -709,8 +908,10 @@ def test_t31_unseen_pairs_occur_benignly_so_only_the_model_can_reject():
     oov = [a for a in st if (a.device, a.op) not in seen]
 
     # "没见过"在时间序下良性发生,比例远超 alpha=0.01,故不可作为证据
+    # "never seen" occurs benignly under temporal order, far above alpha=0.01, so it is not evidence
     assert len(oov) / len(st) > 0.01, len(oov) / len(st)
     # 参考模型不误伤它们:它区分"不在我的样本里"与"设计上不允许"
+    # the reference model does not flag them: it separates "not in my sample" from "not allowed by design"
     assert all(model.can_perform(a.device, a.op) for a in oov)
 
 
@@ -720,6 +921,10 @@ def test_t34_delay_budget_dr_has_a_chance_floor():
     地板 = 1-(1-FPR)^(budget+1)。alpha=0.05、预算 10 条时高达 0.43。
     实测 B1 MBDF 六族全部贴地板——这正是 T-a 的预期表现,但照抄未减地板的
     数字会让论文自己给不可能性结果提供反例。
+
+    Under the delay-budget rule "detecting nothing" still scores, and the floor must be subtracted.
+
+    The floor is 1-(1-FPR)^(budget+1). At alpha=0.05 and a budget of 10 messages it is as high as 0.43. Measured, all six families of B1 MBDF sit on the floor — that is exactly the expected behaviour of T-a, but copying the unsubtracted numbers would let the paper itself supply a counterexample to the impossibility result.
     """
     from algorithm.baselines import chance_floor, judge
     assert chance_floor(0.05, 10) > 0.40
@@ -727,6 +932,7 @@ def test_t34_delay_budget_dr_has_a_chance_floor():
     assert chance_floor(0.0, 10) == 0.0
 
     # 一个与标签完全无关的分数流:检出率应当就是地板,净值约为零
+    # a score stream independent of the labels: the detection rate should be the floor, net about zero
     rng = np.random.default_rng(3)
     n = 800
     benign = [list(rng.random(n))]
@@ -743,19 +949,24 @@ def test_t35_per_message_arm_is_resolution_limited():
     良性参照流 508 条时经验 p 下界是 1/509；四路均分后每路 alpha/4=0.0025,
     阈值下只容 1 个秩位,实际执行的是"取良性最大值作阈值"。这会把 A3/A5
     削掉一个数量级,而 A2 不变——失真是攻击特异的,且歧视多通道方法。
+
+    The number of parallel sub-detectors is constrained by m <= alpha*(n_b+1).
+
+    With a benign reference stream of 508 messages the empirical p-value floor is 1/509; after a four-way split each path has alpha/4=0.0025, only one rank fits under the threshold, and what actually runs is "take the benign maximum as the threshold". That cuts A3/A5 by an order of magnitude while A2 is unchanged — the distortion is attack-specific, and it discriminates against a multi-channel method.
     """
     from algorithm.baselines import empirical_p
     n_b, alpha, m = 508, 0.01, 4
     floor_p = 1.0 / (n_b + 1)
-    assert alpha / m > floor_p                      # 勉强可达
-    assert int(alpha / m * (n_b + 1)) == 1          # 只容 1 个秩位
-    assert int(alpha / 1 * (n_b + 1)) == 5          # 不分路时 5 个
+    assert alpha / m > floor_p                      # 勉强可达 / barely reachable
+    assert int(alpha / m * (n_b + 1)) == 1          # 只容 1 个秩位 / only one rank fits
+    assert int(alpha / 1 * (n_b + 1)) == 5          # 不分路时 5 个 / 5 when the path is not split
 
     col = list(range(n_b))
     # 仅次高分在 alpha/4 下已不可判为异常,在 alpha 下可以
+    # the second-highest score is not anomalous at alpha/4, but is at alpha
     assert empirical_p(col, [n_b - 2])[0] > alpha / m
     assert empirical_p(col, [n_b - 2])[0] <= alpha
-    # 可容纳路数的一般规则
+    # 可容纳路数的一般规则 / the general rule for how many paths fit
     assert max(1, int(alpha * (n_b + 1))) == 5
 
 
@@ -765,18 +976,26 @@ def test_t36_interlock_ceiling_uses_deployment_q():
     q 必须取**部署流**实测值:训练折 0.0054 会让人以为天花板不生效,而测试流
     实测 0.047,天花板只有 0.21。代入 A4 的 0.69 触发率得 0.145,与覆盖矩阵
     的 0.12 吻合。全局池把 q 减半但触发率也减半,故净收益接近零(结论四十七)。
+
+    The per-message power ceiling of the interlock is trigger rate * min(1, alpha/q_deployment).
+
+    q must be the value **measured on the deployment stream**: 0.0054 on the training fold suggests the ceiling does not bind, while the test stream measures 0.047 and the ceiling is only 0.21. Substituting A4's trigger rate of 0.69 gives 0.145, which matches the coverage matrix's 0.12. A global pool halves q but also halves the trigger rate, so the net gain is near zero (conclusion 47).
     """
     def power(trigger, q, alpha=0.01):
         return trigger * min(1.0, alpha / q)
 
     q_train, q_deploy = 0.0054, 0.047
     assert min(1.0, 0.01 / q_train) == 1.0          # 训练折看似不受限
+    # the training fold looks unconstrained
     assert power(0.69, q_deploy) < 0.20             # 部署流其实被压到 0.15
+    # the deployment stream is actually pressed to 0.15
     assert abs(power(0.69, q_deploy) - 0.147) < 0.01
 
     # 全局池:q 减半、触发率也减到 0.41 -> 两效应抵消,净收益 < 0.05
+    # global pool: q halves and the trigger rate also falls to 0.41 -> the two effects cancel, net gain < 0.05
     assert abs(power(0.41, 0.023) - power(0.69, q_deploy)) < 0.05
     # 要让互锁够用,部署 q 必须压到 alpha 量级;全局池只到 2.3%
+    # for the interlock to be useful, deployment q must be pressed to the alpha scale; the global pool only reaches 2.3%
     assert 0.023 > 0.01
 
 
@@ -785,12 +1004,16 @@ def test_t37_alpha_allocation_is_selected_on_benign_data_only():
 
     judge 必须支持非均分 weights,且 weight=0 的路完全不参与判决——否则
     "剔除互锁"无法表达。同时锁住通用原子统计量失败的那两处误判。
+
+    The allocation may be chosen only by a benign criterion, not by attack performance on an adjacent fold (conclusions 48 and 49).
+
+    judge must support a non-uniform weights, and a path with weight=0 takes no part in the decision — otherwise "drop the interlock" cannot be expressed. This also locks the two misreadings on which a generic atom statistic fails.
     """
     from algorithm.baselines import judge
 
     rng = np.random.default_rng(5)
     n = 900
-    # 两条路:第 0 条有信号,第 1 条纯噪声
+    # 两条路:第 0 条有信号,第 1 条纯噪声 / two paths: path 0 has the signal, path 1 is pure noise
     lab = [i % 4 == 0 for i in range(n)]
     sig_b = list(rng.normal(0, 1, n))
     sig_a = [v + (3.0 if L else 0.0) for v, L in zip(sig_b, lab)]
@@ -800,6 +1023,7 @@ def test_t37_alpha_allocation_is_selected_on_benign_data_only():
     only = judge([sig_b, noise_b], [sig_a, noise_a], lab, alpha=0.05,
                  weights=[1.0, 0.0])
     # 把预算全给有信号的那一路,检出率必须不低于均分
+    # give the whole budget to the path that has the signal; the detection rate must be at least the uniform split
     assert only[2] >= both[2], (only[2], both[2])
 
     with pytest.raises(ValueError):
@@ -809,16 +1033,19 @@ def test_t37_alpha_allocation_is_selected_on_benign_data_only():
 
     # 通用原子统计量的两处误判:良性全并列在同一值时,"最异常处的原子质量"
     # 读成 1.0,会把良性零违反的硬层误剔;而随机化会把二值通道的原子抹平。
+    # Two misreadings of a generic atom statistic: when every benign score ties at one value, "the atom mass at the most anomalous point"
+    # is read as 1.0 and wrongly drops a hard-constraint layer that has zero benign violations; randomisation also flattens the atom of a binary channel.
     def atom_at_max(xs):
         top = max(xs)
         return sum(1 for x in xs if x >= top) / len(xs)
 
-    hard_benign = [0.0] * 500                 # 硬层:良性零违反
-    assert atom_at_max(hard_benign) == 1.0    # 误判成"全是异常"
+    hard_benign = [0.0] * 500                 # 硬层:良性零违反 / hard-constraint layer: zero benign violations
+    assert atom_at_max(hard_benign) == 1.0    # 误判成"全是异常" / misread as "all anomalous"
     q = 0.03
     smeared = [rng.uniform(0, q) if i < 15 else q + rng.uniform(0, 1 - q)
                for i in range(500)]
     assert atom_at_max(smeared) < 0.01        # 真实 q=0.03 被抹成 <0.01
+    # the true q=0.03 is smeared to <0.01
 
 
 def test_t32_hsmm_em_likelihood_is_monotone():
@@ -826,6 +1053,10 @@ def test_t32_hsmm_em_likelihood_is_monotone():
 
     有 bug 的 Baum-Welch 典型表现就是似然非单调。实测 12 次迭代
     -8093 -> -4716,严格单调。
+
+    The Baum-Welch log-likelihood must be monotone increasing — the key evidence that B5 is a real HSMM.
+
+    A buggy Baum-Welch typically shows a non-monotone likelihood. Measured over 12 iterations, -8093 -> -4716, strictly monotone.
     """
     from algorithm import baselines as B
     live, _, _ = trier()
@@ -849,12 +1080,16 @@ def test_t33_sequential_arm_must_reset_and_report_its_own_fpr():
 
     坑一:CUSUM.update 不自复位,不复位则 S 越过 h 后每条消息都告警。
     坑二:目标 ARL0 超过良性流长时,零误报使 ARL0 记作无穷、h 落到区间下界。
+
+    Two pitfalls of the sequential rule; stacked, they inflate a baseline's false alarms to 22 times the nominal value.
+
+    Pitfall 1: CUSUM.update does not reset itself, so once S crosses h every later message alarms. Pitfall 2: when the target ARL0 exceeds the benign stream length, a zero false-alarm rate records ARL0 as infinity and h falls to the lower end of the interval.
     """
     from algorithm.baselines import _cusum_alarms
     rng = np.random.default_rng(0)
     benign = list(rng.random(600))
 
-    # 坑一:不复位时告警数会接近流长
+    # 坑一:不复位时告警数会接近流长 / pitfall 1: without a reset the alarm count approaches the stream length
     h = sequential.calibrate_h(benign, 100, k=1.5)
     c = sequential.CUSUM(k=1.5, h=h)
     no_reset = sum(1 for p in benign if c.update(p))
@@ -863,6 +1098,7 @@ def test_t33_sequential_arm_must_reset_and_report_its_own_fpr():
     assert len(with_reset) / len(benign) < 0.03      # 与名义 0.01 同量级
 
     # 坑二:目标 ARL0 撑不起时必须报错而不是悄悄返回一个低 h
+    # pitfall 2: when the target ARL0 cannot be supported, raise rather than quietly return a low h
     try:
         _cusum_alarms(benign[:50], benign[:50], alpha=0.001)
         raise AssertionError("应当拒绝:50 条消息撑不起 ARL0=1000")
@@ -881,13 +1117,19 @@ def test_t38_structural_score_must_be_probability_not_randomised_pit():
     尚可用;支撑薄的行(转移只出现过几次)at 能占到半数概率质量,于是 U*at 近乎
     铺满 (0,1],这一行**完全没有功效**。而攻击恰好落在薄支撑的行上——常见转移
     没什么可伪造的。所以不能说"PIT 平均还行",要按行看。
+
+    What the structural channel feeds the calibrator must be a predictive probability, not a randomised PIT p-value.
+
+    Same shape as T25 (timing must use z, not a p-value that hits the floor): the randomised PIT p = below + U*at spreads a large **tied tail atom** caused by Dirichlet smoothing into a uniform interval, so a never-seen transition has a fair chance of drawing a p-value above alpha.
+
+    What matters is that **the tied tail mass `at` is inversely proportional to that row's support**: a thick-support row has a small `at` and PIT is still usable; a thin-support row (the transition appeared only a few times) can put half its probability mass in `at`, so U*at nearly fills (0, 1] and that row **has no power at all**. Attacks land exactly on thin-support rows — a common transition has little worth forging. So one cannot say "PIT is fine on average"; it has to be read row by row.
     """
     from algorithm import structural as S
 
     states = [f"s{i}" for i in range(20)]
     counts = np.zeros((20, 20))
-    counts[0, 1] = 300.0                       # 厚支撑行:见过 300 次
-    counts[2, 3] = 4.0                         # 薄支撑行:只见过 4 次
+    counts[0, 1] = 300.0                       # 厚支撑行:见过 300 次 / thick-support row: seen 300 times
+    counts[2, 3] = 4.0                         # 薄支撑行:只见过 4 次 / thin-support row: seen only 4 times
     tm = S.TransitionModel(states=states, counts=counts,
                            index={s: i for i, s in enumerate(states)})
 
@@ -896,6 +1138,7 @@ def test_t38_structural_score_must_be_probability_not_randomised_pit():
     at_thick = float(thick[thick == thick[7]].sum())
     at_thin = float(thin[thin == thin[7]].sum())
     # 薄支撑行的并列尾部质量高一个量级,且已远超 alpha=0.05
+    # a thin-support row's tied tail mass is an order of magnitude higher, and already far above alpha=0.05
     assert at_thin > 10 * at_thick
     assert at_thin > 0.5 and at_thick < 0.05
 
@@ -903,10 +1146,13 @@ def test_t38_structural_score_must_be_probability_not_randomised_pit():
     pit = [S.struct_pvalue(tm, "s2", "s7", randomised=True, rng=rng)
            for _ in range(600)]
     # 薄支撑行上 PIT 形式对"从未见过的转移"几乎无功效:多数落在 alpha 之上
+    # on a thin-support row the PIT form has almost no power on a "never seen" transition: most land above alpha
     assert np.mean([p > 0.05 for p in pit]) > 0.8, np.mean(pit)
 
     # 概率形式:确定值,且严格小于同一行里见过的那个后继 -> 次序完好,
     # 分辨率交给下游的良性经验分布,不在每条消息上自摊一次。
+    # Probability form: a fixed value, strictly smaller than the seen successor in the same row -> order is preserved,
+    # and resolution is left to the downstream benign empirical distribution instead of being smeared once per message.
     prob = S.struct_score(tm, "s2", "s7")
     assert prob is not None
     assert prob < S.struct_score(tm, "s2", "s3")
@@ -924,17 +1170,25 @@ def test_t39_comparison_harness_must_calibrate_exactly_once():
     机制是**随机化 conformal 不保序**:并列密集时 U*(1+eq)/(n+1) 项的幅度
     超过相邻档位之间的间距,于是分数更异常的那条消息可能拿到更大的 p 值。
     单次经验变换按构造保序,叠第二次才引入这种反转。
+
+    E1 rule: what is handed to judge must be the raw score, not a score that has already passed through a frozen conformal layer.
+
+    judge itself applies the empirical p-value transform. If our side first passes a randomised conformal layer and then hands the stream over, the same stream is randomised twice while a baseline is randomised once — the first U*(1+eq)/(n+1) term is enough, where ties are dense, to scramble the order of neighbouring atoms, and the structural channel then loses 0.07 of net detection rate. At deployment there is only one calibration layer (the frozen conformal); judge stands in for it rather than adding a second layer.
+
+    The mechanism is that **randomised conformal does not preserve order**: where ties are dense the U*(1+eq)/(n+1) term is larger than the gap between neighbouring levels, so a more anomalous message can receive a larger p-value. A single empirical transform preserves order by construction; only a second pass introduces this reversal.
     """
     from algorithm.baselines import empirical_p
     from algorithm.conformal import Calibrator
 
     rng = np.random.default_rng(0)
     # 良性分数只取少数几个离散档位 -> 并列密集,与转移概率的形状一致
+    # benign scores take only a few discrete levels -> dense ties, matching the shape of the transition probabilities
     grid = np.array([0.2, 0.5, 0.9])
     ben = list(rng.choice(grid, 400))
     s_lo, s_hi = 0.21, 0.25                    # 都比 0.2 档更异常,s_hi 更甚
+    # both are more anomalous than the 0.2 level, and s_hi more so
 
-    # 单次经验变换:保序,严格不等
+    # 单次经验变换:保序,严格不等 / one empirical transform: order-preserving, and strictly unequal
     p1 = empirical_p([-x for x in ben], [-s_lo, -s_hi])
     assert p1[1] <= p1[0]
 
@@ -949,16 +1203,21 @@ def test_t39_comparison_harness_must_calibrate_exactly_once():
         b = cal.pvalue(-s_hi, rng=r)
         inv += b > a                           # 更异常的反而拿到更大的 p
     # 叠加的这一层随机化把相邻档位之间的次序打乱了相当一部分
+    # the extra randomisation scrambles a large part of the order between neighbouring levels
     assert inv / 600 > 0.2, inv / 600
 
 
 def test_t21_abstention_is_neutral_not_evidence():
-    """弃权按 1.0 计入:缺证据不能变成反证,也不能反过来掩盖别的通道。"""
+    """弃权按 1.0 计入:缺证据不能变成反证,也不能反过来掩盖别的通道。
+
+    Abstention counts as 1.0: missing evidence must not become counter-evidence, nor hide another channel.
+    """
     assert fusion.simes((0.01, 1.0, 1.0)) == pytest.approx(0.03)
     assert fusion.fisher((1.0, 1.0, 1.0)) == pytest.approx(1.0)
-    # 弃权不应让已有的强证据失效
+    # 弃权不应让已有的强证据失效 / abstention must not cancel evidence that is already strong
     assert fusion.fisher((1e-6, 1.0, 1.0)) < 0.01
     # None 与 1.0 等价,避免调用方用 None 表示弃权时行为分叉
+    # None is equivalent to 1.0, so a caller that uses None for abstention does not fork the behaviour
     assert fusion.simes((0.01, None, None)) == pytest.approx(0.03)
 
 
@@ -967,6 +1226,10 @@ def test_t40_a8_is_legal_nonmodal_and_rushed():
 
     这三条把 A8 与 A2/A4/A3 隔开。缺任何一条,Fisher 去留实验测的就不是
     声称的那个攻击。
+
+    Contract of the A8 injector: refuse if the model is missing; what it lands on must be an F-allowed non-modal successor, and the sojourn must be compressed.
+
+    These three items separate A8 from A2/A4/A3. If any one is missing, the Fisher keep-or-drop experiment is not measuring the attack it claims.
     """
     live, model, _ = trier()
     sub = [a for a in live if a.duration_s]
@@ -988,9 +1251,10 @@ def test_t40_a8_is_legal_nonmodal_and_rushed():
     assert getattr(spec, "_a8_injected", 0) == n_hit
 
     hits = [a for a, h in zip(bad, lab) if h]
-    # 一元 F:按构造每条都该过
+    # 一元 F:按构造每条都该过 / unary F: by construction every message should pass
     assert all(model.can_perform(a.device, a.op) for a in hits)
     # 时长被压缩:注入条的时长等于某条同 (设备,操作) 原记录的 (1-rho)
+    # sojourn compressed: an injected activity's duration equals some original (device, operation) record times (1-rho)
     originals = {}
     for a in sub:
         if a.duration_s:
@@ -1002,6 +1266,7 @@ def test_t40_a8_is_legal_nonmodal_and_rushed():
             rushed += 1
     assert rushed == len(hits), (rushed, len(hits))
     # 非众数:插入条的操作不应等于前驱的众数后继
+    # non-modal: the inserted operation must not equal the predecessor's modal successor
     modal = 0
     for a in hits:
         prev = max((b for b in bad
@@ -1021,6 +1286,10 @@ def test_t41_judge_detail_archives_delays_and_benign_gaps():
 
     预算内检出的延迟是 0..budget 的整数;未检出是 None,不进 detected_delays。
     五元组与旧 judge 对齐,避免存档口径另起一套。
+
+    Per-trial delays and benign gaps must be kept by judge; a box plot must not read only the median and p90.
+
+    A delay detected inside the budget is an integer in 0..budget; a miss is None and does not enter detected_delays. The five-tuple stays aligned with the old judge, so the archive rule does not start a second convention.
     """
     from algorithm.baselines import judge, judge_detail
 
@@ -1044,7 +1313,10 @@ def test_t41_judge_detail_archives_delays_and_benign_gaps():
 
 
 def test_t42_plant_stream_obeys_hard_layer():
-    """仿真良性流必须过一元 F 与命令账本,否则迁移实验测的是硬层误报。"""
+    """仿真良性流必须过一元 F 与命令账本,否则迁移实验测的是硬层误报。
+
+    A simulated benign stream must pass unary F and the command ledger, or a transfer experiment measures hard-constraint-layer false alarms.
+    """
     from algorithm.detector import Detector, DetectorConfig
 
     acts = plant.generate(plant.PlantConfig(
@@ -1063,7 +1335,10 @@ def test_t42_plant_stream_obeys_hard_layer():
 
 
 def test_t43_transfer_breaks_timing_alpha():
-    """A 上标定的时序核不能当同一个 alpha 用:C 上误报抬高,B 上抢跑功效塌掉。"""
+    """A 上标定的时序核不能当同一个 alpha 用:C 上误报抬高,B 上抢跑功效塌掉。
+
+    A timing kernel calibrated on A cannot be used at the same alpha: false alarms rise on C, and early-reporting power collapses on B.
+    """
     from tools.robust_diag import _score_fpr
     from tools.transfer_diag import _a3_dr, _fit, _split
 

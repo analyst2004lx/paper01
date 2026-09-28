@@ -1,4 +1,7 @@
-"""对比基线(规格文档第八节):两阶段 open-loop、消融(GA 无反馈算子)、派工规则。"""
+"""对比基线(规格文档第八节):两阶段 open-loop、消融(GA 无反馈算子)、派工规则。
+
+Comparison baselines (specification section 8): two-stage open-loop, ablation (GA without the feedback operator), and dispatch rules.
+"""
 from __future__ import annotations
 
 import time
@@ -12,14 +15,20 @@ from .ga import GAConfig, run_ga, ma_min_time
 
 # 递进式消融链的档位顺序(规格 8.1):每一档只比上一档多闭合一个环节;
 # priced 是如实报告的负面对照,不属于递进链本身。
+# Order of the progressive ablation chain (spec 8.1): each arm closes one more link than the previous one.
+# priced is a faithfully reported negative control and is not part of the chain itself.
 ARMS = ("rule", "twostage", "nofeedback", "opendispatch", "opendispatch_nols",
         "nostagger", "closed", "priced")
 
 # `solve_arm` 另接受 "ideal"(规格 12.2 退化对标)。它**故意不在 ARMS 里**:
 # ARMS 是同一算例上的组内比较,而 ideal 档跑在另一套算例(矩阵型公开基准)上、
 # 与文献值比而非与组内档位比。放进 ARMS 会让批跑器把两种口径拼进同一张表。
+# `solve_arm` also accepts "ideal" (spec 12.2, degenerate benchmark). It is deliberately absent from ARMS:
+# ARMS compares arms on the same instance, whereas ideal runs on another instance family (matrix-form public benchmarks)
+# and is compared with published values, not with in-group arms. Putting it in ARMS would mix the two protocols in one table.
 
 # 不含 GA 搜索的档位:单次解码即完成,故"同算力预算"对其无意义,报告时须单列。
+# Arms without GA search finish in a single decode, so a same-compute budget is meaningless; report them separately.
 NO_SEARCH_ARMS = ("rule",)
 
 
@@ -28,7 +37,12 @@ def two_stage_baseline(inst: Instance, net: Network, cfg: GAConfig,
     """规格 8.1 档 2 —— 两阶段 open-loop:
     阶段一在退化模式(运输时间取常数 t*、无冲突约束)下运行同一 GA;
     阶段二冻结阶段一的机器指派、工序顺序与派车序列,在真实冲突模型下重放修复,
-    报告修复后的真实 C_max。"""
+    报告修复后的真实 C_max。
+
+    Spec 8.1 arm 2 — two-stage open-loop:
+    stage 1 runs the same GA in degenerate mode (travel time fixed at t*, no conflict constraints);
+    stage 2 freezes stage-1 machine assignment, operation sequence, and dispatch sequence, replays them under the real conflict model, and reports the repaired true C_max.
+    """
     t0 = time.time()
     stage1 = run_ga(inst, net, cfg, conflict_free=False, use_ls=True, log=log)
     chrom = stage1["best_chrom"]
@@ -38,7 +52,9 @@ def two_stage_baseline(inst: Instance, net: Network, cfg: GAConfig,
     return {
         "name": "two_stage",
         "stage1_makespan": res1.makespan,   # 理想(低估)值,仅供参考
+        # Ideal (underestimated) value, for reference only
         "makespan": res2.makespan,          # 修复后真实值,用于论文对比
+        # Repaired true value, used for paper comparisons
         "best_chrom": chrom,
         "best_result": res2,
         "runtime_sec": round(time.time() - t0, 2),
@@ -47,11 +63,16 @@ def two_stage_baseline(inst: Instance, net: Network, cfg: GAConfig,
         # 轨迹来自阶段一,其目标是**理想运输模型**下的 C_max,系统性低估;
         # 与闭环档的轨迹画在同一张图上时必须标注清楚,并同时给出修复后的真实值,
         # 否则会被误读成"两阶段收敛得更好"
+        # The trajectory comes from stage 1, whose objective is C_max under the ideal travel model and is systematically low.
+        # When plotted with the closed-loop arm, label it clearly and also show the repaired true value,
+        # or it will be misread as "two-stage converged better".
         "history": stage1.get("history"),
         "history_sec": stage1.get("history_sec"),
         "history_is_surrogate": True,
         # 第一阶段的停机原因要透传:同算力预算下"被预算掐停"与"自然收敛"是两种
         # 完全不同的处境,批跑脚本的预算体检靠它判断比较是否公平(规格 8.2)
+        # Pass through the stage-1 stop reason: under a same-compute budget, "cut off by the budget"
+        # and "converged naturally" are different situations. Batch scripts use this for fairness checks (spec 8.2).
         "stopped_by": stage1.get("stopped_by"),
     }
 
@@ -68,6 +89,12 @@ def ideal_benchmark(inst: Instance, net: Network, cfg: GAConfig,
     它与 `two_stage_baseline` 的第一阶段配置完全相同(同一个 `run_ga(...,
     conflict_free=False)`),差别只在于本档就地报告该值、不再做冲突修复重放:
     公开基准是矩阵型算例,没有走廊图可供修复。
+
+    Spec 12.2, layer 1 — degenerate benchmark: turn off conflict constraints and take travel times from the given/ideal matrix t*.
+
+    This arm is not in the spec 8.1 progressive ablation chain (hence not in `ARMS`). It answers a different question: after removing this paper's contribution (corridor contention), how strong is the remaining upper-level search versus comparable methods in the literature. It is a way to rule out the "single implementation" validity threat, not evidence of the method's contribution. The two must be reported in separate tables, or readers cannot tell which conclusion rests on which data.
+
+    Its configuration matches stage 1 of `two_stage_baseline` (the same `run_ga(..., conflict_free=False)`). The only difference is that this arm reports that value in place and does not replay a conflict repair: public benchmarks are matrix-form instances and have no corridor graph to repair against.
     """
     out = run_ga(inst, net, cfg, conflict_free=False, use_ls=True, log=log)
     out["name"] = "ideal"
@@ -77,7 +104,10 @@ def ideal_benchmark(inst: Instance, net: Network, cfg: GAConfig,
 
 def ablation_no_feedback(inst: Instance, net: Network, cfg: GAConfig,
                          log=None) -> dict:
-    """规格 8.1 档 3 —— 消融:同一闭环框架但关闭决策级反馈(局部搜索)。"""
+    """规格 8.1 档 3 —— 消融:同一闭环框架但关闭决策级反馈(局部搜索)。
+
+    Spec 8.1 arm 3 — ablation: the same closed-loop framework with decision-level feedback (local search) turned off.
+    """
     out = run_ga(inst, net, cfg, conflict_free=True, use_ls=False, log=log)
     out["name"] = "no_feedback"
     out["makespan"] = out["best_result"].makespan
@@ -90,6 +120,10 @@ def ablation_open_dispatch(inst: Instance, net: Network, cfg: GAConfig,
 
     与完整版之差 = 补上"框架最后一处开环残余"所带来的增益。注意本档运行时间显著更短,
     因此论文对比必须**同算力预算**复核,不能只比同代数(规格 8.2 协议 1、13.2)。
+
+    Spec 8.1 arm 4 — ablation: dispatch returns to open-loop (estimate arrival from the ideal shortest-path matrix; do not consult the reservation table).
+
+    The gap versus the full method is the gain from closing the framework's last open-loop residual. This arm runs much faster, so paper comparisons must be rechecked under the same compute budget, not only at the same generation count (spec 8.2 protocol 1, and 13.2).
     """
     out = run_ga(inst, net, replace(cfg, dispatch="rule"), conflict_free=True,
                  use_ls=True, log=log)
@@ -106,6 +140,10 @@ def ablation_open_dispatch_no_ls(inst: Instance, net: Network, cfg: GAConfig,
     (精确派车、无局部搜索)之间同时差着两个因素,两者相减得不出"精确派车值多少"。
     本档把局部搜索也关掉,使 `nofeedback` 与本档只差派车方式这一项,精确派车的
     贡献才可单独归因。
+
+    Ablation: open-loop dispatch, and local search turned off as well.
+
+    `opendispatch` changes dispatch on top of the full method (which includes local search), so it differs from `nofeedback` (exact dispatch, no local search) in two factors at once; subtracting them does not say how much exact dispatch is worth. This arm also turns off local search, so it differs from `nofeedback` only in the dispatch rule and the contribution of exact dispatch can be attributed on its own.
     """
     out = run_ga(inst, net, replace(cfg, dispatch="rule"), conflict_free=True,
                  use_ls=False, log=log)
@@ -120,6 +158,10 @@ def ablation_no_stagger(inst: Instance, net: Network, cfg: GAConfig,
 
     与完整版之差 = "换时间"这一类邻域的贡献;拥堵的两条缓解路径(换地方 / 换时间)
     由此分离。
+
+    Spec 8.1 arm 5 — ablation: turn off the conflict-certificate-guided stagger operator and keep only the reassignment operator.
+
+    The gap versus the full method is the contribution of the "change time" neighborhood. The two ways to relieve congestion (change place / change time) are thereby separated.
     """
     out = run_ga(inst, net, replace(cfg, use_conflict_ops=False), conflict_free=True,
                  use_ls=True, log=log)
@@ -135,6 +177,10 @@ def ablation_priced(inst: Instance, net: Network, cfg: GAConfig,
     诊断实验显示该机制在本问题上系统性有害:走廊争用的延误已完整体现在该车自身的
     到达时刻中,再按占用收一次价格属重复计价,导致过度绕行与过度等待。保留此档是为了
     在论文中如实报告并给出机制解释,而非作为方法贡献(规格 13.2、13.3)。
+
+    Spec 8.1 arm 7 — control (negative result): enable price-weighted routing on top of the full method.
+
+    Diagnostic experiments show this mechanism is systematically harmful on this problem: delay from corridor contention is already fully reflected in that vehicle's own arrival time, and charging a price on occupancy prices the same delay twice, causing excessive detours and excessive waiting. This arm is kept so the paper can report it faithfully and explain the mechanism, not as a methodological contribution (spec 13.2, 13.3).
     """
     out = run_ga(inst, net, replace(cfg, theta=theta), conflict_free=True,
                  use_ls=True, log=log)
@@ -149,6 +195,10 @@ def solve_arm(arm: str, inst: Instance, net: Network, cfg: GAConfig,
 
     七档的配置只在此处定义一次,`main.py` 与批跑脚本共用,避免两处 if/elif 漂移
     导致"同名档位、不同配置"这种最难发现的实验错误。
+
+    Solve once by arm name (the seven arms of spec 8.1).
+
+    The seven configurations are defined only here and shared by `main.py` and the batch scripts, so two if/elif chains cannot drift into the hardest experimental error to spot: the same arm name with different configurations.
     """
     if arm == "closed":
         out = run_ga(inst, net, cfg, conflict_free=True, use_ls=True, log=log)
@@ -176,7 +226,10 @@ def solve_arm(arm: str, inst: Instance, net: Network, cfg: GAConfig,
 
 
 def rule_baseline(inst: Instance, net: Network) -> dict:
-    """规格 8.1 档 1 —— 派工规则基线:机器取最小加工时间,顺序按 SPT 贪心,闭环解码一次。"""
+    """规格 8.1 档 1 —— 派工规则基线:机器取最小加工时间,顺序按 SPT 贪心,闭环解码一次。
+
+    Spec 8.1 arm 1 — dispatch-rule baseline: assign each operation to the machine with minimum processing time, order by greedy SPT, and decode once in closed loop.
+    """
     t0 = time.time()
     ma: Dict[OpKey, int] = ma_min_time(inst)
     counts = dict(inst.os_job_counts())

@@ -18,6 +18,22 @@
 同时报告 OS 位置差的分布与"邻居解码后 makespan 未变"的比例——后者直接量化邻域惰性。
 
 运行(clbs/ 目录下):  py -m tools.stagger_fix_diag [--gens N] [--seeds a,b]
+
+Is the stagger operator's 0% hit rate a real conclusion or an implementation defect?
+
+Observation: in tools/regime_curve.py --attrib the stagger operator's hit rate is 0% on almost every cell. A whole family of operators with a complete zero hit rate is usually an implementation problem rather than a property, so it must be checked on its own.
+
+The suspected mechanism. The decoder posts reservations in OS scan order, and `earliest_entry` sees only reservations **already** in the table, so a yield is always caused by a task **earlier** in the OS sequence; relieving it requires stepping over that task. ga.os_shift swaps only with the nearest gene of a different job — if the blocker sits many positions earlier in the OS, one swap cannot cross it, and the neighbor decodes to exactly the same makespan.
+
+This tool compares three moves on the same set of cases:
+
+  current    as implemented: move the blocked operation one slot earlier / the opponent one slot later (ga._stagger_neighbors)
+  random     random adjacent swaps, the same number of neighbors as current, a baseline for "what a perturbation itself is worth"
+  precede    use the same conflict certificate to truly **reverse** their OS order: insert the blocked operation wholly before the blocker, or insert the blocker after the blocked operation
+
+Also report the distribution of OS-position gaps and the fraction of neighbors whose makespan is unchanged after decoding — the latter measures neighborhood inertia directly.
+
+Run (from the clbs/ directory):  py -m tools.stagger_fix_diag [--gens N] [--seeds a,b]
 """
 from __future__ import annotations
 
@@ -38,6 +54,7 @@ from algorithm.ga import (GAConfig, Chromosome, clone, init_population, mutate,
 from algorithm.generator import build_instance, make_spec
 
 # 与 regime_curve --attrib 完全一致的格子,含错峰命中 0% 的那几个
+# The same cells as regime_curve --attrib, including those with a 0% stagger hit rate.
 CONFIGS = [
     dict(tag="high", nm=8, na=12, jobs=16),
     dict(tag="low", nm=8, na=12, jobs=16),
@@ -53,6 +70,10 @@ def os_move(os_seq: List[int], src: int, dst: int) -> None:
 
     同一工件的基因彼此等价(第 k 个出现即第 k 道工序),故跨过同工件基因不改变解码
     结果;真正变化的是该工件与**别的**工件之间的先后。
+
+    Take the gene at src and insert it at dst. It is still the same multiset, so the permutation stays legal.
+
+    Genes of the same job are equivalent (the k-th occurrence is the k-th operation), so crossing a same-job gene does not change the decode; what changes is the order between this job and **other** jobs.
     """
     g = os_seq.pop(src)
     os_seq.insert(dst, g)
@@ -61,7 +82,10 @@ def os_move(os_seq: List[int], src: int, dst: int) -> None:
 def build_neighbors(inst: Instance, chrom: Chromosome, res: DecodeResult,
                     cfg: GAConfig, rng: random.Random
                     ) -> Tuple[Dict[str, List[Chromosome]], List[int]]:
-    """三种走法各自的邻居,以及被堵工序与阻塞者的 OS 位置差。"""
+    """三种走法各自的邻居,以及被堵工序与阻塞者的 OS 位置差。
+
+    Neighbors of each of the three moves, and the OS-position gap between the blocked operation and the blocker.
+    """
     out: Dict[str, List[Chromosome]] = {v: [] for v in VARIANTS}
     gaps: List[int] = []
 
@@ -89,6 +113,7 @@ def build_neighbors(inst: Instance, chrom: Chromosome, res: DecodeResult,
                 continue
             gaps.append(i_b - i_o)
             # 反转先后:被堵工序插到阻塞者之前;以及阻塞者插到被堵工序之后
+            # Reverse order: insert the blocked op before the blocker, and the blocker after the blocked op.
             nb = clone(chrom)
             os_move(nb["os"], i_b, i_o)                   # type: ignore
             out["precede"].append(nb)
@@ -96,8 +121,10 @@ def build_neighbors(inst: Instance, chrom: Chromosome, res: DecodeResult,
             os_move(nb2["os"], i_o, i_b)                  # type: ignore
             out["precede"].append(nb2)
             break                                          # 与现行一致,只动一个对手
+                                                           # match the current operator: move only one opponent
 
     # 随机相邻交换,个数与现行对齐,量出"随便扰动"本身值多少
+    # Random adjacent swaps, count matched to the current operator, measuring what a mere perturbation is worth.
     n = len(os_seq)
     for _ in range(len(cur)):
         nb = clone(chrom)
@@ -117,7 +144,7 @@ def run_cell(inst: Instance, net: Network, seeds: Sequence[int],
                    use_conflict_ops=True)
     n_sit = 0
     hit = {v: 0 for v in VARIANTS}
-    inert = {v: [0, 0] for v in VARIANTS}      # [makespan 未变数, 邻居总数]
+    inert = {v: [0, 0] for v in VARIANTS}      # [makespan 未变数, 邻居总数] / [unchanged-makespan count, neighbor count]
     gaps: List[int] = []
 
     for seed in seeds:
@@ -130,7 +157,7 @@ def run_cell(inst: Instance, net: Network, seeds: Sequence[int],
             order = sorted(range(len(pop)), key=lambda x: res[x].makespan)
             elite, elite_res = pop[order[0]], res[order[0]]
 
-            if gen >= gens - max(1, gens // 3):             # 只看收敛尾段
+            if gen >= gens - max(1, gens // 3):             # 只看收敛尾段 / look only at the converged tail
                 nbs, g = build_neighbors(inst, elite, elite_res, cfg, rng)
                 gaps += g
                 if nbs["current"]:

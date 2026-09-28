@@ -1,4 +1,7 @@
-"""结果报告:文本甘特图、走廊占用率画像与汇总(规格文档 3.3)。"""
+"""结果报告:文本甘特图、走廊占用率画像与汇总(规格文档 3.3)。
+
+Result reports: a text Gantt chart, a corridor-occupancy profile, and a summary (specification section 3.3).
+"""
 from __future__ import annotations
 
 import re
@@ -12,14 +15,20 @@ MAX_GANTT_WIDTH = 300
 
 
 def _job_char(j: int) -> str:
-    """工件 1..n 映射为 A..Z / a..z。"""
+    """工件 1..n 映射为 A..Z / a..z。
+
+    Map jobs 1..n to A..Z / a..z.
+    """
     if j <= 26:
         return chr(ord("A") + j - 1)
     return chr(ord("a") + (j - 27) % 26)
 
 
 def gantt_text(inst: Instance, timetable: dict) -> Optional[str]:
-    """整数时间粒度的文本甘特图;时间跨度过大时返回 None。"""
+    """整数时间粒度的文本甘特图;时间跨度过大时返回 None。
+
+    Text Gantt chart at integer time granularity; returns None when the horizon is too wide.
+    """
     width = int(round(timetable["makespan"]))
     if width <= 0 or width > MAX_GANTT_WIDTH:
         return None
@@ -33,6 +42,7 @@ def gantt_text(inst: Instance, timetable: dict) -> Optional[str]:
         f"{t:<10d}" for t in range(0, width, 10))[:width])
 
     # ---- 机器行 ----
+    # Machine rows
     by_machine: Dict[int, List[dict]] = {}
     for o in timetable["operations"]:
         by_machine.setdefault(o["machine"], []).append(o)
@@ -45,6 +55,7 @@ def gantt_text(inst: Instance, timetable: dict) -> Optional[str]:
         lines.append(f"RA{m:<4d}" + "".join(row))
 
     # ---- AGV 行:大写=载货,e=空驶,w=途中等待 ----
+    # AGV rows: uppercase = loaded, e = empty travel, w = en-route wait
     by_agv: Dict[int, List[dict]] = {}
     for s in timetable["agv_segments"]:
         by_agv.setdefault(s["agv"], []).append(s)
@@ -60,6 +71,7 @@ def gantt_text(inst: Instance, timetable: dict) -> Optional[str]:
             for t in range(int(round(s["enter"])), min(int(round(s["exit"])), width)):
                 row[t] = ch
             # 同一任务相邻分段间的间隙 = 途中等待
+            # Gap between adjacent segments of the same task = en-route wait
             if idx + 1 < len(segs) and segs[idx + 1].get("task") == s.get("task"):
                 for t in range(int(round(s["exit"])),
                                min(int(round(segs[idx + 1]["enter"])), width)):
@@ -77,6 +89,10 @@ def corridor_occupancy(timetable: dict, bucket_width: float) -> Dict[Tuple[str, 
     与 ReservationTable.occupancy 语义相同,但不复用解码器/预约表的内部状态,
     而是从落盘的 agv_segments 反推——与校验器同一套哲学(独立重算才能当证据)。
     因此它对所有模式一致可用,包括 twostage / rule 这类不经 GA 的档。
+
+    Corridor-time occupancy util[(c,b)] = occupied time inside the bucket / bucket width, recomputed independently from the timetable.
+
+    Same meaning as ReservationTable.occupancy, but it does not reuse decoder or reservation-table state. It is reconstructed from the stored agv_segments — the same philosophy as the validator (only an independent recomputation counts as evidence). It is therefore available for every mode, including arms that do not go through the GA, such as twostage / rule.
     """
     util: Dict[Tuple[str, int], float] = {}
     if bucket_width <= 0:
@@ -100,6 +116,10 @@ def occupancy_profile(timetable: dict, bucket_width: float,
 
     用途是**报告**而非驱动搜索(规格 5.2 中前瞻性信号的使用边界):
     用于实证"某条走廊是否真的是瓶颈",支撑算例设计主张与定性分析。
+
+    Occupancy profile: mean and peak occupancy aggregated by corridor, plus the busiest corridor-time slots.
+
+    It is for reporting, not for driving search (the usage boundary of the forward-looking signal in spec 5.2): it shows empirically whether a corridor is really a bottleneck, supporting the instance-design claim and the qualitative analysis.
     """
     util = corridor_occupancy(timetable, bucket_width)
     if not util:
@@ -111,6 +131,7 @@ def occupancy_profile(timetable: dict, bucket_width: float,
         per_corridor.setdefault(cid, []).append(v)
     by_corridor = {
         cid: {"mean": round(sum(vs) / span, 4),      # 按整个计划期取平均,非仅按有占用的桶
+              # Mean over the whole horizon, not only over occupied buckets
               "peak": round(max(vs), 4),
               "busy_buckets": len(vs)}
         for cid, vs in per_corridor.items()

@@ -21,6 +21,25 @@ C. 筛选效果。用打分预测"改派是否比现状好",只解码预测为�
    能省掉多少次解码,又漏掉多少次真实改进。
 
 运行(clbs/ 目录下):  py -m tools.probe_diag [算例路径 ...] [--gens N] [--seeds a,b]
+
+Decision experiment for probe-style reassignment scoring (whether t* scoring is worth replacing with a reservation-table probe).
+
+Background: the reassignment operator of spec 6.5 scores by `t*(previous location, candidate RA) + processing time`, where t* is the **contention-free** shortest path. The operator built for "if the corridor to the fast arm is blocked, switch arms" uses exactly the optimistic matrix the paper criticizes in the two-stage baseline — it cannot see congestion.
+
+The alternative replaces the proximity term's "estimate" with a "probe": take the current solution's reservation table and route to the candidate RA **without committing**, to get the true arrival. The cost is one Dijkstra, not one full decode.
+
+This script does not change the algorithm. It measures three quantities that decide whether to implement the change:
+
+A. Cost ratio. One probe / one full decode. This decides how much "screen, then decode" can save.
+B. Score quality. Four scoring functions rank the same candidates, compared with the true improvement after decoding:
+     S0 = t*(previous, candidate) + processing time              ← current implementation
+     S1 = probe arrival + processing time                        ← replace the estimate with a probe
+     S2 = max(probe arrival, RA free time) + processing time     ← probe + one binding step
+     S3 = max(ideal arrival, RA free time) + processing time     ← control: add only the machine term, no probe
+   S3 is a necessary control. If S2 beats S0 and S3 does too, the gain comes from "the machine term was forgotten", not from "probing", and the conclusion is entirely different.
+C. Screening effect. Use the score to predict "is reassignment better than the status quo", and decode only candidates predicted to be better: how many decodes are saved, and how many true improvements are missed.
+
+Run (from the clbs/ directory):  py -m tools.probe_diag [instance paths ...] [--gens N] [--seeds a,b]
 """
 from __future__ import annotations
 
@@ -51,10 +70,14 @@ SCORER_DESC = {
 
 # --------------------------------------------------------------------------
 # 小工具
+# Small helpers
 # --------------------------------------------------------------------------
 
 def spearman(xs: Sequence[float], ys: Sequence[float]) -> Optional[float]:
-    """秩相关;并列取平均秩。样本不足或某一列为常数时返回 None。"""
+    """秩相关;并列取平均秩。样本不足或某一列为常数时返回 None。
+
+    Rank correlation; ties take the average rank. Return None if the sample is too small or a column is constant.
+    """
     n = len(xs)
     if n < 2:
         return None
@@ -84,7 +107,10 @@ def spearman(xs: Sequence[float], ys: Sequence[float]) -> Optional[float]:
 
 
 def os_positions(os_seq: Sequence[int]) -> Dict[OpKey, int]:
-    """工序 -> 它在 OS 序列中的下标(含伪工序)。"""
+    """工序 -> 它在 OS 序列中的下标(含伪工序)。
+
+    Operation -> its index in the OS sequence (including dummy operations).
+    """
     cnt: Dict[int, int] = {}
     pos: Dict[OpKey, int] = {}
     for idx, j in enumerate(os_seq):
@@ -98,6 +124,10 @@ def loaded_router(net: Network, result: DecodeResult) -> Router:
 
     与解码途中的活预约表不同:这里含全部任务(包括时间上更晚的),因此探询回答的是
     "把一趟行程插进这份完整交通里会几点到",这正是局部搜索所处的语境。
+
+    Rebuild the reservation table from a decoded plan, and obtain a router under "the shop's actual traffic right now".
+
+    Unlike the live reservation table during decoding, this one contains every task (including those later in time), so a probe answers "what time does this trip arrive if inserted into this complete traffic", which is the setting local search is in.
     """
     router = Router(net, conflict_free=True)
     for tr in result.transports:
@@ -110,6 +140,7 @@ def loaded_router(net: Network, result: DecodeResult) -> Router:
 
 # --------------------------------------------------------------------------
 # A. 代价比
+# A. Cost ratio
 # --------------------------------------------------------------------------
 
 def measure_cost(inst: Instance, net: Network, chrom: Chromosome,
@@ -138,16 +169,20 @@ def measure_cost(inst: Instance, net: Network, chrom: Chromosome,
 
 # --------------------------------------------------------------------------
 # B/C. 打分质量与筛选效果
+# B/C. Score quality and screening effect
 # --------------------------------------------------------------------------
 
 def eval_situation(inst: Instance, net: Network, chrom: Chromosome,
                    result: DecodeResult, op: OpKey, dispatch: str,
                    gen: int = 0) -> Optional[dict]:
-    """对关键链上的一个工序,给出全部候选 RA 的四种打分与真实改进量。"""
+    """对关键链上的一个工序,给出全部候选 RA 的四种打分与真实改进量。
+
+    For one operation on the critical chain, report the four scores and the true improvement of every candidate RA.
+    """
     j, i = op
     cur_m: int = chrom["ma"][op]            # type: ignore
     cands = sorted(inst.eligible(j, i))
-    if len(cands) < 2:                      # 无可换之处,打分无从谈起
+    if len(cands) < 2:                      # 无可换之处,打分无从谈起 / nothing to switch; scoring has nothing to say
         return None
 
     pos_prev = inst.lu_node if i == 1 else inst.machine_node[chrom["ma"][(j, i - 1)]]  # type: ignore
@@ -156,7 +191,10 @@ def eval_situation(inst: Instance, net: Network, chrom: Chromosome,
     my_pos = positions[op]
 
     def free_time(m: int) -> float:
-        """该 RA 上排在本工序之前的作业完工时刻(一步近似,不重排同机序)。"""
+        """该 RA 上排在本工序之前的作业完工时刻(一步近似,不重排同机序)。
+
+        Completion time of the work already queued before this operation on that RA (one-step approximation; same-machine order is not reshuffled).
+        """
         f = 0.0
         for o, rec in result.ops.items():
             if rec.machine == m and o != op and positions.get(o, -1) < my_pos:
@@ -165,6 +203,7 @@ def eval_situation(inst: Instance, net: Network, chrom: Chromosome,
 
     router = loaded_router(net, result)
     # 本工序原有的两段行程会被改派替换掉,探询时不应把它们算作占用
+    # This operation's two existing trips will be replaced by the reassignment; the probe must not count them as occupancy.
     router.table.release_all(f"J{j}-{i}-empty")
     router.table.release_all(f"J{j}-{i}-loaded")
 
@@ -181,12 +220,12 @@ def eval_situation(inst: Instance, net: Network, chrom: Chromosome,
             "S1": probe_arr + proc,
             "S2": max(probe_arr, fm) + proc,
             "S3": max(ideal_arr, fm) + proc,
-            "detour": probe_arr - ideal_arr,     # 探询相对理想的额外耗时
+            "detour": probe_arr - ideal_arr,     # 探询相对理想的额外耗时 / extra time of the probe vs the ideal estimate
         })
 
     for r in rows:
         if r["m"] == cur_m:
-            r["delta"] = 0.0                     # 现状,按定义无改进
+            r["delta"] = 0.0                     # 现状,按定义无改进 / status quo; no improvement by definition
             continue
         nb = clone(chrom)
         nb["ma"][op] = r["m"]                    # type: ignore
@@ -220,6 +259,7 @@ def collect_situations(path: str, seeds: Sequence[int], gens: int,
                 cost = measure_cost(inst, net, elite, elite_res)
 
             # 局部搜索只作用于精英,故情形样本取自精英的关键链
+            # Local search acts only on the elite, so situation samples come from the elite's critical chain.
             for op in critical_real_ops(elite_res)[: cfg.L_ls]:
                 s = eval_situation(inst, net, elite, elite_res, op, dispatch, gen)
                 if s is not None:
@@ -250,7 +290,10 @@ def collect_situations(path: str, seeds: Sequence[int], gens: int,
 
 
 def summarize(sits: List[dict]) -> dict:
-    """把情形样本折算成决策相关的指标。"""
+    """把情形样本折算成决策相关的指标。
+
+    Fold situation samples into the metrics that the decision depends on.
+    """
     n = len(sits)
     n_alt = [len(s["rows"]) - 1 for s in sits]
     oracle_hit = 0
@@ -277,7 +320,7 @@ def summarize(sits: List[dict]) -> dict:
                 rho = spearman([-r[k] for r in alts], [r["delta"] for r in alts])
                 if rho is not None:
                     sel[k]["rho"].append(rho)
-            # 筛选:打分认为比现状好才值得解码
+            # 筛选:打分认为比现状好才值得解码 / screen: decode only if the score says it beats the status quo
             if pick[k] < cur[k] - 1e-9:
                 scr[k]["go"] += 1
                 if best > 1e-9:
@@ -307,6 +350,7 @@ def summarize(sits: List[dict]) -> dict:
 
 # --------------------------------------------------------------------------
 # 入口
+# Entry point
 # --------------------------------------------------------------------------
 
 def default_paths() -> List[str]:
@@ -357,6 +401,7 @@ def main() -> int:
 
     report("全部情形", all_sits)
     # 局部搜索真正起作用的是收敛后期;早期任何扰动都容易改进,会高估机制价值
+    # Local search matters in the late, converged phase; early on any perturbation improves easily and would overstate the mechanism.
     report("搜索前半程", [s for s in all_sits if s.get("gen_frac", 0.0) < 0.5])
     report("搜索后半程", [s for s in all_sits if s.get("gen_frac", 0.0) >= 0.5])
     print("命中率 = 该打分选中的候选确实缩短了 makespan 的情形占比(上限为神谕)")

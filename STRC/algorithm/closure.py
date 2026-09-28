@@ -6,6 +6,15 @@
   3) 同工件后继:J{j}-{i}-* 之后的 J{j}-{i+1}-*。
 
 走廊阻断的种子 = 落在阻断时窗内、且尚未在 t_now 前结束的走廊预约。
+
+STRC core: the spatiotemporal reservation closure.
+
+A blocking edge r → r' means: if r fails, r' may need replanning. That includes:
+  1) yield edges: r's occupation makes r' wait on the same corridor;
+  2) same-vehicle successors: the reservation that comes next in time on the same AGV;
+  3) same-job successors: J{j}-{i+1}-* after J{j}-{i}-*.
+
+Seeds of a corridor blockage = corridor reservations that fall inside the blockage window and have not finished before t_now.
 """
 from __future__ import annotations
 
@@ -61,6 +70,10 @@ def build_dependence_graph(
     """构建 r → r' (r 失效可能牵连 r')。
 
     machine_chains: 同机先后工序对 ((j,i), (j2,i2)),由排程的机器时间轴导出。
+
+    Build r → r' (if r fails, r' may be implicated).
+
+    machine_chains: successive operation pairs on the same machine ((j, i), (j2, i2)), taken from the schedule's machine timeline.
     """
     by_corridor: Dict[str, List[ReservationRef]] = defaultdict(list)
     by_agv: Dict[int, List[ReservationRef]] = defaultdict(list)
@@ -83,6 +96,9 @@ def build_dependence_graph(
     # 1) 让行边:同走廊、异车、时间重叠或半开区间接壤。
     # 接壤 (a.t_end == b.t_start) 在排他语义下合法,原先不画边;但 a 稍一延后
     # b 就必须让路,差分试探里全部泄漏都是这一条。
+    # 1) Yield edges: same corridor, different vehicles, overlapping in time or abutting on a half-open interval.
+    # Abutting (a.t_end == b.t_start) is legal under exclusive semantics and used to draw no edge; but if a
+    # is delayed even slightly, b must yield. Every leak in the differential probe was this edge.
     for cid, lst in by_corridor.items():
         for i, a in enumerate(lst):
             for b in lst[i + 1:]:
@@ -99,12 +115,12 @@ def build_dependence_graph(
                     else:
                         graph[b].append(a)
 
-    # 2) 同车后继
+    # 2) 同车后继 / 2) Same-vehicle successor
     for _agv, lst in by_agv.items():
         for i in range(len(lst) - 1):
             graph[lst[i]].append(lst[i + 1])
 
-    # 3) 同工件工序后继
+    # 3) 同工件工序后继 / 3) Same-job operation successor
     jobs = {j for j, _i in by_job_op}
     for j in jobs:
         ops = sorted({i for jj, i in by_job_op if jj == j})
@@ -113,7 +129,7 @@ def build_dependence_graph(
                 for rb in by_job_op[(j, b)]:
                     graph[ra].append(rb)
 
-    # 4) 同机后继(修复时外侧冻结所必需)
+    # 4) 同机后继(修复时外侧冻结所必需) / 4) Same-machine successor (required when freezing the outside during repair)
     if machine_chains:
         for (j1, i1), (j2, i2) in machine_chains:
             for ra in by_job_op.get((j1, i1), ()):
@@ -132,7 +148,10 @@ def build_dependence_graph(
 
 
 def machine_chains_from_ops(ops: dict) -> List[Tuple[Tuple[int, int], Tuple[int, int]]]:
-    """从 DecodeResult.ops 提取同机先后对。"""
+    """从 DecodeResult.ops 提取同机先后对。
+
+    Extract successive pairs on the same machine from DecodeResult.ops.
+    """
     by_m: Dict[int, list] = defaultdict(list)
     for rec in ops.values():
         if getattr(rec, "pseudo", False) or rec.machine is None:
@@ -154,7 +173,10 @@ def spatiotemporal_closure(
     t_now: float = 0.0,
     machine_chains: Optional[Sequence[Tuple[Tuple[int, int], Tuple[int, int]]]] = None,
 ) -> ClosureResult:
-    """对种子集沿依赖边取传递闭包;丢弃 t_end <= t_now 或 t_start >= horizon 的节点。"""
+    """对种子集沿依赖边取传递闭包;丢弃 t_end <= t_now 或 t_start >= horizon 的节点。
+
+    Take the transitive closure of the seed set along dependence edges; drop nodes with t_end <= t_now or t_start >= horizon.
+    """
     seed_list = list(seeds)
     graph = build_dependence_graph(reservations, machine_chains=machine_chains)
     alive = {
@@ -199,11 +221,16 @@ def task_graph_direct(dist, schedule_meta: Optional[dict] = None) -> Set[str]:
     """NOSR 的 T_direct:被故障智能体直接命中的任务 id 集。
 
     走廊阻断/降速:无智能体 → 空集。
+
+    NOSR's T_direct: the set of task ids hit directly by the failed agent.
+
+    Corridor blockage / slowdown: no agent, so the set is empty.
     """
     if dist.type in ("corridor_block", "corridor_slowdown"):
         return set()
     if dist.type == "agv_breakdown":
         # 需要排程里该车未来任务;由调用方传入 schedule_meta["agv_tasks"]
+        # Needs that vehicle's future tasks from the schedule; the caller passes schedule_meta["agv_tasks"].
         agv = dist.agv
         tasks = (schedule_meta or {}).get("agv_tasks", {}).get(agv, [])
         return set(tasks)
@@ -215,6 +242,7 @@ def task_graph_direct(dist, schedule_meta: Optional[dict] = None) -> Set[str]:
         return {f"J{dist.job_op.strip('()').replace(',', '-').replace(' ', '')}"}
     if dist.type == "urgent_job":
         return set()  # 新工件不在原图上,影响域另议;E1 不依赖此类
+        # A new job is not on the original graph; its impact set is separate. E1 does not depend on this class.
     return set()
 
 
@@ -225,7 +253,10 @@ def task_graph_impact(
     theta: int = 2,
     schedule_meta: Optional[dict] = None,
 ) -> Set[str]:
-    """从 T_direct 在任务依赖图上 BFS θ 跳。"""
+    """从 T_direct 在任务依赖图上 BFS θ 跳。
+
+    BFS θ hops from T_direct on the task-dependence graph.
+    """
     direct = task_graph_direct(dist, schedule_meta)
     if not direct or theta <= 0:
         return set(direct)
@@ -245,7 +276,10 @@ def task_graph_impact(
 def job_precedence_from_reservations(
     reservations: Sequence[ReservationRef],
 ) -> Dict[str, List[str]]:
-    """粗粒度任务图:J{j}-{i} → J{j}-{i+1}(忽略 empty/loaded 细分)。"""
+    """粗粒度任务图:J{j}-{i} → J{j}-{i+1}(忽略 empty/loaded 细分)。
+
+    Coarse task graph: J{j}-{i} → J{j}-{i+1} (ignoring the empty/loaded split).
+    """
     ops: Set[Tuple[int, int]] = set()
     for r in reservations:
         p = _parse_task(r.task)
@@ -269,6 +303,10 @@ def release_set_from_tasks(
     """R1:任务影响域映射到预约释放集(task 前缀匹配 J{j}-{i})。
 
     只计 t_end > t_now 的未来预约,与闭包的 alive 口径一致。
+
+    R1: map the task impact set onto the reservation release set (task prefix match J{j}-{i}).
+
+    Count only future reservations with t_end > t_now, the same alive convention as the closure.
     """
     if not tasks:
         return []
@@ -295,6 +333,10 @@ def assert_containment_structural(
     """E2a:结构抽检——闭包外节点不应有从种子集可达的依赖边漏网。
 
     口径与 spatiotemporal_closure 的 alive 过滤一致。
+
+    E2a: structural spot check — a node outside the closure should not be reachable from the seed set along a dependence edge that was missed.
+
+    The convention matches the alive filter in spatiotemporal_closure.
     """
     graph = build_dependence_graph(reservations, machine_chains=machine_chains)
     closed = closure.as_set()

@@ -18,6 +18,19 @@ run_ga 逐代记下 history(至今最优 makespan)与 history_sec(对应挂钟)�
             这条方法线当场不成立——收益曲线再好看也够不着。
 
 运行(clbs/ 目录下):  py -m tools.throughput_gain [--base 12] [--seeds a,b,c]
+
+If evaluation throughput doubles, how much can makespan fall? — the gain ceiling of incremental decoding.
+
+The same-wall-clock A/B (tools/exhaustive_ab.py) is decided in the generation column: the exhaustive arm runs 27 generations, the current arm 53, and exhaustive loses by 2.49%. On the margin, "taking a few more steps" is worth more than "choosing more accurately", so the thing to optimize is the cost of each step, not move quality. The measured reusable fraction of incremental decoding is 46.8% (tools/reuse_diag.py), about 1.9× throughput. Before writing a decoder, estimate what that 1.9× is worth.
+
+Do not run two arms. Run one long trajectory and read the best-so-far at each time from the **same convergence trace**: run_ga records history (best-so-far makespan) and history_sec (the matching wall-clock) each generation. That halves the compute and is a strict same-trace pairing, with no run-to-run noise.
+
+Two numbers that must be read together:
+
+  Gain curve   The makespan drop after scaling the budget by r. The r=1.9 column is the gain ceiling of incremental decoding.
+  Reusable share   Local-search decodes / all decodes. Incremental decoding helps only neighbor decodes that change a single point; after crossover the whole OS of a population decode changes and the prefix cannot be reused. Overall speedup is about 1 / (1 - 0.468 * reusable share). If local search is only a fifth of decodes, the overall factor is 1.1× and this method line fails on the spot — a pretty gain curve cannot be reached.
+
+Run (from the clbs/ directory):  py -m tools.throughput_gain [--base 12] [--seeds a,b,c]
 """
 from __future__ import annotations
 
@@ -44,10 +57,14 @@ CONFIGS = [
 
 RATIOS = (1.0, 1.3, 1.6, 1.9, 2.5)
 REUSE = 0.468            # tools/reuse_diag.py 实测的增量解码可省比例
+                         # reusable fraction of incremental decoding, measured by tools/reuse_diag.py
 
 
 def best_at(history: Sequence[float], secs: Sequence[float], t: float) -> float:
-    """至今最优 makespan 在挂钟时刻 t 的取值。"""
+    """至今最优 makespan 在挂钟时刻 t 的取值。
+
+    Best-so-far makespan at wall-clock time t.
+    """
     out = history[0]
     for v, s in zip(history, secs):
         if s > t:

@@ -2,6 +2,10 @@
 
 箱线图只读 `detected_delays`,不得把未检出填进分位;ARL0 只读纯良性流的
 `benign_gaps`。图脚本不得再手写中位 / p90。
+
+Evaluation archive: per-event delays, benign alarm gaps, and injection-rate sweeps share one JSON.
+
+Box plots read only `detected_delays` and must not fill undetected events into the quantiles; ARL0 reads only `benign_gaps` on a purely benign stream. Figure scripts must not hard-code the median / p90 again.
 """
 from __future__ import annotations
 

@@ -59,6 +59,86 @@ PBFT 式共识确认的是"多数副本对消息的内容与顺序达成一致"�
 这不是给 BFT 设障，而是它的真实语义，且结论对它并不苛刻：`W1` 的检出能力**恰等
 于看门狗 `S1`**（沉默无声明可提交，故 P2 仍能发现），但带宽是本文的 131 倍
 （见 `budget.py`）。一句话：**付 131 倍带宽，换一个看门狗。**
+
+Comparison baselines. Tiered by **information consumed**, not by paper (see README section 4).
+
+    R0  random accusation at a matched alarm rate     no information; the floor
+    S1  scheduler watchdog                            command ledger + whether the statement arrived
+    S2  plan-consistency residual (generic FDI)       plus duration and the result bit
+    S3  alignment-style conformance (process mining)  the process-model language of XES + BPMN
+    W1  whole-network quorum vote (PBFT-style)        agreement on the statement itself; no physical evidence
+    W2  interrogate everyone                          witness set = every device class; the ask-all variant
+    W3  k random witnesses                            same size as this paper, but nominated at random
+    W4  spatial-neighbor witnesses                    nominated by BPMN material-flow adjacency (COLAW/Vouch+)
+    H1  equal-bandwidth periodic full reports         latency contrast at the same bandwidth (feeds budget)
+    H2  GOOSE-style heartbeat with no cryptographic binding   liveness yes, attribution no
+    H3  TESLA-style delayed keys                      authentication yes, non-repudiation no
+    U1  sensor oracle at every handover               ceiling: the difference is the coverage gap
+
+## The four tiers are different in kind and must not be read from one table
+
+**Tier 1 is not a race; it is a theorem.** Assertion D1 already shows that a
+P1 forgery matches the benign activity on all 7 single-observer fields and
+that its duration lies inside the IQR, so the whole tier's detection rate is
+a **structural 0**, not "rather low." Running it is not to compare magnitudes;
+it turns a provable claim into a reproducible measurement.
+
+The tier-1 implementation must therefore be **as strong as possible**, or the
+objection is "you failed to implement it": thresholds are calibrated on the
+benign stream to the tightest point that does not false-alarm (`calibrate`),
+conformance judges the full process-model language (including same-machine
+sequential steps), and the watchdog uses the same 260 s dispatch-queue
+allowance. After all of that the rate is still 0, and that 0 has weight.
+
+**Tier 2 is the race.** Protocol, cryptography, window, and budget are all
+the same; **only how the witness set is chosen** changes, so a difference can
+come only from the selection principle. That is the only clean way to isolate
+the first contribution.
+
+**Tier 3 attaches to the bandwidth–safety margin theorem.** It does not
+compare P1 detection rates (that is tier 1). It compares: how much latency
+differs at equal bandwidth, whether an unbound heartbeat can attribute, and
+whether delayed authentication can be non-repudiable. All three are closed
+form, pinned by `budget.py` / `crypto.py`, and do not depend on replay noise.
+
+**Tier 4 is the ceiling.** Coverage can reach 1 when every handover has an
+independent sensor; the difference from this paper's 70.05% is the coverage
+gap, which is the target of on-demand active corroboration.
+
+## Three fairness requirements
+
+  1. **The same protocol.** All four baselines go through
+     `corroborate.CorroborationProtocol` and only replace `WitnessPolicy`.
+     A baseline with its own implementation cannot rule out an implementation difference.
+  2. **The same window and allowance.** In particular the 260 s dispatch-queue
+     allowance; do not handicap a baseline (`detect_diag`'s watchdog already does this).
+  3. **The same reporting convention.** `W3` raises both detection rate and
+     false-alarm rate; reporting only the detection rate yields the wrong
+     conclusion that "random witnesses also work." This module always reports
+     **detection rate minus false-alarm rate**, and `compare` puts the two side by side.
+
+## W1's operationalization must be written down, or it will be called a straw man
+
+PBFT-style consensus confirms that "a majority of replicas agree on the
+content and order of a message", **not a physical fact**. A forged statement
+that is well formed, validly signed, and on time is committed by the quorum —
+consensus gives **consistency**, and task-state falsification is not a
+consistency problem. So `W1` is operationalized as `confirm_on_claim=True`:
+the statement is committed on arrival.
+
+**The first operationalization was wrong; record it so it is not repeated.**
+It was first written as "any other device's activity counts as confirmation"
+and produced a detection rate of 0.157. That number was not a signal; it was
+an artifact of **settlement order** after pending items are bucketed by
+position — some buckets happened to expire before another device's pickup
+arrived. Consensus has no semantics of "wait for some event to confirm."
+Once the statement is committed, it is committed, so the correct
+operationalization has detection rate exactly 0.
+
+This does not handicap BFT; it is BFT's real semantics, and the conclusion is
+not harsh: `W1`'s detection ability **equals the watchdog `S1`** (silence has
+no statement to commit, so P2 is still found), but the bandwidth is 131 times
+this paper's (see `budget.py`). In one sentence: **pay 131× bandwidth for a watchdog.**
 """
 from __future__ import annotations
 
@@ -86,12 +166,15 @@ U1 = "U1_sensor_oracle"
 OURS = "ours_taskgraph"
 
 #: 第二档（见证选取规则），走 `corroborate` 的同一协议。
+#: Tier 2 (witness-selection rules), on the same `corroborate` protocol.
 FAMILIES = (OURS, W1, W2, W3, W4)
 #: 第一档（单观测者）+ 地板，走下面的 `SingleObserver` 接口。
+#: Tier 1 (single observer) plus the floor, via the `SingleObserver` interface below.
 TIER1 = (R0, S1, S2, S3)
 #: 第三档（心跳/带宽通道），解析对照，不走回放。
+#: Tier 3 (heartbeat / bandwidth channel), closed-form contrast, no replay.
 TIER3 = (H1, H2, H3)
-#: 第四档（天花板）。
+#: 第四档（天花板）。 / Tier 4 (the ceiling).
 TIER4 = (U1,)
 
 
@@ -106,6 +189,18 @@ class QuorumVotePolicy(WitnessPolicy):
 
     见证集仍取任务图的，以免同时改两个变量——本条基线要单独暴露的是
     **"一致"不等于"真实"**。
+
+    `W1`: a PBFT-style quorum votes on the statement itself.
+
+    `confirm_on_claim=True` means "commit on arrival"; `corroborates=False`
+    turns off the three corroboration entries. See `corroborate.WitnessPolicy`:
+    consensus does not create a duty that "B must witness A's delivery", and
+    leaving the refutation channel on hands coupled corroboration to the
+    baseline for free (measured that way it gets a detection rate of 0.136,
+    all from refutation).
+
+    The witness set is still the task graph's, so two variables are not
+    changed at once — what this baseline isolates is **"agreement" is not "truth"**.
     """
     name: str = W1
     confirm_on_claim: bool = True
@@ -128,7 +223,31 @@ class InterrogateAllPolicy(WitnessPolicy):
 
     于是 `W2` 的代价是纯粹的：见证集规模 4.95 倍（即互证带宽 4.95 倍），检出零
     增益，另加一大批永远悬而未决的待确认事项——那是**覆盖率的假象**，看着监控了
-    更多活动，实则一条也结算不了。这恰好从反面支持 $O(1)$ 见证集的主张。
+    更多活动，实则一条也结算不了。    这恰好从反面支持 $O(1)$ 见证集的主张。
+
+    `W2`: the witness set is every device class; the rest matches this paper.
+
+    This is "if you do not know whom to ask, ask everyone." The measurement
+    splits in two, and one half is the opposite of the expectation, so it is
+    written as measured:
+
+      - **Detection matches this paper bit for bit** (0.997/0.997, and the
+        false-alarm rate is also 0.023). Only the real counterpart has local
+        sensor evidence, so whom you ask does not matter — asking everyone
+        **does not create evidence**.
+      - **It also does not create false charges**, which the earlier prediction
+        got wrong. The fear was that activities with no counterpart would still
+        open a window and all time out into false charges. The two-deadline
+        design catches them: if the counterpart was never dispatched, the
+        corroboration window is never filled, so they are archived as
+        `NOT_DISPATCHED` rather than charged. That is a finding about **this
+        paper's own protocol** — the two deadlines are why asking more does not accuse more.
+
+    So `W2`'s cost is pure: a witness set 4.95 times larger (corroboration
+    bandwidth 4.95 times larger), zero detection gain, plus a large pile of
+    pending items that never settle — a **mirage of coverage**. It looks like
+    more activities are monitored, but none of them can be settled. That is
+    support, from the other side, for an $O(1)$ witness set.
     """
     name: str = W2
 
@@ -155,6 +274,31 @@ class RandomWitnessPolicy(WitnessPolicy):
     再算规模"两种调用顺序下给出不同的检出率（0.108 与 0.129）——那不是随机性，
     是不可复现。改为对 (seed, case, event_id) 取哈希后，提名对同一活动恒定，
     与调用次数、调用顺序都无关。
+
+    `W3`: nominate $k$ device classes at random as witnesses, with $k$ equal to this paper's witness-set size.
+
+    This is the random-committee family. The failure is structural: a randomly
+    chosen device has no local sensor evidence of **this** handover, so it
+    cannot show up and cannot confirm.
+
+    Measured detection collapses to 0.108 (this paper: 0.997), while the
+    false-alarm rate stays low (0.002) — the earlier prediction that "detection
+    and false alarms both go to 1" was wrong, again because the two deadlines
+    archive unsettlable pending items as `NOT_DISPATCHED`. So `W3` fails as
+    **it finds nothing**, not as **it accuses at random**.
+
+    The report must still give detection rate minus false-alarm rate
+    (discriminability). That is a methodological requirement, not something
+    this example needs: on a protocol without the two deadlines, random
+    nomination fails in the form of random accusations.
+
+    **Nomination must be a hash of the activity identity, not a sequential
+    RNG.** The first version used a stateful `random.Random`, so the same
+    baseline gave different detection rates (0.108 and 0.129) under "compute
+    witness-set size then replay" versus "replay then compute size" — that is
+    not randomness, it is irreproducibility. Hashing (seed, case, event_id)
+    makes the nomination constant for an activity, independent of call count
+    and call order.
     """
     name: str = W3
     k: int = 1
@@ -166,7 +310,7 @@ class RandomWitnessPolicy(WitnessPolicy):
     def eligible(self, act) -> frozenset[str]:
         base = super().eligible(act)
         if not base:
-            return base            # 无对手方区间对所有规则都一样，不在此制造差异
+            return base            # 无对手方区间对所有规则都一样，不在此制造差异 / the no-counterpart interval is the same for every rule; do not invent a difference here
         k = max(1, min(self.k or len(base), len(self._classes)))
         tag = f"{self.seed}|{act.case}|{act.event_id}|{act.device}|{act.op}"
         rng = random.Random(hashlib.blake2b(tag.encode(),
@@ -190,6 +334,22 @@ class SpatialNeighborPolicy(WitnessPolicy):
     路线无关，故它既会漏掉真正的对手方（该对手方在图上不相邻），也会纳入大量
     与本次交接无关的设备（抬高见证集规模即带宽）。本文规则由**任务图 + 当前
     case** 共同确定，是动态的。
+
+    `W4`: nominate witnesses by material-flow adjacency, the COLAW/Vouch+ principle that "a geographic neighbor witnesses."
+
+    **What is ported is the selection principle, not their full system.** Both
+    implementations depend on ranging / RSSI, which this data does not have;
+    forcing a run would invent a method and then put their name on it (see the
+    end of README section 4). The part that can be ported and checked is the
+    principle itself: a witness is a physically adjacent device. Adjacency here
+    is the BPMN material-flow edge `move_graph`, and `hops` sets the radius.
+
+    The difference from this paper's rule is what is being measured: spatial
+    adjacency is **static** and independent of which process route the current
+    part takes, so it both misses the real counterpart (that counterpart is not
+    adjacent on the graph) and includes many devices unrelated to this handover
+    (which inflates witness-set size, i.e. bandwidth). This paper's rule is
+    fixed jointly by the **task graph and the current case**, and it is dynamic.
     """
     name: str = W4
     hops: int = 1
@@ -240,6 +400,7 @@ class SpatialNeighborPolicy(WitnessPolicy):
 
 
 # ---- 第一档：单观测者检测器 ---------------------------------------------
+# ---- Tier 1: single-observer detectors ---------------------------------
 
 class SingleObserver:
     """第一档基线的共同接口：**只看单观测者可见的字段**。
@@ -250,6 +411,17 @@ class SingleObserver:
       - `calibrate(benign)`：阈值只许由**纯良性流**标定（paper02 规则 30：
         阈值取自含攻击的流会把检出率假性归零）。
       - `accuse(reports)`：返回被指控的声明 id 集合。
+
+    Common interface for tier-1 baselines: **only fields a single observer can see**.
+
+    Unlike tier 2, this tier has no counterpart, so it cannot reuse
+    `corroborate`'s protocol object and has to be its own path. The split
+    between the two methods is a hard requirement:
+
+      - `calibrate(benign)`: thresholds may be set only on a **pure benign
+        stream** (paper02 rule 30: a threshold taken from a stream that
+        contains attacks falsely zeros the detection rate).
+      - `accuse(reports)`: return the set of accused statement ids.
     """
     name = "abstract"
 
@@ -267,9 +439,17 @@ class RandomAccusation(SingleObserver):
     它的作用不是当对手，而是回答"你那 70% 的覆盖率会不会是撞上的"。在告警预算
     相同时，随机指控的期望检出率恰等于告警率本身，故任何**判别力显著大于 0** 的
     方法才算真的在工作。
+
+    `R0`: random accusation at a matched alarm rate. The floor.
+
+    Its job is not to be an opponent. It answers "could your 70% coverage have
+    been a collision." At the same alarm budget, the expected detection rate of
+    a random accusation equals the alarm rate itself, so only a method whose
+    **discriminability is clearly above 0** is actually working.
     """
     name: str = R0
     #: 告警率，默认取本文在良性流上的误报率 69/3062，做等告警预算对照。
+    #: Alarm rate. Default is this paper's benign false-alarm rate 69/3062, for an equal-alarm-budget contrast.
     alarm_rate: float = 69 / 3062
     seed: int = 42
 
@@ -289,9 +469,21 @@ class Watchdog(SingleObserver):
     它对 P2 有效，对 P1/P3/P4 完全无效——一条按时到达、字段正常的伪造声明完全
     满足看门狗。这条与 `detect_diag` 内的同名基线是同一个东西，此处重写只为让
     第一档能在一张表里报齐；两处的数必须一致（断言 H1 对此设了交叉检查）。
+
+    `S1`: the scheduler watchdog. It only looks at "what should have been reported was not."
+
+    Industrial protocols already do this (IEC 61850 GOOSE MaxTime heartbeat and
+    fail-safe); this paper does not claim it. **The window must add the same
+    dispatch-queue allowance as this paper**, or the baseline is handicapped.
+
+    It works on P2 and is completely useless on P1/P3/P4 — a forged statement
+    that arrives on time with ordinary fields fully satisfies the watchdog.
+    This is the same object as the same-named baseline inside `detect_diag`;
+    it is rewritten here so tier 1 can be reported in one table. The two
+    numbers must agree (assertion H1 cross-checks them).
     """
     name: str = S1
-    #: 与 `corroborate.CorroborateConfig` 同口径。
+    #: 与 `corroborate.CorroborateConfig` 同口径。 / Same convention as `corroborate.CorroborateConfig`.
     margin_factor: float = 0.5
     margin_abs_s: float = 5.0
     fallback_s: float = 60.0
@@ -324,9 +516,27 @@ class PlanResidual(SingleObserver):
     失效是**构造性的**：P1 的伪造声明把结果位置为 success，时长取该 (设备, 操作)
     的中位数——恰好落在残差分布的最中央。攻击者不需要猜，因为**模型就写在命令
     里**：调度器已下发"送到某工位"，它只需如实回答这条命令再把结果位翻真。
+
+    `S2`: plan-consistency residual. A generic implementation of the **method
+    class** "a single observer tests residuals against the command ledger",
+    citing the general model-based FDI and CUSUM literature, not any particular implementation.
+
+    Two channels, both visible to a single observer:
+
+      1. **Result bit**: `outcome != success` is an anomaly.
+      2. **Duration residual** $r = (t_{\\text{end}} - t_{\\text{start}}) - \\text{planned}$,
+         grouped by (device, operation), with the threshold at a quantile of $|r|$ on the benign stream.
+
+    The failure is **structural**: a P1 forgery sets the result bit to success
+    and the duration to the median of that (device, operation) — exactly the
+    center of the residual distribution. The attacker does not need to guess,
+    because **the model is written in the command**: the scheduler already
+    issued "deliver to some station", and the attacker only answers that
+    command and flips the result bit.
     """
     name: str = S2
     #: 分位数。默认 0.995 是**为基线争取的最紧阈值**：再紧就要在良性流上误报。
+    #: Quantile. The default 0.995 is the **tightest threshold the baseline is given**: tighter and the benign stream false-alarms.
     quantile: float = 0.995
     _thr: dict = None
     _global: float = 0.0
@@ -387,6 +597,38 @@ class Conformance(SingleObserver):
     两条在良性流上误报均为 0（见 `tools/tier1_diag`）。对 P1/P3 检出亦为 0——
     因为伪造声明是**合法活动的逐字段拷贝**，落在模型语言里，对齐代价为 0。
     这就是构造性不可能：谎言在于物理事件没发生，一致性检验只看日志。
+
+    `S3`: alignment-style conformance (process mining).
+
+    This dataset is itself a process-mining dataset, with 16 BPMN models, and
+    alignment-based conformance is the most standard, most citable, and most
+    likely-to-be-deployed method in this setting, so it is the strongest row in tier 1.
+
+    ## Operationalization: keep only the two rules that actually hurt the attacker
+
+    A naive rule "adjacent activities in a case must satisfy model order and
+    position continuation" false-alarms at 28% on this log. That handicaps the
+    baseline and cannot be used. Three causes, all of which must be avoided:
+
+      1. Several material chains run concurrently inside a case (empty bucket
+         vs. workpiece) and interleave in time, so adjacent activities are
+         often **not** predecessor and successor on the same material flow;
+      2. the reachable closure pulls in optional successors on XOR branches,
+         and a real alignment under Petri-net semantics accepts those interleavings;
+      3. some BPMN service tasks are still `TO_BE_SET`, so the model language itself is incomplete.
+
+    This implementation therefore keeps only two rules that **do not injure
+    the benign stream and are still the most adverse to a forgery**:
+
+      A. `(device class, operation)` is in **no** workflow's task set (a truly illegal activity);
+      B. two activities are physically a handover (delivery position = pickup
+         position) and their order is the strict reverse of the model order.
+
+    Both have zero false alarms on the benign stream (see `tools/tier1_diag`).
+    Detection of P1/P3 is also 0 — the forgery is a **field-by-field copy of a
+    legal activity**, it lies in the model language, and the alignment cost is 0.
+    That is constructive impossibility: the lie is that the physical event did
+    not happen, and conformance only looks at the log.
     """
     name: str = S3
     graph: TaskGraph = None
@@ -439,7 +681,10 @@ def _quantile(xs: list[float], q: float) -> float:
 
 
 def make_tier1(family: str, graph: TaskGraph, **kw) -> SingleObserver:
-    """按族名构造第一档检测器。"""
+    """按族名构造第一档检测器。
+
+    Build a tier-1 detector by family name.
+    """
     if family == R0:
         return RandomAccusation(**kw)
     if family == S1:
@@ -452,7 +697,10 @@ def make_tier1(family: str, graph: TaskGraph, **kw) -> SingleObserver:
 
 
 def make(family: str, graph: TaskGraph, **kw) -> WitnessPolicy:
-    """按族名构造选取规则。`OURS` 返回默认规则，用于同一入口下的对照。"""
+    """按族名构造选取规则。`OURS` 返回默认规则，用于同一入口下的对照。
+
+    Build a selection rule by family name. `OURS` returns the default rule, for a contrast under the same entry point.
+    """
     if family == OURS:
         return WitnessPolicy(graph, name=OURS)
     if family == W1:
@@ -467,16 +715,25 @@ def make(family: str, graph: TaskGraph, **kw) -> WitnessPolicy:
 
 
 def witness_set_sizes(policy: WitnessPolicy, records) -> list[int]:
-    """各活动的见证集规模。带宽与它成正比，故这是 $O(1)$ 主张的直接证据。"""
+    """各活动的见证集规模。带宽与它成正比，故这是 $O(1)$ 主张的直接证据。
+
+    Witness-set size of each activity. Bandwidth is proportional to it, so this is direct evidence for the $O(1)$ claim.
+    """
     return [len(policy.eligible(r.act if hasattr(r, "act") else r))
             for r in records]
 
 
 # ---- 第三档：心跳 / 带宽通道（解析对照，不走回放）----------------------
+# ---- Tier 3: heartbeat / bandwidth channel (closed form, no replay) ----
 
 #: 等带宽对照时，"全量状态上报"的报文大小。取 128 B：足够装设备 id、操作、
 #: 起终点、时长与结果位，与工业状态帧同量级；也与 `silence.pbft_bandwidth_bps`
 #: 的默认 msg_bytes 一致，避免两处对照各用各的数。
+#: Message size of a "full state report" in the equal-bandwidth contrast.
+#: 128 B is enough for device id, operation, endpoints, duration, and the
+#: result bit, the same order as an industrial status frame; it also matches
+#: the default msg_bytes of `silence.pbft_bandwidth_bps`, so the two contrasts
+#: do not each pick their own number.
 FULL_REPORT_BYTES = 128
 
 
@@ -495,6 +752,24 @@ class EqualBandwidthPeriodic:
 
     本条**不比 P1 检出率**：全量上报仍是单观测者可见字段，对任务状态伪造的
     检出与 `S1`/`S2` 同属结构性 0（第一档已证）。它比的是沉默通道上的时延。
+
+    `H1`: equal-bandwidth periodic full reports.
+
+    Given the cheapest accountable-silence configuration `design` (bandwidth
+    $B = n L / T_{hb}$), a periodic full report at the same bandwidth can only have period
+
+        T_period = n * report_bytes / B = (report_bytes / L) * T_hb
+
+    The same verdict of $r$ consecutive misses then has detection latency
+    scaled by `report_bytes / L`. That is not simulation noise; it is a direct
+    corollary of bandwidth conservation — and the reason an equal-bandwidth
+    comparison is clean for the first time: `budget.py` solves $B$ from the
+    safety budget, and that $B$ is substituted here.
+
+    This row **does not compare P1 detection rates**: a full report is still
+    single-observer fields, and detection of task-state falsification is the
+    same structural 0 as `S1`/`S2` (already shown in tier 1). What it compares
+    is latency on the silence channel.
     """
     name: str = H1
     silence: Design = None
@@ -514,7 +789,10 @@ class EqualBandwidthPeriodic:
 
     @property
     def latency_ratio(self) -> float:
-        """相对可问责沉默的检测时延倍率。"""
+        """相对可问责沉默的检测时延倍率。
+
+        Detection-latency ratio relative to accountable silence.
+        """
         return self.detect_delay_s / self.silence.detect_delay_s
 
     @property
@@ -534,6 +812,18 @@ class UnboundGoose:
       - **不能**阻止攻击者替被沉默设备伪造心跳以掩盖 P2。
 
     这是活性 ≠ 归责的结构化对照，不是检出率赛马。
+
+    `H2`: a GOOSE-style heartbeat with no cryptographic binding.
+
+    IEC 61850 GOOSE MaxTime can find "what should have been reported was not"
+    (liveness), but the heartbeat itself has no one-time credential bound to
+    device identity. Anyone can inject or suppress a heartbeat frame, so:
+
+      - silence can be detected (the same ability as a watchdog);
+      - it **cannot** produce transferable attribution evidence;
+      - it **cannot** stop an attacker from forging a heartbeat for a silenced device to cover P2.
+
+    This is a structural contrast of liveness versus attribution, not a detection-rate race.
     """
     name: str = H2
     detects_silence: bool = True
@@ -553,6 +843,18 @@ class TeslaDelayedAuth:
 
     `forge_after_disclosure` 把这条写进可执行的反例：披露后的 MAC 可被第三方
     复现，故归责失败。
+
+    `H3`: TESLA-style delayed-key authentication.
+
+    TESLA / RFC 4082 **explicitly do not provide non-repudiation**: after key
+    $K_i$ is disclosed, anyone can recompute the MAC and forge a "valid"
+    historical packet. Preconditions 1–3 in `crypto.py` are exactly the line
+    drawn against that — this paper treats the chain preimage itself as a
+    one-time credential, and after disclosure a third party can still verify
+    that "only the committer can produce that preimage."
+
+    `forge_after_disclosure` writes this as an executable counterexample: after
+    disclosure the MAC can be reproduced by a third party, so attribution fails.
     """
     name: str = H3
     authenticates: bool = True
@@ -560,7 +862,10 @@ class TeslaDelayedAuth:
 
     def forge_after_disclosure(self, key: bytes, msg: bytes
                                ) -> tuple[bytes, bool]:
-        """密钥披露后，第三方重算 MAC。返回 (伪造标签, 校验是否通过)。"""
+        """密钥披露后，第三方重算 MAC。返回 (伪造标签, 校验是否通过)。
+
+        After key disclosure, a third party recomputes the MAC. Returns (forged tag, whether the check passes).
+        """
         tag = crypto.mac(key, msg)
         return tag, crypto.mac_ok(key, msg, tag)
 
@@ -569,7 +874,10 @@ def equal_bandwidth_periodic(design: Design, *, n_devices: int = 28,
                              report_bytes: int = FULL_REPORT_BYTES,
                              token_bytes: int = crypto.TOKEN_BYTES,
                              skew_s: float = 0.01) -> EqualBandwidthPeriodic:
-    """由可问责沉默的可行配置构造等带宽周期上报对照。"""
+    """由可问责沉默的可行配置构造等带宽周期上报对照。
+
+    Build the equal-bandwidth periodic-report contrast from a feasible accountable-silence configuration.
+    """
     return EqualBandwidthPeriodic(
         silence=design, report_bytes=report_bytes, token_bytes=token_bytes,
         n_devices=n_devices, skew_s=skew_s)
@@ -584,6 +892,7 @@ def tesla_delayed_auth() -> TeslaDelayedAuth:
 
 
 # ---- 第四档：先知天花板 ------------------------------------------------
+# ---- Tier 4: the oracle ceiling ----------------------------------------
 
 @dataclass(frozen=True)
 class SensorOracle:
@@ -592,6 +901,15 @@ class SensorOracle:
     覆盖率可达 1.0（每个交付位置都有与设备无关的传感证据）。本文实测覆盖
     70.05%，差额即覆盖缺口——也是按需主动互证的靶区。先知不提升已覆盖部分的
     检出（本文在已互证区间已是 1.000），它只回答"还差多少"。
+
+    `U1`: an oracle with an independent sensor at every handover.
+
+    Coverage can reach 1.0 (every delivery position has sensor evidence
+    independent of the device). This paper's measured coverage is 70.05%; the
+    difference is the coverage gap — also the target of on-demand active
+    corroboration. The oracle does not raise detection on the already covered
+    part (this paper is already 1.000 on the corroborated interval). It only
+    answers "how much is still missing."
     """
     name: str = U1
     n_activities: int = 0
@@ -616,6 +934,13 @@ def sensor_oracle(records) -> SensorOracle:
 
     先知在每个交付位置都有传感器，故对所有活动都能给出独立证据（含同设备
     接手、无人取件、模型未列）。本文只在存在独立设备对手方时才有证据。
+
+    Build the oracle ceiling from coverage records.
+
+    The oracle has a sensor at every delivery position, so it can give
+    independent evidence for every activity (including same-device handovers,
+    nobody picking up, and positions absent from the model). This paper has
+    evidence only when an independent device counterpart exists.
     """
     n = len(records)
     n_ours = sum(1 for r in records if r.status == coverage.OK)
@@ -623,7 +948,10 @@ def sensor_oracle(records) -> SensorOracle:
 
 
 def silence_vs_periodic(design: Design, **kw) -> dict:
-    """`H1` 的一页纸摘要：等带宽下时延倍率与是否仍落入检测预算。"""
+    """`H1` 的一页纸摘要：等带宽下时延倍率与是否仍落入检测预算。
+
+    One-page summary of `H1`: the latency ratio at equal bandwidth, and whether it still fits the detection budget.
+    """
     h1 = equal_bandwidth_periodic(design, **kw)
     return {
         "silence_T_hb_s": design.t_hb_s,

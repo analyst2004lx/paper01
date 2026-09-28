@@ -11,6 +11,19 @@
   4. 与周期性 PBFT 的量级对照（基线 W1：全体设备法定人数）。
 
 用法(在 paper03/tessera/ 下):  py -m tools.budget_curve
+
+Feasible region of $T_{hb}$, the cheapest-bandwidth configuration, and the bandwidth cost of tolerating bursts.
+
+The theorem chain is reported in four segments, each checkable on its own:
+
+    hazard model -> time budget -> feasible (r, T_hb) -> bandwidth lower bound
+
+  1. Budget split: two hazard models give two budgets. Borrowing an automotive FHI is **too loose** — the travel distance it implies is 256% of the ISO 3691-4 protective field, and the vehicle has already left the envelope.
+  2. The feasible region and the cheapest-bandwidth configuration, and how much slack each of the two constraints still has.
+  3. **Bandwidth cost of burst tolerance**: how much extra it costs to keep the same false-alarm and safety guarantees under clustered loss.
+  4. Order-of-magnitude contrast with periodic PBFT (baseline W1: a quorum of every device).
+
+Usage (from paper03/tessera/):  py -m tools.budget_curve
 """
 from __future__ import annotations
 

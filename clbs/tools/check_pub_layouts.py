@@ -15,6 +15,19 @@
     第 3 行  被拆掉的边,形如 `(8 13) (19 20)`;可缺省
 节点号与坐标的换算为 `to_node(r,c) = (r-1)*rows + c`;六张布局都是方阵,故与本项目
 的 `(r-1)*cols + c` 等价。
+
+Reconcile PUB_LAYOUTS item by item against the toolkit's original `.data` files.
+
+Usage (from the clbs/ directory):
+    py -m tools.check_pub_layouts
+
+Why this script exists. The grid size, LU and machine locations, and removed edges in `algorithm.generator.PUB_LAYOUTS` were transcribed by hand, and "faithful to the public files item by item" is a factual claim in the paper. Hand transcription plus a verbal claim is not evidence, so this program re-reads `database/raw/tjsp_toolset/data/benchmarks/lyu2019/layouts/*.data`, compares the three items field by field with the preset, and also checks the generated instance network (node count, corridor count, and that removed edges are absent from the corridor table).
+
+Original format (see `__read_CFTFJSSP` in the toolkit's `library/model_data.py`):
+    Line 1  `<rows>x<cols>`, a `d` suffix means diagonal moves are allowed
+    Line 2  row-major 1-based grid node ids of [load station, m1..mk, unload station]
+    Line 3  removed edges, like `(8 13) (19 20)`; may be omitted
+Node ids convert to coordinates by `to_node(r,c) = (r-1)*rows + c`. All six layouts are square, so this matches this project's `(r-1)*cols + c`.
 """
 from __future__ import annotations
 
@@ -33,6 +46,9 @@ PUB_INPUT = os.path.join(HERE, "..", "input", "pub")
 
 # 预设键 -> 原始文件相对路径。目录名里的机器台数含两个站点,故 `3machines` 实际是
 # 1 个装货站 + 3 台机器 + 1 个卸货站 = 5 个节点号。
+# Preset key -> relative path of the original file. The machine count in the
+# directory name includes the two stations, so `3machines` is actually
+# 1 load station + 3 machines + 1 unload station = 5 node ids.
 SOURCES = {
     "LyuL1": os.path.join("3machines", "1.data"),
     "LyuL2": os.path.join("4machines", "2.data"),
@@ -88,6 +104,8 @@ def main() -> int:
         if src["diagonal"]:
             diffs.append("原文件允许对角移动,本项目走廊为四邻接")
         # 卸货站必须既不是装卸点也不是机器点(本项目把它退化为普通节点)
+        # The unload station must be neither an LU node nor a machine node
+        # (this project degenerates it to an ordinary node).
         if src["unload"] in [pre["grid_lu_node"]] + list(pre["grid_machine_nodes"]):
             diffs.append(f"卸货站 {src['unload']} 与装卸点/机器点重合")
 
@@ -99,6 +117,8 @@ def main() -> int:
               f"{src['unload']:<4d} {str(src['removed']):16s} {mark}")
 
     # 再核生成的算例:走廊数应为 2*R*C-R-C 减去缺边数,且缺边不在走廊表里
+    # Recheck generated instances: corridor count should be 2*R*C-R-C minus
+    # removed edges, and those edges must be absent from the corridor table.
     print()
     for name in sorted(os.listdir(PUB_INPUT)) if os.path.isdir(PUB_INPUT) else []:
         if not name.endswith(".json"):

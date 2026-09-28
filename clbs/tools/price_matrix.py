@@ -24,6 +24,24 @@ tools/entry_options_ab.py 在单个算例上已证实:改回选项=3 后,同代�
 运行(clbs/ 目录下):
   py -u -m tools.price_matrix --probe          # 只量各算例的争用占比,秒级,先确认梯度
   py -u -m tools.price_matrix [--gens N] [--seeds a,b,c] [--thetas 0.15,0.3]
+
+Multi-instance recheck of price coordination: after the confounded contrast is fixed, what is price guidance worth, and in which parameter region.
+
+Why rerun. GAConfig.theta defaults to 0 because tools/sweep_price.py judged "price-weighted routing systematically harmful". In that sweep the only priced arm was also the only arm with max_entry_options set to 1, and network.feasible_entries with limit<=1 returns only the earliest feasible entry time — price-aware routing then cannot express "wait a bit and enter a cheaper slot", which is why multi-label routing exists. That arm was left with spatial detours only, and its gap from the control confounded "prices on or off" with "can entry times be chosen", so the attribution does not hold. tools/entry_options_ab.py already showed on one instance that restoring options=3 turns the same-generation result from 0.74% worse to 0.46% better (1.20% better versus the truncated arm). This tool extends that conclusion across instances and layouts.
+
+Protocol. **Same generation count** is the primary protocol: price-aware routing costs 2–4× per decode, and under the same wall-clock generations are squeezed out (measured 35 / 18 / 9). That measures compute cost, not guidance quality. To judge whether the mechanism itself works, the throughput gap must be removed first; throughput is a separate line that engineering can address.
+
+The matrix covers three factors, moving one at a time:
+  A layout      high / funnel (dumbbell, fewer exits and lanes), low (grid), scatter (staggered grid)
+  B fleet ratio NA/NM = 0.5 / 1.0 / 2.0
+  C flexibility F = 0.6 / 1.0
+Plus one large high-contention instance — if pricing helps, it should show there.
+
+Also report each instance's contention share, and the rank correlation of "contention share vs pricing gain". The paper does not claim "pricing helps on average"; it claims "pricing helps in the high-contention region", and only the latter is defensible.
+
+Run (from the clbs/ directory):
+  py -u -m tools.price_matrix --probe          # contention share of each instance only, seconds, confirm the gradient first
+  py -u -m tools.price_matrix [--gens N] [--seeds a,b,c] [--thetas 0.15,0.3]
 """
 from __future__ import annotations
 
@@ -47,19 +65,27 @@ from algorithm.validator import validate
 # scatter / 全柔性三格的争用占比恰为 0.0%——那里根本没有走廊让行,定价再准也无处施展,
 # 把它们混进平均值只会把结论稀释成"定价无用"。故按争用从低到高铺开:布局(出口与车道
 # 数)、车数、Tt/Tp 与规模四个旋钮一起用来拉开梯度,并保留两个近零争用格作为下端锚点。
+# The instance set must open a real **contention gradient**, or rank correlation
+# has nothing to correlate. The first smoke test found contention share exactly
+# 0.0% on low / scatter / full-flexibility: no corridor yielding there, so even
+# perfect prices have nowhere to act, and mixing them into the mean dilutes the
+# conclusion into "pricing is useless". Spread from low to high contention using
+# layout (exits and lanes), fleet size, Tt/Tp, and scale together, and keep two
+# near-zero cells as the lower anchor.
 CASES: List[dict] = [
     # 下端锚点:几乎无争用,定价理应无效,用于确认收益不是凭空来的
+    # Lower anchor: almost no contention; pricing should be useless, confirming the gain is not free.
     dict(name="低 low",        tag="low",     jobs=8,  nm=4, na=4,  flex=0.6, tt=3.0),
     dict(name="低 scatter",    tag="scatter", jobs=8,  nm=4, na=4,  flex=0.6, tt=3.0),
-    # 中段:哑铃布局,出口/车道数递减
+    # 中段:哑铃布局,出口/车道数递减 / Mid range: dumbbell layouts, fewer exits and lanes.
     dict(name="中 high",       tag="high",    jobs=8,  nm=4, na=4,  flex=0.6, tt=3.0),
     dict(name="中 funnel",     tag="funnel",  jobs=8,  nm=4, na=4,  flex=0.6, tt=3.0),
-    # 上段:加车、加运输占比、加规模
+    # 上段:加车、加运输占比、加规模 / Upper range: more vehicles, higher transport share, larger scale.
     dict(name="高 funnel A8",  tag="funnel",  jobs=8,  nm=4, na=8,  flex=0.6, tt=3.0),
     dict(name="高 funnel tt4", tag="funnel",  jobs=12, nm=4, na=8,  flex=0.6, tt=4.0),
     dict(name="高 high M8",    tag="high",    jobs=12, nm=8, na=12, flex=0.6, tt=3.0),
     dict(name="高 funnel M8",  tag="funnel",  jobs=12, nm=8, na=12, flex=0.6, tt=4.0),
-    # C 柔性对照:放在有争用的布局上才有意义
+    # C 柔性对照:放在有争用的布局上才有意义 / C flexibility contrast: meaningful only on a layout that has contention.
     dict(name="C 全柔 funnel", tag="funnel",  jobs=8,  nm=4, na=8,  flex=1.0, tt=3.0),
 ]
 
@@ -71,6 +97,10 @@ def contention_share(inst: Instance, net: Network, chrom, dispatch: str) -> floa
     表挑车,rule 派车按理想最短路估算挑车,两者选出的车可能不同,于是"理想"一侧反而可能
     更差,被 max(0,·) 夹成 0。regime_curve 里 GA 本身就跑 rule 派车故无此问题,照抄到
     exact 派车的场景就成了错的——首轮矩阵九格里争用占比全为 0 即由此而来。
+
+    Share of the makespan gap between conflict-free routing and the ideal shortest path on the same chromosome.
+
+    Both decodes must use the **same dispatch rule**, or the gap mixes in a change of dispatch decision: exact dispatch picks a vehicle from the reservation table, rule dispatch picks from the ideal shortest-path estimate, and the chosen vehicles may differ, so the "ideal" side can be worse and max(0, ·) clamps the share to 0. In regime_curve the GA itself runs rule dispatch, so there is no problem; copying that into an exact-dispatch setting is wrong — the first matrix's nine cells all showing 0 contention came from this.
     """
     real = decode(inst, net, chrom["ma"], chrom["os"],
                   conflict_free=True, dispatch=dispatch)
@@ -87,6 +117,10 @@ def instance_contention(inst: Instance, net: Network, dispatch: str,
 
     不用"优化后的最优解"来衡量,因为那量的是解而不是算例——优化器本就会绕开拥堵走廊,
     收敛解上的争用趋近于零,反而抹掉了算例之间的差别。
+
+    Instance-level contention: mean contention share on the initial random population.
+
+    Do not measure it on the optimized best solution: that measures the solution, not the instance. The optimizer avoids congested corridors, contention on a converged solution tends to zero, and the differences between instances disappear.
     """
     import random
     rng = random.Random(seed)
@@ -109,7 +143,10 @@ def build(case: dict):
 
 
 def probe() -> int:
-    """只量各算例的争用强度,秒级确认梯度是否张开。"""
+    """只量各算例的争用强度,秒级确认梯度是否张开。
+
+    Measure only each instance's contention, and confirm in seconds whether the gradient is open.
+    """
     print("算例层面的争用强度 = 初始随机种群(20 个)上争用占比的均值,派车 exact\n")
     print(f"{'算例':<16s} {'布局':>9s} {'NA/NM':>7s} {'柔性':>6s} {'Tt/Tp':>7s} {'争用强度':>9s}")
     print("-" * 62)
@@ -139,6 +176,7 @@ def main() -> int:
     print(f"档位:{', '.join(a for a, _ in arms)}\n")
 
     # (档位, 算例, 种子) -> makespan;按 (算例,种子) 配对
+    # (arm, instance, seed) -> makespan; pair by (instance, seed).
     vals: Dict[str, Dict[str, List[float]]] = {a: {} for a, _ in arms}
     cont: Dict[str, float] = {}
     t0 = time.time()

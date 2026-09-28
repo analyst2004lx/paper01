@@ -18,6 +18,20 @@ I 的残余成因已定位:29 次缺失事件、17 次跨 case 乱序、1 次生
 **领域知识用量核算**(回应"你手工塞了多少先验"):自动导出 23 个位置、
 31 条物料流边、16 组设备内操作对;手工指定的只有下面 6 条规则,每条都是
 关于产线的一句陈述,不含可调参数。
+
+M2 feasibility mask F and interlock invariants I, exported automatically from the reference process model.
+
+Validated on Trier's 16 Camunda BPMN models: each serviceTask's http-connector url is a complete command, of the form
+    /vgr/pick_up_and_transport?resource=vgr_1&start=dm_2_sink_pos&end=ov_1_pos
+so the **quadruple of device, operation, start, and end is written directly in the model**. Extraction yields 15 resources, 23 positions, 31 material-flow edges, and 16 within-device operation pairs.
+
+Measured violation rates (cleaned edition, 282 cases, 3,062 activities, failures excluded):
+    F  0.00%  (953/953)   -> may be a hard constraint
+    I  1.70%  (47/2768)   -> soft evidence only
+
+The residual causes of I are located: 29 missing events, 17 cross-case order violations, 1 producer failure. The order violations come from positions being physical places shared across cases while the token model is per case. If the line has RFID/NFC workpiece identity (Trier's `use_nfc` parameter shows it is really available), I can be raised to a hard constraint.
+
+**Accounting of domain knowledge** (answering "how much prior did you insert by hand"): 23 positions, 31 material-flow edges, and 16 within-device operation pairs are exported automatically. Only the 6 rules below are specified by hand, each one sentence about the line, with no tunable parameter.
 """
 from __future__ import annotations
 
@@ -35,6 +49,8 @@ WORKPIECE, BUCKET = "wp", "bk"
 
 # 手工规则 1-4:仓库操作的令牌语义(消耗, 产出)。工件与料桶是两种令牌,
 # 用单一令牌类型会把二者混为一谈(v1 的 14.87% 违反率主因之一)。
+# Manual rules 1-4: token semantics of warehouse operations (consume, produce).
+# Workpiece and bucket are two token types; one type conflates them (a main cause of the 14.87% violation rate in v1).
 HBW_TOKEN_EFFECTS: dict[str, tuple[list[str], list[str]]] = {
     "/hbw/unload":             ([], [WORKPIECE, BUCKET]),
     "/hbw/get_empty_bucket":   ([], [BUCKET]),
@@ -43,13 +59,19 @@ HBW_TOKEN_EFFECTS: dict[str, tuple[list[str], list[str]]] = {
 }
 # 手工规则 5:分拣机抽象输出位置的别名类。sm_N_automatic_pos 物理上解析为
 # sm_N_sink_{1,2,3}_pos,由运行时检测到的颜色决定(eventBasedGateway 分支)。
+# Manual rule 5: alias class of the sorter's abstract output position. sm_N_automatic_pos
+# physically resolves to sm_N_sink_{1,2,3}_pos, chosen by the color detected at runtime (eventBasedGateway branch).
 SORTER_POS = re.compile(r"(sm_\d+)_(automatic|sink_\d+)(_dropoff)?_pos$")
 # 手工规则 6:同一设备连续重复同一操作视为重试,不算新转移(见 allows)。
+# Manual rule 6: repeating the same operation on one device is a retry, not a new transition (see allows).
 
 
 @dataclass
 class ProcessModel:
-    """从 BPMN 导出的结构知识。"""
+    """从 BPMN 导出的结构知识。
+
+    Structural knowledge exported from BPMN.
+    """
     positions: set[str] = field(default_factory=set)
     move_graph: set[tuple[str, str]] = field(default_factory=set)
     feasible: dict[str, set[tuple[str, str]]] = field(default_factory=dict)
@@ -57,6 +79,7 @@ class ProcessModel:
     resources: set[str] = field(default_factory=set)
     operations: set[str] = field(default_factory=set)
     #: 设备 -> 该设备在任一模型里承担过的操作集合(F 的**一元**部分)
+    #: device -> operations that device performs in any model (the unary part of F)
     capable: dict[str, set[str]] = field(default_factory=dict)
     n_models: int = 0
 
@@ -69,6 +92,10 @@ class ProcessModel:
 
         **只在同一 case 内同设备有前驱时才可查**,实测覆盖率仅 31%
         (3,062 个活动 -> 953 次检查)。跨 case 取前驱会误报 48.6%,不可行。
+
+        Binary part of F. op_from == op_to is a retry (manual rule 6) and is always allowed.
+
+        **Queryable only when the same device has a predecessor inside the same case.** Measured coverage is only 31% (3,062 activities -> 953 checks). Taking the predecessor across cases false-alarms at 48.6% and is not usable.
         """
         if op_from == op_to:
             return True
@@ -89,6 +116,12 @@ class ProcessModel:
 
         未在任何模型中出现过的设备类按"未知"放过,与副产品一的口径一致:
         参考模型覆盖率不是 100%,未建模行为不算违反。
+
+        **Unary** part of F: whether this device is allowed to perform this operation at all.
+
+        No predecessor is required, so it **covers 100% of messages** and fills the 31% coverage gap of the binary part. Injections of the form "the wrong device performs the right operation" can only be caught here — the case-level structural channel's state is the operation name and is therefore device-blind; replacing the state with (device, operation) turns unseen pairs into out-of-vocabulary states and **abstains**, and calibration fails (see tools/struct_diag.py). The capability set is merged by **device class** (instance suffix removed), not by instance: the 16 BPMN models instantiate only one sorter, so an instance-level capability set would falsely flag sm_2's 44 `/sm/sort` events (1.44%), and merging by class brings that to zero. This is the same rule as the existing sorter alias class, and it holds physically — devices of the same type perform the same operations. The cost is losing the distinction "sm_2 did something only sm_1 should do", but the reference model does not contain that information.
+
+        A device class that appears in no model is passed as "unknown", consistent with byproduct 1: reference-model coverage is not 100%, and unmodeled behavior is not a violation.
         """
         allowed = self.capable.get(device_class(device))
         return True if not allowed else op in allowed
@@ -99,6 +132,10 @@ class ProcessModel:
 
         三种形态:带起终点的搬运消耗起点产出终点;仓库操作按手工规则 1-4;
         其余原地加工在设备规范位置上消耗并产出(占位,表达"工件必须在此")。
+
+        An activity's token consume/produce pairs [(token type, position), ...].
+
+        Three shapes: a move with start and end consumes the start and produces the end; warehouse operations follow manual rules 1-4; other in-place processing consumes and produces at the device's canonical position (a placeholder meaning "the workpiece must be here").
         """
         if act.start_pos and act.end_pos:
             return ([(WORKPIECE, act.start_pos)], [(WORKPIECE, act.end_pos)])
@@ -109,18 +146,27 @@ class ProcessModel:
         return ([(WORKPIECE, pos)], [(WORKPIECE, pos)])
 
     def resolve(self, pos: str) -> frozenset[str]:
-        """位置的别名类,含自身。"""
+        """位置的别名类,含自身。
+
+        Alias class of a position, including itself.
+        """
         return self.alias.get(pos) or frozenset({pos})
 
 
 def device_class(device: str) -> str:
-    """设备类 = 去掉实例后缀,如 sm_2 -> sm、vgr_1 -> vgr。"""
+    """设备类 = 去掉实例后缀,如 sm_2 -> sm、vgr_1 -> vgr。
+
+    Device class = drop the instance suffix, e.g. sm_2 -> sm, vgr_1 -> vgr.
+    """
     head, sep, tail = device.rpartition("_")
     return head if sep and tail.isdigit() else device
 
 
 def canonical_position(device: str) -> str:
-    """无 start/end 参数的操作作用于设备的规范位置 `<device>_pos`。"""
+    """无 start/end 参数的操作作用于设备的规范位置 `<device>_pos`。
+
+    An operation with no start/end parameter acts at the device's canonical position `<device>_pos`.
+    """
     return f"{device}_pos"
 
 
@@ -149,6 +195,10 @@ def _reachable_tasks(node, succ, acts):
 
     取直接后继会漏掉被其他设备任务隔开的同设备操作对——这是 F 违反率
     从 14.73% 降到 0.00% 的主因之一。
+
+    serviceTasks inside the **transitive reachable closure** on the sequence flow.
+
+    Taking only the direct successor misses same-device operation pairs separated by another device's task — one of the main reasons the F violation rate fell from 14.73% to 0.00%.
     """
     seen, stack, out = set(), [node], set()
     while stack:
@@ -168,6 +218,10 @@ def build_alias(positions) -> dict[str, frozenset[str]]:
 
     别名闭包必须**同时包含日志里出现的位置**,否则模型中未出现的
     sm_2_automatic_pos 会被误判为违反(v2 -> v3 的修正)。
+
+    Implementation of manual rule 5: group sorter alias classes by the naming convention.
+
+    The alias closure must **also contain positions that appear in the log**. Otherwise sm_2_automatic_pos, which is absent from the model, is falsely flagged as a violation (the v2 -> v3 fix).
     """
     groups = defaultdict(set)
     for p in positions:
@@ -179,7 +233,10 @@ def build_alias(positions) -> dict[str, frozenset[str]]:
 
 def load_bpmn(pattern: str, *, log_positions: set[str] | None = None
               ) -> ProcessModel:
-    """解析全部 BPMN。`log_positions` 用于把日志中出现的位置并入别名闭包。"""
+    """解析全部 BPMN。`log_positions` 用于把日志中出现的位置并入别名闭包。
+
+    Parse every BPMN. `log_positions` merges positions that appear in the log into the alias closure.
+    """
     files = sorted(glob.glob(pattern))
     if not files:
         raise FileNotFoundError(f"没有匹配的 BPMN: {pattern}")
@@ -225,6 +282,10 @@ def coverage(model: ProcessModel, activities) -> tuple[float, dict]:
 
     Trier 上实测 97.4%——未建模的移动(如 sm_2_automatic_pos,在任何 BPMN
     中都不存在)必须按"未知"处理,不能记为违反。返回 (覆盖率, 未建模计数)。
+
+    Coverage of observed material moves by the reference model.
+
+    Measured 97.4% on Trier — unmodeled moves (such as sm_2_automatic_pos, which exists in no BPMN) must be treated as "unknown" and must not be counted as violations. Returns (coverage, unmodeled counts).
     """
     checked = 0
     gaps: dict[tuple[str, str], int] = defaultdict(int)

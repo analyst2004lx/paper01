@@ -17,6 +17,21 @@
 t_produce 在 end 位置产出令牌,并按时间戳顺序回放。同时消耗产出会把并发
 活动误判为乱序(v3 -> v4 的修正,I 违反率由 1.42% 的口径问题变为可解释的
 1.70% 全量口径)。
+
+M5 interlock channel: timed Petri-net token consistency plus command-response causal checks.
+
+Two layers, split by the measured violation rate:
+
+Hard-constraint layer (zero violations on normal data; may alarm immediately):
+  - F violation: a device-operation transition is outside the reference model's reachable closure (953 checks, 0 violations)
+  - missing cause: a state report has no preceding `assigned` command event
+  "Response delay shorter than a physical lower bound" does **not** belong to the hard-constraint layer — dispatch-stage duration is dominated by scheduler queue contention (p95 reaches 253.6 s, sigma_log=1.475) and cannot be a duration test. The command-response channel checks only existence and order.
+
+Soft layer (turned into a p-value and passed to M6 fusion):
+  - material-flow token invariants, with a measured residual 1.70% benign violation rate
+  - conservation quantities such as task-count deviation
+
+Token firing is **timed**: consume the token at the start position at t_consume, produce a token at the end position at t_produce, and replay in timestamp order. Consuming and producing at the same instant mislabels concurrent activities as out of order (the v3 -> v4 fix; the I violation rate goes from a 1.42% reporting artifact to an interpretable 1.70% full-log figure).
 """
 from __future__ import annotations
 
@@ -35,16 +50,24 @@ class Violation:
     device: str
     op: str
     reason: str          # 人类可读,如"机械臂声称在生产,但无 AGV 投料记录"
+    # human-readable, e.g. "the arm claims to be producing, but no AGV feed is recorded"
     cause: str | None = None   # token 违反的成因:LATE / NEVER / FAILED
+    # cause of a token violation: LATE / NEVER / FAILED
 
 
 @dataclass
 class TokenState:
-    """(令牌类型, 位置) -> 计数。位置是跨 case 共享的物理地点。"""
+    """(令牌类型, 位置) -> 计数。位置是跨 case 共享的物理地点。
+
+    (token type, position) -> count. A position is a physical place shared across cases.
+    """
     tokens: Counter = field(default_factory=Counter)
 
     def take(self, ttype: str, pos: str, model) -> bool:
-        """消耗一枚令牌,考虑分拣机别名类。"""
+        """消耗一枚令牌,考虑分拣机别名类。
+
+        Consume one token, taking sorter alias classes into account.
+        """
         if self.tokens[(ttype, pos)] > 0:
             self.tokens[(ttype, pos)] -= 1
             return True
@@ -59,7 +82,10 @@ class TokenState:
 
 
 def _timeline(acts):
-    """(时刻, 消耗/产出, 稳定序, 活动) 的时间序回放序列。"""
+    """(时刻, 消耗/产出, 稳定序, 活动) 的时间序回放序列。
+
+    Temporal replay sequence of (time, consume/produce, stable order, activity).
+    """
     ev = []
     for a in acts:
         t0, t1 = a.t_consume, a.t_produce
@@ -75,6 +101,10 @@ def check_case(acts, model, *, all_acts=None):
     """回放一个 case,返回 (违反列表, 计数器)。
 
     `all_acts` 含 failure 活动,仅用于诊断残余成因(区分 FAILED 与 NEVER)。
+
+    Replay one case and return (violation list, counters).
+
+    `all_acts` includes failure activities, used only to diagnose residual causes (FAILED versus NEVER).
     """
     viols: list[Violation] = []
     cnt = Counter()
@@ -82,6 +112,7 @@ def check_case(acts, model, *, all_acts=None):
         return viols, cnt
 
     # 该 case 有能力产出的令牌及其时刻,用于把残余违反归因
+    # tokens this case can produce, and when, used to attribute residual violations
     produced_later = defaultdict(list)
     for a in acts:
         for tp in model.token_effects(a)[1]:
@@ -104,6 +135,7 @@ def check_case(acts, model, *, all_acts=None):
         cnt["activities"] += 1
 
         # --- 硬层 1:可行性掩码 F(同一 case 内的同设备连续操作)---
+        # hard-constraint layer 1: feasibility mask F (consecutive ops of one device within one case)
         d = a.device
         if d in last_op:
             cnt["F_checked"] += 1
@@ -115,14 +147,14 @@ def check_case(acts, model, *, all_acts=None):
                     f"不在参考模型的可达闭包内"))
         last_op[d] = a.op
 
-        # --- 硬层 2:命令-响应因果配对 ---
+        # --- 硬层 2:命令-响应因果配对 --- / hard-constraint layer 2: command-response causal pairing
         if a.t_cmd is None:
             cnt["causal_viol"] += 1
             viols.append(Violation(
                 "causal", True, a.case, d, a.op,
                 f"设备 {d} 上报 {a.op},但调度器没有下发过对应命令"))
 
-        # --- 软层:物料流令牌前置条件 ---
+        # --- 软层:物料流令牌前置条件 --- / soft layer: material-flow token preconditions
         for ttype, pos in cons:
             cnt["I_checked"] += 1
             if state.take(ttype, pos, model):
@@ -154,6 +186,10 @@ def check_all(acts_by_case: dict, model, *, all_by_case: dict | None = None,
 
     `scope='case'` 是逐 case 令牌账（原口径）；`scope='global'` 走跨 case
     全局令牌池 + 守恒，见 check_global 的说明。
+
+    Replay every case and return (violation list, aggregated counters).
+
+    `scope='case'` is the per-case token ledger (the original reporting rule); `scope='global'` uses a cross-case global token pool plus conservation. See check_global.
     """
     if scope == "global":
         return check_global(acts_by_case, model)
@@ -183,6 +219,12 @@ def check_global(acts_by_case: dict, model):
     成立——攻击者伪造一次消耗,只有在池子恰好非空时才蒙得过去。这个宽松
     代价是要实测的,不能假定它划算:q 变小会解开 min(1, alpha/q) 的功效
     天花板(结论三十),但同时也放走了一部分真攻击。
+
+    Cross-case global token pool plus conservation. This is the answer to "how to approximate workpiece identity without NFC".
+
+    Conclusion 8 attributes the 17 LATE residuals of the per-case ledger to this: **a position is a physical place shared across cases, while the token model is per case** — a concurrent case may have produced a token at the same position earlier, the per-case ledger cannot see it, and a legal consume is labeled out of order. Replaying every case's events in time order on a global pool removes that class.
+
+    A global pool is obviously **looser** than a per-case ledger, so conservation has to hold it: each production may be consumed at most once (the Counter decrement), and "no consume without a production" and "no double spend" still hold — an attacker who forges a consume gets away with it only when the pool happens to be non-empty. That looseness must be measured; do not assume it pays. A smaller q lifts the power ceiling min(1, alpha/q) (conclusion 30), but it also lets some real attacks through.
     """
     viols: list[Violation] = []
     cnt = Counter()
@@ -238,7 +280,10 @@ def check_global(acts_by_case: dict, model):
 
 
 def summary(cnt: Counter) -> dict:
-    """把计数器折算成论文里报告的比率。"""
+    """把计数器折算成论文里报告的比率。
+
+    Turn the counters into the rates reported in the paper.
+    """
     def rate(v, c):
         return cnt[v] / cnt[c] if cnt[c] else 0.0
     return {

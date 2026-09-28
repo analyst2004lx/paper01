@@ -11,6 +11,14 @@ theta 扫描给出的事实是:同代数下 theta 从 0.05 到 0.50(十倍量程
 
 做法:固定同一条染色体,分别在 theta=0 与若干 theta>0 下解码,比较每个运输任务
 的路径是否真的变了、以及付出的价格总额相对行驶时间有多大。
+
+Why pricing is insensitive to theta: measure how many paths it actually changes.
+
+The theta sweep shows that, at a fixed generation count, theta from 0.05 to 0.50 (a tenfold range) gives identical results, while each evaluation costs about 5× theta=0. That rules out explanations such as "pricing steers vehicles onto bad paths" — if that were true, the same-generation runs would also worsen, and worsen with theta. This script tests another explanation:
+
+  The price table is so sparse that almost every candidate path has price 0. The scalar key t + theta*g then degenerates to t, multi-label search still returns the earliest-arrival path, and a larger theta has nowhere to act; the multi-label bookkeeping cost is charged whether or not any price is nonzero.
+
+Method: fix one chromosome, decode it at theta=0 and at several theta>0, and compare whether each transport task's path actually changed and how large the total price is relative to travel time.
 """
 from __future__ import annotations
 
@@ -36,7 +44,10 @@ DEFAULT = "S8x4x4-LD21-H0.3-F0.6-A4-s42"
 
 
 def sig(res):
-    """每个运输任务的路径签名:(任务, 走廊序列)。"""
+    """每个运输任务的路径签名:(任务, 走廊序列)。
+
+    Path signature of each transport task: (task, corridor sequence).
+    """
     out = {}
     for tr in res.transports:
         out[(tr.job, tr.i)] = (
@@ -73,6 +84,7 @@ def main() -> int:
     bw = default_bucket_width(inst)
 
     # 拿一个有代表性的 incumbent:价格表必须来自像样的解,否则测的是随机解的拥堵
+    # Take a representative incumbent: the price table must come from a decent solution, or the test measures congestion of a random solution.
     cfg = GAConfig(pop=60, max_gen=args.warm_gen, stall_gen=10 ** 9, seed=42)
     warm = run_ga(inst, net, cfg, conflict_free=True, use_ls=True)
     chrom, base_res = warm["best_chrom"], warm["best_result"]

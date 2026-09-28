@@ -1,6 +1,8 @@
 ========================================================================
 P17-A  tab:e1 / fig:e1e3(左):逐算例 10 种子的离散度
+P17-A  tab:e1 / fig:e1e3 (left): dispersion of 10 seeds per instance
         源 expanded/e1_miss.csv
+        source expanded/e1_miss.csv
 ========================================================================
 
   example_3x3x2         
@@ -34,17 +36,23 @@ P17-A  tab:e1 / fig:e1e3(左):逐算例 10 种子的离散度
      |Seeds|  n=10  min=13.0  Q1=14.0  med=15.0  Q3=15.8  max=18.0  IQR=1.8  mean=15.0
 
   全部 50 对合池 Cl/|R|: n=50  min=0.5000  Q1=0.5567  med=0.5714  Q3=0.5939  max=0.6552  IQR=0.0372  mean=0.5760
+  All 50 pairs pooled Cl/|R|: n=50  min=0.5000  Q1=0.5567  med=0.5714  Q3=0.5939  max=0.6552  IQR=0.0372  mean=0.5760
 
   >>> 逐算例 IQR 的最大值 = 0.0493
+  >>> maximum of the per-instance IQRs = 0.0493
   >>> 逐算例 IQR 的最小值 = 0.0239
+  >>> minimum of the per-instance IQRs = 0.0239
 
 ========================================================================
 P17-B  fig:scale:phi 扫描逐档离散度   源 expanded/scale_compare.csv
+P17-B  fig:scale: per-level dispersion of the phi sweep   source expanded/scale_compare.csv
 ========================================================================
   列名: instance, seed, phi, n_affected_ops, n_future_ops, n_closure, strc_feasible, strc_makespan, strc_wall_ms, strc_scope_rounds, r0_feasible, r0_makespan, r0_wall_ms, speedup, ref_makespan
+  Column names: instance, seed, phi, n_affected_ops, n_future_ops, n_closure, strc_feasible, strc_makespan, strc_wall_ms, strc_scope_rounds, r0_feasible, r0_makespan, r0_wall_ms, speedup, ref_makespan
 
   phi=0.10  (n=10)
      strc_feasible  10/10 可行
+     strc_feasible  10/10 feasible
      strc_wall_ms   n=10  min=2.16  Q1=3.10  med=11.36  Q3=13.42  max=15.95  IQR=10.32  mean=9.08
      strc_makespan  n=10  min=169.0  Q1=185.2  med=190.0  Q3=200.8  max=212.0  IQR=15.5  mean=190.9
      r0_makespan    n=10  min=93.0  Q1=97.0  med=101.5  Q3=105.0  max=121.0  IQR=8.0  mean=103.5
@@ -54,6 +62,7 @@ P17-B  fig:scale:phi 扫描逐档离散度   源 expanded/scale_compare.csv
 
   phi=0.25  (n=10)
      strc_feasible  10/10 可行
+     strc_feasible  10/10 feasible
      strc_wall_ms   n=10  min=2.95  Q1=3.86  med=12.44  Q3=17.07  max=19.53  IQR=13.21  mean=11.06
      strc_makespan  n=10  min=175.0  Q1=189.2  med=202.0  Q3=208.8  max=214.0  IQR=19.5  mean=199.3
      r0_makespan    n=10  min=97.0  Q1=101.0  med=105.0  Q3=113.8  max=121.0  IQR=12.8  mean=107.0
@@ -63,6 +72,7 @@ P17-B  fig:scale:phi 扫描逐档离散度   源 expanded/scale_compare.csv
 
   phi=0.50  (n=10)
      strc_feasible  10/10 可行
+     strc_feasible  10/10 feasible
      strc_wall_ms   n=10  min=4.89  Q1=5.30  med=5.57  Q3=6.01  max=23.79  IQR=0.71  mean=8.61
      strc_makespan  n=10  min=199.0  Q1=209.5  med=214.5  Q3=218.0  max=226.0  IQR=8.5  mean=213.4
      r0_makespan    n=10  min=99.0  Q1=106.5  med=111.5  Q3=114.8  max=134.0  IQR=8.2  mean=111.8
@@ -72,6 +82,7 @@ P17-B  fig:scale:phi 扫描逐档离散度   源 expanded/scale_compare.csv
 
   phi=0.75  (n=10)
      strc_feasible  10/10 可行
+     strc_feasible  10/10 feasible
      strc_wall_ms   n=10  min=6.82  Q1=8.16  med=8.48  Q3=8.66  max=9.99  IQR=0.49  mean=8.37
      strc_makespan  n=10  min=205.0  Q1=230.8  med=248.0  Q3=251.5  max=256.0  IQR=20.8  mean=240.3
      r0_makespan    n=10  min=104.0  Q1=109.8  med=123.0  Q3=133.0  max=164.0  IQR=23.2  mean=125.8
@@ -81,6 +92,7 @@ P17-B  fig:scale:phi 扫描逐档离散度   源 expanded/scale_compare.csv
 
   phi=1.00  (n=10)
      strc_feasible  10/10 可行
+     strc_feasible  10/10 feasible
      strc_wall_ms   n=10  min=8.46  Q1=10.00  med=11.26  Q3=11.47  max=11.83  IQR=1.47  mean=10.70
      strc_makespan  n=10  min=245.0  Q1=270.0  med=282.0  Q3=291.5  max=298.0  IQR=21.5  mean=278.0
      r0_makespan    n=10  min=103.0  Q1=108.8  med=146.5  Q3=184.2  max=201.0  IQR=75.5  mean=148.1
@@ -89,79 +101,134 @@ P17-B  fig:scale:phi 扫描逐档离散度   源 expanded/scale_compare.csv
      n_closure      n=10  min=46.0  Q1=50.0  med=51.5  Q3=54.0  max=55.0  IQR=4.0  mean=51.5
 
   --- 跨档汇总(便于写图注) ---
+  --- Cross-level summary (for writing the caption) ---
      strc_wall_ms   逐档 IQR 在 0.5--13.2 之间;全扫描极差 2.2--23.8
+     strc_wall_ms   per-level IQR lies in 0.5--13.2; full-sweep range 2.2--23.8
      r0_makespan    逐档 IQR 在 8.0--75.5 之间;全扫描极差 93.0--201.0
+     r0_makespan    per-level IQR lies in 8.0--75.5; full-sweep range 93.0--201.0
      speedup        逐档 IQR 在 25--515 之间;全扫描极差 87--963
+     speedup        per-level IQR lies in 25--515; full-sweep range 87--963
 
 ========================================================================
 NEW-05  E5 两批合并:单调性 + 逐格胜负
+NEW-05  E5 two batches merged: monotonicity + per-cell win/loss
         源 expanded/e5_cross_curve.csv(自建布局)
+        source expanded/e5_cross_curve.csv (self-built layouts)
             pub_layouts/e5_cross_curve.csv(外部布局)
+            pub_layouts/e5_cross_curve.csv (external layouts)
 ========================================================================
 
 --- 自建 expanded  (18 行) ---
+--- self-built expanded  (18 rows) ---
   congested_8x4x4  seed=2024   buds=0.2,1,2
       R0+ Cmax = 281, 275, 273   单调不增=True
+      R0+ Cmax = 281, 275, 273   monotonically nonincreasing=True
       R2  Cmax = 299, 299, 299   随预算恒定=True
+      R2  Cmax = 299, 299, 299   constant in the budget=True
       逐点 R0+胜/持平/负 = 3/0/0
+      Per point, R0+ win/tie/loss = 3/0/0
   congested_8x4x4  seed=42     buds=0.2,1,2
       R0+ Cmax = 288, 283, 283   单调不增=True
+      R0+ Cmax = 288, 283, 283   monotonically nonincreasing=True
       R2  Cmax = 298, 298, 298   随预算恒定=True
+      R2  Cmax = 298, 298, 298   constant in the budget=True
       逐点 R0+胜/持平/负 = 3/0/0
+      Per point, R0+ win/tie/loss = 3/0/0
   congested_8x4x4  seed=7      buds=0.2,1,2
       R0+ Cmax = 295, 284, 284   单调不增=True
+      R0+ Cmax = 295, 284, 284   monotonically nonincreasing=True
       R2  Cmax = 300, 300, 300   随预算恒定=True
+      R2  Cmax = 300, 300, 300   constant in the budget=True
       逐点 R0+胜/持平/负 = 3/0/0
+      Per point, R0+ win/tie/loss = 3/0/0
   example_3x3x2    seed=2024   buds=0.2,1,2
       R0+ Cmax = 84, 84, 84   单调不增=True
+      R0+ Cmax = 84, 84, 84   monotonically nonincreasing=True
       R2  Cmax = 98, 98, 98   随预算恒定=True
+      R2  Cmax = 98, 98, 98   constant in the budget=True
       逐点 R0+胜/持平/负 = 3/0/0
+      Per point, R0+ win/tie/loss = 3/0/0
   example_3x3x2    seed=42     buds=0.2,1,2
       R0+ Cmax = 83, 83, 83   单调不增=True
+      R0+ Cmax = 83, 83, 83   monotonically nonincreasing=True
       R2  Cmax = 86, 86, 86   随预算恒定=True
+      R2  Cmax = 86, 86, 86   constant in the budget=True
       逐点 R0+胜/持平/负 = 3/0/0
+      Per point, R0+ win/tie/loss = 3/0/0
   example_3x3x2    seed=7      buds=0.2,1,2
       R0+ Cmax = 68, 68, 68   单调不增=True
+      R0+ Cmax = 68, 68, 68   monotonically nonincreasing=True
       R2  Cmax = 82, 82, 82   随预算恒定=True
+      R2  Cmax = 82, 82, 82   constant in the budget=True
       逐点 R0+胜/持平/负 = 3/0/0
+      Per point, R0+ win/tie/loss = 3/0/0
 
 --- 外部 pub_layouts  (18 行) ---
+--- external pub_layouts  (18 rows) ---
   LyuL2_4m         seed=2024   buds=0.2,1,2
       R0+ Cmax = 133, 124, 124   单调不增=True
+      R0+ Cmax = 133, 124, 124   monotonically nonincreasing=True
       R2  Cmax = 143, 143, 143   随预算恒定=True
+      R2  Cmax = 143, 143, 143   constant in the budget=True
       逐点 R0+胜/持平/负 = 3/0/0
+      Per point, R0+ win/tie/loss = 3/0/0
   LyuL2_4m         seed=42     buds=0.2,1,2
       R0+ Cmax = 134, 134, 126   单调不增=True
+      R0+ Cmax = 134, 134, 126   monotonically nonincreasing=True
       R2  Cmax = 156, 156, 156   随预算恒定=True
+      R2  Cmax = 156, 156, 156   constant in the budget=True
       逐点 R0+胜/持平/负 = 3/0/0
+      Per point, R0+ win/tie/loss = 3/0/0
   LyuL2_4m         seed=7      buds=0.2,1,2
       R0+ Cmax = 133, 128, 127   单调不增=True
+      R0+ Cmax = 133, 128, 127   monotonically nonincreasing=True
       R2  Cmax = 167.45, 167.45, 167.45   随预算恒定=True
+      R2  Cmax = 167.45, 167.45, 167.45   constant in the budget=True
       逐点 R0+胜/持平/负 = 3/0/0
+      Per point, R0+ win/tie/loss = 3/0/0
   LyuL6_8m         seed=2024   buds=0.2,1,2
       R0+ Cmax = 147, 137, 135   单调不增=True
+      R0+ Cmax = 147, 137, 135   monotonically nonincreasing=True
       R2  Cmax = 147, 147, 147   随预算恒定=True
+      R2  Cmax = 147, 147, 147   constant in the budget=True
       逐点 R0+胜/持平/负 = 2/1/0
+      Per point, R0+ win/tie/loss = 2/1/0
   LyuL6_8m         seed=42     buds=0.2,1,2
       R0+ Cmax = 134, 134, 129   单调不增=True
+      R0+ Cmax = 134, 134, 129   monotonically nonincreasing=True
       R2  Cmax = 142, 142, 142   随预算恒定=True
+      R2  Cmax = 142, 142, 142   constant in the budget=True
       逐点 R0+胜/持平/负 = 3/0/0
+      Per point, R0+ win/tie/loss = 3/0/0
   LyuL6_8m         seed=7      buds=0.2,1,2
       R0+ Cmax = 152, 140, 121   单调不增=True
+      R0+ Cmax = 152, 140, 121   monotonically nonincreasing=True
       R2  Cmax = 158, 158, 158   随预算恒定=True
+      R2  Cmax = 158, 158, 158   constant in the budget=True
       逐点 R0+胜/持平/负 = 3/0/0
+      Per point, R0+ win/tie/loss = 3/0/0
 
 ========================================================================
 合并结论
+Merged conclusion
 ========================================================================
   算例数              = 4  (LyuL2_4m, LyuL6_8m, congested_8x4x4, example_3x3x2)
+  Number of instances              = 4  (LyuL2_4m, LyuL6_8m, congested_8x4x4, example_3x3x2)
   独立算例--种子格     = 12
+  Independent instance--seed cells     = 12
   预算点总数          = 36
+  Total budget points          = 36
   逐点 R0+ 胜/持平/负 = 35/1/0
+  Per point, R0+ win/tie/loss = 35/1/0
 
   R0+ Cmax 随预算单调不增: 12/12 格成立
+  R0+ Cmax is monotonically nonincreasing in the budget: holds on 12/12 cells
   R2  Cmax 随预算恒定    : 12/12 格成立
+  R2  Cmax is constant in the budget    : holds on 12/12 cells
   最小预算点上 R0+ 胜/持平/负: 11/1/0
+  At the smallest budget point, R0+ win/tie/loss: 11/1/0
 
   => 若 R2 随预算恒定且 R0+ 随预算单调不增,则在 R0+ 于最小预算已不劣的格上,
+  => If R2 is constant in the budget and R0+ is monotonically nonincreasing in the budget, then on cells where R0+ is already no worse at the smallest budget,
      「预算放宽后 R2 反超」在预算维上不可能发生(非统计判断,是构造性判断)。
+     "R2 overtakes after the budget is widened" cannot happen along the budget axis (not a statistical judgment; it is constructive).

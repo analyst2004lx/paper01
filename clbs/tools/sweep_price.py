@@ -2,6 +2,11 @@
 
 用途:回答"价格化层间接口是否真的带来增益,以及增益来自哪一部分"。
 运行(clbs/ 目录下):  py -m tools.sweep_price [算例路径]
+
+Diagnostic sweep of price coordination: theta × entry-time options × price estimator.
+
+Purpose: answer whether a priced interlayer interface really brings a gain, and which part the gain comes from.
+Run (from the clbs/ directory):  py -m tools.sweep_price [instance path]
 """
 from __future__ import annotations
 
@@ -35,6 +40,10 @@ def main() -> int:
     # 机制分解:先在 theta=0(不用价格)下逐一开关与价格无关的两个机制;
     # 派车试探显著更慢,故对开环派车档额外给出**同算力预算**的复核档(A'、B'),
     # 否则"闭环派车更好"这一结论无法排除"只是多花了算力"这个平凡解释。
+    # Mechanism breakdown: at theta=0 (no prices), toggle the two mechanisms that
+    # do not depend on price. Dispatch probing is much slower, so the open-loop
+    # dispatch arms also get a **same-compute** check (A', B'); otherwise
+    # "closed-loop dispatch is better" cannot rule out "it simply spent more compute".
     configs = [
         ("A 规则派车+无错峰", dict(theta=0.0, use_conflict_ops=False, dispatch="rule")),
         ("B A+错峰算子", dict(theta=0.0, use_conflict_ops=True, dispatch="rule")),
@@ -53,6 +62,15 @@ def main() -> int:
         # 的理由。于是 E 只剩空间绕行,定价机制的时间维自由度被关掉了。
         # E' 只把这一处改回默认的 3,其余与 E 全同,故两者之差可归因给进入时刻选择;
         # E' 与 D 之差才是"开价格"的干净效应。
+        # E was the only priced arm and also the only arm with max_entry_options=1,
+        # so its gap from A–D confounds "prices on or off" with "can entry times
+        # be chosen". Per the note on network.feasible_entries, limit<=1 returns
+        # only the earliest feasible time, so price-aware routing can no longer
+        # say "wait a bit and enter a cheaper slot" — the reason multi-label
+        # routing exists. E is left with spatial detours only; the time dimension
+        # of pricing is switched off. E' changes only that setting back to the
+        # default 3, so E'−E is attributable to entry-time choice, and E'−D is
+        # the clean effect of turning prices on.
         ("E' E 但进入时刻选项=3", dict(theta=0.15, use_conflict_ops=True,
                                       dispatch="exact", max_entry_options=3)),
     ]

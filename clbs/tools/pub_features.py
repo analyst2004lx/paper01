@@ -14,6 +14,17 @@
 工序上的均值,`|Ω|=1` 的工序按 **0** 计入。若改成"跳过单机工序"再取均值,公开算例的 H 中位
 会从 0.135 抬到 0.148——因为被跳过的恰是贡献 0 的那些行。抬高的这一版与生成器不同口径,
 不能拿去和自建算例比,故本脚本不提供那个选项。
+
+Measured factors of the public instances: numbers for the paper's §5.1.1 claim about where our settings sit among public instances.
+
+Usage (from the clbs/ directory):
+
+    py -m tools.pub_features            # print per-instance F / H / mean Tt/Tp and quantiles
+    py -m tools.pub_features --csv      # also write experiments_database/pub_features.csv
+
+Why a separate entry point. H and F on self-built instances are **knobs** we set; the same-named quantities on public instances are **measurements**. The only defensible way to compare them is one function — this script calls `algorithm.instance.feature_params`, the same call `algorithm/generator.py` uses when it writes `_features`, so the two columns can be compared directly rather than computed separately and declared "the same definition" in prose.
+
+The easiest definition error: H in `feature_params` is the mean, over **all** operations, of the population coefficient of variation of processing times inside each operation's |Ω|; operations with `|Ω|=1` count as **0**. Skipping single-machine operations before averaging would lift the public-instance H median from 0.135 to 0.148 — the skipped rows are exactly those that contribute 0. That inflated version does not match the generator and cannot be compared with self-built instances, so this script does not offer that option.
 """
 from __future__ import annotations
 
@@ -43,6 +54,10 @@ def collect(key: str) -> List[Dict[str, object]]:
 
     只取 `-ideal` 那一档:争用档(`-excl`)是我们加了排他约束之后的**派生**算例,其
     F/H 与原文一致但已不是文献发布的那一个,拿它当"公开算例的实测值"会名不副实。
+
+    Read the degenerate-arm instances under database/json/<key>/ and measure features one by one.
+
+    Keep only the `-ideal` arm: the contention arm (`-excl`) is a **derived** instance after we added the exclusion constraint. Its F/H matches the source, but it is not the instance the literature published, so treating it as "the measured value of the public instance" would be misnamed.
     """
     rows: List[Dict[str, object]] = []
     pat = os.path.join(DB, "json", key, "*-ideal.json")
@@ -100,6 +115,8 @@ def main(argv: List[str] = None) -> int:
 
     # 论文 §5.1.1 直接引用的三条对照。阈值写在这里而不是正文里,是为了换数据后
     # 这几句话会跟着变,不必靠人记得回去改。
+    # The three comparisons cited directly by paper §5.1.1. Thresholds live here
+    # rather than in the text so these sentences change with the data.
     hs = [float(r["heterogeneity"]) for r in rows]
     n_ge = sum(1 for h in hs if h >= 0.3)
     print("\n-- 与自建算例取值的对照 --")

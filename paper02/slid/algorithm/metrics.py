@@ -11,6 +11,16 @@
 
 误报口径统一为**每设备每小时误报数**,便于与工业可接受水平对齐;同时
 给出 ARL0 以支撑序贯层的理论对照。
+
+Evaluation metrics.
+
+Three hard reporting rules (each forced by measurement):
+
+1. Detection rate must be reported **under a given detection-delay budget**. A per-message detection rate badly understates the method (at rho=0.15, 19.9% versus 86.8%).
+2. Every nominal alpha must also report the **effective calibration-set size**. Otherwise a zero false-alarm rate at alpha=0.001 cannot separate "the method is good" from "the sample is too small to produce so small a p-value".
+3. rho* must be reported **per device and per operation**, not as a line-wide mean only: the measured span is 1.6% to 98.6%, and a mean hides both the best and the worst cases. Line-wide safety is set by the worst group.
+
+The false-alarm unit is **false alarms per device per hour**, so it lines up with industrially acceptable levels; ARL0 is also reported for the sequential layer's theoretical check.
 """
 from __future__ import annotations
 
@@ -20,6 +30,7 @@ from dataclasses import dataclass
 @dataclass
 class Report:
     dr_by_delay: dict[int, float]        # 延迟预算(消息数) -> 检出率
+    # delay budget (message count) -> detection rate
     fpr: float
     fp_per_device_hour: float
     arl0: float
@@ -41,6 +52,11 @@ def evaluate(alarms, labels, cfg=None, *, stream=None,
     检出判定按**延迟预算**:第 i 条被篡改消息,若在第 i..i+budget 条消息
     区间内出现任一告警即算检出——这与"逐消息二分类"不同,也是规定 1
     要求的口径。
+
+    Fold the alarm stream and the ground-truth labels into one report.
+
+    `alarms` is the output of Detector.replay; `labels` lines up with `stream`.
+    Detection uses a **delay budget**: tampered message i counts as detected if any alarm falls in messages i..i+budget. That is not per-message binary classification, and it is the reporting rule required by rule 1.
     """
     labels = list(labels)
     n = len(labels)
@@ -119,7 +135,10 @@ def _span_hours(stream):
 
 
 def bound_check(measured: dict, predicted: dict) -> dict:
-    """理论界与实测的对照。全 rho 区间平均绝对偏差应在 0.03 量级。"""
+    """理论界与实测的对照。全 rho 区间平均绝对偏差应在 0.03 量级。
+
+    Comparison of the theoretical bound with the measurement. Mean absolute deviation over the whole rho range should be on the order of 0.03.
+    """
     keys = sorted(set(measured) & set(predicted))
     diffs = {k: measured[k] - predicted[k] for k in keys}
     mad = sum(abs(v) for v in diffs.values()) / len(diffs) if diffs else 0.0

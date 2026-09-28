@@ -10,6 +10,16 @@
      换算成具体的安全代价。
 
 用法(在 paper03/tessera/ 下):  py -m tools.collusion_diag
+
+Collusion bound: measured distribution, model-level lower bound, and the upper bound on the gain of safety-aware task assignment.
+
+Four things:
+  1. The distribution and the **minimum** of the measured collusion bound — a safety claim may cite only the minimum and the low quantile.
+  2. Model-level lower bound: walk the same closure by device class on the corroboration hypergraph. It is a property of the process model, does not change with scheduling, and can be a design-time metric.
+  3. How common device reuse is on a chain, and how much of it the scheduler **can actually swap** (the device class has more than one instance in the log). That decides whether supplement 1 is an operable design or a paper claim.
+  4. How many hops a same-device handover (`SELF_ONLY`) extends the chain for free — the 7.45% coverage gap converted into a concrete safety cost.
+
+Usage (from paper03/tessera/):  py -m tools.collusion_diag
 """
 from __future__ import annotations
 

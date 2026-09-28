@@ -3,6 +3,12 @@
 用法:
     py -m tools.e2_containment
     py -m tools.e2_containment --instance ../clbs/input/congested_8x4x4.json
+
+E2 containment: E2a structural spot check, plus E2b that outside fields stay unchanged after repair.
+
+Usage:
+    py -m tools.e2_containment
+    py -m tools.e2_containment --instance ../clbs/input/congested_8x4x4.json
 """
 from __future__ import annotations
 

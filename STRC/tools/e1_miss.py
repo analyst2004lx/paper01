@@ -9,6 +9,18 @@
     py -m tools.e1_miss
     py -m tools.e1_miss --instance ../clbs/input/congested_8x4x4.json --seed 7
     py -m tools.e1_miss --auto-corridor   # 忽略 JSON 里的 corridor,改选最忙走廊
+
+E1 gate: under corridor blockage, task-graph missed detection versus a nonempty reservation closure.
+
+Pass conditions (one instance):
+  1) |T_direct| = 0 and |T_impact| = 0
+  2) |seeds| > 0 and |closure| >= |seeds|
+  3) the original schedule is infeasible under the blockage (some reservation still falls in the blockage window)
+
+Usage (from STRC/):
+    py -m tools.e1_miss
+    py -m tools.e1_miss --instance ../clbs/input/congested_8x4x4.json --seed 7
+    py -m tools.e1_miss --auto-corridor   # ignore the corridor in the JSON and pick the busiest corridor
 """
 from __future__ import annotations
 
@@ -76,7 +88,7 @@ def main() -> int:
         save_schedule_bundle(args.save_schedule, bundle)
 
     dist = load_disturbance(args.disturbance)
-    # 对齐 t_now 到排程尺度
+    # 对齐 t_now 到排程尺度 / Align t_now to the schedule's time scale
     t_now = dist.t_now
     if t_now <= 0 or t_now >= result.makespan:
         t_now = args.t_now_frac * result.makespan

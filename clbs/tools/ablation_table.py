@@ -14,6 +14,19 @@
   nostagger           精确       开         关         关
   closed              精确       开         开         关
   priced              精确       开         开         开
+
+Ablation table for the paper: each mechanism is attributed by a pair of arms that differ in that one factor only.
+
+Most pairwise differences among the seven arms change two or more factors at once, and a raw subtraction can even get the sign wrong (exact dispatch is an example: the confounded contrast gives +0.83%/p=0.046; after deconfounding it is -0.93%/p=0.046). This script lists only attributable pairs and cross-checks the independent estimates of the same mechanism in different contexts — the conclusion for that item is stable only when the two estimates agree.
+
+Factor breakdown of the arms (all under the same wall-clock budget, all with conflict-free routing and true makespan fitness):
+                     dispatch   local search   stagger op.   price routing
+  opendispatch_nols   rule       off            -             off
+  opendispatch        rule       on             on            off
+  nofeedback          exact      off            -             off
+  nostagger           exact      on             off           off
+  closed              exact      on             on            off
+  priced              exact      on             on            on
 """
 from __future__ import annotations
 
@@ -31,6 +44,8 @@ from algorithm.stats import stars, wilcoxon_signed_rank  # noqa: E402
 
 # (机制, 上下文, 关掉该机制的档, 开着该机制的档)
 # 正数 = 开着该机制更好,即该机制在同挂钟下挣回了自己的成本
+# (mechanism, context, arm with the mechanism off, arm with it on)
+# Positive = the mechanism-on arm is better, i.e. it earned back its cost under the same wall-clock.
 CONTRASTS = [
     ("真实目标(无冲突路由进评估回路)", "廉价派车", "twostage", "opendispatch_nols"),
     ("真实目标(无冲突路由进评估回路)", "精确派车", "twostage", "nofeedback"),

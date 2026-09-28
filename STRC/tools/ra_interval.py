@@ -7,6 +7,15 @@
 
 用法：py -m tools.ra_interval      （在 STRC/ 目录内）
       py STRC/tools/ra_interval.py
+
+R2 vs RA change ratio: interval estimates and dispersion of the paired difference (standard library only).
+
+Use the existing experiments/cheap_baselines.csv; do not rerun the experiment.
+This matches \\RAStabMean / \\RAStabMed / \\RAStabWTL in §6.9 of the paper,
+and adds the bootstrap confidence interval, the Hodges--Lehmann estimate, and the IQR needed for decision D.
+
+Usage: py -m tools.ra_interval      (from inside STRC/)
+       py STRC/tools/ra_interval.py
 """
 from __future__ import print_function
 
@@ -22,7 +31,10 @@ SEED = 20260917
 
 
 def quantile(sorted_xs, q):
-    """线性插值分位数（与 numpy 默认 linear 一致）。"""
+    """线性插值分位数（与 numpy 默认 linear 一致）。
+
+Linearly interpolated quantile (same as numpy's default linear).
+"""
     if not sorted_xs:
         raise ValueError("empty")
     if len(sorted_xs) == 1:
@@ -44,7 +56,10 @@ def iqr(xs):
 
 
 def hodges_lehmann(xs):
-    """配对差的 Walsh 平均之中位数。"""
+    """配对差的 Walsh 平均之中位数。
+
+Median of the Walsh averages of the paired differences.
+"""
     walsh = []
     n = len(xs)
     for i in range(n):
@@ -80,7 +95,7 @@ def main():
         x, y = float(a["res_frac"]), float(b["res_frac"])
         r2s.append(x)
         ras.append(y)
-        diffs.append(y - x)          # RA - R2 = R2 少改写的幅度
+        diffs.append(y - x)          # RA - R2 = R2 少改写的幅度 / RA - R2 = how much less R2 rewrites
 
     n = len(diffs)
     win = sum(1 for d in diffs if d > 0)
@@ -93,6 +108,7 @@ def main():
     ci_mean = boot_ci(diffs, lambda s: sum(s) / len(s))
     ci_med = boot_ci(diffs, median)
     # HL 是与 Wilcoxon 配套的点估计，只给点值不给区间等于半份报告
+# HL is the point estimate that pairs with Wilcoxon; a point without an interval is only half a report
     ci_hl = boot_ci(diffs, hodges_lehmann)
 
     i_r2, q1_r2, q3_r2 = iqr(r2s)

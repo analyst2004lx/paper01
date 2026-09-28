@@ -17,6 +17,20 @@
   2. 提速:统计每次解码的路由调用数与耗时。
 
 运行(clbs/ 目录下):  py -u -m tools.dispatch_speedup [--n 30]
+
+Cost reduction of dispatch probing: equivalence check plus speedup measurement.
+
+Background. At a fixed generation count, dispatch probing is about 3% better than rule dispatch (output/matrix/gen100: congestion +3.39%, funnel +2.42%, one cell p=0.0246), but each evaluation costs 4.6× (15.9 vs 3.5 ms), so under the same wall-clock that 3% is eaten by compute (output/matrix/p3: -0.12%, 40 wins 39 losses, p=0.53). Of the three contributions only this one has a real decision gain, so cutting its cost is the way to realize the gain.
+
+Two changes (both in decoder.dispatch_exact):
+  Pruning   Conflict-free routing can only be later because of yielding; it is never faster than the ideal shortest path, so the ideal estimate is an **admissible lower bound** on the actual arrival. A vehicle whose bound cannot beat the incumbent cannot win on the true value either, so it need not be probed. The original keeps the first strictly better vehicle in id order; a pruned vehicle could not have been optimal, so the output matches bit for bit.
+  Reuse     The winner's two path segments were already computed during probing under the same reservation-table state, then recomputed after rollback. The cache writes them straight into the table.
+
+This tool does two things:
+  1. Equivalence: compare makespan and the dispatch sequence, instance by instance and chromosome by chromosome, against a reference with pruning and reuse off. They must match exactly — this change is provably equivalent, and any mismatch means the reasoning has a hole.
+  2. Speedup: count routing calls and time per decode.
+
+Run (from the clbs/ directory):  py -u -m tools.dispatch_speedup [--n 30]
 """
 from __future__ import annotations
 
@@ -58,7 +72,10 @@ def dispatch_exact_naive(router: Router, net: Network,
                          loc: Dict[int, str], avail: Dict[int, float],
                          pickup: str, dest: str, ready: float
                          ) -> Tuple[int, Optional[Tuple[RoutePlan, RoutePlan]]]:
-    """参考实现:无剪枝、不复用(即改造前的行为)。返回 plans=None 以强制重算。"""
+    """参考实现:无剪枝、不复用(即改造前的行为)。返回 plans=None 以强制重算。
+
+    Reference: no pruning and no reuse (behavior before the change). Returns plans=None to force recomputation.
+    """
     best_k, best_est = None, float("inf")
     for k in sorted(loc.keys()):
         token = router.table.checkpoint()
@@ -86,7 +103,10 @@ def build(case: dict):
 
 
 def run(inst: Instance, net: Network, pop, use_fast: bool):
-    """返回 (makespan 列表, 派车序列列表, 路由调用数, 耗时秒)。"""
+    """返回 (makespan 列表, 派车序列列表, 路由调用数, 耗时秒)。
+
+    Return (makespan list, dispatch-sequence list, routing-call count, seconds).
+    """
     global _calls
     fast = D.dispatch_exact
     if not use_fast:

@@ -17,6 +17,16 @@ R0+(热启动种群搜索,预算 0.2--2 s)。从"什么都不做"直接跳到"�
 
 代价在解质量与稳定性:完工时间恰好增加 Δ,而全部未来预约的时刻都变了
 (按本文的偏差口径,改动比例接近未来预约的全部)。
+
+A cheap admissible comparison arm: global right-shift (RS).
+
+Why it is needed. The comparison ladder previously had only three rungs: R1 (empty release set, i.e. do nothing), R2 (closure repair), and R0+ (warm-start population search, budget 0.2--2 s). Jumping from "do nothing" straight to "search for two seconds" left out a rung of cheap global recomputation. Right-shift rescheduling is the standard rung in this literature (see dalcastagne2020reactive: fast response, but no explicit boundary). Without measuring it, part of the "two to three orders of magnitude lower" reading comes from comparing against population search rather than against a cheap method.
+
+Mechanism. Take one uniform delay Δ and push everything not yet finished back by Δ, keeping the finished part unchanged: paths, vehicle assignment, machine assignment, and scan order all stay the same; only future events are translated. Δ is the smallest value that places every movable leg on the blocked corridor after the blockage window ends.
+
+Why this construction is feasible. The frozen set uses the same test as R2 (`t_end <= t_now` is immovable), so under assumption A2 it is admissible. Translation preserves every gap: the gap between two shifted events is unchanged; the gap between one frozen event and one shifted event can only grow. Every constraint (operation precedence, machine non-overlap, corridor non-overlap) is of the "≥" type, and a larger gap does not violate it. A feasible solution is therefore obtained without rerouting.
+
+The cost is solution quality and stability: makespan increases by exactly Δ, and the times of all future reservations change (under this paper's deviation definition, the change ratio is close to all future reservations).
 """
 from __future__ import annotations
 
@@ -46,6 +56,10 @@ def _shift_delta(bundle: ScheduleBundle, dist: Disturbance) -> float:
 
     只看受阻走廊:别的走廊上的腿本来就不冲突,用它们抬高 Δ 只会白白拉长完工时间,
     对这条基线不公平。
+
+    The smallest uniform delay that places every movable leg on the blocked corridor after the blockage window.
+
+    Look only at the blocked corridor: legs on other corridors are not in conflict, and raising Δ because of them would only lengthen the makespan for free, which is unfair to this baseline.
     """
     from algorithm.block_context import block_windows_from_dist
     delta = 0.0
@@ -81,7 +95,10 @@ def repair_by_right_shift(
     dist: Disturbance,
     **_kwargs,
 ) -> RepairResult:
-    """RS 臂:统一右移全部未完成事件,不改路径、不改指派、不改序。"""
+    """RS 臂:统一右移全部未完成事件,不改路径、不改指派、不改序。
+
+    RS arm: right-shift every unfinished event by one delay, without changing paths, assignments, or sequence.
+    """
     t_wall0 = time.perf_counter()
     base = bundle.result
     t_now = dist.t_now
@@ -100,6 +117,7 @@ def repair_by_right_shift(
     ops: Dict[Tuple[int, int], OpRecord] = {}
     for key, rec in base.ops.items():
         # 判「可动」用 start 而不是 finish:已开工的工序不中断,只是它之后的排程被推后。
+        # "Movable" is judged by start, not finish: an operation already started is not interrupted; only the schedule after it is pushed back.
         moved = rec.start > t_now + EPS
         arrive = arrive_of.get(key)
         if arrive is None:

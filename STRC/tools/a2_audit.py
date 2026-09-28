@@ -8,6 +8,16 @@ e5_cross_curve 只报计数;这里把逐条 before/after 打出来,用于判断�
     py -m tools.a2_audit
     py -m tools.a2_audit --instance ../clbs/input/example_3x3x2.json --seeds 7
     py -m tools.a2_audit --baseline-mode ga --seeds 42,7,2024
+
+Independent audit of assumption A2: which reservations that had already finished before t_now were rewritten after repair.
+
+A2 says a finished occupation is not revised, so for bounded repair such as R1/R2 this list must be empty.
+e5_cross_curve reports only a count; here each before/after row is printed, to tell whether a nonzero count is a real out-of-bound rewrite or a problem in the audit convention itself (for example, keys merge when the same task crosses the same corridor twice).
+
+Usage:
+    py -m tools.a2_audit
+    py -m tools.a2_audit --instance ../clbs/input/example_3x3x2.json --seeds 7
+    py -m tools.a2_audit --baseline-mode ga --seeds 42,7,2024
 """
 from __future__ import annotations
 
@@ -66,7 +76,7 @@ def main() -> int:
 
         before = [r for r in bundle.reservations if r.t_end <= t_now + EPS]
         after = reservations_from_result(rep.result)
-        # 先看键是否唯一;不唯一则计数本身不可信
+        # 先看键是否唯一;不唯一则计数本身不可信 / First check whether keys are unique; if not, the count itself is not trustworthy
         kb = Counter((r.corridor, r.agv, r.task) for r in before)
         dup = {k: n for k, n in kb.items() if n > 1}
         aft = {}

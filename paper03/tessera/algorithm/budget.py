@@ -40,6 +40,62 @@ Trier 日志没有 AGV、没有通信层（`../database/README.md` 第三节）�
     本文的主威胁是任务状态伪造，其危害是调度损害而非碰撞，故距离换算仅作
     **量纲示意**，用来说明同一个 $T_{\\text{detect}}$ 在运动场景下值多少米，
     不作为本文的安全论断。把它当主结论会被审稿人一眼看穿。
+
+Bandwidth–safety margin: feed $r\\,T_{\\text{hb}}$ into the functional-safety time budget.
+
+## Attach accountable silence only, not coupled corroboration
+
+Measurements in `corroborate.py` force a limit that must be respected: a
+task-completion verdict has **only a conditional latency bound**. The
+corroboration window must absorb the scheduler's own dispatch queue (this log
+measures p95 218.3 s, max 1476.4 s), and the queue itself has no upper bound,
+so $T_{\\text{detect}}(\\text{path 1})$ cannot be substituted into the FHI
+budget unconditionally.
+
+Accountable silence is different: it judges the device's **state statement**,
+not task completion, and is fully decoupled from the dispatch queue.
+$T_{\\text{detect}} = r\\,T_{\\text{hb}} + \\text{skew}$ is an **unconditional**
+upper bound. This module's theorem takes only that as input. The original
+`../paper03-NewIdea.md` let both paths supply a latency bound; that mixed
+dimensions and has been corrected.
+
+## Budget split
+
+ISO 26262 splits the fault-handling time budget into detection and reaction:
+
+    FTTI  >=  FHI  =  T_detect + T_react
+
+FTTI (fault tolerant time interval) is the time from fault to hazard. FHI
+(fault handling interval) is the window left for detection plus reaction. So
+
+    r * T_hb + skew  <=  FHI - T_react                         (safety)
+    n * q(p, r, rho) * 3600 / T_hb  <=  false-alarm budget     (availability)
+    B = n * L / T_hb                                            (bandwidth)
+
+The two constraints pull in opposite directions, which is what makes this a
+real optimization: a larger $T_{\\text{hb}}$ saves bandwidth and also reduces
+verdict opportunities per hour, which allows a smaller $r$, but
+$r\\,T_{\\text{hb}}$ hits the safety budget. The cheapest configuration always
+lies on **the boundary of one of the constraints**. Which boundary binds is
+what this module answers — it decides whether the paper should say "bandwidth
+is limited by the safety constraint" or "by packet loss."
+
+## What this dataset cannot support, and must say so
+
+The Trier log has no AGV and no communication layer (`../database/README.md`,
+section 3), so:
+
+  - FHI and $T_{\\text{react}}$ can only be cited example values with a source,
+    not claimed as measurements;
+  - loss rate and burst correlation are simulation parameters, not measurements
+    of this line;
+  - the distance conversion (ISO 13855's $S = K T + C$) is meaningful only when
+    the hazard is a **motion collision**. This paper's main threat is
+    task-state falsification, whose harm is scheduling damage rather than a
+    collision, so the conversion is only a **dimensional illustration** of how
+    many metres the same $T_{\\text{detect}}$ is worth in a motion setting. It
+    is not this paper's safety claim. Treating it as the main conclusion would
+    be obvious to a reviewer.
 """
 from __future__ import annotations
 
@@ -47,7 +103,7 @@ from dataclasses import dataclass
 
 from .silence import SilenceConfig, far_per_hour, min_misses
 
-#: 约束名，用于报告"哪条边界起作用"。
+#: 约束名，用于报告"哪条边界起作用"。 / Constraint names, for reporting which boundary binds.
 SAFETY = "safety"
 AVAILABILITY = "availability"
 BOTH = "both"
@@ -61,15 +117,27 @@ class SafetyBudget:
     默认取 DLR 在 ASE 2023 给出的自动驾驶算例 FHI <= 2.43 s，反应段取
     ISO 3691-4:2023 防护场算例里的制动器响应 0.15 s 加 0.10 s 的调度侧动作
     （撤销可用性、冻结派单）。换场景必须换数并注明来源。
+
+    Functional-safety time budget. Every value is a **citation**, not a measurement on this data.
+
+    The default is the automated-driving example FHI <= 2.43 s from DLR, ASE
+    2023. The reaction segment takes the 0.15 s brake response from the ISO
+    3691-4:2023 protective-field example plus 0.10 s of scheduler-side action
+    (revoke availability, freeze dispatch). A different setting must use
+    different numbers and cite them.
     """
     fhi_s: float = 2.43
     t_react_s: float = 0.25
     #: 数据来源标注。写进论文表格时逐项引用，不允许出现无来源的数。
+    #: Source label. Cite each item in the paper table; a number without a source is not allowed.
     source: str = "FHI: DLR ASE 2023 算例; T_react: ISO 3691-4:2023 算例"
 
     @property
     def detect_budget_s(self) -> float:
-        """留给检测的时间。$r\\,T_{hb}+\\text{skew}$ 必须落在这个数以内。"""
+        """留给检测的时间。$r\\,T_{hb}+\\text{skew}$ 必须落在这个数以内。
+
+        Time left for detection. $r\\,T_{hb}+\\text{skew}$ must fall inside this number.
+        """
         return self.fhi_s - self.t_react_s
 
     def admits(self, cfg: SilenceConfig) -> bool:
@@ -89,6 +157,20 @@ class SafetyBudget:
         正确做法是让危害模型定预算：$\\text{FHI} = \\text{field} / v$，于是
         1.275 m / 1.5 m/s = 0.85 s，留给检测 0.60 s。论文的定理链条由此完整：
         危害模型 -> 时间预算 -> $(r, T_{hb})$ 可行区间 -> 带宽下界。四段都可核对。
+
+        Invert a budget from a **motion hazard**: detection plus reaction must finish before the envelope is left.
+
+        This one was forced by measurement. An automotive FHI of 2.43 s leaves
+        2.18 s for detection, and a 1.5 m/s AGV travels 3.26 m in that time —
+        **256%** of the ISO 3691-4 example protective field (1.275 m). The
+        vehicle is already outside the safety envelope. A **generic FHI is too
+        loose for a factory AGV and cannot be borrowed directly**.
+
+        The right move is to let the hazard model set the budget:
+        $\\text{FHI} = \\text{field} / v$, so 1.275 m / 1.5 m/s = 0.85 s, leaving
+        0.60 s for detection. The theorem chain is then complete: hazard model
+        -> time budget -> feasible $(r, T_{hb})$ -> bandwidth lower bound.
+        All four segments can be checked.
         """
         return cls(fhi_s=field_mm / v_mm_s, t_react_s=t_react_s,
                    source=(f"由 ISO 3691-4 防护场 {field_mm:.0f} mm 与速度 "
@@ -97,7 +179,10 @@ class SafetyBudget:
 
 @dataclass(frozen=True)
 class Design:
-    """一个可行配置。带宽只含心跳，不含交接确认。"""
+    """一个可行配置。带宽只含心跳，不含交接确认。
+
+    One feasible configuration. Bandwidth includes heartbeats only, not handover acknowledgements.
+    """
     t_hb_s: float
     r_misses: int
     detect_delay_s: float
@@ -124,6 +209,12 @@ def feasible(budget: SafetyBudget, *, p_loss: float, n_devices: int,
 
     $r$ 取该 $T_{\\text{hb}}$ 下满足误报预算的**最小值**：$r$ 再大只增时延不减
     带宽（断言 C9），故最优解一定在最小可行 $r$ 上。
+
+    Enumerate $(T_{hb}, r)$ that meet both the safety budget and the false-alarm budget, sorted by bandwidth.
+
+    $r$ is the **minimum** that meets the false-alarm budget at that
+    $T_{\\text{hb}}$: a larger $r$ only adds latency and does not cut bandwidth
+    (assertion C9), so the optimum is always at the smallest feasible $r$.
     """
     out: list[Design] = []
     for i in range(grid):
@@ -147,6 +238,10 @@ def feasible(budget: SafetyBudget, *, p_loss: float, n_devices: int,
 def cheapest(budget: SafetyBudget, **kw) -> Design | None:
     """最省带宽的可行配置。无可行解返回 None——那说明预算给不出方案，
     是有意义的结论（须调 FHI、换网络或降设备数），不该靠放宽误报预算掩盖。
+
+    Cheapest feasible configuration. None means the budget admits no design —
+    a meaningful conclusion (change the FHI, the network, or the device count),
+    not something to hide by loosening the false-alarm budget.
     """
     xs = feasible(budget, **kw)
     return xs[0] if xs else None
@@ -158,6 +253,13 @@ def slack(d: Design, budget: SafetyBudget, far_target_per_hour: float) -> dict:
     只报分类标签不够：实测最优解常常**两条边界都几乎顶满**（突发口径下安全余量
     1.1%、误报余量 3.3%），说明两条约束在最优点处近乎同时起作用。把它说成
     "只受安全约束限制"会失掉一半信息。
+
+    How much slack the optimum has on each constraint, reported as a relative value.
+
+    A class label is not enough: the measured optimum often **nearly saturates
+    both boundaries** (under the burst convention, 1.1% safety slack and 3.3%
+    false-alarm slack), so both constraints act at once at the optimum. Saying
+    "limited only by the safety constraint" drops half the information.
     """
     return {
         "safety_slack": ((budget.detect_budget_s - d.detect_delay_s)
@@ -176,6 +278,14 @@ def binding_constraint(d: Design, budget: SafetyBudget, *, p_loss: float,
     这决定论文的论断方向：顶在安全边界说明"带宽受安全约束限制"，顶在误报边界
     说明"受丢包限制"。两句话的工程含义完全不同，不能含糊其辞；两者同时顶满时
     必须说"同时"，那才是最优点的真实结构。
+
+    Which boundary the optimum sits on.
+
+    This sets the paper's claim: the safety boundary means "bandwidth is
+    limited by the safety constraint"; the false-alarm boundary means "limited
+    by packet loss." The two sentences mean different things in engineering and
+    must not be blurred; when both are saturated the paper must say "both",
+    because that is the real structure of the optimum.
     """
     s = slack(d, budget, far_target_per_hour)
     at_safety = s["safety_slack"] <= tol
@@ -197,6 +307,14 @@ def burst_premium(budget: SafetyBudget, *, p_loss: float, n_devices: int,
     独立丢包口径下所需的 $r$ 较小，$T_{\\text{hb}}$ 可以放得更大、带宽更省；
     突发口径要求更大的 $r$，同一个安全预算就把 $T_{\\text{hb}}$ 压小，带宽随之
     上升。比值即"为了在成簇丢包下维持同样的误报与安全保证，要多付多少带宽"。
+
+    **Bandwidth cost** of tolerating bursty loss. The most citable quantitative result in this module.
+
+    Under independent loss the required $r$ is smaller, $T_{\\text{hb}}$ can be
+    larger, and bandwidth is cheaper. The burst convention needs a larger $r$,
+    and the same safety budget then compresses $T_{\\text{hb}}$, so bandwidth
+    rises. The ratio is "how much extra bandwidth it costs to keep the same
+    false-alarm and safety guarantees under clustered loss."
     """
     a = cheapest(budget, p_loss=p_loss, n_devices=n_devices,
                  far_target_per_hour=far_target_per_hour, burst_rho=0.0, **kw)
@@ -213,6 +331,7 @@ def burst_premium(budget: SafetyBudget, *, p_loss: float, n_devices: int,
 
 
 # ---- 量纲示意：把时延折算成距离（仅在危害为运动碰撞时有意义）-----------
+# ---- Dimensional illustration: latency as distance (only for a motion-collision hazard) ---
 
 def iso13855_distance_mm(t_detect_s: float, *, k_mm_s: float = 1600.0,
                          c_mm: float = 850.0, t_react_s: float = 0.25
@@ -225,6 +344,18 @@ def iso13855_distance_mm(t_detect_s: float, *, k_mm_s: float = 1600.0,
     **本文不把它作为安全论断。** 主威胁是任务状态伪造，危害是调度损害而非
     碰撞；此函数只用来回答"同一个 $T_{\\text{detect}}$ 在运动场景下值多少米"，
     是量纲示意。当作主结论会被一眼看穿。
+
+    ISO 13855's $S = K\\,T + C$.
+
+    $K$ is the approach speed (the standard takes 1600 mm/s for a walking
+    person; for an AGV, take its travel speed), $T$ is the system's total
+    response time (here = detection + reaction), and $C$ compensates intrusion distance.
+
+    **This paper does not treat it as a safety claim.** The main threat is
+    task-state falsification; the harm is scheduling damage, not a collision.
+    The function only answers "how many metres the same $T_{\\text{detect}}$
+    is worth in a motion setting." It is a dimensional illustration. Using it
+    as the main conclusion would be obvious.
     """
     return k_mm_s * (t_detect_s + t_react_s) + c_mm
 
@@ -236,6 +367,12 @@ def protective_field_mm(*, v_mm_s: float = 1500.0, t_sensor_s: float = 0.10,
 
     默认参数即标准算例：1.5 m/s 下扫描仪 0.10 s + 制动器 0.15 s 给出反应距离
     0.375 m，加制动距离 0.65 m 与裕度 0.25 m，得 1.275 m。
+
+    ISO 3691-4:2023 protective-field example, itemized so a citation can be checked.
+
+    The defaults are the standard example: at 1.5 m/s a scanner of 0.10 s plus
+    a brake of 0.15 s gives a reaction distance of 0.375 m; adding a braking
+    distance of 0.65 m and a margin of 0.25 m yields 1.275 m.
     """
     react_mm = v_mm_s * (t_sensor_s + t_brake_s)
     return {"react_mm": react_mm, "brake_mm": brake_mm,
@@ -246,5 +383,9 @@ def protective_field_mm(*, v_mm_s: float = 1500.0, t_sensor_s: float = 0.10,
 def detection_travel_mm(t_detect_s: float, v_mm_s: float = 1500.0) -> float:
     """检测时延对应的行驶距离。用于对照防护场：若它远小于防护场，说明该时延
     在运动场景下也不构成额外的空间代价；反之则须缩短 $T_{\\text{detect}}$。
+
+    Travel distance corresponding to the detection latency. Compare it with the
+    protective field: if it is far smaller, that latency adds no extra spatial
+    cost in a motion setting; otherwise $T_{\\text{detect}}$ must be shortened.
     """
     return v_mm_s * t_detect_s

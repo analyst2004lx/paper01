@@ -41,6 +41,65 @@ $q > p^{r}$，故 `far_prob` 提供 `burst_rho` 参数给出相关丢包下的�
 Trier 日志没有通信层，故心跳与丢包必须仿真（`../database/README.md` 第三节
 第 2 条）。可从数据得到的是**对照量**：设备沉默时，只靠耦合互证要多久才能
 判定——那是命令账本给出的计划完成时刻，实测分布见 `tools/silence_diag.py`。
+
+Accountable silence: heartbeat slots, preimage-miss verdicts, and the
+closed-form relation among false alarms, latency, and bandwidth.
+
+## Mechanism
+
+Under event-triggered communication, silence is an attack surface: a Byzantine
+node stays silent and the receiver infers a wrong state from its prediction
+model, so zero messages produce unbounded deviation. **This paper does not
+claim to have introduced that attack surface** (non-triggering misbehavior,
+arXiv:2201.02997). What it does is **runtime detection and attribution**.
+Silence is no longer free — when slot k expires the device must disclose hash
+chain preimage $h_k$, meaning "during slot k my state still lay inside the
+prediction band." True silence means $h_k$ never arrives, and only that device
+can produce $h_k$ (one-wayness plus a signed commitment root), so "slot k's
+deadline passed with no $h_k$" is a **deterministic criterion**, not a suspicion.
+
+## Why paper02's binary-channel ceiling does not apply here
+
+paper02 conclusions 11 and 21: a binary channel's single-message power ceiling
+is $\\text{trigger rate} \\times \\min(1, \\alpha/q)$, where q is the rate of
+that channel's discrete anomaly on the **benign stream**. The interlock
+channel's q is a property of the log (4.7% on the deployment stream, 0.54% on
+the training fold, a 9× drift) and cannot be pushed down — approximate identity
+resolution only reaches 2.3%, and the other half needs a real NFC/RFID part
+id. At $\\alpha=0.001$ the ceiling is only 0.185.
+
+A preimage-miss verdict is also binary in form, but three structural
+differences keep the ceiling from applying:
+
+  1. **It is a cryptographic protocol violation, not a statistical test.** A
+     failed signature check needs no p-value, and neither does a missing
+     preimage. paper02's hard layer (feasibility mask F) is the same: benign
+     q = 0, the ceiling is identically 1, so F is a hard constraint and the
+     interlock can only be soft evidence. Accountable silence is the former.
+  2. **q is a design parameter, not a property of the data.** Benign misses
+     come only from packet loss, so $q = p_{\\text{loss}}^{\\,r}$ (r is the
+     number of consecutive misses required for a verdict; losses are treated
+     as approximately independent). r may be chosen freely, so q can be driven
+     arbitrarily small — the opposite of the interlock's immovable 4.7%, and
+     the quantitative reason this mechanism is worth building.
+  3. **The cost is latency, not power.** The ceiling does not vanish; it
+     **becomes a latency-budget constraint**:
+     $T_{\\text{detect}} = r \\cdot T_{\\text{hb}}$, which must fit inside the
+     functional-safety FHI budget. That is exactly how the second contribution
+     connects to the third (the bandwidth–safety margin theorem); see `budget.py`.
+
+Honest boundary: point 2 assumes independent losses. Bursty industrial
+wireless makes $q > p^{r}$, so `far_prob` takes `burst_rho` and gives an upper
+bound under correlated loss. When the paper reports FPR it must state which
+convention it used.
+
+## What this dataset cannot support
+
+The Trier log has no communication layer, so heartbeats and loss must be
+simulated (`../database/README.md`, section 3, item 2). What the data can
+give is a **reference quantity**: how long coupled corroboration alone takes
+to decide when a device is silent — that is the planned completion time from
+the command ledger. The measured distribution is in `tools/silence_diag.py`.
 """
 from __future__ import annotations
 
@@ -51,6 +110,7 @@ from dataclasses import dataclass, field
 from . import crypto
 
 #: 判决类型。SILENT 是缺失判定，FORGED / EARLY 是不可否认的作恶证据。
+#: Verdict kinds. SILENT is a miss verdict; FORGED / EARLY are undeniable evidence of misbehavior.
 SILENT = "silent"
 FORGED = "forged_preimage"
 EARLY = "early_reveal"
@@ -58,22 +118,32 @@ EARLY = "early_reveal"
 
 @dataclass
 class SilenceConfig:
-    """心跳参数。默认值是示例而非建议值，可行区间由 budget.py 给出。"""
+    """心跳参数。默认值是示例而非建议值，可行区间由 budget.py 给出。
+
+    Heartbeat parameters. Defaults are examples, not recommendations; the feasible region comes from budget.py.
+    """
     t_hb_s: float = 0.2
     #: 判决所需的连续缺失槽数。r=1 即零容忍，误报率等于丢包率。
+    #: Consecutive missing slots required for a verdict. r=1 is zero tolerance: FAR equals the loss rate.
     r_misses: int = 3
-    #: 松散时间同步的容差，计入判决时延。
+    #: 松散时间同步的容差，计入判决时延。 / Skew tolerance of loose time sync, counted in detection latency.
     skew_s: float = 0.01
-    #: 每槽披露的字节数（原像）。
+    #: 每槽披露的字节数（原像）。 / Bytes disclosed per slot (the preimage).
     token_bytes: int = crypto.TOKEN_BYTES
 
     @property
     def detect_delay_s(self) -> float:
-        """沉默的最坏检测时延。接 FHI 预算的就是这个量。"""
+        """沉默的最坏检测时延。接 FHI 预算的就是这个量。
+
+        Worst-case detection latency of silence. This is the quantity that enters the FHI budget.
+        """
         return self.r_misses * self.t_hb_s + self.skew_s
 
     def bandwidth_bps(self, n_devices: int) -> float:
-        """心跳的稳态带宽，字节/秒。不含交接确认。"""
+        """心跳的稳态带宽，字节/秒。不含交接确认。
+
+        Steady-state heartbeat bandwidth, bytes/second. Handover acknowledgements are not included.
+        """
         return n_devices * self.token_bytes / self.t_hb_s
 
 
@@ -84,6 +154,7 @@ class Verdict:
     slot: int
     t_decide: float
     #: 判决所依据的证据。FORGED / EARLY 时为已披露的原像，可交第三方核验。
+    #: Evidence behind the verdict. For FORGED / EARLY it is the disclosed preimage, checkable by a third party.
     evidence: bytes = b""
 
 
@@ -94,6 +165,13 @@ class SilenceMonitor:
     每设备维护一个链验证器与连续缺失计数。判决在**截止时刻的扫描**中产生，
     不在收到消息时产生——这一点是必须的：沉默是"没有事件"，只有时钟推进才
     能观测到它，靠消息驱动永远等不到。
+
+    Verifier-side silence monitor.
+
+    Each device has a chain verifier and a consecutive-miss counter. Verdicts
+    are produced by a **scan at the deadline**, not when a message arrives —
+    this is required: silence is "no event", and only a clock advance can
+    observe it. A message-driven loop waits forever.
     """
     cfg: SilenceConfig
     _ver: dict[str, crypto.Verifier] = field(default_factory=dict)
@@ -108,7 +186,10 @@ class SilenceMonitor:
 
     def on_reveal(self, device: str, slot: int, preimage: bytes, *,
                   now: float) -> Verdict | None:
-        """处理一次原像披露。返回非 None 即作恶证据。"""
+        """处理一次原像披露。返回非 None 即作恶证据。
+
+        Handle one preimage disclosure. A non-None return is evidence of misbehavior.
+        """
         v = self._ver[device]
         self.n_reveals += 1
         steps = slot - v.last_slot
@@ -127,6 +208,14 @@ class SilenceMonitor:
         连续缺失达 `r_misses` 即出具 SILENT 判决并冻结派单；一旦收到合法披露，
         计数复位。**复位是必须的**：paper02 结论"序贯臂必须复位且自报误报"
         记录过漏掉复位使检出率虚高 22 倍的代价。
+
+        Advance the clock to `now` and judge every slot past its deadline.
+
+        `r_misses` consecutive misses produce a SILENT verdict and freeze
+        dispatch; a valid disclosure resets the counter. **The reset is
+        required**: paper02's conclusion that "a sequential arm must reset and
+        must report its own false alarms" records a 22× inflated detection
+        rate from a missing reset.
         """
         out: list[Verdict] = []
         for dev, v in self._ver.items():
@@ -146,11 +235,15 @@ class SilenceMonitor:
         return out
 
     def revoked(self) -> set[str]:
-        """已被冻结派单的设备。调度器据此停止下发新任务。"""
+        """已被冻结派单的设备。调度器据此停止下发新任务。
+
+        Devices whose dispatch has been frozen. The scheduler stops issuing them new tasks.
+        """
         return set(self._revoked)
 
 
 # ---- 解析关系（论文里的图与定理都从这里出）-----------------------------
+# ---- Closed forms (the paper's figures and theorems come from here) ----
 
 def far_prob(p_loss: float, r: int, *, burst_rho: float = 0.0) -> float:
     """良性流上出现一次 SILENT 误判的概率，即天花板公式里的 q。
@@ -160,6 +253,16 @@ def far_prob(p_loss: float, r: int, *, burst_rho: float = 0.0) -> float:
     概率仍是 p，后续每次的条件概率被抬高到 $p + \\rho(1-p)$。$\\rho=0$ 退化为
     独立情形，$\\rho=1$ 退化为 $q=p$（一旦丢包必连丢，r 完全失效）。
     工业无线必须报 $\\rho > 0$ 的口径。
+
+    Probability of one SILENT false verdict on the benign stream, the q in the ceiling formula.
+
+    Under independent loss $q = p^{r}$. `burst_rho` is the conditional
+    correlation of loss on adjacent slots and gives the bursty-loss upper bound
+    $q \\le p \\cdot (p + \\rho(1-p))^{r-1}$: the first miss still has probability
+    p, and each later conditional probability is raised to $p + \\rho(1-p)$.
+    $\\rho=0$ recovers independence; $\\rho=1$ collapses to $q=p$ (one loss
+    implies a run, and r is useless). Industrial wireless must report the
+    $\\rho > 0$ convention.
     """
     if not 0.0 <= p_loss <= 1.0:
         raise ValueError("丢包率须在 [0, 1]")
@@ -172,6 +275,10 @@ def far_per_hour(p_loss: float, cfg: SilenceConfig, n_devices: int,
     """全车队的 SILENT 误报次数/小时。这是运维真正关心的量。
 
     每设备每槽都是一次判决机会，故速率 = n / T_hb × q。
+
+    SILENT false alarms per hour for the whole fleet. This is the quantity operations actually cares about.
+
+    Every device and every slot is a verdict opportunity, so the rate is n / T_hb × q.
     """
     q = far_prob(p_loss, cfg.r_misses, burst_rho=burst_rho)
     return n_devices * q * 3600.0 / cfg.t_hb_s
@@ -180,7 +287,10 @@ def far_per_hour(p_loss: float, cfg: SilenceConfig, n_devices: int,
 def min_misses(p_loss: float, t_hb_s: float, n_devices: int,
                far_target_per_hour: float, *, burst_rho: float = 0.0,
                r_max: int = 64) -> int | None:
-    """满足误报预算所需的最小 r。无解返回 None。"""
+    """满足误报预算所需的最小 r。无解返回 None。
+
+    Smallest r that meets the false-alarm budget. Returns None if none exists.
+    """
     for r in range(1, r_max + 1):
         cfg = SilenceConfig(t_hb_s=t_hb_s, r_misses=r)
         if far_per_hour(p_loss, cfg, n_devices,
@@ -198,6 +308,14 @@ def feasible_t_hb(p_loss: float, n_devices: int, far_target_per_hour: float,
     返回 [(T_hb, r, 检测时延, 带宽 B/s), ...]，按带宽升序。带宽随 $T_{hb}$
     单调下降，故最省带宽的配置总在时延预算的边界上——这正是"省带宽是带安全
     约束的优化问题"的形式化，也是论文那张可行区间图的数据来源。
+
+    Enumerate feasible $(T_{hb}, r)$ under a false-alarm budget and an FHI latency budget.
+
+    Returns [(T_hb, r, detection latency, bandwidth B/s), ...] sorted by
+    bandwidth. Bandwidth falls monotonically in $T_{hb}$, so the cheapest
+    configuration always sits on the latency-budget boundary — the formal
+    statement that "saving bandwidth is an optimization problem with a safety
+    constraint", and the data source of the paper's feasible-region figure.
     """
     out = []
     for i in range(grid):
@@ -219,6 +337,13 @@ def power_ceiling(alpha: float, q: float) -> float:
     在此仅用于**对照**：说明若把沉默当作统计通道去融合，会落回这条天花板；
     本文把它作为硬层，故不受此限。论文中必须同时给出两个数，否则审稿人会
     以"你的通道也是二值的"质疑。
+
+    paper02's binary-channel ceiling $\\min(1, \\alpha/q)$.
+
+    Used here only as a **contrast**: if silence were fused as a statistical
+    channel it would fall back onto this ceiling; this paper treats it as a
+    hard layer, so the ceiling does not bind. The paper must report both
+    numbers, or a reviewer will object that "your channel is binary too."
     """
     return 1.0 if q <= 0 else min(1.0, alpha / q)
 
@@ -228,12 +353,22 @@ def pbft_bandwidth_bps(n: int, rate_hz: float, msg_bytes: int = 128) -> float:
 
     正常路径消息数约 $2n^2$ 条/轮（pre-prepare 广播 n、prepare 与 commit
     各 $n^2$），故带宽 $\\approx 2n^2 \\cdot R \\cdot L$。
+
+    Normal-path bandwidth of periodic PBFT, an upper bound for baseline `W1`
+    (a quorum of every device).
+
+    The normal path is about $2n^2$ messages per round (pre-prepare broadcasts
+    n; prepare and commit are $n^2$ each), so bandwidth
+    $\\approx 2n^2 \\cdot R \\cdot L$.
     """
     return 2 * n * n * rate_hz * msg_bytes
 
 
 def bytes_per_verdict(cfg: SilenceConfig) -> dict:
-    """一次判决的密码学开销账，用于"非对称密码预算"那节的表格。"""
+    """一次判决的密码学开销账，用于"非对称密码预算"那节的表格。
+
+    Cryptographic cost account of one verdict, for the "asymmetric cryptography budget" table.
+    """
     return {
         "commit_root_once": crypto.TOKEN_BYTES + crypto.SIG_BYTES,
         "per_slot_reveal": cfg.token_bytes,
@@ -244,7 +379,10 @@ def bytes_per_verdict(cfg: SilenceConfig) -> dict:
 
 
 def entropy_bits(p_loss: float) -> float:
-    """丢包过程的每槽熵，用于说明心跳流的可压缩性下界（附录用）。"""
+    """丢包过程的每槽熵，用于说明心跳流的可压缩性下界（附录用）。
+
+    Per-slot entropy of the loss process, a lower bound on how compressible the heartbeat stream is (appendix).
+    """
     if p_loss in (0.0, 1.0):
         return 0.0
     return -(p_loss * math.log2(p_loss)

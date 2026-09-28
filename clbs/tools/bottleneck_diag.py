@@ -18,6 +18,22 @@
     py -m tools.bottleneck_diag                  # 分析 input/ext/ 的四个拥堵档
     py -m tools.bottleneck_diag --sweep          # 扫 臂数 x 车数 网格
     py -m tools.bottleneck_diag --sweep --jobs 12
+
+Bottleneck attribution: is makespan pinned by arms, AGVs, or corridors?
+
+Motivation: the oracle upper bound of the reassignment operator is only 3% (tools/probe_diag.py), so "swap an arm" almost never improves. A natural suspicion is a bad instance mix — if processing load is the bottleneck, every arm is already saturated, moving an operation from one arm to another only relocates load, and no feedback mechanism can shorten makespan.
+
+This script reports four groups of quantities for each instance:
+
+1. **Lower-bound composition**: which of job_chain / machine_load / lu_cut is tight, and the gap to the realized solution. If machine_load is tight, total processing divided by the number of arms already approaches makespan, and the bottleneck is on the processing side.
+2. **Resource utilization**: each arm's processing occupancy / makespan, and each AGV's travel and wait occupancy / makespan. The saturated side is the bottleneck.
+3. **Critical-chain composition**: the share of makespan in five attribution classes. This is the most direct evidence — if the corridor class is only a few percent, corridor contention is not the main contradiction on these instances.
+4. **Total yield**: all paths' yield waits / makespan.
+
+Run (from the clbs/ directory):
+    py -m tools.bottleneck_diag                  # analyze the four congestion levels in input/ext/
+    py -m tools.bottleneck_diag --sweep          # sweep the arms x vehicles grid
+    py -m tools.bottleneck_diag --sweep --jobs 12
 """
 from __future__ import annotations
 
@@ -43,6 +59,7 @@ def analyze(inst: Instance, net: Network, result: DecodeResult) -> dict:
     cmax = result.makespan
 
     # ---- 资源占用 ----
+# ---- Resource occupancy ----
     arm_busy: Dict[int, float] = {m: 0.0 for m in inst.machine_node}
     for rec in result.ops.values():
         if not rec.pseudo and rec.machine is not None:
@@ -53,6 +70,7 @@ def analyze(inst: Instance, net: Network, result: DecodeResult) -> dict:
     travel = [(s["loaded_time"] + s["empty_time"]) / cmax for s in agv.values()]
     waits = [s["wait_time"] / cmax for s in agv.values()]
     # 未被派到任务的车不出现在 agv_stats 里,补 0 以免高估车队利用率
+# Vehicles with no assigned task are absent from agv_stats; fill 0 so fleet utilization is not overstated.
     while len(travel) < inst.num_agvs:
         travel.append(0.0)
         waits.append(0.0)
@@ -60,6 +78,7 @@ def analyze(inst: Instance, net: Network, result: DecodeResult) -> dict:
     waits.sort()
 
     # ---- 关键链构成 ----
+# ---- Critical-chain composition ----
     chain = critical_chain(result)
     by_kind = {k: 0.0 for k in KINDS}
     for it in chain:
@@ -67,6 +86,7 @@ def analyze(inst: Instance, net: Network, result: DecodeResult) -> dict:
             by_kind[it.kind] += it.amount
 
     # ---- 让行总量 ----
+# ---- Total yield waits ----
     yield_total = sum(tr.empty_plan.total_wait + tr.loaded_plan.total_wait
                       for tr in result.transports)
 
@@ -91,7 +111,10 @@ def analyze(inst: Instance, net: Network, result: DecodeResult) -> dict:
 
 
 def solve(inst: Instance, net: Network, seed: int, budget_gen: int = 100) -> DecodeResult:
-    """用论文的提出方法(规则派车、无局部搜索、闭环评价)求一个像样的解。"""
+    """用论文的提出方法(规则派车、无局部搜索、闭环评价)求一个像样的解。
+
+    Find a decent solution with the paper's method (rule dispatch, no local search, closed-loop evaluation).
+    """
     cfg = GAConfig(pop=50, max_gen=budget_gen, stall_gen=30, seed=seed,
                    theta=0.0, dispatch="rule")
     out = run_ga(inst, net, cfg, conflict_free=True, use_ls=False)
@@ -154,7 +177,7 @@ def sweep(jobs: int, ops: int, tag: str, het: float, flex: float,
           seeds: Sequence[int]) -> List[dict]:
     rows: List[dict] = []
     for nm in machines:
-        if flex * nm < 2.0:            # 假设 A3 要求多数工序 |Ω|>=2
+        if flex * nm < 2.0:            # 假设 A3 要求多数工序 |Ω|>=2 / Hypothesis A3 requires most operations to have |Ω|>=2.
             print(f"  (跳过 M{nm}:F={flex} 下 |Ω|={flex*nm:.1f} < 2,与 A3 冲突)")
             continue
         for na in agvs:

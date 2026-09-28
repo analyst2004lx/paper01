@@ -4,6 +4,13 @@
     py main.py                                       # input/ 全部算例,三种模式
     py main.py --instance input/example_3x3x2.json   # 指定算例
     py main.py --mode closed --seed 7 --pop 100 --gen 200
+
+One-click CLBS entry: load an instance -> solve (closed-loop / two-stage / rule) -> independent validation -> write results.
+
+Examples (from the clbs/ directory):
+    py main.py                                       # every instance under input/, three modes
+    py main.py --instance input/example_3x3x2.json   # one specified instance
+    py main.py --mode closed --seed 7 --pop 100 --gen 200
 """
 from __future__ import annotations
 
@@ -25,6 +32,7 @@ from algorithm.report import gantt_text, occupancy_profile, summary_line
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 ABLATION_MODES = list(ARMS)      # 递进式消融链,档位定义见 algorithm/baseline.py
+# Progressive ablation chain; arm definitions are in algorithm/baseline.py
 
 
 def parse_args() -> argparse.Namespace:
@@ -87,9 +95,11 @@ def solve_one(path: str, args: argparse.Namespace) -> dict:
         print(summary_line(mode, out) + ("  [校验通过]" if not errors else "  [校验失败]"))
 
     # ---- 落盘 ----
+    # Write results to disk
     out_dir = os.path.join(HERE, "output", inst.name)
     os.makedirs(out_dir, exist_ok=True)
     bucket_w = default_bucket_width(inst)   # rule/twostage 档没有 GA 给的桶宽,用默认值
+    # The rule/twostage arms have no GA-provided bucket width; use the default.
     summary = {
         "instance": inst.name,
         "delta_return": inst.delta_return,
@@ -123,6 +133,7 @@ def solve_one(path: str, args: argparse.Namespace) -> dict:
             entry["stopped_by"] = o.get("stopped_by")
             entry["convergence_history"] = o["history"]
         # 占用率画像:只对该模式的**最终最优解**算一次(报告用,不参与搜索)
+        # Occupancy profile: computed once on this mode's final best solution (for the report; not used in search)
         prof = occupancy_profile(r["timetable"], o.get("bucket_width") or bucket_w)
         if prof is not None:
             entry["occupancy"] = prof

@@ -5,6 +5,13 @@
   §6.11  「耗时比从 1.5x 升到 3.3x——规模越大,重算一遍越不划算」
   §6.12  「与重解码的耗时比单调拉大到 3.3x」
 本脚本按 k 分档,给出逐档耗时比的中位与四分位距,并检查中位是否真的单调。
+
+Check whether the E8 (instance-scale sweep) claim that "the time ratio grows monotonically" is supported by the dispersion.
+
+Two claims in the text:
+  §6.11  "the time ratio rises from 1.5x to 3.3x — the larger the scale, the less it pays to recompute once"
+  §6.12  "the time ratio against re-decoding grows monotonically to 3.3x"
+This script bins by k, reports the median and interquartile range of the time ratio at each level, and checks whether the median is really monotonic.
 """
 import csv
 import io
@@ -56,6 +63,8 @@ w("")
 
 # 按 (k, seed) 配对取各臂耗时,算逐格比值——比值必须逐格配对后再统计,
 # 不能用「各档均值之比」,那会把离散度藏起来。
+# Pair wall-clock by (k, seed) and take the per-cell ratio. The ratio must be paired cell by cell before summarizing;
+# do not use "the ratio of per-level means", which hides the dispersion.
 cell = defaultdict(dict)
 for r in rows:
     cell[(int(r["k"]), r["seed"])][r["arm"]] = r

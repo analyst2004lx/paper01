@@ -17,6 +17,24 @@
     工作流间转移集合 Jaccard 重叠中位 0.324
 
 用法(在 paper02/slid/ 下):  py -m tools.calib_diag
+
+M8 calibration diagnostic: what the randomised p-value and the random split are each worth.
+
+Four control arms, orthogonal in pairs:
+    chain granularity   (device, case) level  vs  case level
+    p-value form        plain                 vs  randomised
+    split               lexicographic         vs  random
+
+The point is a **matched comparison**. A probe script once compared one lexicographic split (0.076) with the mean of 20 random splits (0.053); the two sides did not draw the same number of randomisation samples, and the gap was inflated. Here both splits run the same number of seeds, and the mean and the standard deviation are reported.
+
+Target numbers (probe_structural_v2/v3):
+    level A, plain            alpha=0.05 -> 1.000     (atomised; calibration fails completely)
+    level A, randomised       alpha=0.05 -> 0.051     alpha=0.01 -> 0.010
+    level B, lexicographic randomised  alpha=0.05 -> 0.058    (one seed)
+    level B, random-split randomised   alpha=0.05 -> 0.053    (mean of 20 seeds)
+    median Jaccard overlap of the transition sets across workflows 0.324
+
+Usage (from paper02/slid/):  py -m tools.calib_diag
 """
 from __future__ import annotations
 
@@ -97,6 +115,7 @@ def main() -> int:
     print()
 
     # 有效校准集规模:规则 3
+    # effective calibration-set size: rule 3
     print("=== 规则 3:校准集规模决定可达的最小名义水平 ===")
     n_tr = sum(max(0, len(v) - 1) for v in case_seqs.values())
     n_cal = int(n_tr * 0.25)
@@ -116,6 +135,7 @@ def main() -> int:
     print()
 
     # 工作流异质性:为什么字典序切会坏
+    # workflow heterogeneity: why a lexicographic split breaks
     per_wf = {}
     wf_of = {}
     for a in acts:

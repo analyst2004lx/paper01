@@ -10,6 +10,16 @@
      这是回应"为何必须是组合方法"的直接材料。
 
 用法(在 paper03/tessera/ 下):  py -m tools.detect_diag
+
+Detection rate and detection latency of P1–P4, and the ablation of why the combination is necessary.
+
+Four things:
+  1. **Check of P1's construction**: the forged statement matches the benign activity on every single-observer field. A stronger claim than re-running a residual detector — residual methods fail by construction.
+  2. False alarms on the benign stream, checking that the protocol produces no evidence when there is no attack.
+  3. Detection rate and latency of P1–P4, under "the counterpart has an arrival sensor (can refute)" and "no sensor (can only wait for timeout)."
+  4. **Ablation**: watchdog (baseline `S1`) / coupled corroboration only / accountable silence only / both. Direct material for "why this must be a combined method."
+
+Usage (from paper03/tessera/):  py -m tools.detect_diag
 """
 from __future__ import annotations
 
@@ -44,6 +54,10 @@ def evaluate(recs, g, family, *, refute: bool, rate: float, seed: int) -> dict:
     """跑一族攻击，按声明身份对齐真值与证据。
 
     检出率的分母是**伪造声明数**，不含对手方的否证消息（那是诚实设备发的）。
+
+    Run one attack family and align ground truth with evidence by statement identity.
+
+    The detection-rate denominator is the **number of forged statements**, not the counterpart's refutation messages (those are sent by an honest device).
     """
     spec = attacks.AttackSpec(family=family, rate=rate, seed=seed,
                               explicit_refutation=refute)
@@ -86,6 +100,17 @@ def watchdog_dr(res, cfg: corroborate.CorroborateConfig
 
     **窗口必须与本文一致地加上派发排队容差**，否则是在给基线设障：不加容差时
     看门狗在良性流上要误报约四分之一（派发时延 p95 218.3 s 远超 planned 窗口）。
+
+    Baseline `S1`: a GOOSE-style watchdog. It only looks at "what should have been reported was not."
+
+    Industrial protocols already do this (IEC 61850 MaxTime and fail-safe); this
+    paper does not claim it. It works on P2 and is completely useless on
+    P1/P3/P4 — a forged statement that arrives on time with ordinary fields
+    fully satisfies the watchdog.
+
+    **The window must add the same dispatch-queue allowance as this paper**, or
+    the baseline is handicapped: without the allowance the watchdog false-alarms
+    on about a quarter of the benign stream (dispatch-delay p95 218.3 s far exceeds the planned window).
     """
     caught = [r for r in res["reports"]
               if id(r) in res["forged"] and r.withheld]
@@ -98,6 +123,13 @@ def silence_dr(res, cfg: silence.SilenceConfig) -> tuple[float, list[float]]:
 
     对 P2 有效（未披露即确定性判定），对 P1/P3/P4 无效——攻击者按时披露原像的
     同时谎报完成，声明本身无从检验。这正是"仅可问责沉默"留下的逃脱口。
+
+    Accountable silence: look only at whether the preimage was disclosed on its slot.
+
+    It works on P2 (no disclosure is a deterministic verdict) and fails on
+    P1/P3/P4 — the attacker discloses preimages on time and falsifies
+    completion, and the statement itself cannot be tested. That is the escape
+    left by "accountable silence alone."
     """
     caught = [r for r in res["reports"]
               if id(r) in res["forged"] and not r.revealed]

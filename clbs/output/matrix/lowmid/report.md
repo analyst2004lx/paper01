@@ -1,11 +1,13 @@
-# 矩阵实验报告 `lowmid`
+# 矩阵实验报告 / Matrix experiment report `lowmid`
 
-- 预算模式:`auto`(各算例预算 {'S8x4x4-LG21-H0-F0.6-A4-s42': 47.65, 'S8x4x4-LG21-H0.15-F0.6-A4-s42': 47.44, 'S8x4x4-LG21-H0.3-F0.6-A4-s42': 60.42, 'S8x4x4-LG21-H0.5-F0.6-A4-s42': 55.44, 'S8x4x4-LD22-H0-F0.6-A4-s42': 72.93, 'S8x4x4-LD22-H0.15-F0.6-A4-s42': 49.52, 'S8x4x4-LD22-H0.3-F0.6-A4-s42': 37.77, 'S8x4x4-LD22-H0.5-F0.6-A4-s42': 46.67});种群 60;种子 [42, 7, 2024, 3, 11, 19, 23, 31, 47, 53]
-- 完成运行数:640;校验失败:0
+- 预算模式 / Budget mode:`auto`(各算例预算 / per-instance budgets {'S8x4x4-LG21-H0-F0.6-A4-s42': 47.65, 'S8x4x4-LG21-H0.15-F0.6-A4-s42': 47.44, 'S8x4x4-LG21-H0.3-F0.6-A4-s42': 60.42, 'S8x4x4-LG21-H0.5-F0.6-A4-s42': 55.44, 'S8x4x4-LD22-H0-F0.6-A4-s42': 72.93, 'S8x4x4-LD22-H0.15-F0.6-A4-s42': 49.52, 'S8x4x4-LD22-H0.3-F0.6-A4-s42': 37.77, 'S8x4x4-LD22-H0.5-F0.6-A4-s42': 46.67});种群 / Population 60;种子 / Seeds [42, 7, 2024, 3, 11, 19, 23, 31, 47, 53]
+- 完成运行数 / Runs finished:640;校验失败 / Validation failures:0
 
-## 一、各格子结果(均值 ± 样本标准差)
+## 一、各格子结果(均值 ± 样本标准差) / 1. Per-cell results (mean ± sample standard deviation)
 
 > `秒` / `评估数` / `毫秒每评价` / `停机原因` 四列并列,是同算力协议是否真的成立的证据:秒数应相近,评估数可以差数十倍,而差多少**全部**由单次评价成本解释。`停机原因 = budget` 意味着该档被预算掐停而非收敛。
+>
+> The four columns `seconds` / `evaluations` / `milliseconds per evaluation` / `stop reason`, side by side, are the evidence that the same-compute protocol actually holds: the seconds should be close, the evaluation counts may differ by tens of times, and the whole of that difference is explained by the cost of one evaluation. `stop reason = budget` means the arm was cut off by the budget rather than converged.
 
 | 算例 | 档位 | n | 均值±sd | 最好 | 最差 | 极差 | 秒/次 | 评估数 | 毫秒/评价 | 停机原因 | 下界 gap 上限 |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -18,7 +20,7 @@
 | S8x4x4-LD22-H0.3-F0.6-A4-s42 | opendispatch_nols | 10 | 67.6 ± 2.4 | 65.0 | 72.0 | 7.0 | 37.8 | 17562 | 2.15 | budget | 0.5372 |
 | S8x4x4-LD22-H0.5-F0.6-A4-s42 | opendispatch_nols | 10 | 63.6 ± 3.0 | 60.0 | 68.0 | 8.0 | 46.7 | 22716 | 2.06 | budget | 0.6062 |
 
-### 1.1 预算体检(同算力协议自身是否成立)
+### 1.1 预算体检(同算力协议自身是否成立) / 1.1 Budget check (whether the same-compute protocol itself holds)
 
 | 算例 | 最便宜档 | 毫秒/评价 | 最贵档 | 毫秒/评价 | 成本比 |
 | --- | --- | --- | --- | --- | --- |
@@ -33,8 +35,10 @@
 
 **两阶段档的评价成本天然低一两个数量级**——它的第一阶段在理想运输模型下搜索(路由退化为查 t\* 表),故等挂钟时间等于给它数十倍的搜索次数。**等时间与等评估数两种口径都不中立**:前者偏向廉价代理模型的开环法,后者偏向每次评价都做真实路由的闭环法。结论必须同时给出两种口径(`--budget auto` 与 `--budget gen`)才算完整。
 
+**The two-stage arm's evaluation cost is naturally one or two orders of magnitude lower** — its first stage searches under the ideal travel model (routing degenerates to a lookup of the t\* table), so the same wall-clock time gives it tens of times more search steps. **Neither the same-time nor the same-evaluation protocol is neutral**: the former favors the open-loop method on a cheap surrogate model, and the latter favors the closed-loop method that really routes on every evaluation. A conclusion is complete only when both protocols are reported (`--budget auto` and `--budget gen`).
 
-## 二、集成收益(closed vs twostage,同种子配对)
+
+## 二、集成收益(closed vs twostage,同种子配对) / 2. Integrated gain (closed vs twostage, paired on the same seed)
 
 | 算例 | 拥堵档 | H | 两阶段 | 闭环 | 相对收益 | n | 非平局对数 | p(Wilcoxon) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -47,7 +51,7 @@
 | S8x4x4-LD22-H0.3-F0.6-A4-s42 | mid | 0.3 | 70.9 | 70.5 | 0.3% | 10 | 9 | 0.47289   |
 | S8x4x4-LD22-H0.5-F0.6-A4-s42 | mid | 0.5 | 66.5 | 64.6 | 2.7% | 10 | 8 | 0.10301   |
 
-## 三、机制增益(closed 相对各消融档)
+## 三、机制增益(closed 相对各消融档) / 3. Mechanism gain (closed versus each ablation arm)
 
 | 算例 | 消融档 | 拥堵档 | H | 消融 | 闭环 | 机制增益 | 非平局对数 | p |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -76,17 +80,19 @@
 | S8x4x4-LD22-H0.5-F0.6-A4-s42 | opendispatch | mid | 0.5 | 64.9 | 64.6 | 0.3% | 9 | 1.0   |
 | S8x4x4-LD22-H0.5-F0.6-A4-s42 | nostagger | mid | 0.5 | 66.5 | 64.6 | 2.9% | 8 | 0.01356*  |
 
-## 四、12.3.6 三条预期的判定
+## 四、12.3.6 三条预期的判定 / 4. Verdicts on the three predictions in 12.3.6
 
-**预测 1(拥堵/异构越高收益越大)**:不支持(收益随 H 非单调);Spearman(收益, H) = 0.0982
-- 按拥堵档:{'low': 0.0644, 'mid': 0.021}
-- 按异构度:{'0.0': 0.0389, '0.15': 0.0471, '0.3': 0.0324, '0.5': 0.0524}
+**预测 1(拥堵/异构越高收益越大)**:不支持(收益随 H 非单调);Spearman(收益, H) = 0.0982 / **Prediction 1 (the gain grows with congestion/heterogeneity)**: not supported (the gain is non-monotone in H); Spearman(gain, H) = 0.0982
+- 按拥堵档 / By congestion level:{'low': 0.0644, 'mid': 0.021}
+- 按异构度 / By heterogeneity:{'0.0': 0.0389, '0.15': 0.0471, '0.3': 0.0324, '0.5': 0.0524}
 
-**预测 2(H=0 时机制失效)**:支持;H=0 收益 0.0389 vs H>0 收益 0.044
+**预测 2(H=0 时机制失效)**:支持;H=0 收益 0.0389 vs H>0 收益 0.044 / **Prediction 2 (the mechanism fails at H=0)**: supported; H=0 gain 0.0389 vs H>0 gain 0.044
 
-**预测 3(high 上机制增益 > funnel 上)**:证据不足(缺 high/funnel 配对算例)
+**预测 3(high 上机制增益 > funnel 上)**:证据不足(缺 high/funnel 配对算例) / **Prediction 3 (mechanism gain on high > on funnel)**: insufficient evidence (no paired high/funnel instances)
 
 
 ---
 
 > 解读约束(规格 8.2、13.2):引用任何数字必须连同**种子数与预算模式**一并给出;非平局对数少于种子数一半时,该行差异基本落在取整噪声内。
+>
+> Reading constraint (spec 8.2, 13.2): any cited number must be given together with the **seed count and the budget mode**. When the number of non-tie pairs is under half the seed count, that row's difference mostly sits inside rounding noise.

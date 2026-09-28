@@ -1,4 +1,7 @@
-"""实验档位 R0 / R0+ / R1 / R2。"""
+"""实验档位 R0 / R0+ / R1 / R2。
+
+Experimental arms R0 / R0+ / R1 / R2.
+"""
 from __future__ import annotations
 
 from typing import Callable, Dict

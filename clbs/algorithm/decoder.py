@@ -2,6 +2,10 @@
 
 解码保证(建模文档 B4 三重保证):任意合法染色体解码必得可行方案且 C_max 有限;
 给定染色体与价格表,解码结果完全确定(预约顺序 = OS 扫描中任务产生的顺序)。
+
+Event-driven decoder, vehicle dispatch rules, congestion/price statistics, and critical-path attribution (spec 6.2, 6.3, 6.5).
+
+Decode guarantees (modeling document B4, the triple guarantee): any legal chromosome decodes to a feasible solution with finite C_max; given a chromosome and a price table, the decode is fully determined (reservation order = the order in which tasks arise while scanning the OS).
 """
 from __future__ import annotations
 
@@ -13,6 +17,7 @@ from .network import BucketKey, Network, PriceTable, RoutePlan, Router
 
 EPS = 1e-9
 # 空载段中让行等待占比超过此阈值时,瓶颈归因于走廊而非车辆可用性
+# When yield-wait exceeds this share of an empty trip, attribute the bottleneck to the corridor, not vehicle availability.
 CORRIDOR_SHARE = 0.5
 
 
@@ -20,12 +25,13 @@ CORRIDOR_SHARE = 0.5
 class OpRecord:
     job: int
     i: int
-    machine: Optional[int]        # 伪工序(回运)为 None
-    arrive: float                 # 工件到达时刻
+    machine: Optional[int]        # 伪工序(回运)为 None / None for a pseudo-operation (return haul)
+    arrive: float                 # 工件到达时刻 / job arrival time
     start: float
     finish: float
     bind: str                     # 'arrive' | 'machine':start 由哪一支决定
-    machine_prev: Optional[OpKey]  # 同机前一工序
+    # 'arrive' | 'machine': which branch determines start
+    machine_prev: Optional[OpKey]  # 同机前一工序 / previous operation on the same machine
     pseudo: bool
 
 
@@ -37,6 +43,7 @@ class TransportRecord:
     pickup: str
     dest: str
     ready: float                  # 工件就绪时刻(前道完工;首道为 0)
+    # Job ready time (previous operation's finish; 0 for the first operation)
     empty_plan: RoutePlan
     loaded_plan: RoutePlan
 
@@ -62,6 +69,17 @@ class CriticalItem:
 
     原实现只有 'machine' 与隐式的上游回溯两支,运输段完全不在链上,导致被
     "工件到达"卡住时无法区分是上游慢、车不够、还是路上堵——反馈算子因此无的放矢。
+
+    One link on the critical chain, with its attribution type.
+
+    Values of kind and their meaning (spec 6.5, step 1):
+    - 'operation' this operation's own processing occupation;
+    - 'machine'   start is blocked by the previous operation on the same machine;
+    - 'upstream'  start is blocked by the upstream operation's finish (the vehicle arrived first; the job was not ready);
+    - 'vehicle'   start is blocked by vehicle availability (the job was ready, the vehicle had not arrived, and the road network is not the cause);
+    - 'corridor'  yield-wait on some corridor during transport, with a specific corridor and time window.
+
+    The original implementation had only 'machine' and an implicit upstream traceback. Transport segments were not on the chain at all, so a start blocked by "job arrival" could not be split into a slow upstream operation, too few vehicles, or congestion on the way — and the feedback operator had nothing to aim at.
     """
     kind: str
     op: Optional[OpKey] = None
@@ -79,10 +97,14 @@ class DecodeResult:
     ops: Dict[OpKey, OpRecord]
     transports: List[TransportRecord]
     dispatch_order: List[int]     # 任务产生顺序下所选车辆(供两阶段基线回放)
+    # Vehicle chosen in task-generation order (for two-stage baseline replay)
     congestion: Dict[str, float]  # 走廊 -> 累计进入前等待(回顾性信号)
+    # corridor -> cumulative wait before entry (retrospective signal)
     conflict_free: bool
     price_cost_total: float = 0.0  # 全部路径的影子价格总额(层间接口的"账单")
+    # Total shadow price of all paths (the "bill" of the inter-level interface)
     occupancy: Dict[BucketKey, float] = field(default_factory=dict)  # 前瞻性信号
+    # Forward-looking signal
 
     def agv_stats(self) -> Dict[int, dict]:
         stats: Dict[int, dict] = {}
@@ -94,7 +116,10 @@ class DecodeResult:
         return stats
 
     def to_timetable(self) -> dict:
-        """统一时刻表格式(校验器/甘特图/落盘共用)。"""
+        """统一时刻表格式(校验器/甘特图/落盘共用)。
+
+        Unified timetable format (shared by the validator, the Gantt chart, and disk output).
+        """
         operations = [
             {"job": r.job, "i": r.i, "machine": r.machine,
              "start": r.start, "finish": r.finish}
@@ -126,6 +151,7 @@ class DecodeResult:
 
 # --------------------------------------------------------------------------
 # 派工规则(规格 6.3)
+# Dispatch rules (spec 6.3)
 # --------------------------------------------------------------------------
 
 def dispatch_rule(inst: Instance, net: Network,
@@ -138,6 +164,10 @@ def dispatch_rule(inst: Instance, net: Network,
     当价格表可用时,估算值加入"沿理想路径要买的通行权价格",使派车决策也感知
     路网的时空紧张程度——这是原实现中唯一仍活在"无冲突理想世界"里的环节。
     价格项与时间同量纲,故可直接相加。
+
+    Dispatch rule: pick the vehicle with the earliest estimated arrival; ties go to the smaller vehicle id.
+
+    When a price table is available, the estimate adds the "right-of-way price to buy along the ideal path", so the dispatch decision also senses how tight the road network is in space and time. This was the only step in the original implementation that still lived in a conflict-free ideal world. The price term has the same dimension as time, so the two add directly.
     """
     best_k, best_est = None, float("inf")
     for k in sorted(loc.keys()):
@@ -145,6 +175,7 @@ def dispatch_rule(inst: Instance, net: Network,
         est = t_pick + net.ideal_dist[pickup][dest]
         if prices is not None and theta > 0.0 and not prices.is_empty():
             # 以节点价格 x 行驶时长近似两段路径要买的通行权
+            # Approximate the right-of-way to buy on both path segments by node price times travel time
             est += theta * (
                 prices.node_price(net, pickup, avail[k]) * net.ideal_dist[loc[k]][pickup]
                 + prices.node_price(net, dest, t_pick) * net.ideal_dist[pickup][dest])
@@ -155,6 +186,7 @@ def dispatch_rule(inst: Instance, net: Network,
 
 # --------------------------------------------------------------------------
 # 解码(规格 6.2)
+# Decode (spec 6.2)
 # --------------------------------------------------------------------------
 
 def dispatch_exact(router: Router, net: Network,
@@ -186,6 +218,20 @@ def dispatch_exact(router: Router, net: Network,
     prune/reuse 两个开关默认为真,即上述两项优化都开。置假则退回未优化的全量试探,
     专供 tools/prune_ablation.py 度量"降本值多少"——因为两项优化都不改变输出(见论文
     命题 4.3),关掉它们唯一的作用就是变慢,故同挂钟下的差值即降本买到的解质量。
+
+    Dispatch probe: run a real two-segment route for each candidate vehicle and keep the one with the earliest actual arrival.
+
+    This directly closes the framework's only remaining open-loop residual. The original rule estimated arrival from the ideal shortest-path matrix and never consulted the reservation table, so it could pick a vehicle that looks close but is blocked the whole way.
+
+    The implementation depends on reservation-table checkpoints and rollback: the empty segment must be written for real before the loaded segment can see the time window it occupies, or the two segments may be planned onto the same corridor in the same period. After evaluation, the whole probe is rolled back and leaves no trace.
+
+    Cost and pruning. The probe raises routing calls per transport task from 2 to 2*NA. Measured cost per evaluation is about 4.6 times rule dispatch (output/matrix/gen100: 15.9 vs 3.5 ms). At the same generation count, probe dispatch beats rule dispatch by about 3%; under the same wall-clock that 3% is exactly eaten by the extra compute (output/matrix/p3: -0.12%). Cutting cost is therefore the way to gain quality.
+
+    Pruning uses an admissible lower bound: a conflict-free route can only arrive later because of yields, never faster than the ideal shortest path, so the ideal estimate used by dispatch_rule is a lower bound on the actual arrival. If a vehicle's lower bound cannot beat the current best measured value, its measured value cannot either, and there is no need to route it. The original implementation kept the first strictly better vehicle in ascending vehicle id. A pruned vehicle would not have become the winner there either, so the output matches a full probe bit for bit; only probes that were doomed to fail are skipped.
+
+    The winner's two path segments are also returned. They were already computed during the probe, then rolled back and recomputed by decode, wasting two routing calls. route(commit=True) only reserves each segment, so the cache can be reused.
+
+    prune and reuse default to true, i.e. both optimizations are on. Setting them false falls back to the unoptimized full probe, used only by tools/prune_ablation.py to measure "how much the cost cut is worth". Neither optimization changes the output (see proposition 4.3 in the paper); turning them off only makes the run slower, so the same-wall-clock gap is the solution quality bought by the cost cut.
     """
     best_k, best_est = None, float("inf")
     best_plans: Optional[Tuple[RoutePlan, RoutePlan]] = None
@@ -195,6 +241,7 @@ def dispatch_exact(router: Router, net: Network,
                   + net.ideal_dist[pickup][dest])
             if lb >= best_est - 1e-12:
                 continue                # 下界已不优于现任,实测值必然也不优
+                # Lower bound is already no better than the incumbent, so the measured value cannot be either.
         token = router.table.checkpoint()
         try:
             empty = router.route(loc[k], pickup, avail[k], k, f"probe{k}-empty", commit=True)
@@ -222,6 +269,10 @@ def decode(inst: Instance, net: Network, ma: Dict[OpKey, int], os_seq: List[int]
     """事件驱动解码。os_seq 为工件号重复序列(delta_return=1 时含伪工序)。
 
     theta=0 或 prices 为空时,路由退化为纯最早到达搜索,结果与价格协调前完全一致。
+
+    Event-driven decode. os_seq is a sequence of repeated job ids (it includes pseudo-operations when delta_return=1).
+
+    When theta=0 or prices is empty, routing falls back to pure earliest-arrival search, identical to the result before price coordination.
     """
     router = Router(net, conflict_free, prices=prices, theta=theta,
                     max_entry_options=max_entry_options,
@@ -253,11 +304,14 @@ def decode(inst: Instance, net: Network, ma: Dict[OpKey, int], os_seq: List[int]
             p = inst.proc_time[(j, i)][m]
 
         # ---- 运输阶段 ----
+        # Transport stage
         if pos[j] == dest:
             arrive = ready[j]          # 同机连续工序,无运输任务(C4)
+            # Consecutive operations on the same machine; no transport task (C4)
         else:
             pickup = pos[j]
             probed = None            # 仅派车试探会产出可复用的路径
+            # Only a dispatch probe produces a reusable path.
             if forced_dispatch is not None:
                 k = forced_dispatch[len(dispatch_order)]
             else:
@@ -268,10 +322,13 @@ def decode(inst: Instance, net: Network, ma: Dict[OpKey, int], os_seq: List[int]
                         rest = {kk: vv for kk, vv in loc.items() if kk not in banned}
                         if rest:
                             allowed = rest     # 至少留一辆,保持可解码性
+                            # Keep at least one vehicle, so the chromosome stays decodable.
                 sub_avail = {kk: avail[kk] for kk in allowed}
                 if dispatch in ("exact", "exact_noopt") and conflict_free:
                     # exact_noopt 关掉下界剪枝与胜者路径复用,选出的车与落表的预约
                     # 与 exact 逐位相同,只是慢——专供降本对照使用
+                    # exact_noopt turns off lower-bound pruning and winner-path reuse. The chosen vehicle
+                    # and the reservations written match exact bit for bit; it is only slower, and exists for the cost-cut comparison.
                     opt = (dispatch == "exact")
                     k, probed = dispatch_exact(router, net, allowed, sub_avail,
                                                pickup, dest, ready[j],
@@ -282,6 +339,7 @@ def decode(inst: Instance, net: Network, ma: Dict[OpKey, int], os_seq: List[int]
             dispatch_order.append(k)
             if probed is not None:
                 # 试探时已在同一预约表状态下算过这两段,直接落表,省去两次重复路由
+                # These two segments were already computed under the same reservation-table state during the probe; write them and skip two repeat routes.
                 empty, loaded = probed
                 for plan, tag in ((empty, "empty"), (loaded, "loaded")):
                     for s in plan.segments:
@@ -290,9 +348,11 @@ def decode(inst: Instance, net: Network, ma: Dict[OpKey, int], os_seq: List[int]
             else:
                 empty = router.route(loc[k], pickup, avail[k], k, f"J{j}-{i}-empty")
                 t_load = max(empty.arrive, ready[j])      # 车等件或件等车(B4)
+                # The vehicle waits for the job, or the job waits for the vehicle (B4).
                 loaded = router.route(pickup, dest, t_load, k, f"J{j}-{i}-loaded")
             arrive = loaded.arrive
             loc[k], avail[k] = dest, arrive               # 卸货即走/即空闲(B5、C5)
+            # Unload and leave / become idle immediately (B5, C5).
             transports.append(TransportRecord(j, i, k, pickup, dest, ready[j], empty, loaded))
             for plan in (empty, loaded):
                 for cid, w in plan.wait_by_corridor.items():
@@ -300,13 +360,14 @@ def decode(inst: Instance, net: Network, ma: Dict[OpKey, int], os_seq: List[int]
                 price_total += plan.price_cost
 
         # ---- 加工阶段 ----
+        # Processing stage
         if pseudo:
             start = finish = arrive
             bind, mprev = "arrive", None
         else:
             mf = free[m]
             bind = "machine" if mf > arrive else "arrive"
-            start = max(arrive, mf)                       # B4 核心公式
+            start = max(arrive, mf)                       # B4 核心公式 / Core formula of B4
             finish = start + p
             mprev = last_on_machine.get(m)
             free[m] = finish
@@ -323,6 +384,7 @@ def decode(inst: Instance, net: Network, ma: Dict[OpKey, int], os_seq: List[int]
 
 # --------------------------------------------------------------------------
 # 关键路径归因(规格 6.5 第 1 步)
+# Critical-path attribution (spec 6.5, step 1)
 # --------------------------------------------------------------------------
 
 def critical_chain(result: DecodeResult) -> List[CriticalItem]:
@@ -330,10 +392,15 @@ def critical_chain(result: DecodeResult) -> List[CriticalItem]:
 
     与只回溯工序链的原实现相比,本函数把运输段纳入链上,并在开工被"工件到达"
     卡住时进一步分解到底是上游工序慢、车辆不够、还是某条走廊某个时段堵。
+
+    Trace backward from the last event that determines C_max and produce a critical chain with attribution types.
+
+    Compared with the original implementation, which only walked the operation chain, this function puts transport segments on the chain. When a start is blocked by "job arrival", it further splits the cause into a slow upstream operation, too few vehicles, or congestion on some corridor in some period.
     """
     ops = result.ops
     tr_by_op: Dict[OpKey, TransportRecord] = {(t.job, t.i): t for t in result.transports}
     # 每辆车按任务产生顺序的任务链,用于"车辆可用性"分支的回溯
+    # Per-vehicle task chain in task-generation order, for the traceback of the "vehicle availability" branch.
     prev_task_of: Dict[OpKey, OpKey] = {}
     last_of_agv: Dict[int, OpKey] = {}
     for tr in result.transports:
@@ -365,18 +432,21 @@ def critical_chain(result: DecodeResult) -> List[CriticalItem]:
             continue
 
         # 载货段的让行等待:无论瓶颈在哪一侧,这部分都实际拖长了到达时刻
+        # Yield-wait on the loaded segment: whichever side the bottleneck is on, this wait actually delays arrival.
         for cid, wf, wt, amt in tr.loaded_plan.wait_events():
             items.append(CriticalItem("corridor", op=cur, corridor=cid, t_start=wf,
                                       t_end=wt, amount=amt, agv=tr.agv))
 
         if tr.ready >= tr.empty_plan.arrive - EPS:
             # 车先到、件未好 -> 瓶颈在上游工序
+            # Vehicle arrived first and the job was not ready -> the bottleneck is the upstream operation.
             items.append(CriticalItem("upstream", op=cur, t_start=tr.empty_plan.arrive,
                                       t_end=tr.ready, amount=max(0.0, tr.ready - tr.empty_plan.arrive)))
             cur = (rec.job, rec.i - 1) if rec.i > 1 else None
             continue
 
         # 件已好、车后到 -> 分解空载段:是路上堵,还是车本身腾不出来
+        # Job was ready and the vehicle arrived later -> split the empty segment: congestion on the way, or the vehicle itself was not free.
         for cid, wf, wt, amt in tr.empty_plan.wait_events():
             items.append(CriticalItem("corridor", op=cur, corridor=cid, t_start=wf,
                                       t_end=wt, amount=amt, agv=tr.agv))
@@ -392,7 +462,10 @@ def critical_chain(result: DecodeResult) -> List[CriticalItem]:
 
 
 def critical_real_ops(result: DecodeResult) -> List[OpKey]:
-    """关键链上的实工序(去重、保持追溯顺序),供改派算子挑选候选。"""
+    """关键链上的实工序(去重、保持追溯顺序),供改派算子挑选候选。
+
+    Real operations on the critical chain (deduplicated, traceback order kept), used by the reassignment operator to pick candidates.
+    """
     out: List[OpKey] = []
     for it in critical_chain(result):
         if it.op is not None and not result.ops[it.op].pseudo and it.op not in out:
@@ -402,7 +475,10 @@ def critical_real_ops(result: DecodeResult) -> List[OpKey]:
 
 def critical_corridor_slots(result: DecodeResult, bucket_width: float
                             ) -> List[BucketKey]:
-    """关键链上出现的走廊-时段槽位,供影子价格加权与错峰算子定位。"""
+    """关键链上出现的走廊-时段槽位,供影子价格加权与错峰算子定位。
+
+    Corridor-time slots that appear on the critical chain, used to weight shadow prices and to locate the stagger operator.
+    """
     if bucket_width <= 0:
         return []
     out: List[BucketKey] = []
@@ -420,6 +496,10 @@ def blocking_opponents(result: DecodeResult, cid: str, t_start: float, t_end: fl
 
     这是"冲突凭证"的具体内容:下层解冲突时天然知道是谁挡了谁,把这一对操作对象
     交给上层,上层的邻域就不再是随机变异,而是定向修复。
+
+    Opponent tasks that occupy corridor cid over [t_start, t_end) and thereby cause a yield.
+
+    This is the concrete content of a "conflict certificate": when the lower level resolves a conflict it already knows who blocked whom. Handing that pair to the upper level means the neighborhood is no longer a random mutation, but a directed repair.
     """
     out: List[OpKey] = []
     for tr in result.transports:

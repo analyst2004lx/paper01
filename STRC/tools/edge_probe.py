@@ -7,6 +7,15 @@ E2b 检验的是「实现与释放集定义是否一致」,不是「四类边是
 用法(在 STRC/ 下):
     py -m tools.edge_probe              # 2 算例 × 3 种子
     py -m tools.edge_probe --full       # 与 E1 同口径 5×10
+
+Differential probe of the edge set: change only one reservation inside the closure, and see whether something outside is forced to move.
+
+E2b checks whether the implementation matches the definition of the release set, not whether the four edge types cover the physical coupling.
+This tool does not assume a ground-truth coupling: delay each r in Cl once; if that newly overlaps some o not in Cl on the same corridor, record a leak — a channel the current edge set cannot draw, but that would physically collide after the delay.
+
+Usage (from STRC/):
+    py -m tools.edge_probe              # 2 instances × 3 seeds
+    py -m tools.edge_probe --full       # same protocol as E1, 5×10
 """
 from __future__ import annotations
 
@@ -52,6 +61,10 @@ def _probe(reservations, closed, delay: float):
     """返回 (n_probed, n_delay_leaks, n_abut, n_near_miss, n_same_agv_leaks)。
 
     abut = 半开区间首尾相接(gap=0):现有让行边要求重叠,接壤不画边。
+
+    Return (n_probed, n_delay_leaks, n_abut, n_near_miss, n_same_agv_leaks).
+
+    abut = half-open intervals that meet end to end (gap=0): existing yield edges require overlap, so abutting draws no edge.
     """
     cl = set(closed)
     outside = [o for o in reservations if o not in cl]

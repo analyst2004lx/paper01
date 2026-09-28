@@ -9,6 +9,20 @@
     BPMN: 16 个模型 / 15 个资源 / 21 个操作 / 23 个位置 / 31 条物料流边
 
 用法(在 paper03/tessera/ 下):  py -m tools.graph_diag
+
+Corroboration-hypergraph and coverage diagnostics.
+
+The first thing that must be quantified: how many coupling edges the 16 BPMN
+files actually give, and what fraction of logged activities they cover. That
+is the **structural ceiling** of coupled corroboration, the same kind of
+question as paper02's "the binary feasibility mask covers only 31% of messages."
+
+Also check that the parsing convention matches paper02 (same log, so the
+numbers must agree):
+    282 cases / 3,062 activities (failures excluded) / 3,157 including failures
+    BPMN: 16 models / 15 resources / 21 operations / 23 positions / 31 material-flow edges
+
+Usage (from paper03/tessera/):  py -m tools.graph_diag
 """
 from __future__ import annotations
 

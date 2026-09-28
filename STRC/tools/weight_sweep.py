@@ -8,6 +8,17 @@
 用法(在 STRC/ 下):
     py -m tools.weight_sweep
     py -m tools.weight_sweep --seeds 42,7 --modes lognormal
+
+Sweep of nonuniform edge weights: rerun only E1/E3, to test whether the main conclusions are sensitive to the equal-weight calibration.
+
+All three levels multiply the original corridor time by a factor, then rebuild the Network (ideal_dist is recomputed with it):
+  lognormal  independent lognormal, geometric mean normalized to 1, keeping the average scale
+  lu_far     slower the farther from the load/unload point (1 + 0.8 * d/dmax)
+  split      each corridor independently takes 0.5 or 2.0
+
+Usage (from STRC/):
+    py -m tools.weight_sweep
+    py -m tools.weight_sweep --seeds 42,7 --modes lognormal
 """
 from __future__ import annotations
 
@@ -55,7 +66,10 @@ def _cid(u: str, v: str) -> str:
 
 
 def apply_weights(inst, mode: str, seed: int):
-    """深拷贝算例并改写 corridors[].time。"""
+    """深拷贝算例并改写 corridors[].time。
+
+Deep-copy the instance and rewrite corridors[].time.
+"""
     from algorithm.clbs_bridge import Network
 
     inst = copy.deepcopy(inst)

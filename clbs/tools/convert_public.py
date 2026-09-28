@@ -25,6 +25,28 @@
 - `num_agvs = 2`:HF/Kumar/Deroussi 这几族公开算例统一为两辆车(Lim & Moon 2023
   §4:"All test instances involve two transporters");
 - 布局按机器数选取:M 台机的算例用 `<M>-M` 布局矩阵。
+
+Public FJSPT benchmarks → this project's section-3.1 JSON schema (spec 12.4, item 2).
+
+Usage (from the clbs/ directory):
+
+    py -m tools.convert_public --check          # fidelity check only, do not write files
+    py -m tools.convert_public                  # convert all 20 hf instances -> database/json/hf/
+    py -m tools.convert_public --out <dir>
+
+Input is the **text** under `database/extracted/hf/`, produced once from the read-only PDF by:
+
+    pdftotext -raw -enc UTF-8 database/raw/homayouni_fontes_2020/<f>.pdf \
+              database/extracted/hf/<f>.txt
+
+Extraction and conversion are split because extraction needs an external binary (poppler's pdftotext), while conversion must run on the standard library alone. After the split, the converter reproduces on any machine with Python, and the extracts are recorded in the MANIFEST together with their SHA256.
+
+**Extraction errors do not pass silently**: each instance header declares `M*J*O`, and the parser checks machine count, job count, operation count, and precedence-arc count (= O - J). A mismatch is an error and an exit. A missing line, a shifted line, or glued digits is caught by one of these four constraints.
+
+Definitions (consistent with the literature; see database/README.md):
+- `delta_return = 0`: finished goods do not return; makespan is the completion of the last operation. Checked on SFJST01 — the literature optimum 70 = LU→m1 travel 4 + 45 + 21, exactly the job chain without the return;
+- `num_agvs = 2`: the public HF/Kumar/Deroussi families all use two vehicles (Lim & Moon 2023 §4: "All test instances involve two transporters");
+- Layout is chosen by machine count: an instance with M machines uses the `<M>-M` layout matrix.
 """
 from __future__ import annotations
 
@@ -47,10 +69,14 @@ _HEADER_RE = re.compile(r"^([a-z]+\d+)\s+(\d+)\s*\*\s*(\d+)\s*\*\s*(\d+)")
 
 # --------------------------------------------------------------------------
 # 解析:工件集
+# Parse: job sets
 # --------------------------------------------------------------------------
 
 class JobSet:
-    """一个公开算例的工件数据(机器标号沿用原文的 0 基)。"""
+    """一个公开算例的工件数据(机器标号沿用原文的 0 基)。
+
+    Job data of one public instance (machine ids stay 0-based, as in the source).
+    """
 
     def __init__(self, name: str, num_machines: int, num_jobs: int,
                  num_ops: int, precedence: List[Tuple[int, int]],
@@ -60,11 +86,14 @@ class JobSet:
         self.num_jobs = num_jobs
         self.num_ops = num_ops
         self.precedence = precedence
-        self.ops = ops                      # 全局工序号 -> {机器: 工时}
+        self.ops = ops                      # 全局工序号 -> {机器: 工时} / global op id -> {machine: time}
         self.chains = _chains_from_precedence(num_ops, precedence)
 
     def check(self) -> None:
-        """把算例头的声明值当作独立校验源,核对解析结果(见模块 docstring)。"""
+        """把算例头的声明值当作独立校验源,核对解析结果(见模块 docstring)。
+
+        Treat the header's declared values as an independent check of the parse (see the module docstring).
+        """
         if len(self.ops) != self.num_ops:
             raise ValueError(f"{self.name}: 声明 {self.num_ops} 道工序,解析到 {len(self.ops)}")
         want_arcs = self.num_ops - self.num_jobs
@@ -90,6 +119,10 @@ def _chains_from_precedence(num_ops: int,
     原格式只给"U 必须先于 V"的两两关系,不显式说哪些工序属于同一个工件。各工件
     在这批数据里都是简单链(每个工序至多一个前驱、至多一个后继),故按链首出发
     顺着后继走一遍即可;链的条数必须等于声明的工件数,由 `check` 断言。
+
+    Recover each job's operation chain from the precedence relations.
+
+    The source format only gives pairwise "U must precede V"; it does not say which operations belong to the same job. In this batch every job is a simple chain (each operation has at most one predecessor and one successor), so start at each chain head and walk the successors. The number of chains must equal the declared job count; `check` asserts that.
     """
     succ: Dict[int, int] = {}
     pred: Dict[int, int] = {}
@@ -111,7 +144,10 @@ def _chains_from_precedence(num_ops: int,
 
 
 def parse_jobsets(text: str) -> List[JobSet]:
-    """解析 HF 工件集文本。返回顺序即文件中的出现顺序。"""
+    """解析 HF 工件集文本。返回顺序即文件中的出现顺序。
+
+    Parse HF job-set text. The return order is the order of appearance in the file.
+    """
     lines = [ln.strip() for ln in text.splitlines()]
     lines = [ln for ln in lines if ln and not ln.startswith("--")]
 
@@ -155,6 +191,7 @@ def parse_jobsets(text: str) -> List[JobSet]:
 
 # --------------------------------------------------------------------------
 # 解析:布局矩阵
+# Parse: layout matrices
 # --------------------------------------------------------------------------
 
 def parse_layouts(text: str) -> Dict[int, List[List[float]]]:
@@ -163,6 +200,10 @@ def parse_layouts(text: str) -> Dict[int, List[List[float]]]:
     矩阵第 0 行/列为 LU,其后为机器 1..M(原文的 1 基标号)。行 = 出发地,
     列 = 目的地;矩阵**有向**(往返不等),这一点必须保留,见 network.Network 的
     docstring。
+
+    Parse travel-time matrix text; return {machine count: matrix}.
+
+    Row/column 0 is LU, then machines 1..M (1-based ids from the source). Rows are origins, columns are destinations. The matrix is **directed** (the two directions differ); that must be kept. See the docstring of network.Network.
     """
     lines = [ln.strip() for ln in text.splitlines()]
     lines = [ln for ln in lines if ln and not ln.startswith("--")]
@@ -196,6 +237,7 @@ def parse_layouts(text: str) -> Dict[int, List[List[float]]]:
 
 # --------------------------------------------------------------------------
 # 保真度体检:矩阵是不是某张图的最短路闭包?
+# Fidelity check: is the matrix the shortest-path closure of some graph?
 # --------------------------------------------------------------------------
 
 def closure_violations(matrix: List[List[float]]
@@ -207,6 +249,10 @@ def closure_violations(matrix: List[List[float]]
     **不是任何图的最短路闭包**;强行为它造一张走廊图,得到的算例在这些位置对上
     比原算例更快,即换了一个更容易的算例。反之若无违反项,矩阵自身就是一张
     (完全有向图的)合法闭包,可以无损承载。
+
+    Triangle-inequality violations (a, b, c, direct, detour) — those with d[a][c] > d[a][b] + d[b][c].
+
+    Why this decides **whether the matrix can be reconstructed as a corridor graph**: the all-pairs shortest-path matrix of any graph satisfies the triangle inequality (otherwise the detour itself would be a shorter path). A violation means the matrix is **not the shortest-path closure of any graph**; forcing a corridor graph onto it makes the instance faster at those pairs, i.e. a different, easier instance. With no violations, the matrix itself is a legal closure of a complete digraph and can be carried without loss.
     """
     n = len(matrix)
     bad: List[Tuple[int, int, int, float, float]] = []
@@ -242,6 +288,12 @@ def fidelity_report(layouts: Dict[int, List[List[float]]],
     `label_fmt` 决定 `layout` 列怎么写。默认 `"{}-M"` 是 hf 的口径——那一族的布局**按机器数
     索引**,故 `3-M` 意为"3 台机的布局"。别的数据集若按序号索引布局(如 bu 的 4 个布局都是
     4 台机),必须改这个格式,否则 `1-M` 会被读成"1 台机",与事实相反。
+
+    One check row per layout. The two "reconstructible" columns **must be read separately**; reading them together yields the opposite conclusion.
+
+    `digraph_reconstructible` checks only the triangle inequality, i.e. "can this be the shortest-path closure of some directed graph". `corridor_reconstructible` also requires symmetry, i.e. "can this be this project's undirected corridor network" — the latter is the criterion for running the contention arm, because `Instance.corridors` is undirected and each corridor has one `time`, so the t* computed from it is necessarily symmetric. Of the 7 HF layouts, 5 pass the former and none pass the latter; looking only at the first column would suggest those 5 can run the contention arm.
+
+    `label_fmt` decides how the `layout` column is written. The default `"{}-M"` is the hf convention — that family's layouts are **indexed by machine count**, so `3-M` means "the 3-machine layout". If another dataset indexes layouts by serial number (the 4 bu layouts are all 4 machines), this format must change, or `1-M` is read as "1 machine", which is false.
     """
     rows = []
     for nm in sorted(layouts):
@@ -263,6 +315,7 @@ def fidelity_report(layouts: Dict[int, List[List[float]]],
 
 # --------------------------------------------------------------------------
 # 生成算例 JSON
+# Build instance JSON
 # --------------------------------------------------------------------------
 
 def machine_node(m1: int) -> str:
@@ -274,6 +327,10 @@ def build_instance(js: JobSet, matrix: List[List[float]], src: dict) -> dict:
 
     机器标号:原文 0 基 -> 本项目 1 基(m+1),节点名 `m{1..M}`;矩阵索引 0 为 LU、
     k 为机器 k,故本项目机器 id 与矩阵索引同号,无偏移风险。
+
+    Emit an instance dict in the section-3.1 schema (degenerate benchmark version, suffix -ideal).
+
+    Machine ids: source 0-based -> this project 1-based (m+1), node name `m{1..M}`. Matrix index 0 is LU and k is machine k, so this project's machine id matches the matrix index, with no offset risk.
     """
     if len(matrix) != js.num_machines + 1:
         raise ValueError(f"{js.name}: 需要 {js.num_machines} 机布局,"

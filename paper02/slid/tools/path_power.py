@@ -15,6 +15,17 @@ E1 里我方在 A1/A4/A6 上输给 B2 markov，这有两种完全不同的解释
 因为"哪一路满预算"要在良性折上选，而单路满预算的选择依赖攻击族。
 
 用法（在 paper02/slid/ 下）:  py -m tools.path_power
+
+Net detection rate when each path **takes the full alpha alone**, lined up with a baseline that also takes the full alpha.
+
+In E1 we lose to B2 markov on A1/A4/A6. There are two completely different explanations, with opposite implications for the paper, and they must be separated:
+
+1. **Budget dilution.** Our structural channel is not itself weak; after an even three-way split each path has only alpha/3, while markov swallows alpha on one path. That is an inherent cost of a multi-channel method, a trade of coverage breadth for single-point sensitivity, and it can be written as an honest limitation.
+2. **M3 itself is weaker than a first-order Markov model.** If the structural channel still loses to markov after taking alpha alone, that is an implementation defect (Mondrian grouping shreds the resolution of small-sample groups; Dirichlet smoothing flattens rare transitions). It must be fixed, not written up as a tradeoff.
+
+This tool scales each path alone to a full budget to decide: weights go to one path and the rest are 0, still through the same `baselines.judge`. This is not a new method, only a diagnosis — **the main table must not be reported this way**, because "which path gets the full budget" would be chosen on a benign fold, and the single-path full-budget choice depends on the attack family.
+
+Usage (from paper02/slid/):  py -m tools.path_power
 """
 from __future__ import annotations
 
@@ -40,6 +51,10 @@ def fit_fold(train, frac=0.67):
     split conformal 必须留出校准折,于是本方法的转移矩阵只见到 train 的
     67%,而基线吃满 100%。这不是实现失误而是**分布无关校准的数据代价**,
     但要把它与"M3 本身弱"分开,只能让基线也只吃这 67% 再比一次。
+
+    Reproduce the internal split of Detector.fit and take the fold it actually uses for fitting.
+
+    Split conformal must hold out a calibration fold, so this method's transition matrix sees only 67% of train, while a baseline eats 100%. That is not an implementation mistake; it is the **data cost of distribution-free calibration**. To separate it from "M3 is weak in itself", the baseline must also be fed only that 67% and compared again.
     """
     by_case = _group(train)
     keys = _order_cases(by_case, temporal=True, rng=None)
@@ -48,7 +63,10 @@ def fit_fold(train, frac=0.67):
 
 
 def solo(det, benign, attacked, labels, alpha, rng, idx, *, conformal=False):
-    """只给第 idx 条路预算，其余为 0。"""
+    """只给第 idx 条路预算，其余为 0。
+
+    Give a budget only to path idx; the rest are 0.
+    """
     w = [0.0] * len(PATHS)
     w[idx] = 1.0
     pb = _parts(det, benign, np.random.default_rng(rng.integers(1 << 30)),

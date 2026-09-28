@@ -1,97 +1,107 @@
-# TESSERA — 耦合互证与可问责沉默
+# TESSERA — 耦合互证与可问责沉默 / Coupled corroboration and accountable silence
 
 面向被劫持工业设备**任务状态伪造**的在线检测与归责：
 任务图诱导的耦合互证 + 哈希链承诺的可问责沉默 + 带宽–安全裕度预算。
+
+Online detection and attribution of **task-state falsification** by a compromised industrial device: task-graph coupled corroboration, accountable silence by hash-chain commitment, and a bandwidth–safety margin budget.
 
 对应论文：《基于耦合互证与可问责沉默的被劫持设备任务状态伪造检测》
 （*Detecting Task-State Falsification by Compromised Devices via Coupled
 Corroboration and Accountable Silence*）。方法论证、查新与实验设计见
 `../paper03-NewIdea.md`。
 
-## 一、为什么叫 TESSERA
+The paper is 《基于耦合互证与可问责沉默的被劫持设备任务状态伪造检测》 (*Detecting Task-State Falsification by Compromised Devices via Coupled Corroboration and Accountable Silence*). The argument, literature check, and experiment design are in `../paper03-NewIdea.md`.
+
+## 一、为什么叫 TESSERA / 1. Why the name TESSERA
 
 罗马人的 **tessera hospitalis** 是一块被掰成两半的凭证：宾主各持一半，
 日后拼合即可互证身份，任何一半单独都不成立。这正是本文两个机制的共同结构——
 
-- **耦合互证**：一次任务交接的真伪，由物理耦合的双方各持"半块"，
-  单方声明不构成证据，必须拼合。
-- **可问责沉默**：心跳槽上逐个披露的哈希链原像，是一串**只有承诺者能产生**
-  的凭证；每一枚单独看是"我未偏离"的声明，串起来则是不可否认的记录。
+The Roman **tessera hospitalis** was a token broken in two: host and guest each kept one half, and later the halves had to fit to corroborate identity. Either half alone was worthless. That is the shared structure of the two mechanisms here —
+
+- **耦合互证** / **coupled corroboration**：一次任务交接的真伪，由物理耦合的双方各持"半块"，单方声明不构成证据，必须拼合。 / The truth of one task handover is held as "one half" by each physically coupled party. A statement from one side is not evidence; the halves must fit.
+- **可问责沉默** / **accountable silence**：心跳槽上逐个披露的哈希链原像，是一串**只有承诺者能产生**的凭证；每一枚单独看是"我未偏离"的声明，串起来则是不可否认的记录。 / The hash-chain preimages disclosed slot by slot are credentials **only the committer can produce**. Each one, alone, states "I have not deviated"; strung together they are an undeniable record.
 
 命名取隐喻而非缩写，与本方向的惯例一致（PISTIS、POLYGRAPH、VOUCH、COLAW、
 DIAT、TESLA、US-AID 均如此）。这与 `../../paper02/slid` 刻意"按问题命名"
 的取舍不同，理由也不同：SLID 的三项技术各有先行工作，按技术命名会overclaim；
 而本文查新的结论是**耦合互证的见证集合选取原则确无先例**，机制命名站得住。
 
-## 二、快速开始
+The name is a metaphor, not an acronym, which is the convention in this line of work (PISTIS, POLYGRAPH, VOUCH, COLAW, DIAT, TESLA, US-AID). The choice differs from `../../paper02/slid`, which deliberately names itself after the problem, and the reason differs too: each of SLID's three techniques has prior work, so naming by technique would overclaim. The literature check here concludes that **the witness-set selection principle of coupled corroboration really has no precedent**, so a mechanism name holds.
+
+## 二、快速开始 / 2. Quick start
 
 已可运行的（实测结果见第五之二节）：
 
+What already runs (measurements are in section 5.2):
+
 ```powershell
 cd paper03\tessera
-py main.py                                    # 一键:覆盖→注入→检出→写 output/
-py -m tools.graph_diag                        # 互证超图规模、覆盖度、无对手方区间
-py -m tools.silence_diag                      # 沉默机制自检、误报-时延-带宽权衡
-py -m tools.detect_diag                       # P1-P4 检出率、时延、消融表
-py -m tools.collusion_diag                    # 串谋界、模型级下界、派工收益
-py -m tools.budget_curve                      # 危害模型 → 时间预算 → T_hb 可行区间 → 带宽
-py -m tools.tier1_diag                        # 第一档基线:单观测者族的结构性 0
-py -m tools.baseline_diag                     # 第二档基线:见证选取规则对照
-py -m tools.heartbeat_diag                    # 第三/四档:等带宽时延、TESLA、先知天花板
-py -m tools.loss_sweep                        # 丢包率扫参(含 PISTIS 地标 p=50%)
-py -m pytest tests\test_all.py -v             # 断言集(63 条)
+py main.py                                    # 一键:覆盖→注入→检出→写 output/ / one shot: coverage → inject → detect → write output/
+py -m tools.graph_diag                        # 互证超图规模、覆盖度、无对手方区间 / hypergraph size, coverage, no-counterpart interval
+py -m tools.silence_diag                      # 沉默机制自检、误报-时延-带宽权衡 / silence self-check and the false-alarm–latency–bandwidth tradeoff
+py -m tools.detect_diag                       # P1-P4 检出率、时延、消融表 / P1–P4 detection rate, latency, ablation
+py -m tools.collusion_diag                    # 串谋界、模型级下界、派工收益 / collusion bound, model-level lower bound, dispatch gain
+py -m tools.budget_curve                      # 危害模型 → 时间预算 → T_hb 可行区间 → 带宽 / hazard model → time budget → feasible T_hb → bandwidth
+py -m tools.tier1_diag                        # 第一档基线:单观测者族的结构性 0 / tier 1: the structural 0 of the single-observer family
+py -m tools.baseline_diag                     # 第二档基线:见证选取规则对照 / tier 2: witness-selection rules
+py -m tools.heartbeat_diag                    # 第三/四档:等带宽时延、TESLA、先知天花板 / tiers 3/4: equal-bandwidth latency, TESLA, oracle ceiling
+py -m tools.loss_sweep                        # 丢包率扫参(含 PISTIS 地标 p=50%) / loss-rate sweep (includes the PISTIS landmark p=50%)
+py -m pytest tests\test_all.py -v             # 断言集(63 条) / assertion set (63 tests)
 ```
 
-## 三、文件夹层级
+## 三、文件夹层级 / 3. Directory layout
 
 ```text
 tessera/
-  README.md            # 本文件
-  requirements.txt     # 依赖
-  main.py              # 一键入口:载入日志 → 建互证超图 → 注入攻击 → 检测 → 写结果
-  algorithm/           # 算法核心
-    ingest.py          #   XES 解析、活动实例合并、按 case / (设备, case) 切链
-    taskgraph.py       #   从 16 个 BPMN 导出任务图 → 互证超图（见证边）
-    corroborate.py     #   耦合互证:对手方确认、pending 窗口、否证与证据构造
-    silence.py         #   可问责沉默:哈希链承诺、心跳槽、原像缺失判定
-    crypto.py          #   哈希链 / HMAC / Ed25519 承诺根,附开销计量
-    coverage.py        #   互证覆盖度、无对手方区间识别、按需主动互证探测
-    collusion.py       #   串谋界:互证超图上"下一个对手方"关系的前向封闭闭包
-    baselines.py       #   基线:第一档 SingleObserver + 第二档 WitnessPolicy
-                       #        + 第三档心跳/带宽解析对照 + 第四档先知天花板
-    budget.py          #   带宽–安全裕度:T_hb 可行区间、FHI 时间预算
-    attacks.py         #   注入器 P1–P4,对应引导例四条攻击路径
-  tools/               # 实验驱动与诊断
-    graph_diag.py      #   互证超图规模、覆盖度、无对手方区间、互证窗口分布
-    silence_diag.py    #   协议自检、误报-时延-带宽权衡、与互证的时延对照
-    detect_diag.py     #   P1-P4 检出率与时延、排队容差扫参、消融表
-    collusion_diag.py  #   串谋界、模型级下界、派工收益
-    budget_curve.py    #   危害模型 → 时间预算 → T_hb 可行区间 → 带宽下界
-    tier1_diag.py      #   第一档基线:单观测者族对任务状态伪造的结构性 0
-    baseline_diag.py   #   第二档基线:见证选取规则的检出、误报、见证集规模
-    heartbeat_diag.py  #   第三/四档:等带宽时延、GOOSE/TESLA 划界、先知缺口
-    loss_sweep.py      #   丢包率扫参(含 PISTIS 地标 p=50%)
+  README.md            # 本文件 / this file
+  requirements.txt     # 依赖 / dependencies
+  main.py              # 一键入口:载入日志 → 建互证超图 → 注入攻击 → 检测 → 写结果 / one-shot entry
+  algorithm/           # 算法核心 / algorithm core
+    ingest.py          #   XES 解析、活动实例合并、按 case / (设备, case) 切链 / XES parse, merge activities, split chains
+    taskgraph.py       #   从 16 个 BPMN 导出任务图 → 互证超图（见证边） / task graph and corroboration hypergraph from 16 BPMN files
+    corroborate.py     #   耦合互证:对手方确认、pending 窗口、否证与证据构造 / coupled corroboration
+    silence.py         #   可问责沉默:哈希链承诺、心跳槽、原像缺失判定 / accountable silence
+    crypto.py          #   哈希链 / HMAC / Ed25519 承诺根,附开销计量 / hash chain, HMAC, Ed25519 commitment root, plus cost accounting
+    coverage.py        #   互证覆盖度、无对手方区间识别、按需主动互证探测 / coverage and the no-counterpart interval
+    collusion.py       #   串谋界:互证超图上"下一个对手方"关系的前向封闭闭包 / collusion bound: forward reachable closure
+    baselines.py       #   基线:第一档 SingleObserver + 第二档 WitnessPolicy / baselines: tier-1 SingleObserver and tier-2 WitnessPolicy
+                       #        + 第三档心跳/带宽解析对照 + 第四档先知天花板 / plus tier-3 closed form and the tier-4 oracle ceiling
+    budget.py          #   带宽–安全裕度:T_hb 可行区间、FHI 时间预算 / bandwidth–safety margin
+    attacks.py         #   注入器 P1–P4,对应引导例四条攻击路径 / injector P1–P4
+  tools/               # 实验驱动与诊断 / experiment drivers and diagnostics
+    graph_diag.py      #   互证超图规模、覆盖度、无对手方区间、互证窗口分布 / hypergraph, coverage, window
+    silence_diag.py    #   协议自检、误报-时延-带宽权衡、与互证的时延对照 / silence self-check and latency contrast
+    detect_diag.py     #   P1-P4 检出率与时延、排队容差扫参、消融表 / detection, allowance sweep, ablation
+    collusion_diag.py  #   串谋界、模型级下界、派工收益 / collusion bound and dispatch gain
+    budget_curve.py    #   危害模型 → 时间预算 → T_hb 可行区间 → 带宽下界 / hazard model through bandwidth lower bound
+    tier1_diag.py      #   第一档基线:单观测者族对任务状态伪造的结构性 0 / tier-1 structural 0
+    baseline_diag.py   #   第二档基线:见证选取规则的检出、误报、见证集规模 / tier-2 selection rules
+    heartbeat_diag.py  #   第三/四档:等带宽时延、GOOSE/TESLA 划界、先知缺口 / tiers 3/4
+    loss_sweep.py      #   丢包率扫参(含 PISTIS 地标 p=50%) / loss-rate sweep, including p=50%
   input/
-    ft_trier/          #   Trier Fischertechnik IoT 日志(主数据集)
-    fjsp/              #   FJSP 标准算例,用于串谋界的规模化评估
-    raw/               #   数据来源与取用说明
-  output/              # 每次运行的原始结果,按 tag 分目录
-  experiments/         # 导出的论文级 CSV
+    ft_trier/          #   Trier Fischertechnik IoT 日志(主数据集) / main dataset
+    fjsp/              #   FJSP 标准算例,用于串谋界的规模化评估 / FJSP instances for scaling the collusion bound
+    raw/               #   数据来源与取用说明 / sources and how the data is used
+  output/              # 每次运行的原始结果,按 tag 分目录 / raw results of each run, one directory per tag
+  experiments/         # 导出的论文级 CSV / paper-level CSV exports
   tests/
-    test_all.py        #   每条断言锚定一个已量化的事实
+    test_all.py        #   每条断言锚定一个已量化的事实 / each assertion pins one quantified fact
 ```
 
-## 四、攻击族与基线（口径先定，避免事后调整）
+## 四、攻击族与基线（口径先定，避免事后调整） / 4. Attack families and baselines (fix the definitions first)
 
 **攻击族 P1–P4** 直接对应 `../paper03-NewIdea.md` 引导例的四条路径，
 编号在文档与代码中必须一致（`slid` 的设计约束第 8 条记录过编号错位的代价）：
 
-| 编号 | 攻击 | 有效的通道（实测见第五之三节） |
+**Attack families P1–P4** are the four paths in the running example of `../paper03-NewIdea.md`. The numbering must match between the document and the code (design constraint 8 in `slid` records what a numbering mismatch costs):
+
+| 编号 / id | 攻击 / attack | 有效的通道（实测见第五之三节） / channel that works (measured in §5.3) |
 | --- | --- | --- |
-| P1 | 谎报完成，**不维持心跳**（朴素谎报者） | 互证与沉默都能抓，沉默快 30 倍 |
-| P2 | 完全沉默，令接收方按命令账本推出错误状态 | 三者都能抓，沉默快 180 倍 |
-| P3 | 谎报完成且**按时披露原像**（老练谎报者） | **只有耦合互证能抓** |
-| P4 | 串谋（耦合双方同时被劫持） | 承认的边界，由串谋界量化 |
+| P1 | 谎报完成，**不维持心跳**（朴素谎报者） / falsified completion, **no heartbeat** (naive falsifier) | 互证与沉默都能抓，沉默快 30 倍 / both catch it; silence is 30× faster |
+| P2 | 完全沉默，令接收方按命令账本推出错误状态 / sustained non-response; the receiver infers a wrong state from the command ledger | 三者都能抓，沉默快 180 倍 / all three catch it; silence is 180× faster |
+| P3 | 谎报完成且**按时披露原像**（老练谎报者） / falsified completion **and on-time preimage disclosure** (sophisticated falsifier) | **只有耦合互证能抓** / **only coupled corroboration catches it** |
+| P4 | 串谋（耦合双方同时被劫持） / collusion (both coupled parties compromised) | 承认的边界，由串谋界量化 / an admitted boundary, quantified by the collusion bound |
 
 P1 与 P3 的区别是实现时被数据逼出来的一处细化。引导例把两者都写成"谎报完成"，
 差别只在证据构造，那样两族会跑出完全相同的数字（属 paper02 设计约束第 8 条
@@ -99,42 +109,52 @@ P1 与 P3 的区别是实现时被数据逼出来的一处细化。引导例把�
 才读得出"两个机制各有对方覆盖不到的攻击"：去掉互证则 P3 完全逃脱，去掉沉默
 则 P1/P2 的时延退化一到两个数量级。
 
+The split between P1 and P3 was forced by the data. The running example wrote both as a "falsified completion report", differing only in how the evidence is built, so the two families produced identical numbers (the "you ran it, but it is the same attack" warning in paper02 design constraint 8). Once they are split by **whether the attacker keeps the heartbeat**, the ablation reads as "each mechanism covers attacks the other misses": drop corroboration and P3 escapes entirely; drop silence and the latency of P1/P2 degrades by one or two orders of magnitude.
+
 P1 的攻击者比 paper02 的 A4 **严格更强**：A4 需要自己挑一个结构上最可能的
 下一步，注入器强度取决于它对转移模型的掌握；本文设定里调度器已通过命令账本
 下发了"送到 R3 工位"，攻击者只需如实回答这条命令、把结果位翻真，不承担猜错
 的风险。**模型就写在命令里。**
 
-### 基线：按**消耗的信息**分档，不按论文分组
+The P1 attacker is **strictly stronger** than paper02's A4. A4 must itself pick the structurally most likely next step, so injector strength depends on how well it knows the transition model. Here the scheduler has already dispatched "deliver to station R3" through the command ledger. The attacker only has to answer that command truthfully and flip the result bit, with no risk of guessing wrong. **The model is written in the command.**
+
+### 基线：按**消耗的信息**分档，不按论文分组 / Baselines: tiered by **information consumed**, not by paper
 
 早先的 B1–B5 是按论文列的，那是根子上的错，会同时犯两种病：拿别人为**别的问题**
 设计的方法跑我们的数据（稻草人），以及把对照对象写成某一篇而非**方法类**。
 改按"基线消耗哪些信息、花多少预算"分档，编号前缀自明，也顺带消除了与断言组
 B1/B5 的编号冲突（此前两套编号并存）。
 
-| 档 | 编号 | 基线 | 消耗的信息 | 作用 |
+The earlier B1–B5 were listed by paper. That was the root mistake, and it commits both faults at once: running someone else's method, designed for **a different problem**, on our data (a straw man), and naming the comparison object as one paper rather than a **method class**. Tiering by "which information the baseline consumes, and at what budget" makes the prefix self-explanatory, and it also removes the clash with assertion groups B1/B5 (two numbering schemes used to coexist).
+
+| 档 / tier | 编号 / id | 基线 / baseline | 消耗的信息 / information used | 作用 / role |
 | --- | --- | --- | --- | --- |
-| 0 | `R0` | 匹配告警率的随机指控 | 无 | 地板：证明覆盖率不是撞上的 |
-| 1 | `S1` | 调度看门狗 | 命令账本 + 是否上报 | 实测 P1/P3 **0.000**，P2 1.000 |
-| 1 | `S2` | 计划一致性残差（通用 FDI 类） | 加时长、结果位 | 实测 P1 **0.003** ≈ FAR，判别力 ≈ 0 |
-| 1 | `S3` | 对齐式一致性检验（过程挖掘） | XES + BPMN | 实测 FAR=0 且 P1 **0.000** |
-| 2 | `W1` | 全网法定人数投票（PBFT 式） | 消息一致，无物理证据 | 实测 **0.000**，带宽 131× |
-| 2 | `W2` | 全体询证（见证集 = 全部设备） | 全网 | 实测**零增益**，见证集 4.13× |
-| 2 | `W3` | $k$ 个随机见证者 | 同规模见证集 | 实测崩到 **0.105** |
-| 2 | `W4` | 空间邻居见证 | BPMN 位置邻接 | **主对照**：只恢复 52% |
-| 3 | `H1` | 等带宽周期性全量上报 | 同带宽 | 时延 **≈8×**，最严口径超检测预算 |
-| 3 | `H2` | 无密码绑定的 GOOSE 式心跳 | 活性 | 活性有、归责无 |
-| 3 | `H3` | TESLA 式延迟密钥 | 认证但无不可否认 | 披露后可伪造，归责失败 |
-| 4 | `U1` | 每个交接点均有传感器的先知 | 真值 | 覆盖 100%；缺口 **29.95%** |
+| 0 | `R0` | 匹配告警率的随机指控 / random charges matched to the alarm rate | 无 / none | 地板：证明覆盖率不是撞上的 / floor: the coverage rate is not a lucky hit |
+| 1 | `S1` | 调度看门狗 / dispatch watchdog | 命令账本 + 是否上报 / command ledger + whether a report arrived | 实测 P1/P3 **0.000**，P2 1.000 |
+| 1 | `S2` | 计划一致性残差（通用 FDI 类） / plan-consistency residual (generic FDI) | 加时长、结果位 / plus duration and the result bit | 实测 P1 **0.003** ≈ FAR，判别力 ≈ 0 |
+| 1 | `S3` | 对齐式一致性检验（过程挖掘） / alignment conformance (process mining) | XES + BPMN | 实测 FAR=0 且 P1 **0.000** |
+| 2 | `W1` | 全网法定人数投票（PBFT 式） / network-wide quorum vote (PBFT-style) | 消息一致，无物理证据 / message agreement, no physical evidence | 实测 **0.000**，带宽 131× |
+| 2 | `W2` | 全体询证（见证集 = 全部设备） / ask everyone (witness set = all devices) | 全网 / the whole network | 实测**零增益**，见证集 4.13× / measured **zero gain**, witness set 4.13× |
+| 2 | `W3` | $k$ 个随机见证者 / $k$ random witnesses | 同规模见证集 / a witness set of the same size | 实测崩到 **0.105** / collapses to **0.105** |
+| 2 | `W4` | 空间邻居见证 / spatial-neighbor witnesses | BPMN 位置邻接 / BPMN location adjacency | **主对照**：只恢复 52% / **main control**: recovers only 52% |
+| 3 | `H1` | 等带宽周期性全量上报 / equal-bandwidth periodic full reports | 同带宽 / the same bandwidth | 时延 **≈8×**，最严口径超检测预算 / latency **≈8×**; the strictest setting exceeds the detection budget |
+| 3 | `H2` | 无密码绑定的 GOOSE 式心跳 / GOOSE-style heartbeat with no cryptographic binding | 活性 / liveness | 活性有、归责无 / liveness yes, attribution no |
+| 3 | `H3` | TESLA 式延迟密钥 / TESLA-style delayed keys | 认证但无不可否认 / authentication without non-repudiation | 披露后可伪造，归责失败 / forgeable after disclosure; attribution fails |
+| 4 | `U1` | 每个交接点均有传感器的先知 / an oracle with a sensor at every handover | 真值 / ground truth | 覆盖 100%；缺口 **29.95%** / coverage 100%; the gap is **29.95%** |
 
 **第一档不是赛马，是定理。** 断言 D1 已证 P1 的伪造声明在单观测者可见的 7 个
 字段上与良性逐字段一致、时长落在 IQR 内，故整个单观测者族的检出率是**结构性的
 0**，不是"比较低"。这一档跑起来近乎免费，产出的是一条可证命题加一行实测确认，
 比"我们比某方法高多少"体面得多，也正好把贡献 0 立起来。
 
+**Tier 1 is a theorem, not a horse race.** Assertion D1 shows that a P1 false statement matches a benign one on all 7 fields a single observer can see, and that the duration falls inside the IQR. The detection rate of the whole single-observer family is therefore a **structural 0**, not "rather low". The tier is almost free to run. It yields one provable claim plus one measured confirmation, which is a cleaner way to state contribution 0 than "we beat method X by so much".
+
 `S3` 值得单独说：本数据集本就是过程挖掘数据集、带 16 个 BPMN，alignment-based
 conformance 是此场景下最标准、最好引、工程上真会部署的方法。而它失败的机理特别
 干净——**伪造的轨迹完全合规**，它落在模型的语言里；谎言在于物理事件没发生，
 而一致性检验只看日志。这是构造性不可能，不是精度不足。
+
+`S3` deserves its own note. This dataset is a process-mining dataset, with 16 BPMN models, and alignment-based conformance is the most standard, the most citable, and the method an engineer would actually deploy here. Its failure is unusually clean: **the falsified trace is fully conformant**; it sits in the language of the model. The lie is that the physical event did not happen, and conformance looks only at the log. That is a constructive impossibility, not a lack of precision.
 
 **第二档是全部说服力所在。** 同一套协议、同一套密码学、同一预算，**只换见证集合
 的选取规则**（`corroborate.WitnessPolicy`，公平性由断言 G6 结构性保证）。实测结果
@@ -142,9 +162,13 @@ conformance 是此场景下最标准、最好引、工程上真会部署的方�
 邻接实现。任务图导出的见证集在**更小的 $|W|$ 下**胜过空间邻居，直接证明了本文主张
 的是**选取原则**而非"有见证者就行"。
 
+**Tier 2 is where the argument is won.** Same protocol, same cryptography, same budget; **only the witness-set selection rule changes** (`corroborate.WitnessPolicy`; fairness is structurally guaranteed by assertion G6). Measurements are in §5.6. `W4` is an honest port of the COLAW/Vouch+ principle "a geographic neighbor testifies", implemented by BPMN location adjacency. The witness set exported from the task graph beats spatial neighbors at a **smaller $|W|$**, which is direct evidence that the claim is a **selection principle**, not "any witness will do".
+
 **铁律：每次对比必须声明是等带宽还是等误报率。** 这是审稿人最常攻击的点。
 `budget.py` 把带宽变成由安全预算解出的量之后，等带宽对比才第一次做得干净——
 等带宽下 `H1` 只能降速率，时延必然更差，这个论证由此闭合。
+
+**Hard rule: every comparison must say whether it is equal-bandwidth or equal false-alarm rate.** That is the point reviewers attack most often. Once `budget.py` makes bandwidth a quantity solved from the safety budget, the equal-bandwidth comparison is clean for the first time: at equal bandwidth `H1` can only lower its rate, so its latency is necessarily worse, and the argument closes.
 
 **刻意不作为数值基线的两项，必须在 Related Work 里说明理由。** PISTIS 的"事件"
 是通信层连通性事件、跑在区块链上，它不消费任务事件，拿来跑必然 0，属误用；
@@ -152,48 +176,56 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
 再冠它的名。正确写法是明说不跑并给出原因，改为把其**选取原则**移植为 `W3`。
 装作跑了比不跑更不严谨。
 
-## 五、落地进度
+**Two items are deliberately not numerical baselines, and Related Work must say why.** A PISTIS "event" is a connectivity event at the communication layer, running on a blockchain. It does not consume task events, so running it here would score 0 by misuse. DiToF needs ranging or topology quantities this dataset does not have; "reimplementing it on this data" would mean inventing a method and putting its name on it. The honest write-up is to say it is not run, give the reason, and port its **selection principle** as `W3`. Pretending to have run it is less rigorous than not running it.
 
-| 模块 | 状态 |
+## 五、落地进度 / 5. Implementation status
+
+| 模块 / module | 状态 / status |
 | --- | --- |
-| 目录骨架与依赖 | 已就绪 |
-| `ingest` XES 解析与分链 | 已实现，解析口径与 paper02 逐项对齐 |
-| `taskgraph` 互证超图 | 已实现，185 条互证边自动导出 |
-| `coverage` 覆盖度与无对手方区间 | 已实现 |
-| `tools/graph_diag` 诊断 | 已实现 |
-| `crypto` 哈希链承诺与密码预算 | 已实现，三条前置条件逐条落地 |
-| `silence` 可问责沉默 | 已实现，含误报—时延—带宽解析关系 |
-| `tools/silence_diag` 诊断 | 已实现 |
-| `attacks` 注入器 P1–P4 | 已实现，含串谋的链式传播 |
-| `corroborate` 在线互证协议 | 已实现，双截止时刻，良性误报 2.25% |
-| `tools/detect_diag` 诊断与消融 | 已实现 |
-| `collusion` 串谋界 | 已实现，含模型级下界与派工收益 |
-| `tools/collusion_diag` 诊断 | 已实现 |
-| `budget` 带宽–安全裕度预算 | 已实现，含危害模型反推与突发代价 |
-| `tools/budget_curve` 诊断 | 已实现 |
-| `baselines` 第一档 `R0`/`S1`–`S3` | 已实现，结构性 0 由断言 H1–H6 锚定 |
-| `tools/tier1_diag` 诊断 | 已实现 |
-| `baselines` 第二档 `W1`–`W4` | 已实现，见证选取规则可替换 |
-| `tools/baseline_diag` 诊断 | 已实现 |
-| `baselines` 第三档 `H1`–`H3` | 已实现，等带宽时延 + 归责划界 |
-| `baselines` 第四档 `U1` | 已实现，先知天花板 = 覆盖缺口 |
-| `tools/heartbeat_diag` 诊断 | 已实现 |
-| `main.py` 一键入口 | 已实现，写 `output/<tag>/summary.json` |
-| `tools/loss_sweep` 丢包扫参 | 已实现，含 PISTIS 地标 p=50% |
+| 目录骨架与依赖 / directory skeleton and dependencies | 已就绪 / ready |
+| `ingest` XES 解析与分链 / XES parse and chain split | 已实现，解析口径与 paper02 逐项对齐 / implemented; the parse matches paper02 item by item |
+| `taskgraph` 互证超图 / corroboration hypergraph | 已实现，185 条互证边自动导出 / implemented; 185 corroboration edges exported automatically |
+| `coverage` 覆盖度与无对手方区间 / coverage and the no-counterpart interval | 已实现 / implemented |
+| `tools/graph_diag` 诊断 / diagnostics | 已实现 / implemented |
+| `crypto` 哈希链承诺与密码预算 / hash-chain commitment and crypto budget | 已实现，三条前置条件逐条落地 / implemented; the three preconditions are each in place |
+| `silence` 可问责沉默 / accountable silence | 已实现，含误报—时延—带宽解析关系 / implemented, including the closed-form false-alarm–latency–bandwidth relation |
+| `tools/silence_diag` 诊断 / diagnostics | 已实现 / implemented |
+| `attacks` 注入器 P1–P4 / injector P1–P4 | 已实现，含串谋的链式传播 / implemented, including chain propagation of collusion |
+| `corroborate` 在线互证协议 / online corroboration protocol | 已实现，双截止时刻，良性误报 2.25% / implemented; two deadlines; benign false-alarm rate 2.25% |
+| `tools/detect_diag` 诊断与消融 / diagnostics and ablation | 已实现 / implemented |
+| `collusion` 串谋界 / collusion bound | 已实现，含模型级下界与派工收益 / implemented, including the model-level lower bound and the dispatch gain |
+| `tools/collusion_diag` 诊断 / diagnostics | 已实现 / implemented |
+| `budget` 带宽–安全裕度预算 / bandwidth–safety margin | 已实现，含危害模型反推与突发代价 / implemented, including the hazard inversion and the burst cost |
+| `tools/budget_curve` 诊断 / diagnostics | 已实现 / implemented |
+| `baselines` 第一档 `R0`/`S1`–`S3` / tier 1 | 已实现，结构性 0 由断言 H1–H6 锚定 / implemented; the structural 0 is pinned by assertions H1–H6 |
+| `tools/tier1_diag` 诊断 / diagnostics | 已实现 / implemented |
+| `baselines` 第二档 `W1`–`W4` / tier 2 | 已实现，见证选取规则可替换 / implemented; the witness-selection rule is swappable |
+| `tools/baseline_diag` 诊断 / diagnostics | 已实现 / implemented |
+| `baselines` 第三档 `H1`–`H3` / tier 3 | 已实现，等带宽时延 + 归责划界 / implemented; equal-bandwidth latency plus the attribution boundary |
+| `baselines` 第四档 `U1` / tier 4 | 已实现，先知天花板 = 覆盖缺口 / implemented; the oracle ceiling is the coverage gap |
+| `tools/heartbeat_diag` 诊断 / diagnostics | 已实现 / implemented |
+| `main.py` 一键入口 / one-shot entry | 已实现，写 `output/<tag>/summary.json` / implemented; writes `output/<tag>/summary.json` |
+| `tools/loss_sweep` 丢包扫参 / loss sweep | 已实现，含 PISTIS 地标 p=50% / implemented, including the PISTIS landmark p=50% |
 
-## 五之二、TESSERA 的第一批实测结果
+## 五之二、TESSERA 的第一批实测结果 / 5.2 First measured results for TESSERA
 
 `py -m tools.graph_diag` 的产出，已由 `tests/test_all.py` 的 B1–B7 锚定。
 这些是**本文的测量结果**（区别于第六节继承自 paper02 的数字）。
+
+The output of `py -m tools.graph_diag` is pinned by B1–B7 in `tests/test_all.py`. These are **measurements of this paper** (distinct from the paper02 numbers inherited in section 6).
 
 1. **互证边可以自动导出，规模 185 条，覆盖 14 个交接位置。** 16 个 BPMN 中
    18/21 个 (设备类, 操作) 存在对手方见证者，涉及 9 个设备类。互证超图完全由
    位置串接推出，无手工编造的耦合关系——这消解了"领域知识是不是为了好看而
    设计的"这一质疑。
 
+   **Corroboration edges export automatically: 185 edges, covering 14 handover locations.** Of the 16 BPMN models, 18/21 (device class, operation) pairs have a counterpart witness, across 9 device classes. The corroboration hypergraph is derived entirely by chaining locations. No coupling was hand-written. That answers the objection that the domain knowledge was designed to look good.
+
 2. **见证集合规模中位 1、最大 6，与设备总数无关。** 这是"见证集合由任务图而非
    无线拓扑决定，故规模 $O(1)$"的可检验后果，也是不需要全网 BFT 的直接依据。
    若换数据集后该量随规模增长，第一贡献的论证就不成立，故列为断言 B2。
+
+   **Witness-set size has median 1 and maximum 6, independent of the device count.** That is the testable consequence of "the witness set is fixed by the task graph, not by the wireless topology, so its size is $O(1)$", and it is the direct reason a network-wide BFT is unnecessary. If the quantity grew with scale on another dataset, the argument for the first contribution would fail, so it is assertion B2.
 
 3. **互证窗口 Δ 的长尾来自调度排队，不能按分位数一刀切。** 实测中位 6.7 s、
    p90 63.6 s、p95 119.7 s、max 2237.7 s。paper02 已实测派发阶段时长 p95 达
@@ -202,20 +234,26 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
    Δ 的经验分位数**，否则 P1 的检测时延会被排队噪声吞掉。这条约束在实现
    `corroborate.py` 时被进一步逼出了双截止时刻的设计，见第五之三节第 13 条。
 
+   **The long tail of the corroboration window Δ comes from scheduling queues and cannot be cut at a quantile.** Measured median 6.7 s, p90 63.6 s, p95 119.7 s, max 2237.7 s. Paper02 already measured a dispatch-phase p95 of 253.6 s and $\sigma_{\log}=1.475$, dominated by scheduler queue contention (its conclusion: dispatch duration cannot be used as a duration test). **Consequence: a pending timeout must be anchored on the planned time in the command ledger, not on an empirical quantile of Δ**, or the detection latency of P1 is swallowed by queue noise. Implementing `corroborate.py` pushed this constraint further into the two-deadline design; see item 13 in §5.3.
+
 4. **互证覆盖度 70.05%（2,145/3,062）。** 缺口分四类，全部是结构性的：
 
-   | 类别 | 数量 | 占比 | 成因与对策 |
+   **Corroboration coverage is 70.05% (2,145/3,062).** The gap falls into four classes, all structural:
+
+   | 类别 / class | 数量 / count | 占比 / share | 成因与对策 / cause and response |
    | --- | --- | --- | --- |
-   | 已互证（有独立对手方） | 2,145 | 70.05% | — |
-   | 模型上无对手方 | 506 | 16.53% | 三个入库操作（`/hbw/store`、`/hbw/store_empty_bucket`、`/hbw/get_empty_bucket`）：工件进入仓库后本 case 内不再有人接手。按需主动互证的靶区 |
-   | 接手方为同一台设备 | 228 | 7.45% | 原地多工步加工（`/mm/mill` 后由 `mm_1` 自己 deburr），无独立第二方传感证据 |
-   | 本 case 内无人接手 | 183 | 5.98% | 含 case 末位活动 |
+   | 已互证（有独立对手方） / corroborated (an independent counterpart) | 2,145 | 70.05% | — |
+   | 模型上无对手方 / no counterpart in the model | 506 | 16.53% | 三个入库操作（`/hbw/store`、`/hbw/store_empty_bucket`、`/hbw/get_empty_bucket`）：工件进入仓库后本 case 内不再有人接手。按需主动互证的靶区 / three putaway operations: after the workpiece enters the warehouse, nobody in this case takes it over. The target of on-demand active corroboration |
+   | 接手方为同一台设备 / the same device takes over | 228 | 7.45% | 原地多工步加工（`/mm/mill` 后由 `mm_1` 自己 deburr），无独立第二方传感证据 / multi-step machining in place (`mm_1` deburrs after `/mm/mill`); no independent second sensor |
+   | 本 case 内无人接手 / nobody in this case takes over | 183 | 5.98% | 含 case 末位活动 / includes the last activity of a case |
 
    **报告覆盖率时必须同时给出两个口径。** 每个 case 的末位活动无下游接手方，
    282 个 case 恰好贡献 282 个缺口，这是覆盖的**结构上界**而非缺陷；去掉末位
    活动后链中覆盖率为 2,145/2,780 = **77.2%**。这与 paper02 那个"二元可行性
    掩码只覆盖 31% 的消息"是同一类问题，且本文的 70% / 77% 显著更高——因为
    互证的作用单元（交接事件）恰好是这条产线唯一密集存在的结构（见第六节第 4 条）。
+
+   **A coverage figure must be reported in both denominators.** The last activity of every case has no downstream taker, so 282 cases contribute exactly 282 gaps. That is a **structural ceiling** on coverage, not a defect. Dropping the last activity, in-chain coverage is 2,145/2,780 = **77.2%**. This is the same kind of issue as paper02's "the binary feasibility mask covers only 31% of messages", and 70% / 77% here is substantially higher, because the unit corroboration acts on (the handover) is the only structure this line has in density (see section 6, item 4).
 
 5. **见证独立性必须按设备实例判定，见证资格按设备类判定。** 两者粒度不同不是
    疏漏：资格是"这类设备的传感器能否观测到该事件"，只能从 BPMN 得知，而 16 个
@@ -226,13 +264,17 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
    `dm_2_sink_pos`、`vgr_1` 从该位置取走。实测代价：VGR 覆盖率 80.6% → 62.6%，
    总覆盖率 70.05% → 64.89%。列为断言 B6 作反例保护。
 
+   **Witness independence is judged per device instance; witness eligibility is judged per device class.** The two grains differ on purpose. Eligibility is "can this class of sensor observe the event", which can be read only from the BPMN, and the 16 models instantiate only some devices; reading by instance would mark an uninstantiated device ineligible (the same cause as paper02 rule 13). Independence is "is the witness a different physical machine", which must be per instance, because `vgr_1` and `vgr_2` are two independent robots, each with its own gripper and photosensor. **Judging independence by class would kill the most valuable corroboration events in this dataset** — the workpiece exchange between the two lines is exactly `vgr_2` delivering to `dm_2_sink_pos` and `vgr_1` picking it up there. Measured cost: VGR coverage 80.6% → 62.6%, total coverage 70.05% → 64.89%. Assertion B6 guards against that counterexample.
+
 6. **一处已知的保守性。** 见证资格用顺序流的传递可达闭包 + 位置匹配推出，是
    over-approximation：若某位置在同一工作流中被访问两次，可能给出实际不成立的
    资格。后果是把本应记为"模型上无对手方"的活动记为"本 case 内无人接手"，
    两类的**合计**不受影响，故当前不影响覆盖度结论。若要把无对手方区间的清单
    用作探测开销的精确输入，需要改为取该位置在流上的首个消费者。
 
-### 可问责沉默（`py -m tools.silence_diag`，断言 C1–C10）
+   **One known conservatism.** Eligibility is derived from the transitive reachable closure of the sequence flow plus a location match, which is an over-approximation: if a location is visited twice in the same workflow, the derivation can grant an eligibility that does not actually hold. The effect is to record an activity that should be "no counterpart in the model" as "nobody in this case takes over". The **sum** of the two classes is unaffected, so the coverage conclusion is unaffected today. Using the no-counterpart list as an exact input to probing cost would require taking the first consumer of that location on the flow.
+
+### 可问责沉默（`py -m tools.silence_diag`，断言 C1–C10） / Accountable silence (`py -m tools.silence_diag`, assertions C1–C10)
 
 7. **paper02 的二值通道天花板在本通道不生效，且理由必须写清而非声称。**
    paper02 结论 11/21：二值通道功效上界 = 触发率 × $\min(1, \alpha/q)$，
@@ -240,18 +282,22 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
    近似身份解析只能压到 2.3%——压不动，$\alpha=0.001$ 时天花板只有 0.021。
    原像缺失判定形式上也是二值的，但 $q = p_{\text{loss}}^{\,r}$ 是**设计参数**：
 
-   | 通道 | $q$ | $\min(1,\alpha/q)$ |
+   **The binary-channel ceiling from paper02 does not bind this channel, and the reason must be written out, not merely claimed.** Paper02 conclusions 11/21: the power upper bound of a binary channel is trigger rate × $\min(1, \alpha/q)$. For the interlock, $q$ is a **property of the data** (4.7% on the deployment stream, 0.54% on the training fold, a 9× drift). Approximate identity resolution can only push it to 2.3% — it will not go lower — so at $\alpha=0.001$ the ceiling is only 0.021. A missing-preimage decision is binary in form too, but $q = p_{\text{loss}}^{\,r}$ is a **design parameter**:
+
+   | 通道 / channel | $q$ | $\min(1,\alpha/q)$ |
    | --- | --- | --- |
-   | paper02 互锁（部署流） | 4.7e-2 | 0.021 |
-   | 沉默 $p$=1e-2, $r$=1 | 1.0e-2 | 0.100 |
-   | 沉默 $p$=1e-2, $r$=2 | 1.0e-4 | 1.000 |
-   | 沉默 $p$=1e-2, $r$=3, 突发 $\rho$=0.3 | 9.4e-4 | 1.000 |
+   | paper02 互锁（部署流） / paper02 interlock (deployment stream) | 4.7e-2 | 0.021 |
+   | 沉默 $p$=1e-2, $r$=1 / silence | 1.0e-2 | 0.100 |
+   | 沉默 $p$=1e-2, $r$=2 / silence | 1.0e-4 | 1.000 |
+   | 沉默 $p$=1e-2, $r$=3, 突发 $\rho$=0.3 / silence, burst | 9.4e-4 | 1.000 |
 
    $r=1$ 时天花板确实生效（0.100），$r\ge 2$ 即解开。**这就是本文能把沉默作
    硬层、而 paper02 只能把互锁作软证据的机理**，与 paper02 硬层（可行性掩码
    良性 $q=0$）是同一类。天花板并未消失，而是**转化为时延预算约束**
    $T_{\text{detect}} = r\,T_{\text{hb}}$，恰好把第二贡献接到第三贡献上。
    论文里两个数都要给，否则会被"你的通道也是二值的"质疑。
+
+   At $r=1$ the ceiling does bind (0.100); at $r\ge 2$ it lifts. **That is why silence can be a hard layer here while paper02 can use the interlock only as soft evidence**, the same kind of hard layer as paper02's feasibility mask (benign $q=0$). The ceiling does not vanish; it **becomes a latency-budget constraint** $T_{\text{detect}} = r\,T_{\text{hb}}$, which is exactly how the second contribution connects to the third. The paper must give both numbers, or the objection "your channel is binary too" stands.
 
 8. **突发丢包是误报率主张的真实威胁，必须按突发口径选 $r$。** 28 台设备、
    $p$=1e-2、$T_{\text{hb}}$=0.2 s、误报预算 1 次/小时：独立丢包下 $r=3$ 就够，
@@ -260,26 +306,36 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
    工业无线的丢包成簇（阴影衰落与信道竞争），故**论文报告 FPR 时必须声明
    $\rho$ 口径**，只报独立丢包是不诚实的。断言 C7 钉死。
 
+   **Burst loss is the real threat to the false-alarm claim, so $r$ must be chosen under the burst setting.** 28 devices, $p$=1e-2, $T_{\text{hb}}$=0.2 s, a false-alarm budget of 1 per hour: under independent loss $r=3$ is enough, but the same $r$ at $\rho$=0.3 gives **475 false alarms per hour**, nearly three orders higher, and the design fails outright. The burst setting needs $r=9$, and the only cost is latency 0.61 s → 1.81 s. Industrial wireless loss comes in clusters (shadow fading and channel contention), so **a reported FPR must state the $\rho$ setting**. Reporting only independent loss is not honest. Assertion C7 pins this.
+
 9. **$r$ 花时延不花带宽。** 带宽只由 $T_{\text{hb}}$ 决定（28 台设备、
    $T_{\text{hb}}$=0.2 s、16 B 原像 = 2.19 KB/s），$r$ 从 3 加到 9 带宽不变。
    这是相对周期性共识的结构优势：省的是共识频率 $R$，不是参与节点数。
    对照周期性 PBFT（$2n^2$ 条/轮，28 台设备 10 Hz、每条 128 B）= 2.01 MB/s，
    相差近三个数量级，且容错阈值未降低。
 
+   **$r$ spends latency, not bandwidth.** Bandwidth is fixed by $T_{\text{hb}}$ alone (28 devices, $T_{\text{hb}}$=0.2 s, a 16 B preimage = 2.19 KB/s). Raising $r$ from 3 to 9 leaves bandwidth unchanged. That is the structural advantage over periodic consensus: what is saved is the consensus frequency $R$, not the number of participants. Periodic PBFT ($2n^2$ messages per round, 28 devices at 10 Hz, 128 B each) = 2.01 MB/s, nearly three orders higher, and the fault threshold is not lowered.
+
 10. **沉默的检测时延远小于耦合互证，两者不可互相替代。** 设备沉默时，任务
     完成类判定只能等超时，而超时窗口必须容纳调度器自己的派发排队（见第 13 条），
     实测 P2 的互证时延中位 **325 s**、看门狗 **334 s**，而可问责沉默在突发口径
     下 **1.81 s** 即判定，**快 180 倍以上**。
 
+    **Silence detects far sooner than coupled corroboration, and the two cannot stand in for each other.** When a device is silent, a task-completion decision can only wait for timeout, and that window must absorb the scheduler's own dispatch queue (item 13). Measured P2 corroboration latency has median **325 s**, the watchdog **334 s**, while accountable silence decides in **1.81 s** under the burst setting, **more than 180× faster**.
+
     倍数不如机理重要：心跳判定的是设备的**状态声明**而非任务完成，与调度队列
     完全解耦，故 $r\,T_{\text{hb}}$ 是**无条件**上界；任务完成类判定只有条件
     上界。**安全裕度定理应当接前者**，这一点在写第三贡献时不能含糊。
+
+    The factor matters less than the mechanism. A heartbeat decides the device's **state statement**, not task completion, and is fully decoupled from the scheduling queue, so $r\,T_{\text{hb}}$ is an **unconditional** upper bound. A task-completion decision has only a conditional bound. **The safety-margin theorem must attach to the former.** That must not be blurred when writing the third contribution.
 
 11. **SILENT 的判决时刻必须是确定的 $r\,T_{\text{hb}}+\text{skew}$。**
     这是"确定性判据而非怀疑"的可检验含义，也是 $T_{\text{detect}}$ 能代入
     FHI 预算的前提：若判决时刻取决于统计量抖动，时延就没有确定上界。断言 C4
     精确到 1e-9 s。另外**缺失计数收到合法披露后必须复位**（断言 C5），
     paper02 记录漏掉复位曾使检出率虚高 22 倍。
+
+    **The SILENT decision time must be the deterministic $r\,T_{\text{hb}}+\text{skew}$.** That is the testable meaning of "a deterministic criterion, not a suspicion", and it is the premise for substituting $T_{\text{detect}}$ into an FHI budget: if the decision time depends on the jitter of a statistic, latency has no deterministic upper bound. Assertion C4 is exact to 1e-9 s. Also, **the miss count must reset when a valid disclosure arrives** (assertion C5). Paper02 recorded that omitting the reset once inflated the detection rate by 22×.
 
 12. **三条前置条件已逐条落地，不是纸面声明。** 承诺根由 Ed25519 一次性签名
     并绑定身份、会话、链长、$t_0$、$T_{\text{hb}}$（把后两项纳入签名是必要的，
@@ -290,9 +346,13 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
     凭证不可搬运（断言 C6）。一次判决的开销：承诺根一次性 80 B，
     每槽 16 B + 1 次哈希 + **0 次签名**。
 
-### 检测、归责与消融（`py -m tools.detect_diag`，断言 D1–D9）
+    **The three preconditions are each implemented, not merely stated.** The commitment root is signed once with Ed25519 and binds identity, session, chain length, $t_0$, and $T_{\text{hb}}$ (binding the last two is necessary, or an attacker can later claim the commitment was for a different heartbeat interval and deny the miss). A chain element is bound to its slot by the reverse chain, and **early disclosure is rejected explicitly** — disclosing the element of slot $k+1$ inside slot $k$ lets the verifier derive the element of slot $k$, which prepays future silence. That is a known problem of the TESLA family (assertion C3). Domain separation makes the same seed produce a different chain on a different device or session, so a credential cannot be carried over (assertion C6). Cost of one decision: the commitment root is 80 B once; each slot is 16 B + 1 hash + **0 signatures**.
+
+### 检测、归责与消融（`py -m tools.detect_diag`，断言 D1–D9） / Detection, attribution, and ablation (`py -m tools.detect_diag`, assertions D1–D9)
 
 注入率 0.2、种子 42、$T_{\text{hb}}$=0.2 s、$r$=9（突发口径）。
+
+Injection rate 0.2, seed 42, $T_{\text{hb}}$=0.2 s, $r$=9 (burst setting).
 
 13. **窗口必须有两个截止时刻，这是被数据逼出来的。** 最初只设一个"上游计划
     完成时刻 + 余量"，良性流上超时率 67.3%，完全不可用。根因是本日志实测的
@@ -300,15 +360,19 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
     p99 817.4 s、max 1476.4 s——与 paper02 独立测得的 p95 253.6 s 吻合。
     这段等待由调度器自己的队列决定，与交接本身无关。改为：
 
+    **The window needs two deadlines. The data forced this.** A single deadline, "upstream planned completion + slack", timed out on 67.3% of the benign stream and was unusable. The cause is the measured **dispatch latency** (command issued until the device starts): median only 4.4 s, but p95 **218.3 s**, p99 817.4 s, max 1476.4 s — consistent with paper02's independent p95 of 253.6 s. That wait is the scheduler's own queue, not the handover. The replacement is:
+
     - **上报看门狗** = $t_{\text{cmd}}(A)+\text{planned}(A)+$ 余量 + 排队容差，
-      只管"该报的没报"，是基线 `S1` 的能力，本文不主张；
+      只管"该报的没报"，是基线 `S1` 的能力，本文不主张； / **report watchdog** = $t_{\text{cmd}}(A)+\text{planned}(A)+$ slack + queue allowance. It only covers "a due report never arrived". That is baseline `S1`. This paper does not claim it.
     - **互证窗口** = $t_{\text{cmd}}(B)+\text{planned}(B)+$ 余量 + 排队容差，
-      **从对手方被下发取件命令时起算**，上游完成到对手方被派发之间的等待不计入。
+      **从对手方被下发取件命令时起算**，上游完成到对手方被派发之间的等待不计入。 / **corroboration window** = $t_{\text{cmd}}(B)+\text{planned}(B)+$ slack + queue allowance, **counted from when the counterpart is dispatched the pickup**. The wait from upstream completion until the counterpart is dispatched is not included.
 
     排队容差扫参（良性流，容差取良性流 p95 的 260 s，符合 paper02 规则 30
     "阈值只能取自纯良性流"）：
 
-    | 容差 | 总告警 | 其中声明已到达 | 已确认 | 最坏时延 |
+    Queue-allowance sweep (benign stream; the allowance is the benign p95 of 260 s, per paper02 rule 30, "a threshold may be taken only from a purely benign stream"):
+
+    | 容差 / allowance | 总告警 / all alarms | 其中声明已到达 / of which the statement arrived | 已确认 / confirmed | 最坏时延 / worst latency |
     | --- | --- | --- | --- | --- |
     | 0 s | 656 (21.42%) | 131 (4.28%) | 1,581 | 72.5 s |
     | 60 s | 300 (9.80%) | 70 (2.29%) | 1,867 | 132.5 s |
@@ -321,22 +385,32 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
     （在对手方被派发之后不超过 $\text{planned}(B)+$ 余量），无条件上界在这条
     产线上不存在，因为调度队列本身没有上界。断言 D5。
 
+    Allowance buys false alarms and pays worst-case latency. The "statement already arrived" row saturates at 2.25% from 130 s on; adding more only increases latency. **The paper must state the cost: a task-completion decision has only a conditional upper bound** (no more than $\text{planned}(B)+$ slack after the counterpart is dispatched). An unconditional bound does not exist on this line, because the scheduling queue itself has none. Assertion D5.
+
 14. **误报率的分母口径必须钉死，否则同一份数据能报出三个数。** 良性流 3,062 条
     声明的终局：已确认 1,961、模型上无对手方 506、**对手方从未被派发 401**、
     超时 194（其中声明确实到达过的仅 **69 条 = 2.25%**）。
 
+    **The false-alarm denominator must be pinned, or the same data reports three numbers.** Of 3,062 benign statements: 1,961 confirmed, 506 with no counterpart in the model, **401 whose counterpart was never dispatched**, 194 timeouts (of which only **69 statements = 2.25%** had actually arrived).
+
     "对手方从未被派发"不是检测结果也不是误报，而是覆盖率缺口，必须单列为
     `NOT_DISPATCHED` 且不产生证据——算进误报会把 2.25% 说成 6.34%，算进检出
     则把 30% 的结构缺口伪装成能力。**2.25% 才是耦合互证的误报率。** 断言 D2。
+
+    "Counterpart never dispatched" is neither a detection nor a false alarm. It is a coverage gap, and it must be recorded as `NOT_DISPATCHED` with no evidence. Counting it as a false alarm turns 2.25% into 6.34%; counting it as a detection disguises a 30% structural gap as capability. **2.25% is the false-alarm rate of coupled corroboration.** Assertion D2.
 
 15. **P1 的伪造声明在每个单观测者可见字段上都与良性一致（7/7 字段 100%，
     时长 100% 落在该 (设备, 操作) 的良性四分位距内）。** 这比重跑一遍 paper02
     的残差检测器更强的主张：它说明残差类方法在本问题上的失效是**构造上的**，
     不是参数没调好。断言 D1。
 
+    **A P1 false statement matches a benign one on every field a single observer can see (7/7 fields at 100%, and the duration falls inside the benign IQR of that (device, operation) 100% of the time).** That is a stronger claim than rerunning paper02's residual detector: residual methods fail on this problem **by construction**, not because a parameter was left untuned. Assertion D1.
+
 16. **检出率与时延。** 对手方装有到料光电门时：
 
-    | 族 | 伪造 | 检出 | DR | 时延中位 | p95 | 否证 | 超时 |
+    **Detection rate and latency**, when the counterpart has an arrival photosensor:
+
+    | 族 / family | 伪造 / forged | 检出 / detected | DR | 时延中位 / latency median | p95 | 否证 / refuted | 超时 / timeout |
     | --- | --- | --- | --- | --- | --- | --- | --- |
     | P1 | 363 | 363 | **1.000** | 54.6 s | 439.2 s | 349 | 14 |
     | P2 | 527 | 393 | 0.746 | 325.0 s | 598.0 s | 0 | 393 |
@@ -348,9 +422,13 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
     中位升到 365 s——**传感器覆盖度直接决定检测时延**，这是部署侧的可操作结论。
     断言 D3。
 
+    349/363 decisions are **refutations**, produced at the moment the counterpart tries to pick up, well before the window expires. When the counterpart is a brownfield device with no sensor, the only option is to wait for timeout: P1 detection falls to 0.860 and the median latency rises to 365 s. **Sensor coverage directly sets detection latency.** That is an actionable deployment conclusion. Assertion D3.
+
 17. **消融表：两个机制各有对方覆盖不到的攻击。**
 
-    | 族 | 看门狗 `S1` | 仅耦合互证 | 仅可问责沉默 | 合用 |
+    **Ablation: each mechanism covers attacks the other misses.**
+
+    | 族 / family | 看门狗 `S1` / watchdog | 仅耦合互证 / corroboration only | 仅可问责沉默 / silence only | 合用 / both |
     | --- | --- | --- | --- | --- |
     | P1 | 0.000 | 1.000 / 54.6 s | 1.000 / 1.8 s | 1.000 / 1.8 s |
     | P2 | 1.000 / 334.0 s | 0.746 / 325.0 s | 1.000 / 1.8 s | 1.000 / 1.8 s |
@@ -361,18 +439,26 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
     信号，只有耦合互证能抓。这是耦合互证**不可被替代**的直接证据。反向的证据
     是 P1/P2 那两行：沉默机制把时延从数十至数百秒压到 1.8 s。
 
+    **The P3 row is the most important row in the table.** A sophisticated falsifier discloses preimages on time, so silence has no signal, and only coupled corroboration catches it. That is direct evidence that coupled corroboration **cannot be substituted**. The converse evidence is the P1/P2 rows: silence compresses latency from tens or hundreds of seconds to 1.8 s.
+
     看门狗对 P1/P3/P4 全无能力——IEC 61850 GOOSE 的 MaxTime 与 fail-safe 只管
     "该报的没报"，被一条按时到达、字段完全正常的伪造声明完全满足。**比较时
     给了基线同样的排队容差**，否则是在给基线设障（不加容差时看门狗在良性流上
     要误报约五分之一）。断言 D7。
+
+    The watchdog has no power on P1/P3/P4. IEC 61850 GOOSE MaxTime and fail-safe only cover "a due report never arrived", and a false statement that arrives on time with every field normal satisfies them completely. **The comparison gives the baseline the same queue allowance**, or the baseline is being handicapped (without the allowance the watchdog false-alarms on about one fifth of the benign stream). Assertion D7.
 
 18. **一跳串谋只把判决推迟一跳，并未逃脱。** 串谋方为上游的假交接背书，主
     受害者的声明因此提交（DR 仅 0.184）；但串谋方自己也没收到工件，它随后的
     交付声明同样是假的，被**它自己的下游**诚实设备否证（DR **0.750**）。
     所以谎言要活到工件真正被消耗，链上每一跳都需一台被劫持设备。
 
+    **One-hop collusion only postpones the decision by one hop. It does not escape.** The colluding party endorses the upstream false handover, so the primary victim's statement is accepted (DR only 0.184). But the colluding party never received the workpiece either, so its own later delivery statement is also false and is refuted by **its own downstream** honest device (DR **0.750**). For the lie to survive until the workpiece is actually consumed, every hop on the chain needs a compromised device.
+
     这条断言（D6）防的是一个具体的低估：注入器若不建模链式传播，串谋方的
     检出率会测成 0.002，于是把能力边界说得比实际宽得多。
+
+    Assertion D6 guards a concrete under-estimate: if the injector does not model chain propagation, the colluder's detection rate measures as 0.002, and the capability boundary is stated much wider than it is.
 
 19. **次生告警：沉默者连带指控其上游。** P2 下有 **277 条诚实声明**因其下游
     沉默而超时（良性流上只有 69 条）。这不是协议误报，而是攻击的真实后果——
@@ -380,12 +466,16 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
     沉默机制直接指认沉默者，上游的未确认声明才能被正确归因**而非被冤枉**。
     断言 D8。
 
-### 串谋界（`py -m tools.collusion_diag`，断言 E1–E6）
+    **Secondary alarms: a silent device also charges its upstream.** Under P2, **277 honest statements** time out because their downstream is silent (only 69 on the benign stream). That is not a protocol false alarm. It is a real consequence of the attack — a silent device also **refuses to testify for its upstream**. That is the second reason silence must be used together with corroboration: silence names the silent device directly, so an unconfirmed upstream statement can be attributed correctly **rather than wrongly charged**. Assertion D8.
+
+### 串谋界（`py -m tools.collusion_diag`，断言 E1–E6） / Collusion bound (`py -m tools.collusion_diag`, assertions E1–E6)
 
 20. **串谋界的正确形式化是前向可达闭包，不是最小顶点割。** 谎言永久不被否证的
     充要条件是：被劫持设备集合在"下一个对手方"关系下**前向封闭**，直到工件离开
     可互证的链。README 早先写的"最小顶点割"是错的表述——直觉相近（要买通的是
     一组把谎言与诚实观测者隔开的设备），但对象是闭包，形式化时必须说准。
+
+    **The right formalization of the collusion bound is the forward reachable closure, not a minimum vertex cut.** A lie is never refuted if and only if the set of compromised devices is **forward-closed** under the "next counterpart" relation, until the workpiece leaves the corroborable chain. An earlier draft of this README said "minimum vertex cut". The intuition is close (what must be bought is a set of devices that separates the lie from an honest observer), but the object is a closure, and the formalization has to say so.
 
 21. **作用域的两条边界方向相反，任一错了结论都歪。** 剔除 `NO_REALIZED`（183 条：
     链长 1、$k=1$，但那是本 case 内根本无人接手，属覆盖率缺口）；**保留
@@ -394,33 +484,47 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
     $k=1$ 的链**。这条口径与 `coverage.py` 的覆盖率分母**故意不同**：覆盖率问
     "这一跳有没有独立证据"，串谋界问"永久藏住要买通几台设备"，后者天然跨跳。
 
+    **The two scope boundaries point opposite ways, and getting either one wrong skews the conclusion.** Drop `NO_REALIZED` (183 items: chain length 1, $k=1$, but nobody in the case ever takes over, so it is a coverage gap). **Keep `SELF_ONLY` (228 items)** — that hop really has no independent witness, but it is an activity an attacker can actually aim at. Dropping it would be picking the most unfavorable samples out of the mechanism, and those 228 items hide **all 23 chains with $k=1$**. This denominator is **deliberately different** from the coverage denominator in `coverage.py`: coverage asks "does this hop have independent evidence", the collusion bound asks "how many devices must be bought to hide the lie forever", and the latter naturally spans hops.
+
 22. **实测串谋界：$k_{\min}=1$、中位 5、max 13，$k\ge 3$ 占 80.99%（2,373 条链）。**
     可写进论文的陈述是"任务状态伪造要永久隐藏，中位需五台设备同时被劫持，
     81% 的情形需三台以上；但存在 23 条最坏链只需一台"。**最坏情形必须报**——
     攻击者挑最薄弱处下手，均值无意义；那 23 条正是按需主动互证的靶区。
 
+    **Measured collusion bound: $k_{\min}=1$, median 5, max 13, and $k\ge 3$ covers 80.99% (2,373 chains).** The sentence that can go in the paper is: "to hide a task-state falsification forever, the median case needs five devices compromised at once, and 81% of cases need three or more; but 23 worst-case chains need only one." **The worst case must be reported** — an attacker strikes the weakest point, so a mean is meaningless. Those 23 chains are the target of on-demand active corroboration.
+
 23. **同设备接手让谎言免费延长，这是 7.45% 覆盖缺口的安全代价。** 1,627 条链共
     获得 1,945 个免费跳；全部 23 条 $k=1$ 的链都源于此。免费跳**无法靠改派工
     消除**（工件仍夹在机床夹具里，换机器要先卸件再装夹），只能靠按需主动互证补上。
 
+    **A same-device takeover extends the lie for free. That is the safety cost of the 7.45% coverage gap.** 1,627 chains pick up 1,945 free hops in total, and all 23 chains with $k=1$ come from this. A free hop **cannot be removed by changing the dispatch** (the workpiece is still clamped in the fixture; changing machines means unclamping and reclamping). Only on-demand active corroboration can fill it.
+
 24. **安全感知任务分配（增补一）在本产线上是负面结果，必须如实报。** 可达理想
     派工（只消除**非相邻**复用）下：
 
-    | | 实际 | 可达理想 | 无约束理想 |
+    **Security-aware task assignment (supplement 1) is a negative result on this line, and it must be reported as such.** Under a reachable ideal dispatch (removing only **non-adjacent** reuse):
+
+    | | 实际 / actual | 可达理想 / reachable ideal | 无约束理想 / unconstrained ideal |
     | --- | --- | --- | --- |
     | $k_{\min}$ | 1 | **1** | 2 |
-    | $k$ 中位 | 5 | **5** | 6 |
-    | $k$ 均值 | 5.13 | 5.80 | — |
+    | $k$ 中位 / median | 5 | **5** | 6 |
+    | $k$ 均值 / mean | 5.13 | 5.80 | — |
 
     最小值与中位**纹丝不动**，只有均值抬了 13%。原因由增益分布给出：1,282 条
     可改善的链里，原本 $k\le 2$ 的只有 **14 条**，增益几乎全落在 $k\ge 5$ 即
     **本来就安全**的链上。
 
+    The minimum and the median **do not move**. Only the mean rises by 13%. The gain histogram says why: of 1,282 chains that can be improved, only **14** originally had $k\le 2$. Almost all of the gain lands on chains with $k\ge 5$, which were **already safe**.
+
     另须注意"无约束理想"（链长）会虚报收益——它把 $k_{\min}$ 说成从 1 抬到 2，
     而那 23 条 $k=1$ 的链全是相邻同设备接手，排产根本改不动。
 
+    The "unconstrained ideal" (chain length) overstates the gain: it reports $k_{\min}$ rising from 1 to 2, but all 23 chains with $k=1$ are adjacent same-device takeovers, which scheduling cannot move.
+
     **因此增补一的定位要改**：不是"提高安全保证"，而是"在不牺牲产能的前提下
     改善分布均值"。断言 E4 就是防这个 overclaim 的。
+
+    **So the role of supplement 1 changes.** It is not "raise the safety guarantee". It is "improve the mean of the distribution without giving up throughput". Assertion E4 exists to block that overclaim.
 
 25. **模型级下界必须逐工作流算：$k_{\min}=2$、中位 8。** 合并 16 个模型的邻接会
     把不同工艺路线的见证关系串成更长的链而虚高界——一个 case 只走一条工艺路线，
@@ -428,26 +532,36 @@ DiToF 需要测距/拓扑量，本数据没有，"在本数据上重实现"实�
     `wt` 搬运（$k=2$，只有两层独立见证）。这个量是**过程模型的性质**，不随排产
     变化，故可作设计期指标；按类归并把 `vgr_1`/`vgr_2` 算作一个顶点，是保守下界。
 
+    **The model-level lower bound must be computed per workflow: $k_{\min}=2$, median 8.** Merging the adjacency of all 16 models strings witness relations from different process routes into a longer chain and inflates the bound. A case follows one route, and the attacker only has to buy the devices on that route. The weakest are the `wt` transports of WF_108 and WF_121 ($k=2$, only two layers of independent witnesses). This quantity is a **property of the process model**. It does not change with scheduling, so it can be a design-time indicator. Collapsing by class and counting `vgr_1`/`vgr_2` as one vertex is a conservative lower bound.
+
 26. **两条独立计算的路径互为佐证。** 结构上 $k\le 2$ 的链占 19.0%，即一跳串谋
     应有约这么大比例能永久藏住；`detect_diag` 实测串谋方逃脱率 25.0%（1−0.750）。
     同量级，差额来自串谋方自身链上的覆盖缺口。论文里只能说"同量级、可互为
     佐证"，不能写成"定量吻合"。
+
+    **Two independently computed paths corroborate each other.** Structurally, chains with $k\le 2$ are 19.0%, so about that share of one-hop collusion should stay hidden forever. `detect_diag` measures the colluder's escape rate at 25.0% (1−0.750). Same order of magnitude; the gap comes from coverage holes on the colluder's own chain. The paper may say "same order, mutually corroborating". It may not say "a quantitative match".
 
 27. **两项增补设计的分工由数据定死。** 抬不动最坏情形的原因有两个，都不是排产
     能化解的：相邻同设备接手（工艺决定），以及工艺流程本身的见证层数（模型级
     下界 2）。**能抬高保证的只有按需主动互证**——它造出原本不存在的见证事件。
     增补一改善分布，增补二改善保证，两者不可互相替代也不可互相冒充。
 
-### 带宽–安全裕度预算（`py -m tools.budget_curve`，断言 F1–F7）
+    **The data fixes the division of labor between the two supplements.** Two reasons the worst case cannot be raised, and scheduling dissolves neither: adjacent same-device takeover (fixed by the process), and the number of witness layers in the process itself (model-level lower bound 2). **Only on-demand active corroboration can raise the guarantee** — it creates a witness event that did not exist. Supplement 1 improves the distribution; supplement 2 improves the guarantee. Neither can stand in for the other, and neither can be passed off as the other.
+
+### 带宽–安全裕度预算（`py -m tools.budget_curve`，断言 F1–F7） / Bandwidth–safety margin (`py -m tools.budget_curve`, assertions F1–F7)
 
 定理的链条按四段走，每段都可独立核对：**危害模型 → 时间预算 →
 $(r, T_{\text{hb}})$ 可行区间 → 带宽下界**。
+
+The theorem runs in four stages, and each can be checked on its own: **hazard model → time budget → feasible region of $(r, T_{\text{hb}})$ → bandwidth lower bound**.
 
 28. **时间预算只能接可问责沉默，接耦合互证是接错量纲。** 沉默判定的
     $T_{\text{detect}} = r T_{\text{hb}} + \text{skew}$ 与调度队列完全解耦，是
     **无条件**上界。互证窗口必须容纳派发排队（实测 p95 218.3 s、max 1476.4 s），
     仅这一项就是最松预算的 100 倍，且**排队本身没有上界**——那不是"数大一点"，
     是没有上界可代。`paper03-NewIdea.md` 早先让两条路径都提供时延界，已改。断言 F1。
+
+    **The time budget can attach only to accountable silence. Attaching it to coupled corroboration uses the wrong dimension.** The silence decision $T_{\text{detect}} = r T_{\text{hb}} + \text{skew}$ is fully decoupled from the scheduling queue, so it is an **unconditional** upper bound. The corroboration window must absorb dispatch queueing (measured p95 218.3 s, max 1476.4 s). That one term is already 100× the loosest budget, and **the queue itself has no upper bound** — that is not "a larger number", it is that there is no bound to substitute. An earlier draft of `paper03-NewIdea.md` let both paths supply a latency bound; that has been changed. Assertion F1.
 
 29. **借用汽车领域的 FHI 会太松，这是本节最要紧的一条。** 取 FHI = 2.43 s
     （DLR ASE 2023 算例）留给检测 2.18 s，而 1.5 m/s 的 AGV 在这段时间里走
@@ -456,26 +570,36 @@ $(r, T_{\text{hb}})$ 可行区间 → 带宽下界**。
     定预算：$\text{FHI} = \text{field}/v = 0.85$ s，留给检测 0.60 s，对应行驶
     0.90 m = 防护场的 71%，落在包络内。断言 F2。
 
+    **Borrowing an automotive FHI is too loose. This is the most important point in the section.** FHI = 2.43 s (the DLR ASE 2023 example) leaves 2.18 s for detection, and an AGV at 1.5 m/s travels **3.27 m in that time, 256% of the ISO 3691-4 example protective field (1.275 m)**. The vehicle has already left the safety envelope while the budget still says "compliant". A generic FHI cannot be carried into a factory. The hazard model must set the budget: $\text{FHI} = \text{field}/v = 0.85$ s, leaving 0.60 s for detection, which is 0.90 m of travel, 71% of the protective field, inside the envelope. Assertion F2.
+
     这条距离换算**只在危害为运动碰撞时成立**。本文主威胁是任务状态伪造，危害是
     调度损害而非碰撞，故换算的作用是**校准预算量级**，不作本文的安全论断——
     当主结论写会被一眼看穿。
 
+    This distance conversion **holds only when the hazard is a moving collision**. The main threat here is task-state falsification, and the harm is scheduling damage, not a collision, so the conversion **calibrates the order of the budget**. It is not this paper's safety claim. Stating it as the main conclusion would be obvious on sight.
+
 30. **可行区间与最省带宽配置**（28 台设备、丢包 1%、误报预算 1 次/h）：
 
-    | 危害模型 | 丢包口径 | $T_{\text{hb}}$ | $r$ | $T_{\text{detect}}$ | 带宽 | 顶在 |
+    **Feasible region and the cheapest-bandwidth configuration** (28 devices, 1% loss, a false-alarm budget of 1 per hour):
+
+    | 危害模型 / hazard model | 丢包口径 / loss setting | $T_{\text{hb}}$ | $r$ | $T_{\text{detect}}$ | 带宽 / bandwidth | 顶在 / binding constraint |
     | --- | --- | --- | --- | --- | --- | --- |
-    | 汽车 FHI 2.43 s | 独立 | 0.722 s | 3 | 2.175 s | 621 B/s | 安全边界 |
-    | 汽车 FHI 2.43 s | 突发 $\rho$=0.3 | 0.268 s | 8 | 2.154 s | 1,672 B/s | **两条同时** |
-    | 运动危害 0.85 s | 独立 | 0.194 s | 3 | 0.592 s | 2,311 B/s | 安全边界 |
-    | 运动危害 0.85 s | 突发 $\rho$=0.3 | 0.058 s | 10 | 0.594 s | 7,675 B/s | 安全边界 |
+    | 汽车 FHI 2.43 s / automotive | 独立 / independent | 0.722 s | 3 | 2.175 s | 621 B/s | 安全边界 / safety bound |
+    | 汽车 FHI 2.43 s / automotive | 突发 $\rho$=0.3 / burst | 0.268 s | 8 | 2.154 s | 1,672 B/s | **两条同时** / **both at once** |
+    | 运动危害 0.85 s / motion hazard | 独立 / independent | 0.194 s | 3 | 0.592 s | 2,311 B/s | 安全边界 / safety bound |
+    | 运动危害 0.85 s / motion hazard | 突发 $\rho$=0.3 / burst | 0.058 s | 10 | 0.594 s | 7,675 B/s | 安全边界 / safety bound |
 
     $r$ 取该 $T_{\text{hb}}$ 下满足误报预算的最小值——$r$ 再大只增时延不减带宽
     （断言 C9），故最优解必在最小可行 $r$ 上。断言 F3、F5。
+
+    $r$ is the smallest value that meets the false-alarm budget at that $T_{\text{hb}}$. A larger $r$ only adds latency and does not reduce bandwidth (assertion C9), so the optimum sits on the smallest feasible $r$. Assertions F3 and F5.
 
 31. **最优解顶在安全边界，故可以说"带宽受安全约束限制"而非"受丢包限制"。**
     四个口径中三个的安全余量 <1.5%。但汽车口径 + 突发那一格是**两条边界同时
     顶满**（安全余量 1.2%、误报余量 3.3%），此时只说安全会失掉一半信息，所以
     `budget.slack` 报的是两条约束的相对余量而非一个分类标签。断言 F5。
+
+    **The optimum sits on the safety bound, so one may say "bandwidth is limited by the safety constraint" rather than "limited by loss".** Three of the four settings have a safety margin under 1.5%. The automotive-plus-burst cell is the one where **both bounds are tight at once** (safety margin 1.2%, false-alarm margin 3.3%). Saying only "safety" there drops half the information, so `budget.slack` reports the relative margin of both constraints rather than a single category label. Assertion F5.
 
 32. **两项代价各自量化。** 突发容忍 **3.32×**（运动危害口径：$r$ 从 3 抬到 10，
     同一预算把 $T_{\text{hb}}$ 从 0.194 s 压到 0.058 s；代价严格只经由
@@ -483,38 +607,50 @@ $(r, T_{\text{hb}})$ 可行区间 → 带宽下界**。
     （突发口径下汽车 FHI → 运动危害，1,672 → 7,675 B/s）。两者都是诚实的价格，
     不是方法缺陷；**只报独立丢包口径的带宽是不诚实的**，工业无线的丢包成簇。
 
+    **The two costs are quantified separately.** Burst tolerance costs **3.32×** (motion-hazard setting: $r$ rises from 3 to 10, and the same budget compresses $T_{\text{hb}}$ from 0.194 s to 0.058 s; the cost is conducted strictly through $T_{\text{hb}}$, and assertion F4 checks that equality). Tightening the budget costs **4.59×** (under burst, automotive FHI → motion hazard, 1,672 → 7,675 B/s). Both are honest prices, not defects of the method. **Reporting bandwidth only under independent loss is not honest**, because industrial wireless loss comes in clusters.
+
 33. **即便取最严口径，仍比周期性 PBFT 便宜两个数量级：7,675 B/s 对 5 Hz PBFT
     的 1.00 MB/s = 131×。** 这条必须用**自家最贵**的配置去比——用最省的 621 B/s
     比会得到 1,616×，那是挑口径。省下的是共识频率 $R$ 而非参与节点数，故容错
     阈值未降低。断言 F6。
 
+    **Even at the strictest setting it is still two orders cheaper than periodic PBFT: 7,675 B/s against 1.00 MB/s of 5 Hz PBFT, which is 131×.** This comparison must use **our own most expensive** configuration. Comparing the cheapest 621 B/s would give 1,616×, which is picking the setting. What is saved is the consensus frequency $R$, not the number of participants, so the fault threshold is not lowered. Assertion F6.
+
 34. **预算给不出方案时必须返回 `None`。** FHI = 0.05 s 时突发口径无解。这是有
     意义的工程结论（须调 FHI、换网络或降设备数），而放宽误报预算能换回可行解
     ——那正是不该悄悄做的事，断言 F7 把这条路堵住。
+
+    **When the budget admits no design, the function must return `None`.** At FHI = 0.05 s the burst setting has no solution. That is a meaningful engineering conclusion (change the FHI, change the network, or reduce the device count). Relaxing the false-alarm budget would buy a feasible point back — which is exactly what must not be done quietly. Assertion F7 blocks that path.
 
     诚实边界：FHI、$T_{\text{react}}$、丢包率与突发相关系数**全部是引用值或仿真
     参数**，Trier 日志没有 AGV 也没有通信层。可从数据得到的只有对照量（互证的
     实测时延分布）。论文表格须逐项标注来源。
 
-### 第一档：单观测者族的结构性 0（`py -m tools.tier1_diag`，断言 H1–H6）
+    Honest boundary: FHI, $T_{\text{react}}$, the loss rate, and the burst correlation **are all cited values or simulation parameters**. The Trier log has no AGV and no communication layer. The only quantities the data can supply are the controls (the measured latency distribution of corroboration). Every cell in the paper's table must name its source.
+
+### 第一档：单观测者族的结构性 0（`py -m tools.tier1_diag`，断言 H1–H6） / Tier 1: the structural 0 of the single-observer family (`py -m tools.tier1_diag`, assertions H1–H6)
 
 这一档**不是赛马**。为让"检不出"经得起"你没实现好"的质疑，实现上一律给基线
 争取到最强：阈值按纯良性流标定到刚好不误报的最紧位置，一致性检验按过程模型语言
 判（含交接对上的严格逆序），看门狗与本文用同一套派发排队容差 260 s。攻击参数与
 `detect_diag` 一致（rate 0.2，seed 42）。
 
-| 基线 | 误报率 | P1 检出 | P3 检出 | P2 检出 | P1 判别力 |
+This tier **is not a horse race**. So that "it does not detect" can survive the objection "you implemented it badly", every baseline is given the strongest setting available: thresholds are calibrated on a purely benign stream to the tightest point that does not false-alarm, conformance is judged in the language of the process model (including a strict reversal on a handover pair), and the watchdog uses the same dispatch-queue allowance of 260 s as this paper. Attack parameters match `detect_diag` (rate 0.2, seed 42).
+
+| 基线 / baseline | 误报率 / FAR | P1 检出 / P1 DR | P3 检出 / P3 DR | P2 检出 / P2 DR | P1 判别力 / P1 discrimination |
 | --- | --- | --- | --- | --- | --- |
-| `R0` 匹配告警率随机指控 | 0.019 | 0.014 | 0.014 | 0.000 | −0.005 |
-| `S1` 调度看门狗 | 0.042 | **0.000** | **0.000** | 1.000 | −0.042 |
-| `S2` 计划一致性残差 | 0.004 | 0.003 | 0.003 | 1.000 | −0.001 |
-| `S3` 对齐式一致性检验 | **0.000** | **0.000** | **0.000** | 1.000 | 0.000 |
-| **本文** 耦合互证 | 0.023 | **1.000** | **1.000** | 1.000 | **0.977** |
+| `R0` 匹配告警率随机指控 / random charges matched to the alarm rate | 0.019 | 0.014 | 0.014 | 0.000 | −0.005 |
+| `S1` 调度看门狗 / dispatch watchdog | 0.042 | **0.000** | **0.000** | 1.000 | −0.042 |
+| `S2` 计划一致性残差 / plan-consistency residual | 0.004 | 0.003 | 0.003 | 1.000 | −0.001 |
+| `S3` 对齐式一致性检验 / alignment conformance | **0.000** | **0.000** | **0.000** | 1.000 | 0.000 |
+| **本文** 耦合互证 / **this paper**, coupled corroboration | 0.023 | **1.000** | **1.000** | 1.000 | **0.977** |
 
 40. **整档对 P1/P3 是结构性的 0，不是精度不足。** 谎言在于物理事件没发生，而单
     观测者看到的每个字段都正常。P1 与 P3 的数必须完全一样——两者的差别只在是否
     披露哈希链原像，那不是单观测者能看到的字段；这条自检由断言 H4 锚定，漏进任何
     不该有的信息都会让它失败。
+
+    **The whole tier is a structural 0 on P1/P3, not a lack of precision.** The lie is that the physical event did not happen, while every field a single observer sees is normal. The P1 and P3 numbers must be identical — they differ only in whether a hash-chain preimage is disclosed, and that is not a field a single observer can see. Assertion H4 pins this self-check. Any information that should not be there makes it fail.
 
 41. **`S3` 的操作化必须避开三条假误报源，否则 28% 的良性误报会把基线变成稻草人。**
     case 内并发物料链时间交错、XOR 分支上的可选后继、BPMN 里仍是 `TO_BE_SET` 的
@@ -523,22 +659,28 @@ $(r, T_{\text{hb}})$ 可行区间 → 带宽下界**。
     任务集合内；（B）两条活动在物理上确为交接，且顺序是模型顺序的严格逆序。
     修好后 FAR=0 且 DR=0，这才是构造性不可能的干净形态。
 
+    **Operationalizing `S3` must avoid three sources of spurious false alarms, or a 28% benign false-alarm rate turns the baseline into a straw man.** Concurrent material chains inside a case interleave in time, an XOR branch has optional successors, and some service tasks in the BPMN are still `TO_BE_SET`. A naive rule "adjacent activities must obey the model order and continue the location" marks all of those as violations. This implementation keeps only two rules that do not injure the benign stream: (A) the `(device class, operation)` is in no workflow's task set; (B) the two activities really are a physical handover, and their order is a strict reversal of the model order. After that repair, FAR=0 and DR=0, which is the clean form of a constructive impossibility.
+
 42. **P2 那一列必须如实报。** 看门狗、残差、一致性检验对完全沉默都能发现
     （DR=1.000），本文不主张那一点。隐瞒它会显得在夸大第一档的无能；写出它，
     反而把"任务状态伪造 ≠ 沉默"这条贡献 0 的边界立得更清楚。
 
-### 见证选取规则的基线对照（`py -m tools.baseline_diag`，断言 G1–G6）
+    **The P2 column must be reported as measured.** The watchdog, the residual, and conformance all detect sustained non-response (DR=1.000). This paper does not claim that point. Hiding it would look like exaggerating the weakness of tier 1. Writing it down makes the boundary of contribution 0, "task-state falsification is not silence", clearer.
+
+### 见证选取规则的基线对照（`py -m tools.baseline_diag`，断言 G1–G6） / Witness-selection baselines (`py -m tools.baseline_diag`, assertions G1–G6)
 
 同一协议、同一密码学、同一窗口与派发容差 260 s，**只换 `WitnessPolicy`**。
 攻击参数与 `detect_diag` 一致（P1，rate 0.2，seed 42），故两处的数可互相引用。
 
-| 规则 | 见证集均值 | 误报率 | P1 检出 | 判别力 | 悬而未决 |
+Same protocol, same cryptography, same window and dispatch allowance of 260 s; **only `WitnessPolicy` changes**. Attack parameters match `detect_diag` (P1, rate 0.2, seed 42), so the numbers in the two places may cite each other.
+
+| 规则 / rule | 见证集均值 / mean $|W|$ | 误报率 / FAR | P1 检出 / P1 DR | 判别力 / discrimination | 悬而未决 / unsettled |
 | --- | --- | --- | --- | --- | --- |
-| **本文** 任务图对手方 | 2.18 | 0.023 | **1.000** | **0.977** | 401 |
-| `W1` 全网法定人数（PBFT） | 2.18 | 0.000 | **0.000** | 0.000 | 0 |
-| `W2` 全体询证 | 9.00（4.13×） | 0.023 | 1.000 | 0.977 | 900 |
-| `W3` $k$ 个随机见证者 | 1.00 | 0.002 | **0.105** | 0.103 | 2,162 |
-| `W4` 空间邻居见证 | 2.92（1.34×） | 0.000 | **0.518** | 0.518 | 1,331 |
+| **本文** 任务图对手方 / **this paper**, task-graph counterpart | 2.18 | 0.023 | **1.000** | **0.977** | 401 |
+| `W1` 全网法定人数（PBFT） / network-wide quorum (PBFT) | 2.18 | 0.000 | **0.000** | 0.000 | 0 |
+| `W2` 全体询证 / ask everyone | 9.00（4.13×） | 0.023 | 1.000 | 0.977 | 900 |
+| `W3` $k$ 个随机见证者 / $k$ random witnesses | 1.00 | 0.002 | **0.105** | 0.103 | 2,162 |
+| `W4` 空间邻居见证 / spatial-neighbor witnesses | 2.92（1.34×） | 0.000 | **0.518** | 0.518 | 1,331 |
 
 43. **`W1`：PBFT 式共识对任务状态伪造的检出恰为 0。** 共识确认的是"多数副本对
     消息的内容与顺序达成一致"，不是物理事实；一条格式正确、签名有效、按时到达的
@@ -546,15 +688,21 @@ $(r, T_{\text{hb}})$ 可行区间 → 带宽下界**。
     **恰等于看门狗 `S1`**，而带宽是本文的 131 倍。一句话：**付 131 倍带宽换一个
     看门狗。** 这是本档最该写进论文的一行。
 
+    **`W1`: PBFT-style consensus detects task-state falsification at exactly 0.** Consensus confirms that a majority of replicas agree on the content and order of a message. It does not confirm a physical fact. A false statement that is well formed, validly signed, and on time is committed by the quorum. It still works on P2 (there is no statement to commit), so its detection power **equals the watchdog `S1` exactly**, at 131× this paper's bandwidth. In one line: **pay 131× the bandwidth for a watchdog.** That is the row of this tier that most belongs in the paper.
+
     操作化上有两处坑，记下以免重犯：保留互证窗口会让它白捡 0.136（窗口在伪造声明
     到达前到期），保留否证通道也给 0.136（全部来自对手方否证）。共识不制造"B 必须
     为 A 的交付作证"这项协议义务，故两者都不该给它。反过来说才是要点：**把否证
     通道交给 PBFT 就是把耦合互证交给它**——那不是让步，恰好证明检出来自互证而非
     共识。
 
+    Two operational traps, recorded so they are not repeated: keeping the corroboration window lets it pick up 0.136 for free (the window expires before the false statement arrives), and keeping the refutation channel also gives 0.136 (all of it from counterpart refutation). Consensus does not create the protocol obligation "B must testify to A's delivery", so neither should be given to it. The converse is the point: **handing the refutation channel to PBFT is handing it coupled corroboration** — that is not a concession. It is exactly the proof that detection comes from corroboration, not from consensus.
+
 44. **`W2`：问所有人不会造出证据。** 检出与误报与本文**逐位相同**，代价是见证集
     4.13 倍即互证带宽 4.13 倍，零增益——有本地传感证据的只有真正的对手方。
     这从反面支持 $O(1)$ 见证集的主张。
+
+    **`W2`: asking everyone does not create evidence.** Detection and false alarms match this paper **digit for digit**. The cost is a 4.13× witness set, which is 4.13× the corroboration bandwidth, for zero gain — only the true counterpart has local sensor evidence. That supports the $O(1)$ witness-set claim from the other side.
 
     此处有一处预判错了，按实测记正：原以为无对手方的活动会照样开窗并全部超时成为
     假指控。实际没有，**双截止时刻把它们兜住了**（对手方从未被派发，互证窗口就从不
@@ -562,15 +710,21 @@ $(r, T_{\text{hb}})$ 可行区间 → 带宽下界**。
     那是**覆盖率的假象**——看着监控面更广，实则一条也结算不了。这反过来是对本文
     协议自身的一个发现。
 
+    One prediction was wrong here, and the measurement corrects it. The expectation was that activities with no counterpart would still open a window and all time out as false charges. They do not. **The two deadlines catch them** (the counterpart was never dispatched, so the corroboration window is never armed, and the item is archived rather than charged). The cost shows up in another form: unsettled items rise from 401 to 900. That is an **illusion of coverage** — the monitored surface looks wider, and not one extra item settles. That is a finding about this paper's own protocol.
+
 45. **`W3`：随机提名崩到 0.105。** 随机挑中的设备对**这一次**交接没有本地传感
     证据，到不了场也确认不了，2,162 条交付永远结算不了。失败形态是**什么都发现
     不了**而非乱指控（误报仅 0.002，同样被双截止时刻兜住）。可见"有见证者"远不
     等于"有正确的见证者"。
 
+    **`W3`: random nomination collapses to 0.105.** A randomly chosen device has no local sensor evidence of **this** handover. It cannot show up and it cannot confirm, so 2,162 deliveries never settle. The failure mode is **detecting nothing**, not charging at random (the false-alarm rate is only 0.002, caught by the same two deadlines). "There is a witness" is far from "there is the right witness".
+
     实现上有一处可复现性缺陷值得记：第一版用顺序推进的随机数发生器，于是同一条
     基线在"先算见证集规模再回放"与"先回放再算规模"两种调用顺序下给出不同检出率
     （0.105 与 0.129）。那不是随机性，是不可复现。改为对 (seed, case, event_id)
     取哈希后提名恒定，断言 G4 里有换序不变的检查。
+
+    One reproducibility defect is worth recording. The first version advanced a sequential random generator, so the same baseline gave different detection rates (0.105 and 0.129) under "compute the witness-set size, then replay" versus "replay, then compute the size". That is not randomness. It is irreproducibility. Nomination is now a hash of (seed, case, event_id), so it is constant, and assertion G4 checks that swapping the order does not change the result.
 
 46. **`W4`（主对照）：空间邻居只恢复本文 52% 的检出，却多付 34% 的见证集规模。**
     这一行就是第一贡献的全部证据。空间邻接是**静态**的、与当前工件走哪条工艺路线
@@ -578,10 +732,14 @@ $(r, T_{\text{hb}})$ 可行区间 → 带宽下界**。
     由**任务图 + 当前 case** 共同确定，是动态的。移植的是 COLAW/Vouch+ 的**选取
     原则**而非其完整系统（后者依赖测距/RSSI，本数据没有）。
 
+    **`W4` (the main control): spatial neighbors recover only 52% of this paper's detection, and pay 34% more witness-set size.** This row is the whole evidence for the first contribution. Spatial adjacency is **static** and independent of which process route the current workpiece takes, so it both misses a true counterpart that is not adjacent on the graph and includes many devices irrelevant to this handover. This paper's rule is fixed jointly by **the task graph and the current case**, so it is dynamic. What is ported is the COLAW/Vouch+ **selection principle**, not the full system (the latter depends on ranging or RSSI, which this data does not have).
+
 47. **见证资格不可按设备类硬查——反例保护。** 实现基线时试过在确认路径上要求
     "作证者的设备类必须落在模型见证集内"，结果本文自己的 P1 检出率从 1.000 掉到
     0.928、良性证据从 69 条掉到 64 条（后者不是改善，是证据变少），覆盖率会退回
     B6 之前的 64.89%。
+
+    **Witness eligibility must not be a hard lookup by device class — a counterexample guard.** While implementing the baselines, the confirm path was tried with the requirement "the witness's device class must sit in the model witness set". This paper's own P1 detection then fell from 1.000 to 0.928, and benign evidence from 69 items to 64 (the latter is not an improvement; there is less evidence). Coverage would fall back to the 64.89% from before B6.
 
     机理已查明：2,373 个已实现对手方中 392 个不在模型见证集内，其中 **285 个是
     同类跨实例**交接（`vgr_2` 交付、`vgr_1` 取走）、88 个是同机顺序工序
@@ -589,16 +747,20 @@ $(r, T_{\text{hb}})$ 可行区间 → 带宽下界**。
     "同类的另一台实例"。真正跨类却未建模的只有 6 例。故口径仍是 B6 那条：
     **见证资格看设备类，见证独立性看设备实例。** 断言 G1。
 
-### 第三、四档：等带宽时延与归责划界（`py -m tools.heartbeat_diag`，断言 I1–I6）
+    The mechanism is known: of 2,373 realized counterparts, 392 are outside the model witness set. **285 are same-class, cross-instance** handovers (`vgr_2` delivers, `vgr_1` picks up), and 88 are sequential operations on the same machine (`mm/mill` → `mm/deburr`). Model-level witness edges are built for **cross-class** handovers and cannot express "another instance of the same class" at all. Only 6 are truly cross-class and unmodeled. So the rule remains the one in B6: **eligibility is by device class, independence is by device instance.** Assertion G1.
+
+### 第三、四档：等带宽时延与归责划界（`py -m tools.heartbeat_diag`，断言 I1–I6） / Tiers 3 and 4: equal-bandwidth latency and the attribution boundary (`py -m tools.heartbeat_diag`, assertions I1–I6)
 
 这一档**不比 P1 检出率**（那是第一档的结构性 0）。它接的是带宽—安全裕度定理
 与密码学划界——三条都是解析结论，不依赖回放噪声。
 
-| 口径 | 沉默带宽 | 沉默 $T_{det}$ | 等带宽周期 $T_{det}$ | 倍率 |
+This tier **does not compare P1 detection rates** (that is the structural 0 of tier 1). It attaches to the bandwidth–safety margin theorem and to the cryptographic boundary. All three are closed-form conclusions and do not depend on replay noise.
+
+| 口径 / setting | 沉默带宽 / silence bandwidth | 沉默 $T_{det}$ / silence | 等带宽周期 $T_{det}$ / equal-bandwidth period | 倍率 / factor |
 | --- | --- | --- | --- | --- |
-| 汽车·独立丢包 | 621 B/s | 2.175 s | 17.328 s | 7.97× |
-| 运动·独立丢包 | 2,311 B/s | 0.592 s | 4.662 s | 7.88× |
-| 运动·突发丢包 | 7,675 B/s | 0.594 s | 4.680 s | 7.88× |
+| 汽车·独立丢包 / automotive, independent loss | 621 B/s | 2.175 s | 17.328 s | 7.97× |
+| 运动·独立丢包 / motion, independent loss | 2,311 B/s | 0.592 s | 4.662 s | 7.88× |
+| 运动·突发丢包 / motion, burst loss | 7,675 B/s | 0.594 s | 4.680 s | 7.88× |
 
 48. **`H1`：等带宽下周期全量上报的检测时延 ≈ 报文比 8×。** 全量状态帧 128 B、
     原像 16 B。`budget.py` 先解出沉默的 $B$，再代入
@@ -606,83 +768,125 @@ $(r, T_{\text{hb}})$ 可行区间 → 带宽下界**。
     要 4.68 s 才能判沉默，而运动危害只留给检测 0.60 s：**同带宽下对方在安全预算
     内根本不可行**。等带宽对比由此第一次闭合。
 
+    **`H1`: at equal bandwidth, periodic full reporting has detection latency ≈ the message-size ratio, 8×.** A full state frame is 128 B; a preimage is 16 B. `budget.py` first solves silence's $B$, then substitutes $T_{period} = n L_{report}/B$. That is bandwidth conservation, not a simulation. At the strictest setting, periodic reporting needs 4.68 s to decide silence, while the motion hazard leaves only 0.60 s for detection: **at the same bandwidth the other side is not feasible inside the safety budget**. The equal-bandwidth comparison closes here for the first time.
+
 49. **`H2`：活性有、归责无。** GOOSE MaxTime 能发现沉默，但心跳无身份绑定、
     无可转移证据、不能抗伪心跳。攻击者可替被沉默设备伪造心跳掩盖 P2。
+
+    **`H2`: liveness yes, attribution no.** GOOSE MaxTime can discover silence, but the heartbeat has no identity binding, no transferable evidence, and no resistance to a forged heartbeat. An attacker can forge a heartbeat for a silenced device and cover P2.
 
 50. **`H3`：TESLA 披露后可伪造——归责失败。** RFC 4082 明确不提供不可否认性。
     密钥披露后第三方重算 MAC 校验通过（断言 I4 的可执行反例）。本文划界：原像
     是一次性凭证，不是 MAC 密钥；披露后第三方仍能验证"只有承诺者能产生"。
 
+    **`H3`: TESLA is forgeable after disclosure — attribution fails.** RFC 4082 explicitly does not provide non-repudiation. After the key is disclosed, a third party recomputes the MAC and the check passes (the executable counterexample in assertion I4). The boundary drawn here: a preimage is a one-time credential, not a MAC key. After disclosure a third party can still verify "only the committer could have produced it".
+
 51. **`U1`：先知覆盖率 = 100%，与本文差额 = 覆盖缺口 29.95%（917 条）。**
     先知不抬已覆盖区间的检出（本文在已互证区间已是 1.000），只回答"还差多少"
     ——差额即按需主动互证的靶区，与断言 B4 互为表里。
 
-### 丢包率扫参（`py -m tools.loss_sweep`，断言 J1–J3）
+    **`U1`: oracle coverage = 100%, and the difference from this paper is the coverage gap of 29.95% (917 items).** The oracle does not raise detection inside the already covered interval (this paper is already 1.000 there). It only answers "how much is still missing". The difference is the target of on-demand active corroboration, and it is the other face of assertion B4.
+
+### 丢包率扫参（`py -m tools.loss_sweep`，断言 J1–J3） / Loss-rate sweep (`py -m tools.loss_sweep`, assertions J1–J3)
 
 PISTIS 在 50% 丢包下报告毫秒级投递——那是通信层实时性，**不是**本文的数值
 基线。审稿人仍会问：你们的心跳在同样恶劣丢包下还站得住吗？扫参回答的是这一问。
 
-| $p$ | 突发口径 $T_{hb}$ | $r$ | 带宽 | vs 5 Hz PBFT |
+PISTIS reports millisecond delivery under 50% loss. That is communication-layer timeliness. It is **not** a numerical baseline of this paper. A reviewer will still ask whether the heartbeat still stands under equally harsh loss. The sweep answers that question.
+
+| $p$ | 突发口径 $T_{hb}$ / burst-setting | $r$ | 带宽 / bandwidth | vs 5 Hz PBFT |
 | --- | --- | --- | --- | --- |
-| 1%（默认） | 0.058 s | 10 | 7,675 B/s | 1/131 |
+| 1%（默认） / default | 0.058 s | 10 | 7,675 B/s | 1/131 |
 | 10% | 0.041 s | 14 | 10,814 B/s | 1/93 |
-| **50%（PISTIS 地标）** | 0.016 s | 36 | **27,502 B/s** | **1/36** |
+| **50%（PISTIS 地标） / PISTIS landmark** | 0.016 s | 36 | **27,502 B/s** | **1/36** |
 
 52. **p=50% 突发口径仍可行，且仍比 PBFT 便宜一个半数量级。** 相对默认 p=1%
     的带宽代价 3.6×。这不是说我们在做 PISTIS 的事（事件语义完全不同），只说明
     误报—时延—带宽关系在极端丢包下仍给出安全预算内的方案。丢包率是仿真参数，
     不是本产线实测——表格须标注来源。
 
-## 六、继承自 paper02 的既测事实（不是本文的测量结果）
+    **At p=50% the burst setting is still feasible, and still a factor of about thirty cheaper than PBFT.** Relative to the default p=1% the bandwidth cost is 3.6×. This does not say we are doing what PISTIS does (the event semantics are entirely different). It only says the false-alarm–latency–bandwidth relation still yields a design inside the safety budget under extreme loss. The loss rate is a simulation parameter, not a measurement of this line — the table must name the source.
+
+## 六、继承自 paper02 的既测事实（不是本文的测量结果） / 6. Facts inherited from paper02 (not measurements of this paper)
 
 下列数字来自 `paper02` 在**同一份日志**上的实测，已由其 `tests/test_all.py`
 把关。本文复用同一数据集，因此它们直接构成 TESSERA 的实现约束与对照基准。
 标注来源是为了避免日后误当作本文的测量结果引用。
 
+The numbers below are measurements `paper02` made on **the same log**, already gated by its `tests/test_all.py`. This paper reuses the same dataset, so they are implementation constraints and comparison anchors for TESSERA. The source is labeled so they are not later cited as measurements of this paper.
+
 1. **规模：** 清洗版 282 个 case、3,062 个活动实例（排除 failure 前 3,157）；
    BPMN 导出 15 个资源、21 个操作、23 个位置、31 条物料流边、16 组设备内操作对，
    与日志词表完全重合。
+
+   **Scale:** the cleaned log has 282 cases and 3,062 activity instances (3,157 before failures are excluded). The BPMN export has 15 resources, 21 operations, 23 locations, 31 material-flow edges, and 16 intra-device operation pairs, coinciding exactly with the log vocabulary.
+
 2. **跨设备交接在模型里是显式的。** 每个 serviceTask 的 Camunda HTTP connector
    URL 形如 `/vgr/pick_up_and_transport?resource=vgr_1&start=dm_2_sink_pos&end=ov_1_pos`，
    设备/操作/起点/终点四元组直接可读；VGR_2 送到 `dm_2_sink_pos`、VGR_1 从该位置
    取走。**互证超图的边不需要手工编造，位置即耦合点。**
+
+   **A cross-device handover is explicit in the model.** Each serviceTask's Camunda HTTP connector URL has the form `/vgr/pick_up_and_transport?resource=vgr_1&start=dm_2_sink_pos&end=ov_1_pos`, so the quadruple device / operation / start / end is directly readable. VGR_2 delivers to `dm_2_sink_pos` and VGR_1 picks up from that location. **The edges of the corroboration hypergraph do not need to be hand-written. The location is the coupling point.**
+
 3. **链的粒度必须是 (设备, case)。** 设备级全局时间线跨 case 边界，会误报
    48.6% 的可行性违反。
+
+   **Chain granularity must be (device, case).** A device-level global timeline crosses case boundaries and falsely reports 48.6% of feasibility violations.
+
 4. **设备级状态机在本产线上不存在。** 2,109 条 (设备, case) 链中 65.1% 长度为 1，
    3,062 个活动只产出 953 次转移。本产线设备是无状态服务端点，每个作业只被调用
    一到两次。**推论：TESSERA 的状态迁移单元应取"任务交接事件"而非"设备内状态转移"，
    这与耦合互证的设计正好吻合。**
+
+   **There is no device-level state machine on this line.** Of 2,109 (device, case) chains, 65.1% have length 1, and 3,062 activities produce only 953 transitions. Devices on this line are stateless service endpoints, each job invoked once or twice. **Consequence: TESSERA's state-transition unit should be the task-handover event, not an intra-device state transition, which matches the design of coupled corroboration.**
+
 5. **参考模型覆盖率 97.38%（1,744/1,791 次移动）。** 2.62% 的物料移动不在任何
    BPMN 中，其中 44 次涉及 `sm_2_automatic_pos`（任何模型都未出现的位置）。
    未建模行为按"未知"而非"违反"处理。
+
+   **Reference-model coverage is 97.38% (1,744/1,791 moves).** 2.62% of material moves are in no BPMN, and 44 of them involve `sm_2_automatic_pos` (a location that appears in no model). Unmodeled behavior is treated as "unknown", not as a "violation".
 6. **能力集必须按设备类归并**（`sm_2 → sm`）：16 个 BPMN 只实例化一台分选机，
    按实例归并会误判 `sm_2` 的 44 次 `/sm/sort`。
+
+   **The capability set must be collapsed by device class** (`sm_2 → sm`): the 16 BPMN models instantiate only one sorter. Collapsing by instance would misjudge `sm_2`'s 44 `/sm/sort` calls.
+
 7. **物料流令牌不变量的良性违反率漂移极大：** 训练折 0.54%、诊断口径 1.70%、
    部署流实测 4.7%（漂移 9 倍，paper02 全项目最大）。**二值通道的单消息功效
    上界是 min(1, α/q)**，与不变量质量无关；α=0.001 时上界只剩 0.185。
    可问责沉默的原像缺失判定同属二值通道，必须复核这条天花板。
+
+   **The benign violation rate of the material-flow token invariant drifts badly:** 0.54% on the training fold, 1.70% on the diagnostic setting, 4.7% measured on the deployment stream (a 9× drift, the largest in the paper02 project). **The per-message power upper bound of a binary channel is min(1, α/q)**, independent of invariant quality; at α=0.001 the bound is only 0.185. The missing-preimage decision of accountable silence is a binary channel too, so this ceiling must be rechecked.
+
 8. **A4 状态模仿是 paper02 明确的短板，也是 TESSERA 的靶心：** 单消息检出率
    时序 0.00、结构 0.02、互锁 0.12——互锁是唯一有提升的通道，但 0.12 远不够。
    且该数字是**方法与攻击者强度的联合性质**：注入器复制当前操作时结构通道
    可拿到 0.19，换成按转移模型挑最可能的下一步后才归零。P1 注入器必须实现
    为后者，否则头条主张作废。
+
+   **A4 state imitation is an explicit weakness of paper02, and it is TESSERA's target:** per-message detection is 0.00 temporal, 0.02 structural, 0.12 interlock. The interlock is the only channel that improves anything, and 0.12 is far from enough. The number is a **joint property of the method and the attacker strength**: when the injector copies the current operation the structural channel can reach 0.19, and it falls to zero only when the injector picks the most likely next step from the transition model. The P1 injector must be implemented as the latter, or the headline claim is void.
+
 9. **真实的 A4 实例已在数据里找到，不必虚构。** WF_101 中 `sm/sort` 之后是
    eventBasedGateway，分支为 `Detected_White_Color` / `Detected_Red_Color` /
    `Detected_Blue_Color`，之后调度器命令 VGR 去对应料仓取件。**调度器的下一条
    命令由设备上报的物理观测决定**；伪造一条颜色检测消息即可让 VGR 取错料仓，
    而每条命令单独看都合法、都在可行性掩码内，只有"上报颜色"与"料仓实际占用"
    的耦合才能揭穿。这可直接作为论文的引导例实例。
+
+   **A real A4 instance is already in the data. It does not need to be invented.** In WF_101, `sm/sort` is followed by an eventBasedGateway whose branches are `Detected_White_Color` / `Detected_Red_Color` / `Detected_Blue_Color`, after which the scheduler commands the VGR to pick from the matching bin. **The scheduler's next command is determined by the physical observation the device reports.** Forging one color-detection message sends the VGR to the wrong bin, while each command, taken alone, is legal and inside the feasibility mask. Only the coupling of "reported color" and "actual bin occupancy" can expose it. This can be the running example of the paper as it stands.
+
 10. **"没见过"与"不允许"在日志里无法区分。** 时间序下 3.9%（20/508）的良性
     活动是训练折未见的 (设备, 操作) 组合（全是 `hbw_1 //hbw/unload`），而 BPMN
     拒绝了其中 0 条。这是必须用参考模型（而非从数据学）的硬理由。
 
-## 七、与既有材料的关系
+    **"Never seen" and "not allowed" cannot be told apart in the log.** In time order, 3.9% (20/508) of benign activities are (device, operation) pairs unseen in the training fold (all of them `hbw_1 //hbw/unload`), and the BPMN rejects 0 of them. That is the hard reason a reference model must be used, rather than learning from the data.
+
+## 七、与既有材料的关系 / 7. Relation to existing material
 
 - 数据集与取用说明在 `../database/`，原始探针脚本仍留在
-  `../../paper02/database/ft_trier_iot_log/`（保存取证过程）。
-- 方法论证、查新、创新点定位、引导例、实验设计见 `../paper03-NewIdea.md`。
+  `../../paper02/database/ft_trier_iot_log/`（保存取证过程）。 / The dataset and the notes on how it is used are in `../database/`. The original probe scripts remain in `../../paper02/database/ft_trier_iot_log/` (they preserve the forensic trail).
+- 方法论证、查新、创新点定位、引导例、实验设计见 `../paper03-NewIdea.md`。 / The method argument, the literature check, the positioning of the contributions, the running example, and the experiment design are in `../paper03-NewIdea.md`.
 - `paper02` 的实现在 `../../paper02/slid/`。其 `README.md` 第三节的二十五条设计
-  约束是同一数据集上的经验，实现本目录时应先读，尤其第 8、10、11、13、15、16 条。
+  约束是同一数据集上的经验，实现本目录时应先读，尤其第 8、10、11、13、15、16 条。 / The `paper02` implementation is in `../../paper02/slid/`. The twenty-five design constraints in section 3 of its `README.md` are experience on the same dataset. Read them before implementing this directory, especially items 8, 10, 11, 13, 15, and 16.
 
   **但它不以基线身份出现在论文里。** paper03 投稿时 paper02 尚在审，双盲下无法
   引用、审稿人也无从核验。基线的对象应是**方法类**而非某一篇：paper02 属于
@@ -691,6 +895,10 @@ PISTIS 在 50% 丢包下报告毫秒级投递——那是通信层实时性，**
   **论文全文不提 paper02**。这不是规避，反而更强——第一档的结果是结构性 0
   （断言 D1），是可证命题，本就不依赖任何特定实现的实测数字。
 
+  **It does not appear in the paper as a baseline.** When paper03 is submitted, paper02 is still under review, so a double-blind submission cannot cite it and a reviewer cannot check it. The object of a baseline should be a **method class**, not one paper. Paper02 belongs to the class "a single observer checks plan consistency or a residual against the command ledger", and that class has many citable general sources in the model-based FDI and CUSUM literature. So `S2` is implemented as that generic class and cites the generic literature, and **the paper never mentions paper02**. That is not an evasion. It is stronger: the tier-1 result is a structural 0 (assertion D1), a provable claim, and it does not depend on the measured numbers of any particular implementation.
+
   两条随之而来的边界：其一，命令账本**不得**写成本文贡献，它是调度器的派工记录、
   车间既有产物，按此陈述即无重叠；其二，若 paper02 在投稿前见刊或挂出预印本，
   应改为正常引用（届时不引反而像隐瞒）。
+
+  Two boundaries follow. First, the command ledger **must not** be written as a contribution of this paper. It is the scheduler's dispatch record, an existing product of the shop, and stated that way there is no overlap. Second, if paper02 is published or posted as a preprint before submission, it should be cited normally (not citing it then would look like concealment).

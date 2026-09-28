@@ -26,6 +26,46 @@
     这条使"搬运车把工件送到烤炉位、烤炉随后原地加工"被正确识别为一次交接。
   - 能力集与见证关系按**设备类**归并(`sm_2 -> sm`):16 个 BPMN 只实例化了
     一台分选机,按实例归并会误判 `sm_2` 的 44 次 `/sm/sort`(paper02 规则 13)。
+
+Export the task graph and the **corroboration hypergraph** from the BPMN reference models.
+
+This is where TESSERA differs from paper02. From the same BPMN files paper02
+exports a feasibility mask F (which transitions are allowed) and a material-flow
+token invariant I (part conservation); this module exports **who is eligible
+to witness whose state transition**.
+
+Export rule: each serviceTask's Camunda http-connector url is a full command,
+e.g. `/vgr/pick_up_and_transport?resource=vgr_1&start=dm_2_sink_pos&end=ov_1_pos`.
+The device / operation / start / end tuple is readable directly. Positions
+chain head-to-tail across activities, so —
+
+    activity a produces a part at position p, activity b consumes a part from p,
+    and a and b belong to **different device classes**
+        ==> b is the counterpart witness that a "completed and delivered to p",
+            and a is the counterpart witness that b "picked up from p".
+
+That relation is an **edge of the corroboration hypergraph**. Two properties
+are the basis of the first contribution: the witness set is fixed by the task
+graph rather than the wireless topology, so its size is O(1) and known at
+dispatch; collusion requires both ends of the edge to be compromised, so
+collusion resistance reduces to a structural quantity on this graph
+(see collusion.py).
+
+Consecutive operations of the same device class **do not corroborate**: there
+is no independent second-party sensor evidence, so self-witnessing does not
+hold. That is a design core, not an implementation detail.
+
+Two manual rules carried from paper02 (each is one statement about the line,
+with no tunable parameter):
+  - The sorter's abstract output `sm_N_automatic_pos` and `sm_N_sink_{1,2,3}_pos`
+    belong to one alias class; the runtime color (eventBasedGateway branch)
+    decides which.
+  - An in-place operation with no start/end parameter acts at the device's
+    canonical position `<device>_pos`. This correctly treats "the carrier
+    delivers to the oven position, then the oven machines in place" as one handover.
+  - Capability sets and witness relations are merged by **device class**
+    (`sm_2 -> sm`): the 16 BPMN files instantiate only one sorter, and merging
+    by instance would misjudge sm_2's 44 `/sm/sort` events (paper02 rule 13).
 """
 from __future__ import annotations
 
@@ -44,13 +84,19 @@ SORTER_POS = re.compile(r"(sm_\d+)_(automatic|sink_\d+)(_dropoff)?_pos$")
 
 
 def device_class(device: str) -> str:
-    """设备类 = 去掉实例后缀,如 sm_2 -> sm、vgr_1 -> vgr。"""
+    """设备类 = 去掉实例后缀,如 sm_2 -> sm、vgr_1 -> vgr。
+
+    Device class = drop the instance suffix, e.g. sm_2 -> sm, vgr_1 -> vgr.
+    """
     head, sep, tail = device.rpartition("_")
     return head if sep and tail.isdigit() else device
 
 
 def canonical_position(device: str) -> str:
-    """无 start/end 参数的操作作用于设备的规范位置 `<device>_pos`。"""
+    """无 start/end 参数的操作作用于设备的规范位置 `<device>_pos`。
+
+    An operation with no start/end parameter acts at the device's canonical position `<device>_pos`.
+    """
     return f"{device}_pos"
 
 
@@ -59,6 +105,10 @@ class WitnessEdge:
     """互证超图的一条边:`consumer` 为 `producer` 在 `pos` 的交付作证。
 
     两端是 (设备类, 操作) 而非设备实例:见证资格是设备类型的性质。
+
+    One edge of the corroboration hypergraph: `consumer` witnesses `producer`'s delivery at `pos`.
+
+    Both ends are (device class, operation), not a device instance: eligibility is a property of device type.
     """
     producer: tuple[str, str]
     consumer: tuple[str, str]
@@ -68,7 +118,10 @@ class WitnessEdge:
 
 @dataclass
 class TaskGraph:
-    """从 BPMN 导出的任务图与互证超图。"""
+    """从 BPMN 导出的任务图与互证超图。
+
+    Task graph and corroboration hypergraph exported from the BPMN.
+    """
     positions: set[str] = field(default_factory=set)
     move_graph: set[tuple[str, str]] = field(default_factory=set)
     resources: set[str] = field(default_factory=set)
@@ -80,13 +133,22 @@ class TaskGraph:
     #: 逐工作流的任务集合 {工作流: {(设备类, 操作)}}。**只供基线 `S3` 的一致性
     #: 检验使用**，本文的机制不读它。与 `witness_edges` 的区别是不过滤同类交接，
     #: 因为过程模型的语言包含同机顺序工序，一致性检验必须按完整语言判。
+    #: Per-workflow task sets {workflow: {(device class, operation)}}. **Used
+    #: only by baseline `S3`'s conformance check**; this paper's mechanism does
+    #: not read them. Unlike `witness_edges`, same-class handovers are not
+    #: filtered, because the process-model language includes same-machine
+    #: sequential steps and conformance must judge the full language.
     wf_tasks: dict[str, set[tuple[str, str]]] = field(default_factory=dict)
     #: 逐工作流的顺序关系（传递闭包内的有序任务对），同样只供 `S3` 使用。
+    #: Per-workflow order (ordered task pairs inside the transitive closure), also for `S3` only.
     wf_order: dict[str, set[tuple[tuple[str, str], tuple[str, str]]]] = field(
         default_factory=dict)
 
     def resolve(self, pos: str | None) -> frozenset[str]:
-        """位置的别名类,含自身。"""
+        """位置的别名类,含自身。
+
+        Alias class of a position, including itself.
+        """
         if pos is None:
             return frozenset()
         return self.alias.get(pos) or frozenset({pos})
@@ -96,11 +158,17 @@ class TaskGraph:
 
     @property
     def handover_positions(self) -> set[str]:
-        """发生跨设备类交接的位置。互证只可能发生在这些位置上。"""
+        """发生跨设备类交接的位置。互证只可能发生在这些位置上。
+
+        Positions where a cross-class handover occurs. Corroboration can happen only there.
+        """
         return {e.pos for e in self.witness_edges}
 
     def witnesses_of(self, device: str, op: str) -> set[tuple[str, str]]:
-        """谁能为 (device, op) 的完成作证,返回 (设备类, 操作) 集合。"""
+        """谁能为 (device, op) 的完成作证,返回 (设备类, 操作) 集合。
+
+        Who can witness completion of (device, op); returns a set of (device class, operation).
+        """
         key = (device_class(device), op)
         return {e.consumer for e in self.witness_edges if e.producer == key}
 
@@ -109,6 +177,12 @@ class TaskGraph:
 
         为假即落入**无对手方区间**——耦合互证在此失效,须由按需主动互证
         补足(见 coverage.py 与 `../paper03-NewIdea.md` 增补二)。
+
+        Whether this activity's completion has a counterpart witness in the model.
+
+        False means it falls in the **no-counterpart interval** — coupled
+        corroboration fails here and on-demand active corroboration must fill
+        the gap (see coverage.py and supplement 2 of `../paper03-NewIdea.md`).
         """
         return bool(self.witnesses_of(device, op))
 
@@ -138,6 +212,12 @@ def _reachable_tasks(node, succ, tasks) -> set[str]:
 
     取直接后继会漏掉被其他设备任务隔开的操作对——paper02 记录这是 F 违反率
     从 14.73% 降到 0.00% 的主因之一,互证边的抽取同理。
+
+    serviceTasks inside the transitive closure along sequence flow.
+
+    Taking only the direct successor misses operation pairs separated by another
+    device's task — paper02 records this as one main reason the F violation rate
+    fell from 14.73% to 0.00%. Witness-edge extraction is the same.
     """
     seen, stack, out = set(), [node], set()
     while stack:
@@ -153,12 +233,18 @@ def _reachable_tasks(node, succ, tasks) -> set[str]:
 
 
 def produced_at(device: str, end_pos: str | None) -> str:
-    """活动把工件交付到哪个位置。"""
+    """活动把工件交付到哪个位置。
+
+    Position where the activity delivers the part.
+    """
     return end_pos or canonical_position(device)
 
 
 def consumed_at(device: str, start_pos: str | None) -> str:
-    """活动从哪个位置取走工件。"""
+    """活动从哪个位置取走工件。
+
+    Position from which the activity picks the part up.
+    """
     return start_pos or canonical_position(device)
 
 
@@ -173,6 +259,9 @@ def _in_pos(task: dict) -> str:
 def build_alias(positions) -> dict[str, frozenset[str]]:
     """分拣机别名类。必须并入日志中出现的位置,否则模型里未出现的
     `sm_2_automatic_pos` 会被误判(paper02 v2 -> v3 的修正)。
+
+    Sorter alias classes. Positions that appear in the log must be included,
+    or an `sm_2_automatic_pos` absent from the model is misjudged (the paper02 v2 -> v3 fix).
     """
     groups: dict[str, set[str]] = defaultdict(set)
     for p in positions:
@@ -184,7 +273,10 @@ def build_alias(positions) -> dict[str, frozenset[str]]:
 
 def load_bpmn(pattern: str | None = None, *,
               log_positions: set[str] | None = None) -> TaskGraph:
-    """解析全部 BPMN,导出任务图与互证超图。"""
+    """解析全部 BPMN,导出任务图与互证超图。
+
+    Parse every BPMN and export the task graph and corroboration hypergraph.
+    """
     pattern = pattern or default_bpmn_glob()
     files = sorted(glob.glob(pattern))
     if not files:

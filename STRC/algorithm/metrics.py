@@ -1,4 +1,7 @@
-"""偏差度量:完工时间偏差 + 预约扰动量。"""
+"""偏差度量:完工时间偏差 + 预约扰动量。
+
+Deviation measures: makespan deviation plus the amount of reservation disturbance.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -36,6 +39,10 @@ def reservation_delta_count(
     """返回 (changed_or_removed, total_before)。
 
     以 (corridor, agv, task) 为键;时窗变化或键消失都计一次改动。
+
+    Return (changed_or_removed, total_before).
+
+    Keyed by (corridor, agv, task); a changed time window or a disappeared key each counts as one change.
     """
     aft: Dict[Tuple[str, int, str], ReservationRef] = {_res_key(r): r for r in after}
     changed = 0
@@ -60,6 +67,12 @@ def reservation_delta_before(
     假设 A2 规定已完成的占用不得回溯修改,所以对任何解恢复问题的臂,这个数必须是 0。
     全局重解臂从 t=0 重新解码,不受该约束,故用这个量把它越界的程度量出来——
     否则「改动比例」按全表统计时,越界与合法改动混在一列里看不出来。
+
+    Return (how many reservations that had already finished before t_now were rewritten, and the total of that kind).
+
+    Assumption A2 forbids revising a finished occupation, so for any arm that solves a recovery problem this count must be 0.
+    The global re-solve arm decodes again from t=0 and is not bound by that constraint, so this quantity measures how far it steps outside the bound.
+    Otherwise, when the change ratio is counted over the whole table, out-of-bound edits and admissible edits sit in one column and cannot be told apart.
     """
     aft: Dict[Tuple[str, int, str], list] = {}
     for r in after:

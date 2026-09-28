@@ -8,6 +8,19 @@
     py main.py
     py main.py --attack P1 P3 --rate 0.2 --seed 42
     py main.py --tag smoke --attack P1
+
+One-shot TESSERA entry: load the log, build the corroboration hypergraph,
+inject attacks, detect, and write results.
+
+By default it runs coupled-corroboration detection for P1–P4 and writes
+coverage, the collusion bound, and the bandwidth budget into
+`output/<tag>/summary.json`. Fine-grained diagnostics stay in `tools/*_diag`;
+this entry packs the paper experiment's main path into one reproducible run.
+
+Usage (from paper03/tessera/):
+    py main.py
+    py main.py --attack P1 P3 --rate 0.2 --seed 42
+    py main.py --tag smoke --attack P1
 """
 from __future__ import annotations
 
@@ -57,7 +70,10 @@ def _pct(xs, q):
 
 
 def evaluate(recs, g, family, *, refute: bool, rate: float, seed: int) -> dict:
-    """与 `tools.detect_diag.evaluate` 同口径：分母 = 伪造声明数。"""
+    """与 `tools.detect_diag.evaluate` 同口径：分母 = 伪造声明数。
+
+    Same denominator as `tools.detect_diag.evaluate`: number of falsified statements.
+    """
     reports, _ = attacks.inject(recs, attacks.AttackSpec(
         family=family, rate=rate, seed=seed, explicit_refutation=refute))
     primary = {id(r) for r in reports if r.forged and not r.accomplice}

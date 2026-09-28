@@ -5,6 +5,12 @@
 图脚本因此不含任何硬编码数字——所有数字都能追溯到某一次具体运行。
 
 运行(clbs/ 目录下):  py -m tools.export_experiments --runs p3
+
+Export the batch-run ledger into tidy datasets (CSV) for the paper figures.
+
+Separation of duties: `output/matrix/<run>/records.jsonl` is the raw run product, append-only; this tool derives several wide and long tables under `experiments/` for `paper01_new/fig/*.py` to read. Figure scripts therefore contain no hardcoded numbers — every number traces to a specific run.
+
+Run (from the clbs/ directory):  py -m tools.export_experiments --runs p3
 """
 from __future__ import annotations
 
@@ -26,6 +32,7 @@ EXT_DIR = os.path.join(HERE, "input", "ext")
 OUT_DIR = os.path.join(HERE, "experiments")
 
 # 递进链顺序:报告与图例都按这个顺序排,避免不同图里档位次序不一致
+# Order of the progressive chain: reports and legends use this order so arm order does not differ across figures.
 ARM_ORDER = ["rule", "twostage", "nofeedback", "opendispatch",
              "opendispatch_nols", "nostagger", "closed", "priced"]
 TAG_ORDER = {"low": 0, "mid": 1, "high": 2, "funnel": 3}
@@ -33,6 +40,11 @@ TAG_ORDER = {"low": 0, "mid": 1, "high": 2, "funnel": 3}
 # opendispatch_nols 与 nofeedback 只差派车方式一项(两者都不含局部搜索),故这一对
 # 才是"精确派车值多少"的干净归因;opendispatch 含局部搜索,与 nofeedback 相减同时
 # 差着两个因素,不可单独归因。
+# Gaps of closed versus these arms are the "integrated gain" and each "mechanism gain".
+# opendispatch_nols and nofeedback differ only in dispatch (neither has local search),
+# so that pair is the clean attribution of "what exact dispatch is worth";
+# opendispatch includes local search, so subtracting it from nofeedback changes two
+# factors at once and cannot be attributed alone.
 BASELINE_ARMS = ["twostage", "nofeedback", "opendispatch", "opendispatch_nols",
                  "nostagger"]
 
@@ -50,7 +62,7 @@ def load_ledger(run: str) -> List[dict]:
             try:
                 rec = json.loads(line)
             except json.JSONDecodeError:
-                continue          # 断电可能留下半行,跳过而非崩掉
+                continue          # 断电可能留下半行,跳过而非崩掉 / a crash may leave a half line; skip it rather than abort
             out.append(rec)
     return out
 
@@ -101,6 +113,7 @@ def export(runs: Sequence[str], out_dir: str) -> None:
     print("导出 %d 条运行,%d 个算例 -> %s" % (len(results), len(names), out_dir))
 
     # ---------------- 1. 逐次运行(长表) ----------------
+    # ---------------- 1. Per-run records (long table) ----------------
     runs_rows = []
     for r in sorted(results, key=lambda x: (_sort_key(feats, x["instance"]),
                                             ARM_ORDER.index(x["arm"])
@@ -124,6 +137,7 @@ def export(runs: Sequence[str], out_dir: str) -> None:
                "lower_bound", "gap_upper", "budget_sec", "run"])
 
     # ---------------- 2. 格子聚合(算例 x 档位) ----------------
+    # ---------------- 2. Cell aggregates (instance x arm) ----------------
     by_cell: Dict[Tuple[str, str], List[dict]] = {}
     for r in results:
         by_cell.setdefault((r["instance"], r["arm"]), []).append(r)
@@ -160,6 +174,9 @@ def export(runs: Sequence[str], out_dir: str) -> None:
 
     # ---------------- 3. 配对增益(closed 相对各基线) ----------------
     # 只在两档共有的种子上配对。按列表顺序拼接会静默错位,T14 专门守护这一点。
+    # ---------------- 3. Paired gains (closed versus each baseline) ----------------
+    # Pair only on seeds shared by both arms. Concatenating in list order silently
+    # misaligns them; T14 specifically guards that.
     by_arm_seed: Dict[Tuple[str, str], Dict[int, float]] = {}
     for r in results:
         by_arm_seed.setdefault((r["instance"], r["arm"]), {})[r["seed"]] = r["makespan"]
@@ -198,6 +215,7 @@ def export(runs: Sequence[str], out_dir: str) -> None:
                "n_eff", "p_value", "method"])
 
     # ---------------- 4. 逐种子增益(供配对检验与散点图) ----------------
+    # ---------------- 4. Per-seed gains (for paired tests and scatter plots) ----------------
     seed_rows = []
     for n in names:
         new = by_arm_seed.get((n, "closed"))
@@ -221,6 +239,7 @@ def export(runs: Sequence[str], out_dir: str) -> None:
                "baseline_makespan", "closed_makespan", "rel_gain"])
 
     # ---------------- 5. 算例特征与下界 ----------------
+    # ---------------- 5. Instance features and lower bounds ----------------
     inst_rows = []
     for n in names:
         f = feats.get(n)
@@ -244,6 +263,8 @@ def export(runs: Sequence[str], out_dir: str) -> None:
 
     # ---------------- 6. 元信息(图注要引用种子数与预算口径) ----------------
     # 注:双口径对比表由 export_protocols 单独写出,见 --gen-runs
+    # ---------------- 6. Metadata (captions cite seed count and budget protocol) ----------------
+    # Note: the two-protocol comparison table is written separately by export_protocols; see --gen-runs.
 
     seeds = sorted({r["seed"] for r in results})
     invalid = [r for r in results if not r.get("valid")]
@@ -286,6 +307,10 @@ def export_protocols(wall_runs: Sequence[str], gen_runs: Sequence[str],
     同代数偏向每次评价都做真实路由的闭环法,且把局部搜索的邻居解码记为免费。
     只报一种就能把同一份数据讲成两个相反的故事,故规格 8.2 协议 3 要求并列给出。
     为可比,只取两次批跑共有的算例与种子。
+
+    Two-budget comparison table: the same instances and seeds, paired under same wall-clock and under the same generation count.
+
+    The table is itself a conclusion. Neither protocol is neutral: same wall-clock favors open-loop methods whose evaluations are cheap; same generation count favors closed-loop methods that do real routing on every evaluation, and it records local-search neighbor decodes as free. Reporting only one lets the same data tell two opposite stories, so spec 8.2 protocol 3 requires both. For comparability, keep only instances and seeds shared by the two batch runs.
     """
     wall, gen = _results_of(wall_runs), _results_of(gen_runs)
     if not wall or not gen:

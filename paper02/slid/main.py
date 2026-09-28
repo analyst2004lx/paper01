@@ -5,6 +5,14 @@
     py main.py --dataset ft_trier --attack A2 --rho 0.15
     py main.py --arm ablation                         # 完整递进消融链
     py main.py --arm baselines --alpha 0.01
+
+One-shot SLID entry: load the log -> fit -> inject attacks -> detect -> write results.
+
+Usage (from the paper02/slid/ directory):
+    py main.py                                        # all scenarios under input/, default configuration
+    py main.py --dataset ft_trier --attack A2 --rho 0.15
+    py main.py --arm ablation                         # full progressive ablation chain
+    py main.py --arm baselines --alpha 0.01
 """
 from __future__ import annotations
 
@@ -82,7 +90,10 @@ def load(dataset: str):
 
 def _split_cases(acts, seed: int, temporal: bool):
     """**按 case 划分,不能按活动划分**——后者会让同一 case 的前后活动
-    分落训练与测试,结构通道与令牌状态都会跨界泄漏。"""
+    分落训练与测试,结构通道与令牌状态都会跨界泄漏。
+
+    **Split by case, not by activity** — splitting by activity puts earlier and later activities of the same case into train and test, so the structural channel and the token state both leak across the cut.
+    """
     by_case = {}
     for a in acts:
         by_case.setdefault(a.case, []).append(a)

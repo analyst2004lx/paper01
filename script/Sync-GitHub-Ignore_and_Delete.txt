@@ -17,11 +17,15 @@ paper01/paper_EN.synctex.gz
 9001_27001
 项目管理
 </Ignore>
-
-
+A multi-agent system for FJSP with setup and transportation times.pdf
+综述_A Review of Flexible Job Shop Scheduling Problems Considering Transportation Vehicles.pdf
 
 <Delete>
 # Entire obsolete
+texput.fls
+texput.log
+paper04_CN_AI-Modify-26-09-17.aux
+paper04_CN_AI-Modify-26-09-17.fdb_latexmk
 paper01_new
 paper01/figures
 汇报稿_应用场景介绍.files

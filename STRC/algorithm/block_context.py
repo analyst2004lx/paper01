@@ -3,6 +3,10 @@
 二者必须分开。旧实现把 corridor_slowdown 写成一段 __BLOCK__,路由层无法再走
 那条走廊,修复可行率因此是假阳性(过近似成了阻断)。降速的物理含义是走廊仍可通行,
 只把与扰动窗重叠的那一段进度按倍率拉长,窗外仍走原 τ。
+
+Disturbance injection: a corridor blockage is installed in the reservation table; a segment slowdown changes τ in the routing layer.
+
+The two must stay separate. The old implementation wrote corridor_slowdown as a __BLOCK__ segment, so the routing layer could no longer use that corridor, and the repair feasibility rate was a false positive (an over-approximation that had become a blockage). Physically, a slowdown still leaves the corridor passable: only the progress overlapping the disturbance window is stretched by the multiplier, and outside the window the original τ still applies.
 """
 from __future__ import annotations
 
@@ -17,7 +21,7 @@ BlockWin = Tuple[str, float, float]
 SlowWin = Tuple[str, float, float, float]  # cid, t0, t1, mult
 TauFn = Callable[[str, float, float], float]
 
-# 当前激活的阻断列表(可多段);None 表示未激活
+# 当前激活的阻断列表(可多段);None 表示未激活 / Currently active blockage list (may be several segments); None means inactive
 _ACTIVE_BLOCKS: Optional[List[BlockWin]] = None
 _ORIG_INIT = Router.__init__
 
@@ -26,6 +30,10 @@ def block_windows_from_dist(dist: Disturbance) -> List[BlockWin]:
     """从 Disturbance 解析阻断窗:优先 extra['blocks'],否则单走廊字段。
 
     只对 corridor_block 生效。降速不再走这条通道。
+
+    Parse blockage windows from a Disturbance: prefer extra['blocks'], otherwise the single-corridor fields.
+
+    Applies only to corridor_block. Slowdown no longer uses this channel.
     """
     raw = dist.extra.get("blocks") if dist.extra else None
     if raw:
@@ -43,6 +51,10 @@ def slowdown_windows_from_dist(dist: Disturbance) -> List[SlowWin]:
     """降速窗:走廊仍可走,与窗重叠的那一段进度按 tau_mult 拉长。
 
     路由层只缩放 t_now 之后的占用——t_now 之前已经走完的腿按假设 A2 保持原时长。
+
+    Slowdown window: the corridor remains usable, and the stretch of progress overlapping the window is lengthened by tau_mult.
+
+    The routing layer scales only occupations after t_now — legs already finished before t_now keep their original duration under assumption A2.
     """
     if dist.type != "corridor_slowdown":
         return []
@@ -72,6 +84,10 @@ def piecewise_duration(
     """走廊标准化为长度 1:窗外速度 1/τ,窗内 1/(τ·mult),按时间切段积分。
 
     segs 为该走廊上的 (t0, t1, mult);重叠窗取较大倍率。无窗则退回 τ。
+
+    The corridor is normalized to length 1: speed 1/τ outside the window and 1/(τ·mult) inside, integrated piecewise in time.
+
+    segs are (t0, t1, mult) on that corridor; overlapping windows take the larger multiplier. With no window, fall back to τ.
     """
     tau0 = float(tau0)
     if tau0 <= 0.0:
@@ -105,7 +121,10 @@ def piecewise_duration(
 
 def effective_tau(cid: str, t: float, tau: float,
                   windows: Sequence[SlowWin]) -> float:
-    """进入时刻 t 穿越 cid 的有效时长:只缩放与降速窗重叠的进度。"""
+    """进入时刻 t 穿越 cid 的有效时长:只缩放与降速窗重叠的进度。
+
+    Effective duration of crossing cid when entering at time t: scale only the progress that overlaps a slowdown window.
+    """
     segs = [(t0, t1, m) for c, t0, t1, m in windows if c == cid]
     return piecewise_duration(t, tau, segs)
 
@@ -117,6 +136,10 @@ def _earliest_var(
 
     旧的两步 earliest_entry 会在「窗内 2τ 无空档、窗外 τ 有空档」时把进入时刻
     拉回窗内却仍按原 τ 落盘,校验再按倍率拒掉。这里进入时刻与时长必须一致。
+
+    Earliest entry for a variable-duration occupation: at each candidate time, test the free gap with the effective τ at that time.
+
+    The old two-step earliest_entry, when 2τ had no gap inside the window but τ had a gap outside, pulled the entry time back inside the window while still committing the original τ, and validation then rejected it by the multiplier. Here the entry time and the duration must agree.
     """
     table = router.table
     for cand in table._entry_candidates(cid, t_ready):
@@ -131,7 +154,10 @@ def _earliest_var(
 def _search_earliest_scaled(
     router: Router, start: str, goal: str, t0: float, tau_of: TauFn,
 ) -> Tuple[list, float, float]:
-    """与 Router._search_earliest 同构,只把 tau 换成 tau_of(cid, enter, tau0)。"""
+    """与 Router._search_earliest 同构,只把 tau 换成 tau_of(cid, enter, tau0)。
+
+    Same shape as Router._search_earliest, except tau is replaced by tau_of(cid, enter, tau0).
+    """
     from algorithm.clbs_bridge import Segment
 
     if start == goal:
@@ -169,7 +195,10 @@ def _search_earliest_scaled(
 
 
 def attach_slowdown(router: Router, dist: Disturbance) -> None:
-    """把降速窗绑到这一台 Router 上,不改类方法,避免泄漏到后续构造。"""
+    """把降速窗绑到这一台 Router 上,不改类方法,避免泄漏到后续构造。
+
+    Bind the slowdown window to this one Router, without changing the class method, so it does not leak into later constructions.
+    """
     wins = slowdown_windows_from_dist(dist)
     if not wins:
         return
@@ -185,7 +214,10 @@ def attach_slowdown(router: Router, dist: Disturbance) -> None:
 
 
 def is_expected_slowdown_duration_error(msg: str, dist: Disturbance, net) -> bool:
-    """clbs 校验 (d) 按静态 τ 卡时长;降速窗内的占用本就该是 τ×mult。"""
+    """clbs 校验 (d) 按静态 τ 卡时长;降速窗内的占用本就该是 τ×mult。
+
+    clbs check (d) enforces duration against the static τ; an occupation inside a slowdown window is supposed to be τ×mult.
+    """
     import re
     wins = slowdown_windows_from_dist(dist)
     if not wins or "通行时间不符" not in msg:
@@ -211,7 +243,10 @@ def is_expected_slowdown_duration_error(msg: str, dist: Disturbance, net) -> boo
 
 
 def check_slowdown_durations(result, dist: Disturbance, net) -> List[str]:
-    """修复后仍按未缩放 τ 占用降速窗,视为未吸收扰动。"""
+    """修复后仍按未缩放 τ 占用降速窗,视为未吸收扰动。
+
+    If, after repair, the slowdown window is still occupied at the unscaled τ, the disturbance is treated as not absorbed.
+    """
     wins = slowdown_windows_from_dist(dist)
     if not wins:
         return []
@@ -244,7 +279,10 @@ def _patched_init(self, *args, **kwargs):
 
 @contextmanager
 def corridor_block_active(dist: Disturbance) -> Iterator[None]:
-    """进入后,所有新建 Router 都会带上 dist 中的阻断窗。降速不走这条通道。"""
+    """进入后,所有新建 Router 都会带上 dist 中的阻断窗。降速不走这条通道。
+
+    After entry, every newly built Router carries the blockage windows in dist. Slowdown does not use this channel.
+    """
     global _ACTIVE_BLOCKS
     blocks = block_windows_from_dist(dist)
     if not blocks:
