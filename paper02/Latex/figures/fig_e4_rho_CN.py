@@ -19,8 +19,9 @@ from _style import (  # noqa: E402
 def main():
     apply_style()
     rho = np.array([0.05, 0.10, 0.15, 0.20, 0.30, 0.40, 0.50])
-    meas = np.array([0.060, 0.105, 0.199, 0.288, 0.452, 0.712, 0.874])
-    theo = np.array([0.051, 0.127, 0.226, 0.317, 0.497, 0.701, 0.851])
+    # one-sided columns printed by `py -m tools.bound_curve` (slid/output/e4_bound_run.log)
+    meas = np.array([0.062, 0.073, 0.206, 0.291, 0.516, 0.740, 0.899])
+    theo = np.array([0.057, 0.132, 0.239, 0.338, 0.537, 0.745, 0.878])
     sigma = 0.236
     z = 2.326347874
     rho_star = 1.0 - np.exp(-sigma * z)
