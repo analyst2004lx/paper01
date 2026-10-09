@@ -16,12 +16,16 @@ paper01/paper_CN.synctex.gz
 paper01/paper_EN.synctex.gz
 9001_27001
 项目管理
+paper04\__pycache__
+paper04\_en_parts
+.vscode
 </Ignore>
 A multi-agent system for FJSP with setup and transportation times.pdf
 综述_A Review of Flexible Job Shop Scheduling Problems Considering Transportation Vehicles.pdf
 
 <Delete>
 # Entire obsolete
+.vscode
 texput.fls
 texput.log
 paper04_CN_AI-Modify-26-09-17.aux
@@ -111,6 +115,7 @@ paper02\Latex\paper02.fls
 paper02\Latex\paper02.log
 paper02\Latex\paper02.out
 paper02\Latex\paper02.synctex.gz
+paper02/Latex/reference-suggested.bib
 paper03\Latex\fig\build_all.ps1
 paper03\Latex\fig\build_tikz.ps1
 paper03\Latex\fig\plot_all.py
@@ -201,6 +206,18 @@ paper04\paper04_EN.log
 paper04\paper04_EN.out
 paper04\paper04_EN.synctex.gz
 paper04\paper04_EN.xdv
+paper04\comment.cut
+paper04\__pycache__
+paper04\_en_parts
+paper04\_baseline.bbl
+paper04\_sec_sizes.py
+paper04\_sec_sizes.txt
+paper04\abs_len.py
+paper04\sec_sizes.py
+paper04\sec_sizes.txt
+paper04\table_inventory.py
+paper04\table_inventory.txt
+paper04\texput.log
 开题报告\于琪-开题报告(20260909).docx
 开题报告\于琪-开题PPT(20260909).pptx
 </Delete>

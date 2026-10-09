@@ -1,4 +1,4 @@
-"""Motivation figure: empty operation graph vs reservation influence set."""
+"""Motivation figure: empty operation-precedence graph vs reservation impact set."""
 from __future__ import annotations
 
 import os
@@ -31,7 +31,7 @@ def main() -> None:
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 10)
     ax.axis("off")
-    ax.set_title("Operation graph under corridor block", fontsize=9, pad=10)
+    ax.set_title("Operation-precedence graph under corridor blockage", fontsize=9, pad=10)
 
     # ops
     ops = [
@@ -47,9 +47,9 @@ def main() -> None:
                         arrowprops=dict(arrowstyle="->", color="#555555", lw=1.0))
     ax.text(5, 2.3, r"$T_{\mathrm{direct}}=\varnothing$",
             ha="center", fontsize=10, fontweight="bold", color="#8b1e1e")
-    ax.text(5, 1.2, "Operation-graph rule: no reschedule",
+    ax.text(5, 1.2, "Operation-level scoping: no rescheduling",
             ha="center", fontsize=8, color="#8b1e1e")
-    _box(ax, (2.3, 8.55), 5.4, 0.95, "Corridor block (no starting operation)",
+    _box(ax, (1.8, 8.55), 6.4, 0.95, "Corridor blockage (no seed operation)",
          "#f7e6e6", ec="#8b1e1e", fs=7.5)
 
     # ----- Right: reservation cascade -----
@@ -57,7 +57,7 @@ def main() -> None:
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 10)
     ax.axis("off")
-    ax.set_title("Reservation influence set (STRC)", fontsize=9, pad=10)
+    ax.set_title("Reservation impact set (STRC)", fontsize=9, pad=10)
 
     # time axis
     ax.plot([1.6, 9.4], [2.0, 2.0], color="#444444", lw=1.0)
@@ -71,12 +71,12 @@ def main() -> None:
     # blocked window on e*
     ax.add_patch(Rectangle((3.9, 6.2), 2.2, 1.1, facecolor="#e8a0a0",
                             edgecolor="#8b1e1e", hatch="////", alpha=0.85))
-    ax.text(5.0, 6.75, "block", ha="center", va="center", fontsize=7,
+    ax.text(5.0, 6.75, "blockage", ha="center", va="center", fontsize=7,
             color="#5a1010", fontweight="bold")
 
     # reservations
     bars = [
-        (1.6, 6.35, 2.0, 0.8, "r1 start", "#c45c26"),
+        (1.6, 6.35, 2.0, 0.8, "r1 seed", "#c45c26"),
         (6.3, 6.35, 2.0, 0.8, "r2", "#1f4e79"),
         (2.9, 4.65, 2.4, 0.8, "r3 wait", "#1f4e79"),
         (5.6, 4.65, 2.2, 0.8, "r4", "#5a7a9a"),
@@ -94,11 +94,11 @@ def main() -> None:
                 arrowprops=dict(arrowstyle="->", color="#c45c26", lw=1.3))
     ax.annotate("", xy=(4.6, 3.75), xytext=(4.0, 4.65),
                 arrowprops=dict(arrowstyle="->", color="#c45c26", lw=1.3))
-    ax.text(8.55, 7.55, "influence set\nCl(S)", ha="center", fontsize=8,
+    ax.text(8.55, 7.55, "impact set\nCl(S)", ha="center", fontsize=8,
             color="#1f4e79", fontweight="bold",
             bbox=dict(boxstyle="round,pad=0.22", fc="#e8eef5", ec="#1f4e79"))
 
-    ax.text(5, 0.7, "Must repair on the influence set",
+    ax.text(5, 0.7, "Repair on the reservation impact set",
             ha="center", fontsize=8, color="#1f4e79", fontweight="bold")
 
     for ax, y, lab in ((axes[1], 6.75, r"corridor $e^\star$"),

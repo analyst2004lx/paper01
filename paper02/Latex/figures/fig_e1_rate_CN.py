@@ -27,7 +27,8 @@ def main():
     # temporarily swap English method names used inside draw via monkeypatch
     import fig_e1_rate as m
     m.METHODS = METHODS_CN
-    draw(rates, curves, ATTACK_ZH, "净检出率（已扣偶然告警基线）", "fig_e1_rate_CN")
+    draw(rates, curves, ATTACK_ZH, "净检出率（已扣偶然告警基线）", "fig_e1_rate_CN",
+         xlabel="注入率")
 
 
 if __name__ == "__main__":

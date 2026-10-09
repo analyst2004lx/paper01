@@ -19,10 +19,10 @@ from _style import (  # noqa: E402
 )
 
 ATTACKS = ["A1", "A2", "A3", "A4", "A5", "A6"]
-ATTACK_EN = ["replay", "infeas.", "race", "mimic", "drift", "suppress"]
+ATTACK_EN = ["replay", "infeasible", "early", "mimicry", "drift", "suppression"]
 METHODS = [
     ("butla", "BUTLA", C_B3),
-    ("tabor", "TABOR-like", C_B4),
+    ("tabor", "TABOR-style", C_B4),
     ("hsmm", "HSMM", C_B5),
     ("markov", "Label-only", C_LAB),
     ("ours", "Ours", C_OURS),

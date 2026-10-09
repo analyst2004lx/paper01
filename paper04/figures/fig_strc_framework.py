@@ -48,19 +48,19 @@ def main() -> None:
     # Measure strip
     ax.add_patch(Rectangle((3.3, 5.3), 5.0, 2.2, facecolor="#e8eef5",
                             edgecolor=C_MEAS, lw=1.2, alpha=0.55, zorder=0))
-    ax.text(5.8, 7.2, "Measure (STRC)", ha="center", fontsize=8,
+    ax.text(5.8, 7.2, "Delineate scope (STRC)", ha="center", fontsize=8,
             color=C_MEAS, fontweight="bold")
-    box(ax, 3.5, 5.6, 2.1, 1.4, "Seeds\noverlap block", fc="#dce6f1",
+    box(ax, 3.5, 5.6, 2.1, 1.4, "Seeds\noverlap blockage", fc="#dce6f1",
         ec=C_MEAS, fs=7.5, tc=C_MEAS)
-    box(ax, 6.0, 5.6, 2.1, 1.4, "Closure\n$U=\\mathrm{Cl}(S)$", fc="#dce6f1",
+    box(ax, 6.0, 5.6, 2.1, 1.4, "Impact set\n$U=\\mathrm{Cl}(S)$", fc="#dce6f1",
         ec=C_MEAS, fs=7.5, bold=True, tc=C_MEAS)
 
     # Repair strip
     ax.add_patch(Rectangle((8.7, 5.3), 5.0, 2.2, facecolor="#e9f5ee",
                             edgecolor=C_REP, lw=1.2, alpha=0.55, zorder=0))
-    ax.text(11.2, 7.2, "Bounded repair (level-1)", ha="center", fontsize=8,
+    ax.text(11.2, 7.2, "Bounded repair (level-1 rerouting)", ha="center", fontsize=8,
             color=C_REP, fontweight="bold")
-    box(ax, 8.9, 5.6, 2.2, 1.4, "Freeze outside\nReroute inside $U$",
+    box(ax, 8.9, 5.6, 2.2, 1.4, "Keep rest as planned\nReroute inside $U$",
         fc="#d8efe3", ec=C_REP, fs=7.2, tc=C_REP)
     box(ax, 11.4, 5.6, 2.1, 1.4, "Validate\n$\\mathcal{S}'$",
         fc="#d8efe3", ec=C_REP, fs=7.5, tc=C_REP)
@@ -72,28 +72,28 @@ def main() -> None:
 
     # Escalate branch
     box(ax, 8.9, 3.2, 4.6, 1.3,
-        "If fail: expand $U$\n(job suffix $\\rightarrow$ AGV suffix $\\rightarrow$ all future)",
+        "If infeasible: escalate $U$\njob suffix $\\rightarrow$ same-vehicle suffix\n$\\rightarrow$ all unfinished occupancies",
         fc="#fff4e8", ec=C_CTRL, fs=7.2, tc="#7a3b10")
     arrow(ax, 10.0, 5.6, 10.0, 4.5, C_CTRL)
-    ax.annotate("", xy=(12.4, 5.6), xytext=(12.4, 3.85),
+    ax.annotate("", xy=(12.4, 5.6), xytext=(12.4, 4.5),
                 arrowprops=dict(arrowstyle="->", color=C_CTRL, lw=1.1))
 
     # Controls
     box(ax, 0.3, 1.0, 4.0, 1.6,
-        "Control R1\nsame repair engine\n$U\\leftarrow$ task-graph impact",
+        "Baseline R1\nsame level-1 rerouting\n$U\\leftarrow$ affected set on $G_T$",
         fc="#fdeee6", ec=C_CTRL, fs=7.2, tc="#7a3b10")
     box(ax, 4.8, 1.0, 4.0, 1.6,
-        "Control R0+\nhot-start GA / closed loop\nfixed wall-clock budget",
+        "Baseline R0+\nwarm-started global rescheduling\nwall-clock budget",
         fc="#fdeee6", ec=C_CTRL, fs=7.2, tc="#7a3b10")
     box(ax, 9.3, 1.0, 4.4, 1.6,
-        "Outputs\nfeasibility, ms, $C_{\\max}$,\nreservation change",
+        "Outputs\nfeasibility, runtime, $C_{\\max}$,\nrewrite fraction",
         fc="#eef2f6", fs=7.5)
 
     ax.text(7.0, 0.32,
-            "Same conflict-free executor;",
+            "Same network, time-window router, and conflict-free check;",
             ha="center", fontsize=7.5, color="#555555", style="italic")
     ax.text(7.0, 0.02,
-            "only the release set / search policy differs.",
+            "only the rewritable set or the search differs.",
             ha="center", fontsize=7.5, color="#555555", style="italic")
 
     fig.tight_layout()

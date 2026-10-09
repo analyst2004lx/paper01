@@ -1,1 +1,1 @@
-感谢 {University of Trier} 发布带 {BPMN} 参考模型的 {IoT} 事件日志，使可行性掩码得以由外部参考模型提供，而非从日志中学习得到。
+We thank the {University of Trier} for releasing an {IoT} event log with a {BPMN} reference model, which made it possible for the feasibility mask to come from an external reference model rather than being learned from the log.

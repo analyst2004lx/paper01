@@ -17,14 +17,14 @@ from _style import (  # noqa: E402
 )
 
 ATTACKS = [u"A1", u"A2", u"A3", u"A4", u"A5", u"A6"]
-ATTACK_EN = [u"replay", u"infeas.", u"race", u"mimic", u"drift", u"suppress"]
+ATTACK_EN = [u"replay", u"infeasible", u"early", u"mimicry", u"drift", u"suppression"]
 
 
 def main():
     apply_style()
     data = {
         u"BUTLA": np.array([0.04, 0.37, 0.10, -0.04, 0.59, -0.05]),
-        u"TABOR-like": np.array([0.04, 0.67, 0.10, -0.01, 0.48, -0.01]),
+        u"TABOR-style": np.array([0.04, 0.67, 0.10, -0.01, 0.48, -0.01]),
         u"HSMM": np.array([-0.01, 0.31, 0.06, 0.02, 0.25, 0.05]),
         u"Label-only": np.array([0.48, 0.76, -0.01, 0.23, 0.00, 0.28]),
         u"Ours": np.array([0.55, 0.95, 0.18, 0.17, 0.87, 0.14]),
@@ -46,7 +46,7 @@ def main():
     ax.set_yticks([0.0, 0.2, 0.4, 0.6, 0.8, 1.0])
     ax.yaxis.grid(True, linestyle=":", color="#DDDDDD", zorder=0)
     ax.set_axisbelow(True)
-    set_cjk(ax, ylabel=u"Net DR (floor subtracted)")
+    set_cjk(ax, ylabel=u"Net detection rate (chance-alarm floor subtracted)")
     legend(ax, ncol=5, loc="lower center", bbox_to_anchor=(0.5, 1.02),
            columnspacing=0.55, handlelength=1.15, handletextpad=0.3)
     fig.tight_layout(rect=(0.0, 0.0, 1.0, 0.86))

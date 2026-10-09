@@ -78,13 +78,13 @@ def draw(blob, labels, out_name):
 
 def main():
     draw(load_e4(), {
-        "single": "Single-msg",
+        "single": "Single message",
         "cusum": "CUSUM",
-        "xlabel_rho": r"Race amount $\rho$",
+        "xlabel_rho": r"Relative advance $\rho$",
         "ylabel_dr": "Detection rate",
         "ylabel_delay": "Detection delay (messages)",
-        "title_a": "(a) Weak-signal accumulation",
-        "title_b": "(b) Delay boxplots",
+        "title_a": "(a) Accumulation of weak signals",
+        "title_b": "(b) Delay box plots",
     }, "fig_delay")
 
 
