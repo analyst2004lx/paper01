@@ -11,17 +11,12 @@
 <Ignore>
 paper02/database/ft_trier_iot_log/DQI_Event_Log.zip
 paper02/database/ft_trier_iot_log/Cleaned_Event_Log.zip
-paper01/paper.synctex.gz
-paper01/paper_CN.synctex.gz
-paper01/paper_EN.synctex.gz
-9001_27001
-项目管理
-paper04\__pycache__
-paper04\_en_parts
-.vscode
-</Ignore>
 A multi-agent system for FJSP with setup and transportation times.pdf
 综述_A Review of Flexible Job Shop Scheduling Problems Considering Transportation Vehicles.pdf
+9001_27001
+项目管理
+
+</Ignore>
 
 <Delete>
 # Entire obsolete
@@ -116,6 +111,7 @@ paper02\Latex\paper02.log
 paper02\Latex\paper02.out
 paper02\Latex\paper02.synctex.gz
 paper02/Latex/reference-suggested.bib
+paper02\Latex\fig\__pycache__/
 paper03\Latex\fig\build_all.ps1
 paper03\Latex\fig\build_tikz.ps1
 paper03\Latex\fig\plot_all.py
