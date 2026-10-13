@@ -2,6 +2,10 @@
 
 不问 AFT 系数好不好用(协变量已降级),问的是 (mu, sigma, 共形阈值)
 换部署后还能否当同一个 alpha 用。A->B 是行程均值迁移,A->C 是时长变异迁移。
+
+E6: move a detector calibrated on scenario A onto B and C unchanged, and check whether the false-alarm rate holds.
+
+The question is not whether the AFT coefficients still work (covariates have been downgraded). It is whether (mu, sigma, conformal threshold) can still serve as the same alpha after redeployment. A->B is a travel-mean shift; A->C is a sojourn-time variance shift.
 """
 from __future__ import annotations
 

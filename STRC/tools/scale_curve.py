@@ -12,6 +12,16 @@ Tt/Tp 与 LU 割、远端割全部同口径(见 `clbs/tools/gen_instances.py` �
 用法(STRC/ 目录下):
     py -m tools.scale_curve
     py -m tools.scale_curve --ks 4,6,8,10 --seeds 42,7
+
+Closure size and response time as the instance scale changes.
+
+Earlier readings in the text all sit at 8 jobs and 4 machines. For a claim such as "bounded repair is cheaper than a global re-solve", what the reader cares about is how it moves with scale — if the closure ratio rises toward 1 as the scale grows, "bounded" is a name without the property. This tool measures that along a ladder that **changes only the scale**: jobs = 2k, machines = k, vehicles = k, k = 4..10 (that is, 8x4x4 to 20x10x10). Congestion level, heterogeneity H, flexibility F, the transport/processing time ratio Tt/Tp, the LU cut, and the far cut all stay on the same protocol (see the calibration in `clbs/tools/gen_instances.py`).
+
+The three arms use the same definitions as tools.cheap_baselines (R2 closure repair / RS global right-shift / RD fixed-prefix re-decode), and the disturbance protocol matches E1--E3.
+
+Usage (from STRC/):
+    py -m tools.scale_curve
+    py -m tools.scale_curve --ks 4,6,8,10 --seeds 42,7
 """
 from __future__ import annotations
 
@@ -79,8 +89,10 @@ def main() -> int:
                 "RS": repair_by_right_shift(inst, net, bundle, dist),
                 "RD": _redecode(inst, net, bundle, dist),
             }
-            # 首级失败的格用扩域阶梯兜一次,把轮数与总耗时记下来:正文声称阶梯
-            # 存在就是为了这种情形,不记它等于只报了成功的那一半。
+# 首级失败的格用扩域阶梯兜一次,把轮数与总耗时记下来:正文声称阶梯
+# 存在就是为了这种情形,不记它等于只报了成功的那一半。
+# Cells that fail at the first level get one pass of the widening ladder; record the round count and the total time.
+# The text says the ladder exists for exactly this case; not recording it would report only the half that succeeded.
             esc_rounds = esc_ms = None
             if not arms["R2"].feasible:
                 esc = repair_with_strc(inst, net, bundle, dist, expand_on_fail=True)

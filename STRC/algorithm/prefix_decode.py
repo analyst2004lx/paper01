@@ -3,6 +3,12 @@
 clbs.decode 每次从 t=0 重放。本模块不改 clbs 默认路径:
 R0+ 在搜索期间把 ga.decode 临时换成 decode_from_now;
 RD(cheap_baselines._redecode)直接调用本函数。
+
+Decoding constrained by assumption A2: pre-commit finished occupations, and schedule only the operations that have not started, continuing from t_now.
+
+clbs.decode replays from t=0 every time. This module does not change the clbs default path:
+during search, R0+ temporarily replaces ga.decode with decode_from_now;
+RD (cheap_baselines._redecode) calls this function directly.
 """
 from __future__ import annotations
 
@@ -51,7 +57,10 @@ def _loaded_started(tr: Optional[TransportRecord], t_now: float) -> bool:
 def _current_trip_keys(
     tr_old: Dict[OpKey, TransportRecord], t_now: float,
 ) -> Set[OpKey]:
-    """每辆车 t_now 正在执行的那一趟(最后一条 enter < t_now 的腿所属工序)。"""
+    """每辆车 t_now 正在执行的那一趟(最后一条 enter < t_now 的腿所属工序)。
+
+    The trip each vehicle is executing at t_now (the operation that owns the last leg with enter < t_now).
+    """
     best: Dict[int, Tuple[OpKey, float]] = {}
     for key, tr in tr_old.items():
         last = None
@@ -75,6 +84,11 @@ def _classify(
 
     demoted:行程已开始,但同工件前道尚未完工/在制,不能按原时刻冻结。
     仍强制原车、用 _reroute_tail 保住已走完的空载前缀,否则 A2 审计会丢历史预约。
+
+    Return (done, proc, transit, demoted). The rest are future.
+
+    demoted: the trip has started, but the previous operation of the same job is not finished or is still in process, so it cannot be frozen at the original times.
+    The original vehicle is still forced, and _reroute_tail keeps the empty prefix already traveled; otherwise the A2 audit drops historical reservations.
     """
     tr_map = {(t.job, t.i): t for t in base.transports}
     done: Set[OpKey] = set()
@@ -140,7 +154,10 @@ def decode_from_now(
     dead_agv: Optional[int] = None,
     dead_machine: Optional[int] = None,
 ) -> DecodeResult:
-    """与 clbs.decode 同签名的前缀冻结版;bundle/dist 由包装闭包注入。"""
+    """与 clbs.decode 同签名的前缀冻结版;bundle/dist 由包装闭包注入。
+
+    Prefix-frozen version with the same signature as clbs.decode; bundle/dist are injected by the wrapping closure.
+    """
     t_now = float(dist.t_now)
     base = bundle.result
     done, proc, transit, demoted = _classify(inst, base, t_now)
@@ -152,6 +169,8 @@ def decode_from_now(
         demoted |= extra
     # 故障机上已送达的工件停在原地,原车可能已离开;只保留历史到达,改派另派一趟。
     # 尚未送达的(空载/满载进行中)才走 demoted 同车改路。
+    # A job already delivered to the failed machine stays where it is; the original vehicle may already have left. Keep only the historical arrival, and send another trip for the reassignment.
+    # Only jobs not yet delivered (empty or loaded, still in progress) take the demoted same-vehicle reroute.
     arrived_abort: Set[OpKey] = set()
     if dead_machine is not None:
         for key in list(proc | transit):
@@ -168,6 +187,7 @@ def decode_from_now(
             else:
                 demoted.add(key)
     # 前道不再冻结(改派/中止)时,后道不能再按原时刻走完。
+    # When the predecessor is no longer frozen (reassigned or aborted), the successor can no longer finish at the original times.
     changed = True
     while changed:
         changed = False
@@ -229,6 +249,7 @@ def decode_from_now(
 
     try:
         # 按原扫描序回放冻结工序,车辆/工件状态与原时间轴一致。
+        # Replay frozen operations in the original scan order, so vehicle and job state match the original timeline.
         oc0 = {j: 0 for j in inst.job_ids}
         for j0 in bundle.os_seq:
             oc0[j0] += 1
@@ -349,7 +370,10 @@ def decode_from_now(
         }
 
         def _empty_to_pickup(key: OpKey) -> Optional[RoutePlan]:
-            """先收完进行中的空载,占住该车;满载仍等前道完工再走。"""
+            """先收完进行中的空载,占住该车;满载仍等前道完工再走。
+
+            Finish the empty trip already in progress first and hold that vehicle; the loaded trip still waits for the predecessor to finish.
+            """
             if dead_agv is not None and tr_old[key].agv == dead_agv:
                 return None
             old = tr_old[key]
@@ -504,6 +528,7 @@ def decode_from_now(
 
             _process(j, i, m, dest, p, arrive, pseudo)
     except Exception:  # noqa: BLE001 — 搜索中的不可行染色体用大 Cmax 丢掉
+        # noqa: BLE001 — an infeasible chromosome found during search is dropped with a large Cmax
         return _dummy(inst)
 
     if not ops:

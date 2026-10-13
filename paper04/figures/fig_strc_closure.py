@@ -32,7 +32,7 @@ def main() -> None:
     # block window
     ax.add_patch(Rectangle((3.4, 4.75), 2.0, 0.9, facecolor="#e8a0a0",
                             edgecolor="#8b1e1e", hatch="////", alpha=0.9))
-    ax.text(4.4, 5.2, "block", ha="center", va="center", fontsize=7,
+    ax.text(4.4, 5.2, "blockage", ha="center", va="center", fontsize=7,
             color="#5a1010", fontweight="bold")
 
     # reservations as nodes on timeline
@@ -52,7 +52,7 @@ def main() -> None:
         if tag:
             ax.text(x, y - 0.65, tag, ha="center", fontsize=6.5, color="#555555")
 
-    ax.text(5, 0.35, r"Seeds = reservations overlapping the block on $e^\star$",
+    ax.text(5, 0.35, r"Seeds = occupancies overlapping the blockage on $e^\star$",
             ha="center", fontsize=7.5, color="#8b1e1e")
 
     # ---- Right: dependence graph + closure ----
@@ -60,7 +60,7 @@ def main() -> None:
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 6.5)
     ax.axis("off")
-    ax.set_title("(b) Dependence edges and closure", fontsize=9)
+    ax.set_title("(b) Dependency edges and impact set", fontsize=9)
 
     pos = {
         "r1": (2.0, 5.0),
@@ -99,7 +99,7 @@ def main() -> None:
         facecolor="none", edgecolor="#1f4e79", lw=1.4, linestyle="--", zorder=0))
     ax.text(3.6, 6.05, r"$\mathrm{Cl}(\mathrm{Seeds})$", ha="center",
             fontsize=8.5, color="#1f4e79", fontweight="bold")
-    ax.text(7.5, 1.2, "outside\n(frozen)", ha="center", fontsize=7,
+    ax.text(7.5, 1.2, "outside\n(kept as planned)", ha="center", fontsize=7,
             color="#666666")
 
     fig.tight_layout()

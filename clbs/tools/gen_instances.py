@@ -18,6 +18,21 @@
    信号"这一诊断;
 3. **异构度 H=0 是回归档**:同一工序在各机耗时相同,改派机制应自动失效,可用于
    检验"收益随异构度增长"的使能关系(F2)。
+
+Generate the controlled extended instances of spec 12.3 (a congestion × heterogeneity two-factor matrix).
+
+Usage (from the clbs/ directory):
+
+    py -m tools.gen_instances                       # default matrix written to input/ext/
+    py -m tools.gen_instances --list                # print the feature table only, do not write files
+    py -m tools.gen_instances --seeds 42 7 2024     # several seeds per cell
+    py -m tools.gen_instances --jobs 10 --machines 5 --agvs 4 --ops 3
+
+Design points of the experiment matrix (consistent with specs 12.3 and 13.6):
+
+1. The **four congestion levels** (low / mid / high / funnel) change only the network's **capacity structure**. Mean travel over mean processing time is calibrated to one target, so transport intensity is held fixed and only the network structure changes.
+2. **`high` and `funnel` are a controlled pair**: processing times, machine locations, and mean Tt/Tp match field by field; the only difference is LU exit capacity (2 corridors vs 1). The extra congestion in funnel is **independent of machine assignment** (every job's first delivery and finished-goods return must pass through it). If each feedback mechanism shows a gain on high and the gain vanishes on funnel, that directly supports the diagnosis that decision-irrelevant congestion dilutes the mechanism signal.
+3. **Heterogeneity H=0 is a regression level**: the same operation takes the same time on every machine, so the reassignment mechanism should fail automatically. It checks the enabling relation "gain grows with heterogeneity" (F2).
 """
 from __future__ import annotations
 

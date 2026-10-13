@@ -2,6 +2,11 @@
 
 A 类(触碰任务图):RA 故障、加工时间偏差、紧急插单。
 B 类(只触碰预约表):走廊阻断/降速、AGV 抛锚(同时释放该车时窗)。
+
+Disturbance model, split by whether the disturbance touches the task graph.
+
+Class A (touches the task graph): RA failure, processing-time deviation, urgent insertion.
+Class B (touches only the reservation table): corridor blockage / slowdown, AGV breakdown (which also releases that vehicle's time windows).
 """
 from __future__ import annotations
 
@@ -9,9 +14,9 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, List, Optional, Sequence
 
-try:                                    # Literal 自 3.8 起才进 typing
+try:                                    # Literal 自 3.8 起才进 typing / Literal joined typing only in 3.8
     from typing import Literal
-except ImportError:                     # pragma: no cover - 3.7 回退
+except ImportError:                     # pragma: no cover - 3.7 回退 / pragma: no cover - 3.7 fallback
     from typing_extensions import Literal
 
 from algorithm.closure import ReservationRef
@@ -74,7 +79,10 @@ def seed_failed_reservations(
     dist: Disturbance,
     reservations: Sequence[ReservationRef],
 ) -> List[ReservationRef]:
-    """由扰动生成失效预约种子集。"""
+    """由扰动生成失效预约种子集。
+
+    Build the seed set of failed reservations from a disturbance.
+    """
     t_now = float(dist.t_now)
     if dist.type in ("corridor_block", "corridor_slowdown"):
         if not dist.corridor:
@@ -100,11 +108,17 @@ def seed_failed_reservations(
         # failed_ops: [(j,i), ...] 该机上尚未完工的工序。
         # 种子 = 各工件从该工序起(含)的全部未来预约——进站运输可能已结束,
         # 但仍须从该工序起沿工件链重规划,否则闭包会短于任务图影响域。
+        # failed_ops: [(j, i), ...] operations on this machine that are not yet finished.
+        # Seeds = every future reservation of each job from that operation onward (inclusive).
+        # The inbound transport may already have finished, but replanning must still
+        # start at that operation along the job chain; otherwise the closure is shorter
+        # than the task-graph impact set.
         failed_ops = dist.extra.get("failed_ops") or []
         prefixes = dist.extra.get("task_prefixes") or []
         if not failed_ops and not prefixes:
             return []
         # 规范化为 (j, i_min) : 同一工件取最小未完成工序号
+        # Normalize to (j, i_min): for one job, take the smallest unfinished operation index.
         jmin: dict[int, int] = {}
         for item in failed_ops:
             if isinstance(item, (list, tuple)) and len(item) == 2:
@@ -133,7 +147,7 @@ def seed_failed_reservations(
         return out
 
     if dist.type == "proc_delay" and dist.job_op:
-        # "(j,i)" → 前缀 J{j}-{i}-
+        # "(j,i)" → 前缀 J{j}-{i}- / "(j,i)" → prefix J{j}-{i}-
         inner = dist.job_op.strip().strip("()")
         parts = [x.strip() for x in inner.split(",")]
         prefix = f"J{parts[0]}-{parts[1]}-"
@@ -149,7 +163,10 @@ def schedule_still_valid_under_block(
     reservations: Sequence[ReservationRef],
     dist: Disturbance,
 ) -> bool:
-    """粗检:若仍有预约落在被阻断走廊的阻断时窗内,则原排程在扰动下不可行。"""
+    """粗检:若仍有预约落在被阻断走廊的阻断时窗内,则原排程在扰动下不可行。
+
+    Coarse check: if any reservation still falls inside the blockage window of a blocked corridor, the original schedule is infeasible under the disturbance.
+    """
     if dist.type != "corridor_block" or not dist.corridor:
         return True
     t0 = float(dist.t_start if dist.t_start is not None else dist.t_now)
@@ -164,7 +181,10 @@ def schedule_still_valid_under_slowdown(
     reservations: Sequence[ReservationRef],
     dist: Disturbance,
 ) -> bool:
-    """原排程按未缩放 τ 写出:凡与降速窗重叠的未来占用都已偏短,故不可行。"""
+    """原排程按未缩放 τ 写出:凡与降速窗重叠的未来占用都已偏短,故不可行。
+
+    The original schedule was written with unscaled τ: every future occupation that overlaps the slowdown window is already too short, hence infeasible.
+    """
     if dist.type != "corridor_slowdown" or not dist.corridor:
         return True
     t0 = float(dist.t_start if dist.t_start is not None else dist.t_now)

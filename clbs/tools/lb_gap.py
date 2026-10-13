@@ -15,6 +15,21 @@
 
 运行(clbs/ 目录下):
   py -u -m tools.lb_gap [--csv output/baseline_ladder.csv]
+
+Gap between the composite lower bound and the best known solution: recompute \\LBGapLo/Hi/Med on the current (new) instance family.
+
+Why this tool exists. The three macros \\LBGapLo/Hi/Med in the paper preamble originally came from the old instance family (the J8/M4 batch), while every result in Chapter 5 has moved to the ten cells of abc_matrix.CASES (J12/M8/tt=4.0). The two sources differ, and the macro comment already says "update together once the new family's results are on disk". This tool does that step.
+
+Definitions.
+  Lower bound   max(job_chain, machine_load, lu_cut) from algorithm.instance.simple_lower_bound:
+                zero cost, each component a valid relaxation, with no queueing or machine-change transport.
+  Best known    The minimum completion time of that cell over **every arm × every seed** in baseline_ladder.csv.
+                Those solutions were executed with conflict-free routing and passed the validator, so they are realizable; taking the minimum over all arms keeps "best known" from depending on which arm is picked.
+  Gap           gap = (best_known - LB) / best_known, i.e. how many percent of the optimum the lower bound still falls short of a realizable solution.
+                Also report (best_known - LB) / LB so the denominator is not misread.
+
+Run (from the clbs/ directory):
+  py -u -m tools.lb_gap [--csv output/baseline_ladder.csv]
 """
 from __future__ import annotations
 
@@ -33,7 +48,10 @@ HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def best_known(csv_path: str) -> dict:
-    """每格在全部档位、全部种子上的最小完工时间。"""
+    """每格在全部档位、全部种子上的最小完工时间。
+
+    Minimum completion time of each cell over every arm and every seed.
+    """
     best: dict = defaultdict(lambda: float("inf"))
     with open(csv_path, encoding="utf-8") as f:
         for row in csv.DictReader(f):
@@ -85,6 +103,7 @@ def main() -> int:
     print(f"{'':<14s} {'':>10s} {'':>10s} {'':>8s} {'':>8s} {'中位':>9s} {med:>8.1%}")
 
     # 哪个分量在起作用:三个松弛互不支配,报一下各自当选的次数
+    # Which component binds: the three relaxations do not dominate each other; report how often each is selected.
     who = defaultdict(int)
     for _nm, lb, _b, _gb, _gl in rows:
         key = max(("job_chain", "machine_load", "lu_cut"), key=lambda k: lb[k])

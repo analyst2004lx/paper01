@@ -1,0 +1,331 @@
+{
+ "protocol": {
+  "alpha": 0.01,
+  "rate": 0.2,
+  "rho": 0.3,
+  "seeds": 3,
+  "budget": 10,
+  "reference": "uninjected test fold (main-table rule)",
+  "smoothing": 0.5
+ },
+ "summary": {
+  "A1": {
+   "naive": {
+    "mean": 0.04377528895832088,
+    "sd": 0.009264070801627878
+   },
+   "saturated": {
+    "mean": 0.08533811080566849,
+    "sd": 0.02538128146800543
+   }
+  },
+  "A2": {
+   "naive": {
+    "mean": 0.67289751174761,
+    "sd": 0.03365689447916033
+   },
+   "saturated": {
+    "mean": 0.602320704683613,
+    "sd": 0.03704611274033608
+   }
+  },
+  "A3": {
+   "naive": {
+    "mean": 0.09854007600403576,
+    "sd": 0.035949758424347854
+   },
+   "saturated": {
+    "mean": 0.08293543282309361,
+    "sd": 0.03718976773463724
+   }
+  },
+  "A4": {
+   "naive": {
+    "mean": -0.012571035107075348,
+    "sd": 0.00824744021139117
+   },
+   "saturated": {
+    "mean": 0.025696375584036358,
+    "sd": 0.004761661826172036
+   }
+  },
+  "A5": {
+   "naive": {
+    "mean": 0.4823784598424196,
+    "sd": 0.07046616005540861
+   },
+   "saturated": {
+    "mean": 0.5240128739005346,
+    "sd": 0.07046616005540861
+   }
+  },
+  "A6": {
+   "naive": {
+    "mean": -0.012565246948302114,
+    "sd": 0.032631934713855525
+   },
+   "saturated": {
+    "mean": -0.016233338220677445,
+    "sd": 0.00736569563735987
+   }
+  }
+ },
+ "family_mean": {
+  "naive": 0.21207584241616814,
+  "saturated": 0.21734502659604474
+ },
+ "runs": [
+  {
+   "family": "A1",
+   "seed": 0,
+   "variant": "naive",
+   "seq_net": 0.05032597624354425,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A1",
+   "seed": 0,
+   "variant": "saturated",
+   "seq_net": 0.11257894700269025,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A1",
+   "seed": 1,
+   "variant": "naive",
+   "seq_net": 0.030673914387874146,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A1",
+   "seed": 1,
+   "variant": "saturated",
+   "seq_net": 0.051474995112655894,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A1",
+   "seed": 2,
+   "variant": "naive",
+   "seq_net": 0.05032597624354425,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A1",
+   "seed": 2,
+   "variant": "saturated",
+   "seq_net": 0.09196039030165933,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A2",
+   "seed": 0,
+   "variant": "naive",
+   "seq_net": 0.7191021322096564,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A2",
+   "seed": 0,
+   "variant": "saturated",
+   "seq_net": 0.6419246650796526,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A2",
+   "seed": 1,
+   "variant": "naive",
+   "seq_net": 0.6398942114175771,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A2",
+   "seed": 1,
+   "variant": "saturated",
+   "seq_net": 0.5528157541885634,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A2",
+   "seed": 2,
+   "variant": "naive",
+   "seq_net": 0.6596961916155969,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A2",
+   "seed": 2,
+   "variant": "saturated",
+   "seq_net": 0.6122216947826229,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A3",
+   "seed": 0,
+   "variant": "naive",
+   "seq_net": 0.06823704570100547,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A3",
+   "seed": 0,
+   "variant": "saturated",
+   "seq_net": 0.03916438905204983,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A3",
+   "seed": 1,
+   "variant": "naive",
+   "seq_net": 0.14904512650908627,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A3",
+   "seed": 1,
+   "variant": "saturated",
+   "seq_net": 0.13007347996114074,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A3",
+   "seed": 2,
+   "variant": "naive",
+   "seq_net": 0.07833805580201555,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A3",
+   "seed": 2,
+   "variant": "saturated",
+   "seq_net": 0.07956842945609023,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A4",
+   "seed": 0,
+   "variant": "naive",
+   "seq_net": -0.01257103510707535,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A4",
+   "seed": 0,
+   "variant": "saturated",
+   "seq_net": 0.029063378951039727,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A4",
+   "seed": 1,
+   "variant": "naive",
+   "seq_net": -0.0024700250060652462,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A4",
+   "seed": 1,
+   "variant": "saturated",
+   "seq_net": 0.01896236885002963,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A4",
+   "seed": 2,
+   "variant": "naive",
+   "seq_net": -0.022672045208085446,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A4",
+   "seed": 2,
+   "variant": "saturated",
+   "seq_net": 0.029063378951039727,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A5",
+   "seed": 0,
+   "variant": "naive",
+   "seq_net": 0.3914693689333287,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A5",
+   "seed": 0,
+   "variant": "saturated",
+   "seq_net": 0.43310378299144375,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A5",
+   "seed": 1,
+   "variant": "naive",
+   "seq_net": 0.5631865406505004,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A5",
+   "seed": 1,
+   "variant": "saturated",
+   "seq_net": 0.6048209547086155,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A5",
+   "seed": 2,
+   "variant": "naive",
+   "seq_net": 0.4924794699434297,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A5",
+   "seed": 2,
+   "variant": "saturated",
+   "seq_net": 0.5341138840015448,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A6",
+   "seed": 0,
+   "variant": "naive",
+   "seq_net": -0.048150712477797494,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A6",
+   "seed": 0,
+   "variant": "saturated",
+   "seq_net": -0.021441671554010777,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A6",
+   "seed": 1,
+   "variant": "naive",
+   "seq_net": 0.030673914387874146,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A6",
+   "seed": 1,
+   "variant": "saturated",
+   "seq_net": -0.005816671554010777,
+   "seq_fpr": 0.001968503937007874
+  },
+  {
+   "family": "A6",
+   "seed": 2,
+   "variant": "naive",
+   "seq_net": -0.020218942754982996,
+   "seq_fpr": 0.005905511811023622
+  },
+  {
+   "family": "A6",
+   "seed": 2,
+   "variant": "saturated",
+   "seq_net": -0.021441671554010777,
+   "seq_fpr": 0.001968503937007874
+  }
+ ]
+}

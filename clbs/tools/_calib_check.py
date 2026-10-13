@@ -3,6 +3,10 @@
 _calibrate_tt_tp 按平均行程反向缩放加工时间以凑 Tt/Tp 目标。两种布局的平均行程
 若不同,加工时间基数随之不同,直接相减 makespan 便无意义。此处打印平均行程、平均
 加工时间与零成本下界,供归一化后再比。
+
+Check whether the makespan gap between low and scatter is only an artifact of Tt/Tp calibration.
+
+_calibrate_tt_tp inversely scales processing times by mean travel to hit the Tt/Tp target. If the two layouts differ in mean travel, their processing-time bases differ, and subtracting makespans is meaningless. This prints mean travel, mean processing time, and the zero-cost lower bound so they can be compared after normalization.
 """
 from __future__ import annotations
 

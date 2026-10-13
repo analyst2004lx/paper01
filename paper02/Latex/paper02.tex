@@ -1,14 +1,3 @@
-%%
-%% The original source files were:
-%%
-%% samples.dtx  (with options: `all,proceedings,bibtex,manuscript')
-%% 
-%% IMPORTANT NOTICE:
-%% 
-%% For the copyright see the source file.
-%% 
-%% Any modified versions of this file must be renamed
-%% with new filenames distinct from sample-manuscript.tex.
 %% 
 %% For distribution of the original source see the terms
 %% for copying and modification in the file samples.dtx.
@@ -77,25 +66,22 @@
 \DeclareMathOperator*{\argmin}{arg\,min}
 \DeclareMathOperator*{\argmax}{arg\,max}
 \usepackage{multirow}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 % Enable list customization (leftmargin, itemsep, etc.) used in the document
 \usepackage{enumitem}
 % Ensure header height is sufficient for fancyhdr
 \setlength{\headheight}{20.48303pt}
 % theorem environments used in the document
 % acmart/amsart already provides amsthm; do not load amsthm again
-\newtheorem{assumption}{假设}
-\newtheorem{problem}{问题}
-\renewcommand{\proofname}{证明}
+\newtheorem{assumption}{Assumption}
+\newtheorem{problem}{Problem}
+\renewcommand{\proofname}{Proof}
 \AtEndPreamble{%
   \let\proposition\relax
   \let\endproposition\relax
-  \newtheorem{proposition}[theorem]{命题}%
+  \newtheorem{proposition}[theorem]{Proposition}%
 }
-% 中文初稿：请用 XeLaTeX 编译
-\usepackage{xeCJK}
-\setCJKmainfont{SimSun}[BoldFont=SimHei]
-\setCJKsansfont{SimHei}
-\xeCJKsetup{PunctStyle=kaiming}
 
 %%
 %% \BibTeX command to typeset BibTeX logo in the docs
@@ -167,8 +153,7 @@
 %%
 %% The "title" command has an optional parameter,
 %% allowing the author to define a "short title" to be used in page headers.
-\title[生产调度层注入攻击检测]{基于时序半马尔可夫与参考模型可行性约束的工业生产调度层注入攻击检测}
-\subtitle{Timed Semi-Markov Consistency and Reference-Model Constraints for Detecting Scheduling-Layer Injection Attacks in Cyber-Physical Production Systems}
+\title[Injection Detection on Industrial Event Streams]{Reference-Model Hard Constraints and Semi-Markov Timing Channels for Detecting Injection Attacks on Industrial Discrete-Event Streams}
 
 %%
 %% The "author" command and its associated commands are used to define
@@ -214,11 +199,10 @@
 %% The abstract is a short summary of the work to be presented in the
 %% article.
 \begin{abstract}
-工业信息物理生产系统中，现场设备通过命令--状态回环接受中央调度系统派工。攻击者在上行链路上注入或重放状态消息，即可使调度器的状态视图与物理现实脱节，从而提前或错误派工。
-既有检测工作并未覆盖这一调度层：生产线计时自动机为规避状态爆炸，按网络拓扑将系统分解为独立顺序组件，检测在单自动机上完成，跨组件可行性约束被主动丢弃；TABOR 将计时自动机与贝叶斯网络组合，但依赖关系限制在同一工段且显式忽略命令数据；半马尔可夫与基于计时的检测已对停留时长建模，却无法区分日志中``未见过''与参考模型``不允许''；DCTA 等报文层状态机约束的是协议会话，而非工艺与调度语义。
-为此，本文将合法行为建模为带停留时长的半马尔可夫过程，以工艺参考模型导出的可行性掩码作为硬约束一票否决，并检查状态上报是否存在对应命令；时序通道与结构通道分别经共形预测校准后并行判决，再以 CUSUM 累积分级证据。
-在该设定下，攻击者为获取调度提前量所必须付出的相对抢跑量被闭式上界 $\rho^*(\alpha,\sigma)$ 封顶---这是隐蔽攻击基本极限这一已知体裁在离散事件、无系统矩阵条件下的实例。
-在 Fischertechnik Trier 真实产线事件日志上，以自建注入构造调度层攻击，并在同一误报预算下与学习型计时自动机、TABOR 式方法及半马尔可夫似然对照：标签合法但耗时错位的抢跑与渐变漂移，相对区间型时钟守卫具有结构性可检差异；物理不可行注入由可行性硬层覆盖。
+In cyber-physical production systems, field devices report their operation as discrete activity events that carry a lifecycle (assignment, start, completion). By injecting or replaying such events on the uplink, an attacker can decouple the log from the physical process. Detectors that threshold only the predicted probability of labels have a structural blind spot here: under a zero-false-alarm constraint they can flag only transitions that the process reference model already forbids, and against forgeries that leave labels intact and merely compress sojourn times, their net detection is zero.
+We build a detector with three parallel paths. A hard-constraint layer vetoes infeasible events outright using a feasibility mask derived from the reference model; a semi-Markov timing channel produces residuals from grouped log-normal sojourn times; and a structural channel measures whether an activity transition within a process instance is rare. The two statistical channels are calibrated by conformal prediction and accumulate evidence message by message through cumulative-sum (CUSUM) tests, with the false-alarm budget split evenly across the three paths. On the theoretical side, we characterize the blind spot of the label-only detector family in a proposition and derive the critical relative advance $\rho^*(\alpha,\sigma)$, the fraction by which a sojourn must be shortened for a single forgery to be detected with probability one half.
+We synthesize six attack classes under a reproducible protocol on a real production log from the Fischertechnik Trier smart factory. With a false-alarm budget $\alpha=0.01$, a delay budget of $10$ messages, and the chance-alarm floor subtracted, our net detection is $0.95$ for physically infeasible injection and $0.87$ for gradual drift, where the label-only ablation scores $0$. For early-completion replay at a $20\%$ injection rate it is $0.18$, higher than the timed-automaton baseline (significant in a paired test) and not significantly different from the baseline that combines timed automata with a Bayesian network.
+On state mimicry and message suppression, our method falls below the label-only ablation. The conclusions rest on a single public log and synthetic injections; when thresholds are instead calibrated on the calibration fold, every method exceeds its nominal false-alarm rate.
 \end{abstract}
 
 \begin{CCSXML}
@@ -240,323 +224,353 @@
 \ccsdesc[300]{Computer systems organization~Embedded and cyber-physical systems}
 
 \begin{keywords}
-注入攻击检测, 生产调度层, 半马尔可夫过程, 可行性约束,
-共形预测, 序贯检验, 信息物理生产系统
+injection attack detection, discrete event logs, semi-Markov processes, feasibility mask,
+conformal prediction, sequential testing, cyber-physical production systems
 \end{keywords}
 
 \maketitle
 
 
 %=============================================================================
-\section{引言}
+\section{Introduction}
 \label{sec:intro}
 
-信息物理生产系统（cyber-physical production system, CPPS）由中央调度系统与一组异构现场设备构成：调度器下行下发派工命令，设备上行回报离散状态。设备并不自治协商，所有耦合都经由调度器完成。由此，攻击者破坏生产的一条经济路径，并不是去改写连续控制律或攻破设备固件，而是\textbf{污染调度器的状态视图}，使其提前或错误派工。典型手法是在搬运设备尚在途中时重放``已到达工位''的状态消息：单条报文在标签上看完全合法，却足以让下游任务被提前释放，进而造成碰撞、死锁或工艺违规。
+\subsection{Background and Motivation}
+\label{sec:intro_bg}
 
-这一攻击面能够被利用，是因为调度层同时具备三条检测器可以免费使用、而攻击者难以同时伪造的结构。第一，工艺流程规定了哪台设备允许做哪个操作、从哪个前驱可达，这些可行性约束由参考过程模型给出，并不能从运行日志里学出来---日志只能告诉观测者``哪些组合出现过''，无法区分``没见过''与``不允许''。第二，状态转移消耗物理时间：标签序列合法但耗时错位的消息，在纯标签模型下概率接近于~$1$，原理上不可检测。第三，上报本应是命令的响应，调度器持有一份``我下发了什么''的账本；无前置命令的状态跳变是一步可判定的因果缺失。产线中还存在物料流、工位互斥等跨设备耦合，它们说明调度层不同于水处理等单过程工业控制系统，但本文并不把令牌守恒当作统计检测通道。
+In a cyber-physical production system (CPPS), field devices report their operation as discrete activity events: each event carries a device, an operation (or state label), a timestamp, and a process instance~\cite{monostori2016cpps,seiger2022factory}. When the scheduling system assigns a transport device to ``move to a given station'', the log records the assignment, the start, and the completion, so every activity has a lifecycle. An attacker need not rewrite a control law or compromise firmware: \textbf{injecting or replaying these events} on the uplink suffices to decouple the logged trajectory from the physical process. Detection research on industrial cyber-physical systems concentrates on process variables, perimeter protection, and network traffic~\cite{kayan2022icps}; lifecycle activity events are rarely treated as an injection target in their own right. We detect whether these events have been injected or replayed; how the scheduler acts on them is outside the scope of the evaluation.
 
-既有工作并未覆盖上述结构，原因不在于``没有做多设备''，而在于其方法论前提把调度层信息排除在外。生产线计时自动机~\cite{maier2011timed}面对多模块产线，却先按网络拓扑把系统分解为互相独立的顺序组件，再在单个自动机上检查符号、时间区间与转移频率；学并行结构是为了规避状态爆炸，跨组件可行性因此被主动丢弃，检测算法也不做跨组件一致性检查。TABOR~\cite{lin2018tabor}把计时自动机与贝叶斯网络组合，形式上看似覆盖了时序与依赖，但其贝叶斯网络被限制在同一工段之内，并且显式忽略网络与命令数据，因而既无命令账本，也无法表达参考模型给出的跨设备可行性。SWaT 官方攻击分类中本已包含跨阶段攻击~\cite{goh2016swat,lin2018tabor}，即该社区承认这类威胁存在，检测模型却没有相应的结构。DCTA~\cite{barsha2024dcta}把异常分为单报文、报文序列与时间三类，命名上与多通道划分相近，约束对象却是智能电网 {SCADA} 的 {IEC-104} 会话，与工艺和调度语义无关。另一支文献处理自动导引车在连续控制层上的定位、编队与抗重放，对象是位置与速度估计，同样不是调度决策。
+A typical attack replays a ``completed'' event before the activity has actually finished. The record is entirely legitimate at the label level, yet it rewrites the sojourn time and the context of the events that follow. A detector that only compares predicted and observed labels cannot recognize such an injection: its decision depends only on the (predecessor, label) pair and is identical whether the record is benign or forged (Proposition~\ref{prop:ta}).
 
-因此，单纯把``给马尔可夫加上时间''当作创新并不能成立：计时自动机已用于生产线与 {SCADA} 时序异常检测~\cite{maier2011timed,lin2018timing}，半马尔可夫对停留时长的建模亦是成熟做法~\cite{tan2008hsmm}。计时自动机的时钟守卫是区间型二值判断，落在守卫内部的小幅抢跑会被接受；半马尔可夫给出的是停留时长的分布，同向残差可以在序贯检验中累积。更关键的差异在可行性一侧：数据驱动模型把训练折未见的活动组合当作异常，会把新产品变体误判为攻击；参考模型则把``未见''与``不允许''分开。本文将参考模型给出的可行性掩码作为硬层一票否决，把分布型停留时长作为时序通道的机理，而不是再叠加一条从日志学来的互锁统计通道。
+The same event stream, however, carries three kinds of structure, each matched to a different type of injection. The first is \emph{feasibility}: the reference process model specifies which device may execute which operation and from which predecessor; a log records only the combinations that have occurred and cannot distinguish ``never observed'' from ``not allowed'', so these constraints cannot be learned from it. The second is \emph{duration}: activities consume physical time, and an event whose labels are legal but whose timing is wrong can be exposed only by its sojourn time. The third is \emph{workflow structure}: the transition frequencies within a process instance, which change when activities are inserted or deleted.
 
-本文的贡献如下。
+\subsection{Gap in Existing Work}
+\label{sec:intro_gap}
+
+Existing detectors do not exploit these structures because of their methodological premises. Timed automata for production lines~\cite{maier2011timed} model components independently to keep the state space tractable, so cross-component feasibility cannot be expressed; TABOR~\cite{lin2018tabor} confines dependencies to a single stage and uses no assignment (command) data; DCTA~\cite{barsha2024dcta} constrains protocol sessions in smart-grid {SCADA} rather than the production process; and resilience work at the control layer~\cite{elsisi2023agv,mo2009replay} deals with continuous state estimates rather than discrete activity events. Section~\ref{sec:related} gives the detailed comparison.
+
+\subsection{Our Approach}
+\label{sec:intro_method}
+
+We exploit the three kinds of structure with three parallel paths. A hard-constraint layer vetoes infeasible events outright with a feasibility mask derived from the reference model, and additionally checks assignment--completion pairing. A timing channel groups activities by (device, operation) and produces standardized residuals from log-normal sojourn times. A structural channel uses the workflow transition probabilities within a process instance to measure how rare an activity is. The two statistical channels are calibrated by conformal prediction and accumulate evidence message by message through {CUSUM} tests.
+
+Timing models are not new in themselves: timed automata have been applied to timing anomaly detection on production lines and in {SCADA}~\cite{maier2011timed,lin2018timing}, and modelling sojourn times with hidden semi-Markov models is established practice~\cite{tan2008hsmm}. Our work differs from these in two respects. First, the clock guard of a timed automaton is a binary interval decision, so a small early report that stays inside the interval is simply accepted; a distributional sojourn model instead turns such same-direction deviations into evidence that can be accumulated. Second, data-driven models flag activity combinations absent from the training data as anomalous and thus mistake new product variants for attacks, whereas reference-model feasibility rejects only combinations that the process does not allow.
+
+\subsection{Main Results}
+\label{sec:intro_results}
+
+We consider six attack classes: naive replay ({A1}), physically infeasible injection ({A2}), early-completion replay ({A3}), state mimicry ({A4}), gradual drift ({A5}), and message suppression ({A6}) (Section~\ref{sec:coverage}). With a false-alarm budget $\alpha=0.01$, a delay budget of $10$ messages, and the chance-alarm floor (detections produced by random false alarms within the window) subtracted, {A2} is covered by the device capability sets of the reference model with a net detection of $0.95$, and {A5} reaches $0.87$ where the label-only ablation scores $0.00$. On {A3} at a $20\%$ injection rate our method reaches $0.18{\pm}0.01$, above {BUTLA} (paired test, {Holm} $p=0.031$) but not significantly above the {TABOR}-style baseline ($p=0.096$), and the advantage disappears at injection rates of $10\%$ and below. On {A4}/{A6} our method falls below the label-only ablation, and with thresholds calibrated on the calibration fold every method exceeds its nominal false-alarm rate (ours: $0.030$). The single-message power curve predicted from the critical relative advance agrees with the measurements (mean absolute deviation about $0.03$).
+
+\subsection{Contributions}
+\label{sec:intro_contrib}
+
 \begin{enumerate}
-\item \textbf{把生产调度层注入攻击检测表述为一个独立问题。}
-对象是调度系统--现场设备的命令/状态回环，而不是连续控制层，也不是单工艺过程或网络报文会话。
-\item \textbf{用参考模型可行性掩码与命令--响应作为硬约束。}
-一元能力集与二元可达由过程模型导出，覆盖全部消息且在正常数据上违反率为零；命令账本提供因果缺失检查。二者都不能从日志学出。
-\item \textbf{用半马尔可夫过程对停留时长做分布型建模，并以共形预测统一误报预算。}
-时序通道与结构通道校准后并行判决，经 {CUSUM} 累积分级证据。相对区间型时钟守卫，落在正常区间内侧的抢跑仍可被累积检出。
-\item \textbf{给出规避检测的抢跑量上界 $\rho^*(\alpha,\sigma)$。}
-该界只依赖时序变异、误报预算与重复次数，是隐蔽攻击基本极限~\cite{liu2022limits}在离散事件、无系统矩阵条件下的实例。
+\item \textbf{Problem formalization.} We formalize injection detection on lifecycle activity events (assignment, start, completion), as distinct from the continuous control layer, single process variables, and network packet sessions, and give the system model, the threat model, and reproducible rules for six attack classes (Table~\ref{tab:inject}).
+\item \textbf{A hard-constraint layer from the reference-model feasibility mask.} The device-capability check covers every message, is never violated on the cleaned normal data, and rejects none of the $20/508$ benign new combinations in the temporal test fold; such a constraint cannot be learned from operational logs.
+\item \textbf{Distributional sojourn times with sequential accumulation for label-legal duration forgeries.} Sojourn times are modelled per (device, operation) group, and both statistical channels are calibrated by conformal prediction and accumulated by {CUSUM}; unlike an interval guard, this accumulates same-direction early reports that stay inside the normal interval (Section~\ref{sec:md}).
+\item \textbf{An impossibility result and the critical relative advance.} For label-consistent injections, a detector that thresholds only predicted label probabilities adds nothing beyond the feasibility mask (Proposition~\ref{prop:ta}). The critical relative advance $\rho^*(\alpha,\sigma)$, at which single-message detection reaches one half, depends only on the timing variability and the false-alarm budget, and instantiates the limits of stealthy attacks~\cite{liu2022limits} for discrete events without a system matrix.
 \end{enumerate}
 
-后文组织如下。第~\ref{sec:related}~节按层次回顾相关工作并给出定位。第~\ref{sec:problem}~节给出系统模型、威胁模型与检测问题。第~\ref{sec:framework}~节阐述硬层否决、时序通道与结构通道。第~\ref{sec:theory}~节说明分布型时长相对时钟守卫的差异，并给出抢跑量上界。第~\ref{sec:experiments}~节在真实产线日志上评估。第~\ref{sec:conclusion}~节总结并讨论局限。
+Sections~\ref{sec:related}--\ref{sec:conclusion} present related work, the problem statement, the detection method, the theoretical analysis, the experiments, and the conclusions, in that order.
 
 % ============================================================
-%  第 2 章：相关工作
+%  Section 2: Related work
 % ============================================================
-\section{相关工作}
+\section{Related Work}
 \label{sec:related}
 
-与本文最接近的不是流量统计或有监督分类，而是把工业过程写成自动机或半马尔可夫、再用时间约束做异常检测的那条线。下面按层次写：先说明时序本身不新，再划清报文层、连续控制层与过程挖掘，最后用对照表给出本文位置。缺口是物理不可行注入（后文记为 {A2}）以及标签合法、耗时错位的抢跑与漂移（{A3}/{A5}）。
+The work closest to ours models industrial processes as timed automata or semi-Markov processes and detects anomalies through timing constraints.
 
-\subsection{计时一致性与半马尔可夫}
+\subsection{Timed Automata and Semi-Markov Models}
 \label{sec:rw_timed}
 
-Maier 等~\cite{maier2011timed}在生产线上学习计时自动机：先根据 {PROFINET} 邻接得到组件拓扑与并行结构，再为每个组件单独学习行为模型，检测时在单个自动机上检查符号是否合法、时间是否落在时钟守卫内、转移是否过于罕见。其定义明确假设组件顺序执行；学习并行结构是为了把系统分解为独立顺序组件，以免联合状态空间爆炸。检测算法对每个自动机逐观测返回异常，全文没有跨组件一致性检查，也没有调度器命令账本。时钟守卫是区间型二值判断：落在守卫内部的小幅抢跑会被接受。Maier 等还自陈阈值由人工容差给出，正常行为有时被判为错误，且``需要无穷多测试样本''才能消除误报---这是后文用共形预测指定误报预算~$\alpha$ 的直接对照。
+Maier et al.~\cite{maier2011timed} learn timed automata on production lines with the Bottom-Up Timing Learning Algorithm ({BUTLA}): the component topology is derived from {PROFINET} adjacency, a separate behaviour model is learned per component, and at detection time an automaton checks whether a symbol is legal, whether its duration lies inside the clock guard, and whether the transition is too rare. Components are split to avoid an explosion of the joint state space, so the method neither checks cross-component consistency nor involves assignment--completion pairing; its clock guard is a binary interval decision, so a small early report inside the guard is accepted; and the tolerance of its probabilistic check is set manually, whereas we let the user specify the false-alarm budget~$\alpha$ and calibrate thresholds on benign data.
 
-Lin 等~\cite{lin2018timing}把基于计时的异常检测用到 {SCADA} 网络，同样属于``给离散事件加上时间窗''，对象是报文时序而非工艺可行性。Tan 与 Xi~\cite{tan2008hsmm}用隐半马尔可夫替代隐马尔可夫，动机正是指数停留假设不合理；该模型在异常检测中已是成熟工具。因此，停留时长建模本身不能当作本文的创新点。
+Lin et al.~\cite{lin2018timing} attach time windows to discrete events in {SCADA} networks, but their object is message timing rather than process feasibility. Tan and Xi~\cite{tan2008hsmm} replace the hidden Markov model with a hidden semi-Markov model because the exponential sojourn assumption is unrealistic; sojourn-time modelling as such is therefore not a contribution of this paper.
 
-TABOR~\cite{lin2018tabor}把计时自动机与贝叶斯网络组合，在 {SWaT} 上做单类分类，并强调可解释与异常定位。组合形式与``时序加依赖''高度重合，但贝叶斯网络的子模型划分逐条限制在同一工段之内，正文写明学习的是执行器``在同一 stage 内''的依赖；它还声明关注物理过程、忽略网络流量，因而没有命令账本。SWaT 官方场景中含跨阶段攻击~\cite{goh2016swat}，TABOR 的模型结构却没有跨工段成分，只能靠各站独立检测的并集去碰。命令--响应因果与参考模型给出的跨设备可行性，在该框架内不可表达。
+TABOR~\cite{lin2018tabor} combines timed automata with Bayesian networks for one-class classification on the {SWaT} water-treatment testbed. Its ``timing plus dependency'' design resembles ours, but each Bayesian-network submodel learns only the dependence of sensors on actuators within the same stage, and the method uses no network or command data, hence no assignment--completion pairing. Although the official {SWaT} scenarios include cross-stage attacks~\cite{goh2016swat}, TABOR can cover them only through the union of independent per-stage detections.
 
-与上述工作的差异因此只有两处，且都必须写清楚。其一，时长：本文用半马尔可夫核给出分布型停留，而不是时钟守卫的二值区间，使落在正常区间内侧的同向抢跑仍可被序贯累积。其二，可行性：Maier 一脉为可学性主动丢弃跨组件耦合，TABOR 把依赖关在站内；本文把参考模型导出的可行性掩码做成硬约束，因为日志无法区分``未见过''与``不允许''。
-
-\subsection{网络报文层状态机}
+\subsection{Packet-Level State Machines and Continuous Control}
 \label{sec:rw_packet}
-
-Goldenberg 与 Wool~\cite{goldenberg2013modbus}用确定有限自动机刻画 {Modbus}/{TCP} 会话。DCTA~\cite{barsha2024dcta}进一步把智能电网 {SCADA} 的 {IEC-104} 通信建成确定性计数计时自动机，并把异常显式分为单报文、报文序列与基于时间三类。三类命名与本文的硬层/结构/时序划分在字面上接近，必须引用并划清：DCTA 约束的是报文属性、事件定时与协议计数器，建模单元是主站--远动终端会话，与工艺流程、设备协同和调度派工无关。层次不同，不构成方法撞车。
-
-\subsection{连续控制层与信息物理安全}
 \label{sec:rw_agv}
 
-自动导引车与编队控制上的攻击防御，处理的是位置、速度等连续状态估计，例如抗重放的定位滤波与抗虚假数据注入的路径跟踪。Mo 与 Sinopoli~\cite{mo2009replay}以来的信息物理安全则在线性系统上讨论重放、水印与检测延迟。二者都是另一支：它们不把调度器对离散状态标签的信任当作攻击面，也不使用工艺参考模型中的可行性掩码。
+Goldenberg and Wool~\cite{goldenberg2013modbus} characterize {Modbus}/{TCP} sessions with deterministic finite automata, and DCTA~\cite{barsha2024dcta} models {IEC-104} communication in smart-grid {SCADA} as a deterministic counting timed automaton with single-packet, packet-sequence, and timing anomalies. The division resembles our three paths, but DCTA constrains packet attributes and protocol counters of master--terminal sessions and involves neither the production process nor activity semantics. At the control layer, defences for automated guided vehicles such as robust Kalman localization against false data injection~\cite{elsisi2023agv}, and the cyber-physical security line since Mo and Sinopoli~\cite{mo2009replay} on replay, watermarking, and detection delay, deal with continuous state estimates of linear systems rather than discrete activity events.
 
-\subsection{序列检验、共形预测与隐蔽攻击界}
+\subsection{Sequential Testing, Conformal Prediction, and Stealthy-Attack Limits}
 \label{sec:rw_tools}
 
-电网虚假数据注入检测广泛使用 {CUSUM} 与最速检测~\cite{li2015quickest}；主动水印与检测延迟界已形成完整组合~\cite{naha2023watermark}。共形预测提供无分布误报控制~\cite{shafer2008conformal}。隐蔽攻击的基本极限在连续线性系统上已有系统结果~\cite{liu2022limits}。这些工具本文都会用到，但不作为贡献。后文的抢跑量上界 $\rho^*(\alpha,\sigma)$ 只声明为上述体裁在离散事件、无系统矩阵、界仅依赖时序变异时的实例。
+{CUSUM} and quickest change detection are widely used against false data injection in power grids~\cite{li2015quickest}, with delay optimality going back to {Lorden} and {Lai}~\cite{lorden1971procedures,lai1998information}; watermarking and detection-delay bounds~\cite{naha2023watermark} and the fundamental limits of stealthy attacks on linear systems~\cite{liu2022limits} complete this toolkit. Conformal prediction provides distribution-free false-alarm control~\cite{shafer2008conformal,angelopoulos2023conformal} but relies on exchangeability, and coverage degrades under temporal drift~\cite{barber2023exchangeability}. Conformal martingales test exchangeability online~\cite{vovk2003testing,volkhonskiy2017inductive}, and conformal anomaly detection has been tailored to industrial systems through sliding calibration~\cite{yuan2026conformal} and conditional false-alarm control~\cite{kundacina2025conformal}. We use {CUSUM} and split conformal calibration without claiming them as contributions (conformal martingales are not used); $\rho^*(\alpha,\sigma)$ is an instance of the stealthy-attack limits in the discrete-event setting, depending only on timing variability rather than on a system matrix.
 
-\subsection{过程挖掘中的一致性检查}
+\subsection{Conformance Checking and Sequence Anomaly Detection}
 \label{sec:rw_pm}
 
-过程挖掘用事件日志相对参考模型做一致性检查与性能分析~\cite{aalst2012replay,adriansyah2011conformance}，时间视角可以进入对齐代价。该支工作通常对完整轨迹做离线拟合度计算，没有攻击者模型，也不给出由用户指定的误报预算~$\alpha$。本文使用同一类参考模型（随数据集发布的 {BPMN}），但问题是在线逐消息的注入检测，而不是事后度量轨迹符合度。
+Process mining checks the conformance of event logs against a reference model~\cite{aalst2012replay,adriansyah2011conformance}, and the time perspective can enter the alignment cost~\cite{rino2024timed}. It usually computes fitness offline over complete traces, with no attacker model and no user-specified false-alarm budget. Used as a detector that alarms on any feasibility violation, conformance makes the same decisions as our hard-constraint layer: it covers physically infeasible injection but misses duration attacks that leave labels unchanged (hard-constraint column of Table~\ref{tab:coverage}).
 
-\subsection{本文定位}
+Log anomaly detectors train a next-log-key predictor and flag keys outside the top candidates~\cite{du2017deeplog,meng2019loganomaly,landauer2023deep}; anomaly detection on process event logs uses autoencoders~\cite{nolle2018analyzing} or next-event prediction~\cite{nolle2022binet}. A next-event predictor without time features decides only on (history, label) and therefore belongs to the label-only detector family: replacing the predecessor $i$ in Proposition~\ref{prop:ta} by a finite history leaves the proof unchanged. Learned models with time features are not bound by the proposition and are not included as baselines (Section~\ref{sec:limitations}).
+
+\subsection{Positioning}
 \label{sec:rw_position}
 
-表~\ref{tab:rw_comparison}按四个层次对照。本文位于第~(iv)~层：任务耦合的设备协同、调度器命令账本，以及不能从日志学出的可行性硬约束。相对第~(iii)~层，不是``他们没做多设备''，而是他们的分解假设排除了跨组件可行性；相对第~(ii)~层，不是``时序加贝叶斯没人做过''，而是站内依赖与无命令账本决定了 {A2} 无法被参考模型拒绝、{A3}/{A5} 无法靠分布型残差累积。状态模仿类攻击（{A4}）在本文生产配置下没有独占通道，不作为与先行工作对照的卖点。
+Table~\ref{tab:rw_comparison} compares related work at four levels. Our work sits at level~(iv): online event-injection detection with a reference model. The key difference from level~(i) is that its component-decomposition assumption rules out cross-component feasibility; the key difference from level~(ii) is that its dependencies are confined to stages. Component decomposition and stage confinement prevent physically infeasible injection ({A2}) from being rejected by cross-component feasibility, and the binary decision of a clock guard prevents label-legal duration attacks ({A3}/{A5}) from being detected by accumulation.
 
 \begin{table}[!t]
 \renewcommand{\arraystretch}{1.25}
-\caption{相关工作按层次对照。本文相对先行工作的缺口是物理不可行注入与标签合法但耗时错位的攻击。}
+\caption{Related work by level. Existing work neither rejects physically infeasible injections through reference-model feasibility nor accumulates duration deviations that stay inside the guard.}
 \label{tab:rw_comparison}
 \centering
 \small
-\begin{tabular}{p{2.4cm}p{2.6cm}p{2.2cm}p{2.4cm}p{2.2cm}}
+\begin{tabular}{L{2.4cm}L{2.6cm}L{2.2cm}L{2.4cm}L{2.2cm}}
 \toprule
-层次 & 代表方法 & 时长 & 可行性 & 命令账本 \\
+Level & Representative & Duration & Feasibility & Assignment pairing \\
 \midrule
-(i)~报文会话
-  & {DCTA}~\cite{barsha2024dcta}、{Modbus} {DFA}~\cite{goldenberg2013modbus}
-  & 事件定时、计数器
-  & 无工艺约束
-  & 无 \\
-(ii)~单工艺过程
-  & {TABOR}~\cite{lin2018tabor}
-  & 时钟守卫
-  & 仅站内依赖
-  & 无 \\
-(iii)~分解式产线
+(i)~Decomposed production line
   & Maier/{BUTLA}~\cite{maier2011timed}
-  & 时钟守卫
-  & 无跨组件检查
-  & 无 \\
-(iv)~调度层（本文）
-  & 半马尔可夫 + 参考模型
-  & 分布型停留
-  & 硬层可行性掩码
-  & 有 \\
+  & Clock guard
+  & No cross-component check
+  & No \\
+(ii)~Single physical process
+  & {TABOR}~\cite{lin2018tabor}
+  & Clock guard
+  & Within-stage dependency only
+  & No \\
+(iii)~Packet session
+  & {DCTA}~\cite{barsha2024dcta}, {Modbus} {DFA}~\cite{goldenberg2013modbus}
+  & Event timing, counters
+  & No process constraint
+  & No \\
+(iv)~Online event injection (ours)
+  & Semi-Markov + reference model
+  & Distributional sojourn
+  & Feasibility mask in hard-constraint layer
+  & Yes \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 % ============================================================
-%  第 3 章：系统模型与威胁
+%  Section 3: Problem statement and threat model
 % ============================================================
-\section{系统模型与威胁}
+\section{Problem Statement and Threat Model}
 \label{sec:problem}
 
-\subsection{命令--状态回环}
+\subsection{System Model: The Assignment--Event Loop}
 \label{sec:sys}
 
-一个信息物理生产系统由中央调度系统 $\mathcal{C}$ 与一组异构现场设备 $\mathcal{D}=\{d_1,\dots,d_M\}$ 经工业网络互联而成。设备不自主协商，只执行下行命令并上报离散状态；所有任务耦合都经由调度器完成。研究对象是这个命令/状态回环，而不是连续控制律，也不是设备间的自治编队。
+A cyber-physical production system consists of a supervisory execution system $\mathcal{C}$ and a set of heterogeneous field devices $\mathcal{D}=\{d_1,\dots,d_M\}$ connected by an industrial network. Devices receive downlink assignments and report discrete activity events. Our object of study is the integrity of this event stream, not continuous control laws or autonomous coordination among devices.
 
-时刻 $t$ 的一条消息是三元组 $m_t=(d_t,o_t,t)$，其中 $d_t\in\mathcal{D}$ 为设备，$o_t$ 为操作或状态标签。下行命令记为 $u_t$，上行状态（或活动完成）记为 $s_t$。作业实例由日志中的 case 标识（工程上对应命令 {URL} 的 {business\_key}）给出。在线检测器按 $(d,\mathrm{case})$ 维护链上下文：可行性掩码来自同一工作流内的可达性，跨 case 边界不适用。
+Each event is written $m_t=(d_t,o_t,t)$, where $d_t\in\mathcal{D}$ is the device, $o_t$ the operation or state label, and $t$ the timestamp; the event also carries a process-instance identifier (hereafter the \emph{case}), which we omit when no confusion arises. Each event is transmitted over the uplink as one message, and we use ``event'' and ``message'' interchangeably. The binary reachability check maintains predecessors per (device, case), and the structural channel maintains predecessors per case; the feasibility mask constrains reachability only within a single workflow instance and never across case boundaries.
 
-上报有两种语义，必须分开处理。事件驱动：状态跳变时发一条，停留时长可直接观测。周期轮询：固定周期采样，同一状态被重复上报，时长观测是区间删失。本文主实验的产线日志属于前者；后者只在方法中保留相应分支，不作跨域评测。
-
-图~\ref{fig:system}给出回环与三路检测器的位置。攻击者作用于上行状态链路：内容与发送时刻可控，物理过程的推进速度、调度器内部命令账本以及参考模型规定的可行性不可控。
+Two reporting semantics must be handled separately. Under \emph{event-driven} reporting, an event is sent when the state changes, and the sojourn time is directly observable. Under \emph{periodic polling}, the state is sampled at a fixed period and the same state is reported repeatedly, so only the interval containing the sojourn time is observed (interval censoring). The production log in our main experiments is event-driven; the method keeps a branch for polling, but it is not evaluated. Figure~\ref{fig:system} shows the loop structure and where the three detection paths sit.
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=0.92\linewidth]{figures/fig_system.pdf}
-\caption{调度层命令/状态回环。检测器只读命令账本与参考模型可行性掩码，对上行状态作在线判决。}
+\caption{The assignment/event loop. The detector reads only the assignment events in the same log and the reference-model feasibility mask, and decides online on each uplink event.}
 \label{fig:system}
-\Description{调度系统与现场设备构成命令下行、状态上行的回环，检测器只读命令账本并对上行状态作硬层、时序与结构三路判决。}
+\Description{The supervisory system and field devices form a loop with assignments going down and events going up; the detector reads only assignment events and applies hard-constraint, timing, and structural decisions to uplink events.}
 \end{figure}
 
-\subsection{命令账本与可行性掩码}
+\subsection{Assignment Pairing and the Feasibility Mask}
 \label{sec:ledger}
 
-调度器对其已下发命令持有账本 $\mathcal{L}$。状态上报本应是某条命令的响应：若 $s_t$ 在对应 $(d,\mathrm{case})$ 上找不到前置命令事件，则构成一步可判定的因果缺失。命令--响应是结构/因果检查，而不是时长检验---派发阶段的排队时延由调度竞争主导，不宜写入时序通道。
+The same log also records the downlink assignments, whose set we denote by $\mathcal{L}$. A completion event without a preceding assignment on the same (device, case) is a causal gap decidable in one step; once process management is integrated with the shop-floor event stream, this pairing can be read directly from the log~\cite{seiger2022factory}. The pairing is a causal check, not a duration test (the queueing delay between assignment and start is driven by device contention), and is retained as an implementation detail of the hard-constraint layer (Section~\ref{sec:hard}).
 
-可行性由随产线发布的参考过程模型（本文为 {BPMN}）导出，记为掩码 $\mathbf F$。它含两类硬约束。\emph{一元能力集}：设备 $d$ 是否允许执行操作 $o$，不依赖前驱，覆盖全部消息。\emph{二元可达}：在同一 case、同一设备上，从已确认前驱 $o'$ 到 $o$ 是否被模型允许。二者都不能从运行日志学出：日志只能给出``哪些组合出现过''，无法区分``没见过''与``不允许''。同一份参考模型还可以导出物料令牌等跨设备不变量，但那些约束在缺少工件级身份时存在残余良性违反，本文不把它们写入检测器。
+Feasibility is derived from the reference process model released with the production line ({BPMN} in our case) and denoted by the mask $\mathbf F$, which contains two kinds of hard constraint. A \emph{unary capability set} specifies whether device $d$ may execute operation $o$; it does not depend on the predecessor and therefore covers every message. \emph{Binary reachability} specifies whether, on the same case and the same device, operation $o$ may follow the confirmed predecessor operation $o'$. The reference model also yields cross-device constraints such as material-token conservation, but without workpiece-level identities these suffer residual benign violations and are not included in the detector (Section~\ref{sec:limitations}).
 
-\subsection{攻击类型与通道覆盖}
+\subsection{Modelling Assumptions and Threat Model}
+\label{sec:assumptions}
+
+We make two modelling assumptions. First, the detector reads only uplink events and the assignments in the same log; how the supervisory system dispatches work on their basis is not evaluated. Second, the reference model is consistent with the cleaned normal log, on which the hard-constraint layer has zero violations; the raw log with execution errors does not satisfy this assumption (Table~\ref{tab:shift}).
+
+Attacker capabilities follow the {Dolev--Yao} model~\cite{dolev1983yao}: the attacker acts on the uplink event channel, can eavesdrop on, replay, inject, drop, or delay messages, and may know the state-machine structure and even the transition frequencies. The attacker may know the structure and parameters of the detector (including the $\sigma$ of each group) but cannot observe its online state (such as the {CUSUM} statistics and reset times). The attacker cannot compromise the supervisory system or device firmware, cannot change the pace of the physical process, and cannot rewrite assignment events already written to the log or the reference model. The attacker's goal is to decouple the event record from the physical process. Coordinated forgery across multiple devices, which requires aligning several event streams and assignments at once, is outside our scope.
+
+\subsection{Attack Classes}
 \label{sec:coverage}
 
-攻击者能力按 {Dolev--Yao} 作用于上行链路：窃听、重放、注入、丢弃或延迟；可以知道状态机结构乃至转移频率。攻击者不能攻破调度器本体或设备固件，不能改变物理世界，也不能读取命令账本。目标是使调度器的状态视图与物理现实脱节，从而提前或错误派工。
-
-表~\ref{tab:coverage}列出六类注入。生产检测器只有三路：硬层 $\mathbf F$（含命令--响应）、结构通道、时序通道。状态模仿（{A4}）在该配置下没有独占通道，这是能力边界而不是再加通道的理由。多设备协同伪造（需同时对齐多路上报与命令账本）超出范围，本文不实现、不报告。
+Table~\ref{tab:inject} lists the six injection classes and their reproducible rules. {A2} violates the reference model; {A3} and {A5} leave labels unchanged and only compress sojourn times, sporadically and over consecutive runs respectively. These are the primary targets; {A1} serves as the replay reference, and {A4}/{A6} delimit the boundary of the detection capability.
 
 \begin{table}[!t]
-\renewcommand{\arraystretch}{1.15}
-\caption{六类调度层注入与三路生产通道的单消息覆盖。括号内为同一批良性消息上的误报；{A2} 硬层的 $0.06$ 来自原地改写后的级联比对，不是纯良性虚警。序贯检出见第~\ref{sec:e1}~节。}
-\label{tab:coverage}
+\renewcommand{\arraystretch}{1.12}
+\caption{Reproducible rules for the six injection classes. Default injection rate $20\%$, default $\rho=0.30$ for {A3}/{A5}, three injection seeds; the case is never altered. {A4} requires a structural model, without which it degenerates into repeating the current operation and underestimates the attacker. By default the evaluation does not shift the subsequent events of the same instance forward.}
+\label{tab:inject}
 \centering
 \small
-\begin{tabular}{llccc}
+\begin{tabular}{lL{2.6cm}L{6.6cm}}
 \toprule
-编号 & 类型 & 硬层 $\mathbf F$ & 结构 & 时序 \\
+ID & Class & Rule \\
 \midrule
-{A1} & 朴素重放 & $0.22\,(0.00)$ & $0.19\,(0.02)$ & $0.03\,(0.03)$ \\
-{A2} & 物理不可行注入 & $0.98\,(0.06)$ & $0.29\,(0.03)$ & $0.00\,(0.02)$ \\
-{A3} & 抢跑重放 & $0.00\,(0.00)$ & $0.02\,(0.01)$ & $0.43\,(0.02)$ \\
-{A4} & 状态模仿（知模型） & $0.03\,(0.00)$ & $0.02\,(0.03)$ & $0.00\,(0.02)$ \\
-{A5} & 渐变漂移 & $0.00\,(0.00)$ & $0.01\,(0.01)$ & $0.48\,(0.03)$ \\
-{A6} & 消息抑制 & $0.00\,(0.00)$ & $0.17\,(0.02)$ & $0.04\,(0.02)$ \\
+{A1} & Naive replay & Resend a historical activity of the same device after the current completion time; the historical duration is kept and the label is duplicated. \\
+{A2} & Physically infeasible injection & Rewrite the operation name in place to a label outside the device's capability set (or to another operation if none exists); subsequent benign events are checked for binary reachability with the forged operation as predecessor (hereafter the cascaded check). \\
+{A3} & Early-completion replay & Move the completion time earlier in place so that the sojourn time becomes $(1-\rho)\tau$; by default, subsequent events of the same instance are not shifted. \\
+{A4} & State mimicry & With the model known, insert the most probable next step after the current completion; the device is one that has executed this operation in the log, and the duration is the median of that group. \\
+{A5} & Gradual drift & Take a run of consecutive activities in time order and compress each sojourn by the same $\rho$ (in contrast to the sporadic sampling of {A3}). \\
+{A6} & Message suppression & Delete an entire activity that has not yet started; the label is placed on the next event of the same instance (the observable consequence appears downstream). \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-表~\ref{tab:coverage}的定性分工如下。{A2} 由一元能力集拒绝，时序看不见。{A3}/{A5} 不改标签、只压缩或偏移停留时长，硬层与结构接近于零，时序是唯一有实质提升的通道。{A1} 照搬历史时长，时序无增益，靠硬层与结构。{A4} 按转移模型插入最可能的下一步，三路单消息都接近误报；{A6} 抹掉整条尚未开始的活动时，看门狗未布防，结构通道在下游才有弱信号。因此，后文把可辩护的增益放在 {A2} 与 {A3}/{A5}，而不是放在 {A4}。图~\ref{fig:coverage}把同一张表画成净提升热图，{A4} 一行接近全白。
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=0.98\linewidth]{figures/fig_coverage.pdf}
-\caption{三路生产通道相对良性误报的净提升（{DR}$-${FPR}）。{A2} 由硬层覆盖，{A3}/{A5} 仅时序有实质提升，{A4} 没有独占通道。}
-\label{fig:coverage}
-\Description{三行六列热图：硬层、结构、时序对 A1 至 A6 的净检出提升，A2 硬层与 A3、A5 时序为深色高值，A4 接近零。}
-\end{figure}
-
-\subsection{检测问题}
+\subsection{Detection Problem}
 \label{sec:detproblem}
 
-\begin{problem}[调度层注入检测]
+\begin{problem}[Discrete-event injection detection]
 \label{prob:detect}
-给定仅含正常运行的历史日志、参考过程模型以及用户指定的误报预算 $\alpha$，对在线消息流逐条输出告警，使得纯良性流上的经验误报不超过 $\alpha$，并在延迟预算内检出 {A1}--{A6} 中的注入。检测器不得使用攻击标签调阈值。
+Given a historical log of normal operation only, a reference process model, and a user-specified false-alarm budget $\alpha$, raise alarms on the online event stream message by message, with the goal that the per-message alarm rate on a purely benign stream does not exceed $\alpha$. Under exchangeability this goal is guaranteed by conformal calibration; the measured deviation under temporal deployment is reported in Section~\ref{sec:boundary}. The detector must not use attack labels to tune thresholds. The security goal is \emph{to detect a forgery, or to force its relative advance to stay small}: once the relative advance of a single forgery exceeds $\rho^*(\alpha,\sigma)$, the single-message test detects it with probability greater than one half (Section~\ref{sec:bound}).
 \end{problem}
 
-主指标是同一 $\alpha$ 下、延迟预算内的净检出率（扣除偶然地板，见第~\ref{sec:e1}~节），以及以消息数计的检测延迟。算力约束是每条消息 $O(1)$。
+We use three evaluation metrics: the net detection rate within the delay budget at a common $\alpha$ (detection rate minus the chance-alarm floor, see Section~\ref{sec:setup}); the detection delay in messages (box plots, covering only injections detected within the budget); and the sequential false-alarm rate and alarm intervals on a purely benign stream ($\mathrm{ARL}_0$ is not estimated from them when alarms are too few). The computational constraint is $O(1)$ per message.
 
 % ============================================================
-%  第 4 章：方法
+%  Section 4: Method
 % ============================================================
-\section{检测方法}
+\section{Detection Method}
 \label{sec:framework}
 
-\subsection{总体架构}
+\subsection{Overall Architecture}
 \label{sec:arch}
 
-生产配置为三路并行，任一触发即告警。硬层良性违反率为零，不消耗共形校准样本；$\alpha/3$ 是三路并集的 {Bonferroni} 划分，因而时序与结构各得 $\alpha/3$。这不是硬层有误报，而是并行 {OR} 的代价：单通道方法独享全部 $\alpha$，三路方法在只有一路有信号的攻击上必然被摊薄。两路统计通道各自校准后经 {CUSUM} 累积。不设跨通道合成路。
+The production configuration consists of three parallel paths---the hard-constraint layer, the structural channel, and the timing channel---and an alarm is raised when any of them fires. The offline phase uses only normal logs and the reference model: $\mathbf F$ is derived from the {BPMN}; transition probabilities and sojourn times are estimated per device and operation; the two statistical channels are calibrated by conformal prediction on a held-out calibration fold; and a {CUSUM} threshold $h_i$ is calibrated for each path on the benign stream so that the path's average run length to false alarm is $\mathrm{ARL}_{0,i}=1/\alpha_i$, where $\alpha_i$ is the budget assigned to the path (see the next paragraph). The online phase performs a constant number of table lookups and logarithms per message, as shown in Figure~\ref{fig:arch} and Algorithm~\ref{alg:detect}.
 
-离线阶段只用正常日志与参考模型。由 {BPMN} 导出 $\mathbf F$；按设备与操作估计转移与停留时长；留出校准折，用共形预测定出两路统计通道的阈值，并用良性流反解 {CUSUM} 门限，使目标平均误报间隔 $\mathrm{ARL}_0=1/\alpha$。在线阶段对每条消息做常数次查表与对数运算，如图~\ref{fig:arch}。
+The false-alarm budget is split evenly across the three paths, $\alpha_i=\alpha/3$ ($\mathrm{ARL}_{0,i}=300$ at $\alpha=0.01$). Under the logical OR, the overall single-message false-alarm rate is at most $\alpha$ (the {Bonferroni} bound) and the overall sequential alarm rate at most the sum over the paths; since the hard-constraint layer never fires on normal data, both bounds are conservative. The price of parallel decisions is the split, which every method pays alike: the label-only ablation has a single path and keeps all of $\alpha$, {BUTLA} and {HSMM} have two paths, and the {TABOR}-style baseline has three, so on an attack where only one path carries signal each of our paths has one third of the budget of the label-only ablation (Section~\ref{sec:e1}).
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=0.98\linewidth]{figures/fig_arch.pdf}
-\caption{离线拟合与在线三路并行。硬层在统计通道之前，以免不可行样本污染校准；无互锁统计通道，无跨通道合成。}
+\caption{Offline fitting and online three-path parallel decisions. The hard-constraint layer precedes the statistical channels so that infeasible samples do not contaminate calibration.}
 \label{fig:arch}
-\Description{离线阶段由日志与BPMN估计转移、时长核并校准阈值；在线阶段对每条消息依次做硬层否决、时序与结构打分及CUSUM累积。}
+\Description{In the offline phase, transitions and duration kernels are estimated from the log and BPMN and thresholds are calibrated; in the online phase each message passes the hard-constraint veto, timing and structural scoring, and CUSUM accumulation.}
 \end{figure}
 
-硬约束必须在最前：零成本、可解释，并避免不可行样本进入后续校准。结构与时序并列而非串联，以便同时覆盖``标签错''与``标签对但时间错''。序列检验在最后，因此两路统计通道必须输出分级分数而不是布尔值。算法~\ref{alg:detect}给出在线路径。
+The hard-constraint layer comes first because its decisions produce no false alarms, are interpretable, and keep infeasible samples out of calibration. The structural and timing channels run side by side so that both ``wrong label'' and ``right label at the wrong time'' are covered, and both output continuous scores for the final sequential test.
 
 \begin{algorithm}[!t]
-\caption{调度层注入的在线检测}
+\caption{Online detection of discrete-event injection}
 \label{alg:detect}
 \begin{algorithmic}[1]
-\Require 消息 $m=(d,o,t)$；账本 $\mathcal{L}$；掩码 $\mathbf{F}$；核 $(\tilde P,\mu,\sigma)$；共形阈值与门限 $h$
-\Ensure 告警或接受
-\If{一元能力、二元可达或命令--响应任一违反}
-    \State \textbf{return} 告警（硬层原因）
+\Require event $m=(d,o,t)$; assignments $\mathcal{L}$; mask $\mathbf{F}$; kernels $(\tilde P,\mu,\sigma)$; conformal calibrators; thresholds $h$
+\Ensure alarm or accept
+\If{the unary capability, binary reachability, or assignment--completion check fails}
+    \State \textbf{return} alarm (hard-constraint reason)
 \EndIf
-\State 计算时序残差 $z$ 与结构分数 $\tilde P_{o'\to o}$
-\State 对两路分别更新 $S\leftarrow\max(0,\,S+s-c)$
-\If{任一路 $S\ge h$}
-    \State 复位该路；\textbf{return} 告警
+\State compute the timing residual $z$ and the structural score $\tilde P_{o'\to o}$
+\State convert each score to a conformal $p$-value $p$ with the frozen conformal calibrator
+\State update $S\leftarrow\max(0,\,S-\log p-c)$ for each of the two channels
+\If{$S\ge h$ on either channel}
+    \State reset that channel; \textbf{return} alarm
 \EndIf
-\If{隔离窗口内无告警}
-    \State 门控更新 $(\mu,\sigma,\tilde P)$ 并锚定状态
+\If{no alarm within the quarantine window}
+    \State gated update of $(\mu,\sigma)$ and anchor the state
 \EndIf
-\State \textbf{return} 接受
+\State \textbf{return} accept
 \end{algorithmic}
 \end{algorithm}
 
-\subsection{硬层可行性与命令--响应}
-\label{sec:hard}
-
-对消息 $(d,o,t)$，硬层依次检查三项，任一失败立即告警并给出原因。
-\begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
-\item 一元：$(d,o)$ 是否属于参考模型的能力集。
-\item 二元：若同一 $(d,\mathrm{case})$ 存在已确认前驱 $o'$，则 $(o'\to o)$ 是否被 $\mathbf F$ 允许。
-\item 因果：该状态上报是否存在前置命令事件。
-\end{enumerate}
-掩码由随数据集发布的 {BPMN} 自动导出：一元能力集取节点上绑定的设备类型（或资源角色），二元可达由同一工作流内的顺序与网关展开，不手工编转移表。一元检查覆盖全部消息，正常数据上违反率为零。训练折未见的良性组合不能当作异常：其比例远高于 $\alpha$，而参考模型拒绝其中 $0$ 条；具体数字见第~\ref{sec:e1}~节。
-
-\subsection{结构通道}
-\label{sec:struct}
-
-结构通道询问：当前活动在 case 级工作流序列上是否常见。链粒度取 case 而不是 $(d,\mathrm{case})$：在服务端点型产线上，设备级链大量长度为~$1$，转移概率没有可分的取值。状态是操作名。转移用 {Dirichlet} 后验预测 $\tilde P$，以避免小样本伪零，同时保留 $\mathbf F$ 强制的真零。
-
-交给共形校准器的是预测概率 $\tilde P_{o'\to o}$，而不是随机化 $p$ 值。随机化是为了在直接与 $\alpha$ 比较时打散原子；喂给校准器时应保留原始分数的次序，并列只在阈值处打破一次。该通道对 {A4}/{A6} 这类改变事件数目的攻击敏感，但在三路均分预算后，其单路功效低于独享 $\alpha$ 的纯马尔可夫检测器---这是多通道的固有代价，见第~\ref{sec:e2}~节。
-
-\subsection{半马尔可夫时序通道}
-\label{sec:timing}
-
-半马尔可夫核写作 $Q_{o'o}(\tau)=P_{o'o}F_{o'o}(\tau)$。停留时长按 $(\text{设备},\text{操作})$ 分组，取 $\log\tau\sim\mathcal{N}(\mu,\sigma^2)$。时序本身不是创新点；与计时自动机的差别在于 $F_{o'o}$ 是分布而不是区间守卫，见第~\ref{sec:md}~节。生产配置不把路线协变量写入卖点：在全局样本量加权口径下，条件化仅把 $\sigma$ 从 $0.236$ 降到 $0.228$，端到端无增益。
-
-四种观测对应四个分支。
-\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
-\item \textbf{状态跳变。} 标准化残差 $z=(\log\tau-\mu)/\sigma$，只做左侧检验（``太快''即抢跑）。抢跑是有方向的备择；单侧的价值主要是阈值稳定，而不是功效翻倍。
-\item \textbf{同状态心跳。} 右删失生存函数 $-\log\bigl(1-F(\tau)\bigr)$，只在``待太久''时报警。
-\item \textbf{超时无消息。} 同一生存函数，由看门狗在高分位触发。它覆盖``活动已开始、完成事件被抑制''，覆盖不到``整条活动从未开始''---后者需要活动间隔模型，本文不提供。
-\item \textbf{周期轮询。} 区间删失 $\log\bigl[F(\tau+\Delta)-F(\tau)\bigr]$，以免量化误差污染似然。主实验为事件驱动日志，该分支不参与评测。
-\end{itemize}
-不符合度分数取 $z$ 本身，不取参数化 $p$ 值。人工工位的 $\sigma$ 可接近~$2$，时序通道在那些分组上接近失效；检测能力由最易变工序决定。
-
-\subsection{共形校准与序贯累积}
-\label{sec:conformal}
-
-两路统计通道在留出的正常样本上做分割共形预测~\cite{shafer2008conformal}，经验分位数给出无分布 $\mathrm{FPR}\le\alpha/3$ 的阈值。该保证不依赖高斯或马尔可夫假设成立，但依赖校准集与部署数据可交换。工作流间转移集合的 {Jaccard} 重合度中位数约为 $0.32$，故新产品型号必须重新校准或按型号分层。本日志校准集 $n_{\mathrm{cal}}=701$，可信支撑的最低单消息 $\alpha$ 约为 $10^{-2}$；更低的误报预算由 {CUSUM} 的 $\mathrm{ARL}_0$ 承担。
-
-对各通道的不符合度分数做单侧 {CUSUM}~\cite{li2015quickest}
-\begin{equation}
-  S_t=\max\bigl(0,\,S_{t-1}+s_t-c\bigr),
-  \label{eq:cusum}
-\end{equation}
-越过门限 $h$ 则告警并复位。$h$ 由良性流标定，目标 $\mathrm{ARL}_0=1/\alpha$。设计位移取 $1\sigma$。告警后必须复位，否则统计量停在门限上方，后续每条都告警。基线中凡输出分级分数的方法套用同一套累积，以免把增益误归因到 {CUSUM} 本身。
-
-\subsection{门控更新与复杂度}
-\label{sec:online}
-
-正常消息用于锚定状态，并用指数滑动平均缓慢更新 $(\mu,\sigma)$ 与 $\tilde P$。更新必须门控：仅当该消息通过全部通道、且隔离窗口内无告警时才进入基线。否则攻击者可以用持续的小幅抢跑把时长基线拖向自己，使后续注入逐渐合法化。在持续抢跑下，关闭门控后攻击者可稳定获取的调度提前量约为 $26\%$，门控后降到约 $1\%$。
-
-每条消息 $O(1)$：常数次查表、对数与硬层判断，与状态数、设备数在热路径上无关。多设备可按链并行。第~\ref{sec:e8}~节给出常数因子。
-
-% ============================================================
-%  第 5 章：理论分析
-% ============================================================
-\section{理论分析}
-\label{sec:theory}
-
-\subsection{分布型时长与时钟守卫}
-\label{sec:md}
-
-计时自动机对转移 $(o',o)$ 给出时钟守卫 $[\ell,u]$：$\tau\in[\ell,u]$ 则接受，否则拒绝~\cite{maier2011timed,lin2018tabor}。设正常停留均值为 $\mu$。若攻击者取抢跑量 $\rho$，使 $(1-\rho)\mu\in[\ell,u]$，则该观测在守卫内，单步判决为正常。守卫是二值的，同一方向上多次略快的停留不会被累积。
-
-半马尔可夫通道输出的是分级残差 $z=(\log\tau-\mu)/\sigma$。抢跑使 $\mathbb{E}[z]=\log(1-\rho)/\sigma<0$。只要该期望低于 {CUSUM} 的参考值，随机游程即以正漂移越过 $h$，即使每条 $|z|$ 都小于单消息共形阈值。这不是停留时长建模本身的新颖性，而是\emph{证据形态}的差别：区间守卫把落在内侧的抢跑映射为零，分布型残差把它映射为可加的增量。图~\ref{fig:guard}给出示意：全部观测落在守卫内，二值通道不报警，{CUSUM} 仍越过门限。{A3} 正落在这一差别上---标签完全合法，计时自动机可以接受，序贯半马尔可夫仍可能检出。
+Figure~\ref{fig:alarm} traces two real cases message by message. {A2} is vetoed immediately by the unary capability set with a readable alarm reason; the labels of {A3} are entirely legal, and its negative residuals, which lie inside the interval guard, cross the threshold after {CUSUM} accumulation.
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=0.95\linewidth]{figures/fig_guard_cusum.pdf}
-\caption{时钟守卫与分布型残差的差别（示意，非评测轨迹）。灰色带为区间守卫；同向抢跑全部被接受，{CUSUM} 仍累积越过 $h$。}
-\label{fig:guard}
-\Description{三行示意：停留时长均落在灰色守卫带内，时钟守卫全部接受，CUSUM 统计量随后越过门限。}
+\includegraphics[width=0.98\linewidth]{figures/fig_alarm.pdf}
+\caption{Message-by-message trace of the hard-constraint veto on {A2} and of timing-evidence accumulation on {A3}. Shaded columns are injected messages; crosses mark hard-constraint alarms.}
+\label{fig:alarm}
+\Description{Two rows of message-by-message traces: in the upper row A2 is vetoed by the hard-constraint layer at the injection; in the lower row the timing residuals of A3 are negative and the CUSUM statistic then crosses the threshold.}
 \end{figure}
 
-\subsection{规避检测的抢跑量上界}
+\subsection{Hard-Constraint Layer}
+\label{sec:hard}
+
+For a message $(d,o,t)$, the hard-constraint layer performs three checks in order; any failure raises an alarm immediately, together with its reason.
+\begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
+\item Unary: whether $(d,o)$ belongs to the capability set of the reference model.
+\item Binary: if the same $(d,\mathrm{case})$ has a confirmed predecessor $o'$, whether $\mathbf F$ allows $(o'\to o)$.
+\item Causal: whether the completion event has a preceding assignment event.
+\end{enumerate}
+The mask is derived automatically from the {BPMN} released with the dataset: unary capability sets come from the device types (or resource roles) bound to the nodes, and binary reachability is obtained by unfolding the sequence flows and gateways within each workflow, so no transition table has to be written by hand. The unary check covers every message and is never violated on normal data. The value of the reference model is most evident under a temporal split: $20/508$ ($3.9\%$) of the benign activities in the test fold are (device, operation) combinations absent from the training fold, far more than $\alpha=0.01$, so a rule of ``unseen in training means anomalous'' would raise many false alarms, whereas the reference model rejects none of them. None of the six injection classes breaks assignment--completion pairing, so the causal check is neither evaluated separately nor counted as a contribution.
+
+\subsection{Structural Channel}
+\label{sec:struct}
+
+The structural channel judges whether the current activity is common in the case-level workflow sequence. The chain is kept per case rather than per (device, case): the devices in this log are service endpoints that are invoked, so most per-device event chains have length~$1$ and their transition probabilities carry little discriminative information. The channel state is the operation name rather than the (device, operation) pair: ``the wrong device executing the right operation'' is already covered by the unary capability set, and the statistical channel should not additionally assign very small probabilities to unseen combinations, because under a temporal split benign data itself produces new combinations. Transition probabilities are the posterior predictive $\tilde P$ of a symmetric {Dirichlet} prior with concentration $0.5$ ({Jeffreys}-type), which avoids spurious zeros caused by small samples while preserving the true zeros enforced by $\mathbf F$.
+
+The score fed to the conformal calibrator is the predicted probability $\tilde P_{o'\to o}$ itself, for reasons given in Section~\ref{sec:conformal}. The first activity of a case has no predecessor, so the structural channel abstains and its score is treated as least anomalous. The channel is relatively sensitive to attacks that change the number of events, such as {A4}/{A6}.
+
+\subsection{Semi-Markov Timing Channel}
+\label{sec:timing}
+
+The semi-Markov kernel is written $Q_{o'o}(\tau)=P_{o'o}F_{o'o}(\tau)$. Sojourn times are grouped by (device, operation) and modelled as $\log\tau\sim\mathcal{N}(\mu,\sigma^2)$. The difference from a timed automaton is that $F_{o'o}$ is a probability distribution rather than an interval guard (Section~\ref{sec:md}). The location parameter $\mu$ is decomposed additively by travel route (source and destination storage positions): routes with at least $8$ observations in a group get their own effect, and the rest are pooled into the group's common intercept; unseen routes fall back to the planned duration plus the group's systematic offset. Groups that are absent from the training fold or have fewer than $2$ observations, as well as the abstaining groups described below, contribute no timing evidence, and their scores are treated as least anomalous; $56$ of the $508$ activities in the test fold ($11.0\%$) fall into this category.
+
+Four kinds of observation correspond to four branches: (i)~a \textbf{state transition} yields the standardized residual $z=(\log\tau-\mu)/\sigma$, tested on the left side only because early reporting is a directional alternative; (ii)~a \textbf{same-state heartbeat} yields the right-censored survival term $-\log\bigl(1-F(\tau)\bigr)$, which alarms only on overlong sojourns; (iii)~a \textbf{timeout without message}, raised by a watchdog when the sojourn exceeds the group's $99.9\%$ quantile, uses the same survival term and covers a suppressed completion of a started activity, but not an activity that never started; (iv)~\textbf{periodic polling} uses the interval-censored term $\log\bigl[F(\tau+\Delta)-F(\tau)\bigr]$ and is not evaluated, since the main log is event-driven.
+The nonconformity score of the timing channel is $-z$ (larger means more anomalous) rather than a parametric $p$-value, for reasons given in Section~\ref{sec:conformal}. The $\sigma$ of manual stations can approach~$2$; for manual stations and for groups with $\sigma\ge1$ (where $\rho^*>90\%$ at $\alpha=0.01$), the timing channel abstains. Overall detectability is governed by the most variable operation.
+
+\subsection{Conformal Calibration and Sequential Accumulation}
+\label{sec:conformal}
+
+Both statistical channels apply split conformal prediction~\cite{shafer2008conformal,angelopoulos2023conformal} on held-out normal samples: for each new message, the rank of its nonconformity score among the calibration scores gives a conformal $p$-value $p_t$. When calibration and deployment data are exchangeable, $p_t$ is uniformly distributed on a benign stream, and deciding by $p_t\le\alpha/3$ guarantees a per-channel false-alarm rate of at most $\alpha/3$. The guarantee requires no Gaussian or Markov assumption, but it does require exchangeability~\cite{barber2023exchangeability}, which a time-ordered deployment split does not ensure; Section~\ref{sec:boundary} reports the empirical false-alarm rate under such a split. The lowest single-message false-alarm level attainable with a finite calibration set is about $1/(n+1)$, where $n$ is the number of calibration samples; we do not set the single-message $\alpha$ below $10^{-2}$ and leave lower false-alarm budgets to the $\mathrm{ARL}_0$ of {CUSUM}.
+
+The nonconformity scores must preserve a monotone order in the tail, so both channels take raw scores as input, not parametric or randomized $p$-values. The timing channel takes $-z$: once a parametric $p$-value is truncated at $10^{-12}$, benign mismatches and obvious early reports are compressed onto the same value and the tail order is lost. The structural channel takes $\tilde P$: a randomized probability integral transform would spread the many ties produced by {Dirichlet} smoothing over a uniform interval, giving a never-seen transition roughly an even chance of a $p$-value above $\alpha$. The conformal $p$-value has its own randomization term, so ties are broken exactly once, at this step. Section~\ref{sec:e2} reports the measured effect of the choice for the timing channel.
+
+Each channel runs a one-sided {CUSUM}~\cite{li2015quickest} on its conformal $p$-values:
+\begin{equation}
+  S_t=\max\bigl(0,\,S_{t-1}-\log p_t-c\bigr),
+  \label{eq:cusum}
+\end{equation}
+where $-\log p_t$ is the evidence contributed by message $t$; anomalies such as early reporting make $p_t$ small and the evidence large. On a benign stream $p_t$ is uniform and $-\log p_t$ is exponential with mean~$1$, so the reference value $c$ must exceed~$1$ for the statistic not to grow without bound on benign data; we use $c=1.5$. An alarm is raised when $S_t$ crosses the threshold $h$, which is calibrated per path on the benign stream so that $\mathrm{ARL}_{0,i}=1/\alpha_i$ ($3/\alpha$ with three paths). The statistic must be reset after an alarm; otherwise it stays above the threshold and every subsequent message raises an alarm. Every baseline that outputs continuous scores uses the same accumulation rule, so that gains are not misattributed to {CUSUM} itself.
+
+\subsection{Gated Update and Complexity}
+\label{sec:online}
+
+The predecessor state of each chain advances message by message. The duration model slowly updates the $(\mu,\sigma)$ of the corresponding group by an exponential moving average with forgetting factor $0.95$; the $\tilde P$ of the structural channel is not updated online. Updates must be gated: a message may enter the baseline only if it passes every path and does not fall within the quarantine window (the $20$ messages after the most recent alarm); otherwise an attacker could drag the duration baseline towards the forged value through sustained small early reports (Section~\ref{sec:gate}). The main-table and ablation experiments use frozen models; the gating and latency experiments follow the same decision protocol with only gated updates enabled. The cost per message is $O(1)$---a constant number of table lookups, logarithms, and hard-constraint checks, independent of the numbers of states and devices---and chains can be processed in parallel (Section~\ref{sec:e8}).
+
+% ============================================================
+%  Section 5: Theoretical analysis
+% ============================================================
+\section{Theoretical Analysis}
+\label{sec:theory}
+
+\subsection{Impossibility of Label-Only Detection for Label-Consistent Injections}
+\label{sec:ta}
+
+Consider a class of detectors that use labels only, hereafter the \emph{label-only detector family}: from the predecessor $i$ it obtains a predictive distribution $\hat{\mathbf p}$, encodes the observation as a one-hot vector $\mathbf e_j$, and compares $\delta(i,j)=\|\mathbf e_j-\hat{\mathbf p}\|_2$, or any quantity strictly decreasing in $p_j$, with an adaptive threshold. Assume that the predictive distribution satisfies $p_j=0$ if and only if the transition $i\to j$ is forbidden by the feasibility mask $\mathbf F$; that is, the predictor uses a smoothed estimate and produces no spurious zeros from insufficient samples (the {Dirichlet} posterior predictive of Section~\ref{sec:struct} satisfies this condition). Expanding
+\begin{equation}
+  \delta(i,j)^2=1-2p_j+\|\hat{\mathbf p}\|^2
+\end{equation}
+shows that $\|\hat{\mathbf p}\|^2$ is constant over all $j$ for a given predecessor $i$, so $\delta$ is merely a monotone transform of $p_j$ and its geometric form adds no information.
+
+Hence $\delta$ is a deterministic function of $(i,j)$, regardless of whether the message is benign or injected. Let $q_{ij}$ denote the true frequency with which $j$ follows predecessor $i$ in the benign stream, and $\mathrm{FPR}_i$ the false-alarm rate on benign messages that follow predecessor $i$.
+
+\begin{proposition}[Impossibility for the label-only detector family]
+\label{prop:ta}
+Suppose that the detector decides on an observation $j$ following predecessor $i$ based only on $(i,j)$, that its decision is a monotone function of $p_j$, and that $q_{ij}=0$ if and only if $i\to j$ is forbidden by $\mathbf F$. Then:
+(i) under a zero-false-alarm constraint, the transitions that can be flagged are exactly those forbidden by $\mathbf F$, so for label-consistent injections the family adds nothing beyond the mask;
+(ii) for injections that leave labels unchanged, the single-message decision on every message equals that on its benign counterpart; if the injection also preserves the message order, the sequential decisions are identical as well, and the net detection is zero regardless of $\alpha$.
+\end{proposition}
+
+\begin{proof}
+(i) If some $j$ with $q_{ij}>0$ is flagged, every benign occurrence of $j$ raises an alarm, so $\mathrm{FPR}_i\ge q_{ij}>0$, contradicting the zero-false-alarm constraint; hence only transitions with $q_{ij}=0$, that is, those forbidden by $\mathbf F$, can be flagged. (ii) When labels are unchanged, the pair $(i,j)$ of every message is unchanged and so is its decision; when the order is also unchanged, the score sequence coincides with the benign one message by message, the alarm positions are the same, and any detection comes from chance alarms only.
+\end{proof}
+
+The attacker's optimal evasive choice is $\arg\min_j\delta_j=\arg\max_j p_j$, that is, the next step that is most common in the log and thus closest to normal behaviour once forged.
+
+The result does not depend on the particular threshold coefficient: every detector whose decision is a univariate function of the predicted probability belongs to this family. Proposition~\ref{prop:ta}(ii) predicts that the first-order Markov ablation has zero net detection on the pure timing attacks {A3}/{A5}; Section~\ref{sec:e1} measures $-0.01$ and $0.00$ after subtracting the chance-alarm floor, in agreement with the prediction.
+
+\subsection{Distributional Durations versus Clock Guards}
+\label{sec:md}
+
+A timed automaton assigns a clock guard $[\ell,u]$ to a transition $(o',o)$: a sojourn time $\tau\in[\ell,u]$ is accepted and any other value is rejected~\cite{maier2011timed,lin2018tabor}. If an attacker shortens a normal sojourn $\tau$ to $(1-\rho)\tau$ and $(1-\rho)\tau$ still lies in $[\ell,u]$, the single-step decision is ``normal''. Because the guard is a binary decision, repeated sojourns that are slightly fast in the same direction are not accumulated.
+
+The semi-Markov channel outputs the continuous residual $z=(\log\tau-\mu)/\sigma$. Early reporting yields $\mathbb{E}[z]=\log(1-\rho)/\sigma<0$, so the corresponding conformal $p$-values are systematically small and the mean of the evidence $-\log p_t$ increases. On a benign stream $\mathbb{E}[-\log p_t]=1<c$; only when the shift is large enough that $\mathbb{E}[-\log p_t]>c$ does the {CUSUM} statistic drift upwards and cross $h$, even if no single observation crosses the single-message threshold on its own. For small shifts the statistic has no positive drift and crosses the threshold only by chance fluctuation, which matches the low detection at small $\rho$ in Figure~\ref{fig:e4}. The difference therefore lies not in whether sojourn times are modelled but in the \emph{form of the evidence}: an interval guard maps early reports inside the interval to zero, whereas a distributional residual maps them to additive increments. {A3} is the typical case: its labels are legal and a timed automaton accepts it, yet in the trace of Figure~\ref{fig:alarm}(b) its residuals inside the guard are accumulated by {CUSUM} until the threshold is crossed.
+
+\subsection{Critical Relative Advance}
 \label{sec:bound}
 
-\begin{proposition}[规避检测的抢跑量上界]
+Consider a left-sided single-message test that alarms when the residual falls below $-z_{1-\alpha}$. Shortening the sojourn to $(1-\rho)\tau$ shifts the residual distribution to the left; when its mean lies exactly on the threshold, a single forgery is detected with probability $1/2$. An attacker who wants each forgery to evade with probability above one half cannot exceed this critical relative advance $\rho^*$. It is not a strict upper bound on evasion: forgeries with $\rho<\rho^*$ are still detected with probability below one half, and sequential accumulation raises detection further.
+
+\begin{proposition}[Critical relative advance]
 \label{prop:rho}
-设正常停留满足 $\log\tau\sim\mathcal{N}(\mu,\sigma^2)$，左侧水平为 $\alpha$，阈值为 $-z_{1-\alpha}$。攻击将观测时长缩为 $(1-\rho)\tau$。使攻击后残差均值恰好落在阈值上的抢跑量为
+Let normal sojourns satisfy $\log\tau\sim\mathcal{N}(\mu,\sigma^2)$, and consider a left-sided test of level $\alpha$ with threshold $-z_{1-\alpha}$. The attack shortens the observed duration to $(1-\rho)\tau$. The relative advance at which the post-attack residual mean lies exactly on the threshold is
 \begin{equation}
   \rho^*(\alpha,\sigma)=1-e^{-\sigma z_{1-\alpha}}.
   \label{eq:rho}
 \end{equation}
-$k$ 次独立重复下，均值标准差按 $1/\sqrt{k}$ 收缩，
+If the test acts on the mean of $k$ independent forged residuals, whose standard deviation shrinks as $1/\sqrt{k}$, then
 \begin{equation}
   \rho^*_k(\alpha,\sigma)\approx 1-e^{-\sigma z_{1-\alpha}/\sqrt{k}}.
   \label{eq:rhok}
@@ -564,158 +578,263 @@ $k$ 次独立重复下，均值标准差按 $1/\sqrt{k}$ 收缩，
 \end{proposition}
 
 \begin{proof}
-对数域位移 $\Delta=\log(1-\rho)$，标准化后均值移动 $\Delta/\sigma$。令 $\Delta/\sigma=-z_{1-\alpha}$，解出 $\rho=1-e^{-\sigma z_{1-\alpha}}$。$k$ 次独立平均把 $\sigma$ 换成 $\sigma/\sqrt{k}$，即得式~\eqref{eq:rhok}。
+The log-domain shift is $\Delta=\log(1-\rho)$, which moves the standardized mean by $\Delta/\sigma$. Setting $\Delta/\sigma=-z_{1-\alpha}$ gives $\rho=1-e^{-\sigma z_{1-\alpha}}$. Averaging $k$ independent residuals replaces $\sigma$ by $\sigma/\sqrt{k}$, which yields Eq.~\eqref{eq:rhok}.
 \end{proof}
 
-式~\eqref{eq:rho}只含时序变异、误报预算与重复次数，不含系统矩阵。它是隐蔽攻击基本极限~\cite{liu2022limits}在离散事件上的实例：体裁不新，实例是抢跑量而不是连续状态的偏差能量。对\emph{单一}高斯，均值落在阈值上对应单消息检出率约 $1/2$。产线工序的 $\sigma$ 高度异质，低变异分组会远早于全局 $\rho^*$ 被抓住，因而\emph{混合}功效曲线在 $\rho<\rho^*$ 时就可以明显高于 $1/2$；第~\ref{sec:e4}~节验证的是这条混合曲线与实测的吻合，而不是``过了 $\rho^*$ 才到半数''。图~\ref{fig:sigma}画出 $\rho^*(\sigma)$：全局 $\sigma=0.236$ 对应 $42.2\%$；人工工位 $\sigma$ 接近 $2$ 时上界失效，产线整体可检测性由最弱环节决定。
+Eq.~\eqref{eq:rho} involves only the timing variability and the false-alarm budget, not a system matrix. It instantiates the fundamental limits of stealthy attacks~\cite{liu2022limits} in the discrete-event setting; the form is not new, but the instantiated quantity is the relative advance rather than the energy of a continuous state deviation. Our experiments validate single injections only, so the $\sqrt{k}$ tightening of Eq.~\eqref{eq:rhok} is not presented as a validated result.
+
+The one-half point refers to a \emph{single} Gaussian. The $\sigma$ of the operations on a line are highly heterogeneous, and low-variability groups are detected at relative advances far below the global $\rho^*$, so the detection curve mixed over operations (the mixture power curve) can lie clearly above $1/2$ already for $\rho<\rho^*$ (validated in Section~\ref{sec:e4}). Figure~\ref{fig:sigma} shows $\rho^*$ as a function of $\sigma$: the global $\sigma=0.236$ corresponds to $42.2\%$ at $\alpha=0.01$ ($47.3\%$ at the $\alpha/3$ of the three-path configuration); as the $\sigma$ of manual stations approaches~$2$, $\rho^*$ tends to~$1$, so the detectability of the line is governed by its most variable operation.
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=0.82\linewidth]{figures/fig_sigma.pdf}
-\caption{$\alpha=0.01$ 单侧下 $\rho^*$ 随 $\sigma$ 的变化。标注点为低变异工序、全局加权 $\sigma$ 与人工工位。}
+\caption{$\rho^*$ as a function of $\sigma$ for a one-sided test at $\alpha=0.01$. Marked points are a low-variability operation, the globally weighted $\sigma$, and a manual station.}
 \label{fig:sigma}
-\Description{抢跑量上界随时序变异增大并趋近于一，全局 sigma 为 0.236 时上界约百分之四十二。}
+\Description{The critical relative advance increases with timing variability and tends to one; at the global sigma of 0.236, rho star is about forty-two percent.}
 \end{figure}
 
 % ============================================================
-%  第 6 章：实验
+%  Section 6: Experiments
 % ============================================================
-\section{实验评估}
+\section{Experiments and Results}
 \label{sec:experiments}
 
-\subsection{设置}
+\subsection{Experimental Setup}
 \label{sec:setup}
 
-主数据集是特里尔大学教学工厂的 Fischertechnik 智能工厂 {IoT} 事件日志~\cite{malburg2022trier}。产线含高架仓库、真空搬运、分拣、铣削、钻孔、冲压、烤炉与人工工位等十余台资源，两条线经工件交换互联。设备是被调度器调用的服务端点：每个作业通常只被调用一到两次，按设备切开的状态链多数长度为~$1$，因此结构通道必须走 case 级工作流链，而不是 $(d,\mathrm{case})$。活动带指派--执行--完成的生命周期，可与命令账本配对。随数据发布 $16$ 个 {BPMN}：一元能力取节点绑定的设备类型（或资源角色），二元可达取同一工作流内顺序与网关的传递闭包，从而自动得到 $\mathbf F$，不手工编转移表。清洗后全日志 $3{,}062$ 条活动。划分按时间序：拟合、校准、测试互不重叠；测试折良性消息 $508$ 条，校准折 $n_{\mathrm{cal}}=701$。注入在测试折上进行，注入率 $20\%$，抢跑默认 $\rho=0.30$，三个随机种子。{A4} 的攻击者按转移模型选择最可能的下一步（知模型），而不是复制当前操作。
+The main data are the {Fischertechnik} smart-factory {IoT} event log of the {University of Trier}~\cite{malburg2022trier}, chosen because it is one of the few public activity logs that provide both a {BPMN} reference model and the assignment--execution--completion lifecycle, not because its scale is representative. Process-variable datasets such as {HAI} cannot instantiate assignments and activities~\cite{shin2020hai}, and public industrial-control datasets are likewise dominated by process variables and network traffic~\cite{conti2021testbeds,dobler2025datasets}; we therefore report no cross-dataset results. The cleaned log contains $3{,}062$ activities on about a dozen invoked service endpoints. Diversity within the log serves only for stress tests, not as a second external dataset: $16$ released {BPMN} models, the official error-containing version (NTP clock drift, duplicated and missing records), and five workflows in the temporal test fold that are unseen in training.
 
-主基线三项，均在同一良性参照流上把经验误报对齐到 $\alpha$，并给输出分级分数的方法套上同一套 {CUSUM}（延迟预算 $10$ 条，告警后复位）。
-\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
-\item {B3}：学习型计时自动机（Maier/{BUTLA} 式），时钟守卫加人工容差~\cite{maier2011timed}。
-\item {B4}：{TABOR} 式，计时自动机加站内依赖~\cite{lin2018tabor}。
-\item {B5}：显式时长隐半马尔可夫似然~\cite{tan2008hsmm}，观测为操作符号与对数时长，隐状态数由留出似然在 $\{2,3,4,6\}$ 中取 $K=6$。
-\end{itemize}
-仅标签的一阶马尔可夫似然作为消融对照（记为仅标签），不是独立先行方法：它用于展示去掉时间维之后 {A3}/{A5} 的结构性失明。阈值一律定在同一批 case 的未注入版本上，不用受攻击流内部的``良性''消息---原地改写会让后继良性消息与伪造前驱比对，产生攻击引起的级联触发。
+Public activity logs contain no injection labels, so we map replay, injection, and dropping in the {Dolev--Yao} model to the log fields (Table~\ref{tab:inject}); the injector is released with the code. The data are split in time order into fit ($1{,}951$ activities), calibration ($603$), and test ($508$ benign events) folds, and injections are applied only to the test fold, at a default rate of $20\%$ (swept over $5\%/10\%/20\%/40\%$) and $\rho=0.30$. The sample structure is $1$ log $\times$ $1$ temporal split $\times$ $6$ attack classes $\times$ $3$ injection seeds: the seeds ($0,1,2$) determine only the injection positions, the fitting seed is fixed at $0$, each class has $297$ injections over the three seeds ($290$ for {A1}, $303$ for {A2}, $201$ for {A6}), and under a given seed all methods face the same attacked stream. The relative-advance sweep (Section~\ref{sec:e4}) uses a calibration set stratified by (device, operation) group ($n_{\mathrm{cal}}=701$). All experiments run on a single machine ({Intel Xeon W-1270}, $64$~GB of memory) with {Python}~3.7.6, {NumPy}~1.18.1, and {SciPy}~1.4.1.
 
-延迟预算内``窗口中任一告警即检出''存在偶然地板 $1-(1-\mathrm{FPR})^{B+1}$（$B=10$）。表中主结果已减去该地板；未减地板的数字不单独引用。逐消息检出受参照流长度限制，本规模下不作主结果。
-
-\subsection{与计时自动机及半马尔可夫的对照}
-\label{sec:e1}
-
-表~\ref{tab:e1}是 $\alpha=0.01$ 下的净检出率。本方法均值为 $0.48$，{B3}/{B4}/{B5} 为 $0.17/0.21/0.11$。主张不写成全面优于，而写成三句。第一，{A3}/{A5} 是纯时序攻击，标签未改；仅标签消融减地板后为 $-0.01$ 与 $0.00$，即分数流与良性流逐条相同。本方法为 $0.18$ 与 $0.87$。{B3}/{B4} 在 {A3} 上只有 $0.10$，与区间守卫接受内侧抢跑相一致；{A5} 上计时自动机有累积式漂移可抓（$0.59/0.48$），仍低于分布型通道。{B5} 在 {A3} 上仅 $0.06$，是因为其时长核绑在隐状态上，而不是按 $(\text{设备},\text{操作})$ 做左尾检验：标签未改的抢跑被吸收为``该隐状态一次略短的停留''，似然下降不足以在 $\alpha$ 下越界。第二，{A1}/{A2} 上本方法为 $0.55/0.95$，高于三条主基线；{A2} 由硬层覆盖，{B4} 的站内依赖不能替代参考模型。第三，{A4}/{A6} 上本方法为 $0.17/0.14$，低于仅标签消融的 $0.23/0.28$---三路均分使结构通道只得 $\alpha/3$，而这两类攻击主要改变事件数目。这是多通道方法的预算代价，不是通道设计失败。表~\ref{tab:coverage}是单通道、单消息、未减地板的覆盖诊断；表~\ref{tab:e1}是三路并行、延迟预算 $10$、已减偶然地板的端到端净检出。因此 {A3} 时序单消息 $0.43$ 与表~\ref{tab:e1}的 $0.18$ 并不矛盾：后者把预算摊到 $\alpha/3$，再减去窗口偶然地板。
+The three main baselines are reimplemented from the structural constraints of the original papers (Table~\ref{tab:repro}), since neither {BUTLA} nor {TABOR} has a released implementation that accepts this log format and {HSMM} is a model class rather than an industrial detector. Every method that outputs continuous scores uses the same {CUSUM} ($c=1.5$, delay budget of $10$ messages, reset after alarm) and splits its budget evenly across its sub-detectors, each calibrated for $\mathrm{ARL}_0=1/\alpha_i$. To compare methods at the same false-alarm level, the main-table thresholds are calibrated on the uninjected test fold; this uses no attack labels but borrows the benign test distribution and is thus idealized, so we also rerun every method with thresholds from the calibration fold (Section~\ref{sec:e1}). All methods are fitted on the fit fold only. In the main table our three raw scores and the baseline scores pass through the same decision procedure (empirical $p$-values and the {CUSUM} above), bypassing the conformal calibrator so that two threshold mechanisms are not mixed; per-channel conformal false-alarm rates are given in Section~\ref{sec:boundary}. The label-only first-order Markov likelihood is an ablation that removes the time dimension, not a prior method, and the reference-model conformance proxy coincides with the hard-constraint layer (Table~\ref{tab:coverage}).
 
 \begin{table}[!t]
-\renewcommand{\arraystretch}{1.15}
-\caption{$\alpha=0.01$、延迟预算 $10$ 条、已减偶然地板的净检出率。仅标签为马尔可夫消融。序贯误报（名义 $0.01$）依次为 $0.006$、$0.006$、$0.008$、$0.004$（仅标签 $0.008$）。}
-\label{tab:e1}
+\renewcommand{\arraystretch}{1.12}
+\caption{Reimplementation protocol for the main baselines. The comparison is against the structural constraints of the original papers, not against official binaries.}
+\label{tab:repro}
 \centering
 \small
-\begin{tabular}{lccccc}
+\begin{tabular}{lL{3.4cm}L{4.4cm}}
 \toprule
-攻击 & {B3} {BUTLA} & {B4} {TABOR} 式 & {B5} {HSMM} & 仅标签 & 本文 \\
+Method & Retained & Approximation on this log \\
 \midrule
-{A1} 朴素重放 & $0.04$ & $0.04$ & $-0.01$ & $0.48$ & $0.55$ \\
-{A2} 不可行注入 & $0.37$ & $0.67$ & $0.31$ & $0.76$ & $0.95$ \\
-{A3} 抢跑重放 & $0.10$ & $0.10$ & $0.06$ & $-0.01$ & $0.18$ \\
-{A4} 状态模仿 & $-0.04$ & $-0.01$ & $0.02$ & $0.23$ & $0.17$ \\
-{A5} 渐变漂移 & $0.59$ & $0.48$ & $0.25$ & $0.00$ & $0.87$ \\
-{A6} 消息抑制 & $-0.05$ & $-0.01$ & $0.05$ & $0.28$ & $0.14$ \\
-\midrule
-均值 & $0.17$ & $0.21$ & $0.11$ & $0.29$ & $0.48$ \\
+{B1} {BUTLA}-style~\cite{maier2011timed}
+  & One automaton learned per component; no cross-component check; duration as a deviation tolerance
+  & Component taken as device; tolerance replaced by the empirical quantile at the same $\alpha$, so that differences in false alarms are not counted as differences between methods \\
+{B2} {TABOR}-style~\cite{lin2018tabor}
+  & Within-stage dependencies; no assignment (command) data
+  & Stage taken as device; within-stage joint as $P(o)\prod P(v\mid o)$ (compared with the saturated joint below the table) \\
+{B3} {HSMM}~\cite{tan2008hsmm}
+  & Semi-Markov model with explicit durations
+  & Observations are the operation and $\log\tau$; $K\in\{2,3,4,6\}$, with $K=6$ selected by held-out likelihood \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-图~\ref{fig:e1}把表~\ref{tab:e1}画成柱状对照。仅标签消融在 {A3}/{A5} 上贴着零线，是去掉时间维后的结构性失明；本文在 {A4}/{A6} 上低于该消融，与三路均分预算一致，并不改写为全面优于。
+The within-stage structure learned in the original paper lies between the naive factorization of Table~\ref{tab:repro} and the saturated joint $P(o,v_1,\dots,v_m)$; with the saturated joint, {B2}'s six-class mean changes from $0.21$ to $0.22$ and its {A3} result from $0.10$ to $0.08$, and our method remains above this variant on all six classes.
+
+Under the rule ``any alarm in the window counts as a detection'', random false alarms yield some detection even for a detector without real capability. This chance-alarm floor, $1-(1-\mathrm{FPR})^{B+1}$ with delay budget $B=10$, is subtracted from all main results.
+
+Methods are paired per injection instance. For each attack class we apply a two-sided exact {McNemar} test to our method against each competitor, with $95\%$ bootstrap intervals ($2{,}000$ resamples over injections) for the difference in detection rate and {Holm} correction over the $6\times4=24$ comparisons. The test uses raw detections without floor subtraction, and treating injections in the same stream as independent is an approximation.
+
+\subsection{Single-Channel Coverage Diagnosis}
+\label{sec:diag}
+
+Before the end-to-end comparison, Table~\ref{tab:coverage} gives the single-message detection rate of each of the three paths, to show which path is responsible for which attack. {A2} is rejected by the unary capability set, and the timing channel is insensitive to it. {A3}/{A5} leave labels unchanged and only compress sojourn times; the hard-constraint layer and the structural channel detect almost nothing, and the timing channel is the only one with substantial detection. {A1} keeps historical durations, so the timing channel gains nothing and detection is carried by the hard-constraint layer and the structural channel. {A4} inserts the most probable next step according to the transition model, and the single-message detection of all three paths is close to the false-alarm level. {A6} deletes an entire activity that has not yet started, so the timeout watchdog is never triggered, and the structural channel sees only a weak signal downstream. Being a single-channel, single-message diagnosis without budget splitting or floor subtraction, Table~\ref{tab:coverage} is not comparable with the end-to-end net detection of Table~\ref{tab:e1}; the single-message timing detection of $0.43$ on {A3} and the $0.18$ there do not conflict.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.15}
+\caption{Single-message detection rates of the three production paths on the six injection classes, with the false-alarm rate on the same benign events in parentheses. Each path decides on its own at $\alpha=0.01$ with frozen models; test fold of $508$ events, injection rate $20\%$, mean over three injection seeds. The hard-constraint value of $0.06$ on {A2} comes from the cascaded check: the benign event after an injection has the forged operation as predecessor and fails binary reachability, i.e.\ the attack is detected but attributed to the following event; it is therefore not a purely benign false alarm.}
+\label{tab:coverage}
+\centering
+\small
+\begin{tabular}{llccc}
+\toprule
+ID & Class & Hard constraint $\mathbf F$ & Structural & Timing \\
+\midrule
+{A1} & Naive replay & $0.22\,(0.00)$ & $0.21\,(0.02)$ & $0.03\,(0.02)$ \\
+{A2} & Physically infeasible injection & $0.98\,(0.06)$ & $0.29\,(0.02)$ & $0.00\,(0.02)$ \\
+{A3} & Early-completion replay & $0.00\,(0.00)$ & $0.02\,(0.01)$ & $0.43\,(0.02)$ \\
+{A4} & State mimicry (known model) & $0.03\,(0.00)$ & $0.01\,(0.01)$ & $0.00\,(0.02)$ \\
+{A5} & Gradual drift & $0.00\,(0.00)$ & $0.01\,(0.01)$ & $0.48\,(0.03)$ \\
+{A6} & Message suppression & $0.00\,(0.00)$ & $0.16\,(0.01)$ & $0.04\,(0.02)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Comparison with Timed Automata and Semi-Markov Models}
+\label{sec:e1}
+
+Table~\ref{tab:e1} gives the net detection rates at $\alpha=0.01$. Our method averages $0.48$ over the six attack classes, against $0.17/0.21/0.11$ for {B1}/{B2}/{B3}. We discuss three groups of attacks in turn.
+
+First, pure timing attacks. On {A3}/{A5} the label-only ablation scores $-0.01$ and $0.00$; its score stream coincides with the benign one message by message, as Proposition~\ref{prop:ta}(ii) predicts. On {A5} our method reaches $0.87$; timed-automaton baselines also capture cumulative drift ($0.59/0.48$) but stay below the per-group left-tail test. On {A3} our method reaches $0.18{\pm}0.01$ against $0.10$ for both {B1} and {B2}; the paired difference is $0.067$ against {B1} ($95\%$ interval $[0.020,0.114]$, Holm-corrected $p=0.031$) and $0.064$ against {B2} ($[0.010,0.118]$, $p=0.096$, not significant). The modest gain comes from accumulating sporadic early reports under distributional residuals. {B3} reaches only $0.06$, so the gain is not merely ``semi-Markov versus interval guard'': the {HSMM} duration kernel is tied to hidden states, which absorb an early report with an unchanged label as a slightly shorter stay.
+
+Second, replay and infeasible injection. On {A1}/{A2} our method reaches $0.55/0.95$, above all three baselines (Holm-corrected $p<10^{-20}$ in every case). {A2} is covered by the unary capability set, which the within-stage dependencies of {B2} cannot replace: {B2} assigns extreme scores to never-executed (device, operation) combinations, but such combinations already occur in the benign test fold (Section~\ref{sec:hard}). {B3}, whose {EM} likelihood converges monotonically with a non-degenerate duration kernel, reaches only $0.31$ on {A2}, consistent with the absence of feasibility constraints in a hidden-state model.
+
+Third, attacks that change the number of events. On {A4}/{A6} our method reaches $0.17/0.14$, below the label-only ablation's $0.23/0.28$ (Holm-corrected $p=0.001$ and $p<10^{-6}$). These attacks are handled mainly by the structural channel, which receives $\alpha/3$ while the label-only ablation keeps all of $\alpha$; the budget split is consistent with the gap, which we report as a cost of the multi-channel design rather than as a main conclusion. At $\alpha=0.05$ the gap persists ($0.18/0.19$ versus $0.41/0.45$), so it is not a calibration-resolution artefact; at that level our method also falls below the label-only ablation on {A1} ($0.47$ versus $0.61$).
+
+With thresholds calibrated on the calibration fold instead (Section~\ref{sec:setup}), every method exceeds the nominal sequential false-alarm rate of $0.01$ on the test fold: {B1} $0.043$, {B2} $0.138$, {B3} $0.028$, label-only $0.018$, ours $0.030$, consistent with the per-channel results of Section~\ref{sec:boundary}. With the false-alarm rates no longer aligned, the net detections (each with the floor of its own measured false-alarm rate subtracted) are only qualitative: our method is still the highest on {A3}/{A5} ($0.45/0.71$) and in the six-class mean ($0.44$, against $0.13$, $-0.11$, $0.18$, and $0.32$ for {B1}, {B2}, {B3}, and label-only), but falls below the label-only ablation on {A2} ($0.72$ versus $0.76$). Taken together, the advantage on duration forgery holds against all three baselines on {A5}, and on {A3} it is significant only against {B1}/{B3}.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.15}
+\caption{Net detection rates at $\alpha=0.01$ with a delay budget of $10$ messages and the chance-alarm floor subtracted. Mean $\pm$ population standard deviation over three injection seeds, $201$--$303$ injections per attack class in total. Label-only is the Markov ablation. Sequential false-alarm rates in the attacked streams (nominal $0.01$): {B1} $0.006$, {B2} $0.006$, {B3} $0.008$, label-only $0.008$, ours $0.004$. Paired tests and results with thresholds calibrated on the calibration fold are reported in Section~\ref{sec:e1}.}
+\label{tab:e1}
+\centering
+\scriptsize
+\begin{tabular}{lccccc}
+\toprule
+Attack & {B1} {BUTLA} & {B2} {TABOR}-style & {B3} {HSMM} & Label-only & Ours \\
+\midrule
+{A1} Naive replay & $0.04{\pm}0.01$ & $0.04{\pm}0.01$ & $-0.01{\pm}0.03$ & $0.48{\pm}0.04$ & $0.55{\pm}0.04$ \\
+{A2} Infeasible injection & $0.37{\pm}0.05$ & $0.67{\pm}0.03$ & $0.31{\pm}0.04$ & $0.76{\pm}0.04$ & $0.95{\pm}0.00$ \\
+{A3} Early-completion replay & $0.10{\pm}0.03$ & $0.10{\pm}0.04$ & $0.06{\pm}0.04$ & $-0.01{\pm}0.02$ & $0.18{\pm}0.01$ \\
+{A4} State mimicry & $-0.04{\pm}0.01$ & $-0.01{\pm}0.01$ & $0.02{\pm}0.01$ & $0.23{\pm}0.04$ & $0.17{\pm}0.03$ \\
+{A5} Gradual drift & $0.59{\pm}0.09$ & $0.48{\pm}0.07$ & $0.25{\pm}0.08$ & $0.00{\pm}0.12$ & $0.87{\pm}0.06$ \\
+{A6} Message suppression & $-0.05{\pm}0.01$ & $-0.01{\pm}0.03$ & $0.05{\pm}0.02$ & $0.28{\pm}0.08$ & $0.14{\pm}0.06$ \\
+\midrule
+Mean & $0.17$ & $0.21$ & $0.11$ & $0.29$ & $0.48$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figure~\ref{fig:e1delay} shows box plots of the detection delay, counting only injections detected within the delay budget. On the purely benign stream of the test fold ($508$ events) each method raises only $2$--$4$ alarms (ours: $2$, a sequential false-alarm rate of $0.004$), too few to estimate $\mathrm{ARL}_0$. Figure~\ref{fig:e1rate} sweeps the injection rate from $5\%$ to $40\%$: on {A2} our method is the highest at every rate, with a lead that narrows as the rate grows; on {A5} it is slightly below {B1} only at $10\%$ ($0.67$ versus $0.69$); on {A3} it exceeds the timed-automaton baselines only at $20\%$ and $40\%$; on {A4} it is below the label-only ablation at every rate, and on {A6} it exceeds the latter only at $5\%$.
 
 \begin{figure}[!t]
 \centering
-\includegraphics[width=0.98\linewidth]{figures/fig_e1_dr.pdf}
-\caption{$\alpha=0.01$、延迟预算 $10$ 条、已减偶然地板的净检出率。仅标签为马尔可夫消融，不是独立先行方法。}
-\label{fig:e1}
-\Description{六类攻击上 BUTLA、TABOR 式、HSMM、仅标签与本文的分组柱状图，本文在 A2 与 A5 最高，仅标签在 A3 与 A5 为零。}
+\includegraphics[width=0.98\linewidth]{figures/fig_e1_delay.pdf}
+\caption{Detection delays (in messages) of each method on the six attack classes at $\alpha=0.01$ with a delay budget of $10$ messages. Boxes include only detections within the budget; for undetected injections see the net detection rates.}
+\label{fig:e1delay}
+\Description{Grouped box plots for BUTLA, TABOR-style, HSMM, label-only, and ours on the six attack classes; the vertical axis is the detection delay in messages.}
 \end{figure}
 
-{B4} 与 {B3} 在多格上接近：站内依赖在本日志上信息量低，且给``该设备从未做过此操作''的极端分数已在良性测试折出现（即上述 $3.9\%$ 未见组合）。参考模型拒绝这 $20$ 条中的 $0$ 条。{B5} 的 {EM} 似然单调收敛，时长核非退化，是与时序加结构对位的基线；均值 $0.11$，说明把状态当作隐变量并没有自动获得可行性掩码。按校准折定阈值后在测试折的误报：{B3}/{B4} 为名义值的 $3.7$ 倍，{B5} 为 $1.0$ 倍。共形的对照因此不是``只有本文控得住误报''，而是控制不依赖模型假设成立。$\alpha=0.05$ 下各格排序不变，{A4}/{A6} 的落后不是分辨率假象。
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.98\linewidth]{figures/fig_e1_rate.pdf}
+\caption{Net detection rate versus injection rate ($5\%$--$40\%$). One panel per attack class, showing whether the conclusions break down as attack density increases.}
+\label{fig:e1rate}
+\Description{Six panels, one per attack class; the horizontal axis is the injection rate, the vertical axis the net detection rate, with five method curves.}
+\end{figure}
 
-\subsection{消融}
+\subsection{Ablation}
 \label{sec:e2}
 
-消融在 $\alpha=0.05$、\emph{每路误报预算固定}的设置下进行，以避免``去掉一路等于给其余路加预算''的混淆。完整配置六族均值为 $0.41$。去掉时序通道后均值下降 $0.11$，且 {A3}/{A5} 精确归零（$0.27\to 0.01$，$0.70\to -0.02$）。这与表~\ref{tab:e1}中仅标签消融在同两格上的零是同一现象的两个独立证据。去掉硬层后均值下降 $0.07$，集中在 {A2} 与 {A1}。去掉结构通道后均值下降 $0.04$，集中在 {A4} 与 {A6}。图~\ref{fig:e2}给出按攻击族的对照与均值变化。
+The ablation uses the main-table procedure at $\alpha=0.01$ and \emph{fixes each path's budget}, so that removing a path gives no extra budget to the others (Figure~\ref{fig:e2}). From the full mean of $0.48$, removing the timing channel costs $0.18$ and drives {A3}/{A5} to zero ($0.18\to -0.01$, $0.87\to -0.02$): the remaining two paths read labels only, which corroborates the label-only result on the same classes. Removing the hard-constraint layer costs $0.08$, mainly on {A2} ($0.95\to0.70$) and {A1} ($0.55\to0.42$); removing the structural channel costs $0.05$, mainly on {A6} ($0.14\to-0.02$) and {A4} ($0.17\to0.08$). At $\alpha=0.05$ the three drops are $0.16$, $0.04$, and $0.03$, in the same order. Only the timing channel is irreplaceable: it is the sole source of detection on {A3}/{A5}.
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=0.98\linewidth]{figures/fig_e2_ablation.pdf}
-\caption{生产三路的消融（每路误报预算固定，$\alpha=0.05$）。去掉时序后 {A3}/{A5} 归零；硬层与结构的贡献分别集中在 {A2}/{A1} 与 {A4}/{A6}。}
+\caption{Ablation of the three production paths ($\alpha=0.01$, fixed per-path false-alarm budget, mean over three injection seeds, chance-alarm floor subtracted).}
 \label{fig:e2}
-\Description{左图为完整、去时序、去硬层、去结构在六类攻击上的柱状对照；右图为均值下降 0.11、0.07、0.04。}
+\Description{Left: bars for the full configuration and without timing, without the hard-constraint layer, and without the structural channel on the six attack classes; right: mean drops of 0.18, 0.08, and 0.05.}
 \end{figure}
 
-共形在检出率口径上接近于零（$-0.01$），因为它的作用是把误报对齐；其证据在误报侧：参数阈值会使经验误报接近翻倍。物料令牌不变量与跨通道合成路曾作为候选统计通道，在良性发生率天花板与端到端消融上净贡献为非正，不进入生产配置，也不占 $\alpha$ 预算。
+Three design choices were also settled by measurement. Replacing the conformal one-sided threshold by a Gaussian quantile raises the empirical test false-alarm rate from $0.0126$ to $0.0168$ (nominal $0.01$, stratified calibration set of Section~\ref{sec:e4}). Feeding the timing channel a truncated parametric $p$-value instead of $-z$ lowers the single-message detection on {A3} from $0.43$ to $0.06$ (basis of Table~\ref{tab:coverage}). Material-token conservation, with too high a benign violation rate and zero net end-to-end contribution, is excluded and consumes no budget (Section~\ref{sec:limitations}).
 
-\subsection{抢跑量与理论界}
+\subsection{Relative-Advance Sweep}
 \label{sec:e4}
 
-在真实时长上注入 $\tau\mapsto(1-\rho)\tau$。命题~\ref{prop:rho}的 $\rho^*$ 使用全局拟合折 $\sigma=0.236$（不用协变量口径）；$\alpha=0.01$ 单侧时 $\rho^*=42.2\%$。表~\ref{tab:e4}与图~\ref{fig:e4}的理论列是按工序分组后的混合预测，不是把全局 $\sigma$ 代入单一高斯后、在 $\rho^*$ 处应等于 $1/2$ 的那一点：$\rho=0.30<\rho^*$ 时实测单消息检出 $0.45$，在 $\rho=0.40\approx\rho^*$ 时为 $0.71$。全区间平均绝对偏差约 $0.03$。{CUSUM} 把弱信号变成可用检测：$\rho=0.15$ 时单消息检出 $0.20$，累积后 $0.87$，中位延迟 $10$ 条消息；$\rho=0.30$ 时中位延迟 $4$ 条，见图~\ref{fig:delay}。检出率在约 $0.96$ 处饱和，剩余来自 $\sigma$ 极大的分组，与``最弱环节''陈述一致。
+We apply the injection $\tau\mapsto(1-\rho)\tau$ to real sojourn times. The $\rho^*$ of Proposition~\ref{prop:rho} uses the global $\sigma=0.236$ of the fit fold (not conditioned on covariates), giving $\rho^*=42.2\%$ for a one-sided test at $\alpha=0.01$. The theory curve in Figure~\ref{fig:e4} is the mixture prediction over operation groups (Section~\ref{sec:bound}); their mean absolute deviation from the measurements over the whole range is $0.027$ ($95\%$ interval $[0.018,0.035]$ from $2000$ bootstrap resamples drawn independently from the calibration and test folds; $0.012$--$0.031$ over $20$ fold-split seeds). At $\rho=0.30<\rho^*$ the measured single-message detection already reaches $0.52$, and at $\rho=0.40\approx\rho^*$ it is $0.74$, whereas a single Gaussian would give only $1/2$ at $\rho^*$; this is exactly what the mixture power curve predicts.
 
-\begin{table}[!t]
-\renewcommand{\arraystretch}{1.12}
-\caption{$\alpha=0.01$ 单侧下抢跑量扫描。位移 $\Delta=\log(1-\rho)$；理论列为按工序混合后的预测，不是全局 $\sigma$ 下单一高斯在 $\rho^*$ 处的 $1/2$ 点。}
-\label{tab:e4}
-\centering
-\small
-\begin{tabular}{ccccc}
-\toprule
-$\rho$ & $\lvert\Delta\rvert$ & $\lvert\Delta\rvert/\bar\sigma$ & 实测 {DR} & 理论 \\
-\midrule
-$0.05$ & $0.051$ & $0.21$ & $0.060$ & $0.051$ \\
-$0.10$ & $0.105$ & $0.44$ & $0.105$ & $0.127$ \\
-$0.15$ & $0.163$ & $0.68$ & $0.199$ & $0.226$ \\
-$0.20$ & $0.223$ & $0.93$ & $0.288$ & $0.317$ \\
-$0.30$ & $0.357$ & $1.49$ & $0.452$ & $0.497$ \\
-$0.40$ & $0.511$ & $2.14$ & $0.712$ & $0.701$ \\
-$0.50$ & $0.693$ & $2.90$ & $0.874$ & $0.851$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+{CUSUM} turns weak signals into usable detection capability. In this experiment it is driven by parametric left-tail $p$-values on the stratified calibration set, with a threshold corresponding to $\mathrm{ARL}_0=500$ and a delay budget of $40$ messages. At $\rho=0.15$ the single-message detection is $0.21$ and rises to $0.55$ after accumulation, with a median delay of $15$ messages; at $\rho=0.20$ it rises to $0.85$; at $\rho=0.30$ it is $0.93$, with a median delay of $7$ messages (Figure~\ref{fig:delay}). Detection saturates at about $0.96$; the undetected remainder comes from groups with very large $\sigma$, consistent with overall detectability being governed by the most variable operation.
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=0.82\linewidth]{figures/fig_e4_rho.pdf}
-\caption{单消息检出率随抢跑量的变化。理论列为分组混合预测；竖线为全局 $\sigma=0.236$ 下的 $\rho^*=42.2\%$。}
+\caption{Single-message detection rate versus relative advance for a one-sided test at $\alpha=0.01$ (stratified calibration set $n_{\mathrm{cal}}=701$, $715$ test events). The theory curve is the group-mixture prediction; the vertical line marks $\rho^*=42.2\%$ at the global $\sigma=0.236$.}
 \label{fig:e4}
-\Description{实测单消息检出率与按工序混合的理论预测随抢跑量上升；竖线标出全局 sigma 下的 rho 星，该处混合功效已明显高于二分之一。}
+\Description{The measured single-message detection rate and the per-operation mixture prediction rise with the relative advance; a vertical line marks rho star at the global sigma, where the mixture power is already clearly above one half.}
 \end{figure}
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=0.98\linewidth]{figures/fig_delay.pdf}
-\caption{{CUSUM} 相对单消息阈值的功效与检测延迟。延迟为中位数，上须为 $p_{90}$；无逐次分位存档，故不作箱线图。}
+\caption{Power of {CUSUM} relative to the single-message threshold, and box plots of the detection delay. Driven by parametric left-tail $p$-values on the stratified calibration set, threshold for $\mathrm{ARL}_0=500$, delay budget of $40$ messages, $53$ test substreams. Boxes include only injections detected within the budget; undetected injections are censored (see the net detection rates in the main table).}
 \label{fig:delay}
-\Description{左图 CUSUM 检出率在小抢跑量下明显高于单消息；右图中位延迟随抢跑量下降。}
+\Description{Left: the CUSUM detection rate is clearly above the single-message rate at small relative advances; right: the median delay decreases as the relative advance increases.}
 \end{figure}
 
-\subsection{处理时延}
+\subsection{Deployment Conditions and Scope}
+\label{sec:boundary}
+\label{sec:e5}
+\label{sec:robust}
+\label{sec:gate}
+\label{sec:e6}
 \label{sec:e8}
 
-单核逐消息时延中位 $81\,\mu\mathrm{s}$，{$p_{95}=116\,\mu\mathrm{s}$}，{$p_{99}=159\,\mu\mathrm{s}$}，等效吞吐约 $1.23\times 10^{4}$ 条/秒，见图~\ref{fig:latency}。相对本日志的活动到达间隔，余量在三个数量级以上。未做专用工业控制器实测；``边缘可部署''由 $O(1)$ 热路径加上上述常数因子支撑。
+This subsection reports four sets of data that bear on deployment.
 
-\begin{figure}[!t]
+First, false alarms under a temporal split (Table~\ref{tab:shift}, upper part). With fitting and testing split $75\%/25\%$ by case (about $636$ test messages), the per-channel conformal false-alarm rates stay close to nominal under $5$ random splits, but under the temporal split at $\alpha=0.01$ the timing channel rises to $0.024$ and the structural channel to $0.012$ ($0.098$ and $0.064$ at $\alpha=0.05$); the temporal split admits only one partition, so its $5$ seeds vary only the fitting and calibration randomization. The median {Jaccard} similarity of the transition sets of the $16$ released workflows is only $0.324$, so new product types must be recalibrated or calibrated in strata by type. These per-channel single-message rates differ in definition from the sequential false-alarm rate of $0.004$ in Section~\ref{sec:e1}; with sequential thresholds from the calibration fold, ours rises to $0.030$, in the same direction.
+
+Second, stress tests within the log (Table~\ref{tab:shift}, lower part). The timing false-alarm rate is $0.112$ on the official error-containing version, caused by data-acquisition defects rather than attacks, and $0.067$ on unseen workflows, while the hard-constraint layer stays at $0.003$ and $0$. Product changeover is a distribution shift: the timing channel must be recalibrated per product type, whereas the hard-constraint layer need not be.
+
+Third, recalibration of the duration kernel. Doubling the $\sigma$ of the fit fold lowers the single-message and {CUSUM} detection at $\rho=0.30$ from $0.52$ and $0.94$ to $0.22$ and $0.45$; at $\sigma\approx0.96$ only $0.05$ single-message detection remains. A self-built simulated line shows that the kernel must be recalibrated per scenario. Its three scenarios share the operation vocabulary and $\mathbf F$: I has $2$ automated guided vehicles and $1$ robot arm with $\sigma=0.12$ and short travel distances; II has $4$ vehicles and $2$ arms with $\sigma=0.12$ and long distances; III has the layout of I with $\sigma=0.35$; each has $69$--$90$ benign events and $13$--$18$ {A3} injections ($\alpha=0.01$, $\rho=0.30$). With each scenario's own kernel, the single-message {A3} detection of the timing channel is $0.462$, $0.556$, and $0.308$ on I, II, and III. With the kernel of I it drops to $0.056$ on II ($1/18$ versus $10/18$) and to $0.385$ on III, where the timing false-alarm rate rises from $0$ to $0.101$; the reverse transfer II$\to$I raises it to $0.493$. The hard-constraint layer has zero false alarms in every setting, since all scenarios share $\mathbf F$.
+
+Fourth, gating and computational cost. Under $200$ sustained early reports with $\rho=0.30$, disabling the gate lets $26.4\%$ of the forged advance enter the baseline (all $200/200$ updates take effect), whereas enabling it reduces this to $1.4\%$ ($3/200$). The median per-event latency on a single core is $123\,\mu\mathrm{s}$ ($p_{95}=191\,\mu\mathrm{s}$, $n=1{,}524$) and does not grow when the scale is increased by replicating device names; we did not measure on a dedicated controller.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.12}
+\caption{Per-path empirical false-alarm rates without injection at $\alpha=0.01$. Upper part: conformal rates under case-level $75\%/25\%$ splits (random: $5$ splits; temporal: one split, $5$ seeds), mean $\pm$ standard deviation; the hard-constraint layer was not measured in this experiment. Lower part: stress tests within the same {Trier} log; the error-containing version is released by the original authors, and seen and unseen workflows are obtained by splitting the temporal test fold.}
+\label{tab:shift}
+\label{tab:fprsplit}
+\label{tab:cprime}
+\label{tab:e9}
 \centering
-\includegraphics[width=0.48\linewidth]{figures/fig_latency.pdf}
-\caption{单核逐消息处理时延。中位 $81\,\mu\mathrm{s}$，$p_{95}=116\,\mu\mathrm{s}$，$p_{99}=159\,\mu\mathrm{s}$。}
-\label{fig:latency}
-\Description{三条柱分别给出逐消息处理时延的中位、百分之九十五与百分之九十九分位。}
-\end{figure}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Setting & $n$ & Hard constraint & Timing & Structural \\
+\midrule
+Random case split & ${\approx}636$ & -- & $0.006{\pm}0.005$ & $0.008{\pm}0.006$ \\
+Temporal case split & ${\approx}636$ & -- & $0.024{\pm}0.001$ & $0.012{\pm}0.001$ \\
+\midrule
+Cleaned temporal test fold & $508$ & $0.000$ & $0.024$ & $0.012$ \\
+Official error-containing full log & $2{,}778$ & $0.003$ & $0.112$ & $0.011$ \\
+Seen workflows & $329$ & $0.000$ & $0.000$ & $0.012$ \\
+Unseen workflows & $179$ & $0.000$ & $0.067$ & $0.006$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 % ============================================================
-%  第 7 章：结论
+%  Section 7: Conclusion
 % ============================================================
-\section{结论}
+\section{Conclusion}
 \label{sec:conclusion}
 
-本文将生产调度层的注入攻击检测表述为独立问题：对象是调度器对离散状态标签的信任，而不是连续控制或报文会话。方法上，参考模型可行性掩码与命令账本构成硬层，半马尔可夫停留核与 case 级结构通道在指定误报预算下并行累积。相对分解式计时自动机与站内依赖模型，可辩护的差别是两点：分布型时长使守卫内侧的抢跑可被累积；可行性不能从日志学出，必须外挂参考模型。规避检测的抢跑量被 $\rho^*(\alpha,\sigma)$ 封顶，并在产线日志上与实测检出率吻合。
+\subsection{Conclusions and Contributions}
+\label{sec:contributions}
 
-局限如下。第一，状态模仿与整段活动抑制在生产配置下没有独占通道，且在 {A4}/{A6} 上低于仅标签检测器，代价来自多路预算摊薄。第二，物料流不变量在缺少工件身份时良性违反率使统计功效被封顶，不能作为现行通道。第三，多设备协同伪造超出声明范围，未实现即不报告。第四，跨域的周期轮询日志尚未评测；共形保证在产品型号切换时要求重新校准。后续工作应在带工件标识的产线上重新检验令牌约束能否升为硬层，并把 $\alpha$ 在连续通道之间的分配写成不依赖攻击标签的规则。
+We have formalized injection detection on lifecycle activity events. Theoretically, Proposition~\ref{prop:ta} shows that detectors which threshold only predicted label probabilities add nothing beyond the feasibility mask for label-consistent injections under a zero-false-alarm constraint, and Proposition~\ref{prop:rho} gives the critical relative advance $\rho^*(\alpha,\sigma)$. Methodologically, we combine a hard-constraint layer from the reference-model feasibility mask with a timing channel of distributional sojourn times per (device, operation), both statistical channels being calibrated conformally and accumulated by {CUSUM}; unlike decomposed timed automata and within-stage dependency models, early reports inside the guard can be accumulated and feasibility comes from the reference model rather than the log. Empirically, physically infeasible injection is covered by the mask (net detection $0.95$), gradual drift reaches $0.87$ where the label-only ablation scores zero, early-completion replay at a $20\%$ injection rate reaches $0.18$ (above {BUTLA}, not significantly different from the {TABOR}-style baseline), and the mixture power curve agrees with the measurements. Reference-model feasibility and distributional sojourn times are thus two kinds of evidence missing from label-only detection; the disadvantage on {A4}/{A6} shows that they do not replace workflow structure.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+\textbf{(1) State mimicry and message suppression lack a dedicated detection path.}
+On {A4}/{A6} our detection is below that of the label-only ablation. There are two possible causes whose effects have not been separated: after the three-way split the structural channel receives only $\alpha/3$, and its state is the operation name, which is insensitive to the device. This limitation qualifies the comparison of ``six-class means'' but does not affect the claims about {A2} and {A3}/{A5}.
+
+\textbf{(2) Without workpiece identities, material-flow invariants cannot serve as reliable constraints.}
+The benign violation rate $q$ rises from $0.0054$ on the training fold to $0.047$ on the deployment stream, which caps single-message detection at only $0.21$ for $\alpha=0.01$. Approximate cross-case workpiece identities lower $q$ to $2.3\%$, still above $\alpha$, and end-to-end performance is the same as without the constraint, so the token constraint is not included in the detector. This limitation does not affect the three claims of this paper; it only means that the hard-constraint layer cannot yet cover cross-device material-flow forgery.
+
+\textbf{(3) The main evaluation uses a single public log, synthetic injections, and reimplemented baselines.}
+Attacks are synthesized by a reproducible injector, the baselines are reimplemented from the structural constraints of the original papers rather than taken from official code, and no learned sequence model with time features is compared. Within-log stress tests cannot substitute for a second external dataset; under a temporal split the conformal guarantee no longer holds automatically, and duration kernels cannot be transferred across scenarios directly (Section~\ref{sec:boundary}). This limitation threatens the external validity of the results on {A2} and {A3}/{A5}, but does not affect Proposition~\ref{prop:ta}.
+
+\subsection{Future Work}
+\label{sec:future_work}
+
+\textbf{(1) Material-token constraints on lines with workpiece identifiers} (Limitation~(2)). If the benign violation rate in deployment can be brought down to the order of $\alpha$, token conservation could extend the hard-constraint layer to cross-device material-flow forgery.
+
+\textbf{(2) Label-free allocation of the false-alarm budget across channels} (Limitation~(1)). The even $\alpha/3$ split may underlie the disadvantage on {A4}/{A6}; any allocation rule must not tune thresholds with attack labels.
+
+\textbf{(3) External validation and online recalibration} (Limitation~(3)). This requires a second public log with both {BPMN} and the activity lifecycle, official baseline implementations, learned sequence baselines with time features, and gate-protected adaptive updating of the duration kernel per product type, since the self-built scenarios show that kernels do not transfer while the feasibility mask does.
+
+\section{Data Availability}
+\label{sec:data}
+
+The {Fischertechnik} {Trier} smart-factory event log is released by its original authors~\cite{malburg2022trier}; a copy of the data is available on {Figshare} at \texttt{10.6084/m9.figshare.20130794}. The injection protocol, baseline reimplementations, diagnostic scripts, and evaluation archives are in the accompanying code repository, available from the corresponding author during review and to be made public upon acceptance. The main tables and box plots are read from JSON archives, and no quantile is filled in by hand. Paper-level {CSV} files are aggregated from the archives by \texttt{py -m tools.export\_experiments}. The self-built scenarios~I/II/III (configurations {A}/{B}/{C} in the code) are regenerated from seeds by \texttt{algorithm/plant.py}. {HAI} is used only to check the data dictionary and is not imported into the {CSV} files.
+
+\begin{acks}
+We thank the {University of Trier} for releasing an {IoT} event log with a {BPMN} reference model, which made it possible for the feasibility mask to come from an external reference model rather than being learned from the log.
+\end{acks}
 
 % Bibliography (placed at document end)
 \bibliographystyle{ACM-Reference-Format}

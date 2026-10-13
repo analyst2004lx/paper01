@@ -3,6 +3,12 @@
 用法:
     py -m tools.e4_structure
     py -m tools.e4_structure --seeds 42,7,2024
+
+E4 structure prediction: when the LU min-cut corridors are blocked, the closure ratio of funnel (cut=1) should exceed that of high (cut=2).
+
+Usage:
+    py -m tools.e4_structure
+    py -m tools.e4_structure --seeds 42,7,2024
 """
 from __future__ import annotations
 
@@ -71,6 +77,7 @@ def main() -> int:
             cid, t0, _t1, n_hit = pick_busy_corridor(
                 bundle.reservations, t_now=t_now, prefer=prefer)
             # 结构性断路:从 t_now 起封死该走廊至视界末端(而非只封其繁忙子窗)
+# Structural cut: seal that corridor from t_now through the end of the horizon (not only its busy sub-window)
             dist = Disturbance(
                 type="corridor_block", t_now=t_now, corridor=cid,
                 t_start=t_now, t_end=bundle.makespan + 1.0,
@@ -113,7 +120,7 @@ def main() -> int:
     h_mean, h_med = _agg("high", "closure_frac")
     fs_mean, fs_med = _agg("funnel", "n_seeds")
     hs_mean, hs_med = _agg("high", "n_seeds")
-    # 主判据:中位数(抗单种子尖峰);种子命中数作辅证
+    # 主判据:中位数(抗单种子尖峰);种子命中数作辅证 / Main criterion: the median (robust to a single-seed spike); seed-hit counts are supporting evidence
     pred_ok = (f_med > h_med) or (f_med >= h_med and fs_med > hs_med)
     print(f"[E4] closure_frac funnel mean/med={f_mean:.3f}/{f_med:.3f}  "
           f"high={h_mean:.3f}/{h_med:.3f}")

@@ -1,4 +1,7 @@
-"""从已有存档导出论文表;可选重跑诊断。不重跑 E1,除非显式 --e1。"""
+"""从已有存档导出论文表;可选重跑诊断。不重跑 E1,除非显式 --e1。
+
+Export paper tables from existing archives; optionally rerun diagnostics. Do not rerun E1 unless --e1 is set.
+"""
 from __future__ import annotations
 
 import argparse

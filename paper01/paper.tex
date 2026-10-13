@@ -411,13 +411,13 @@ Machine flexibility then becomes an operational trade-off: when the corridor to 
 A \emph{closed-loop bilevel framework} connects the two decisions along an evaluation path and a decision path.
 The upper level assigns machines and sequences operations; the lower level generates conflict-free paths by time-window reservation.
 \emph{Routing-in-the-loop evaluation} takes the fitness of each candidate as the makespan after that routing, so yielding wait enters the search objective.
-\emph{Reservation-table-aware vehicle dispatching} chooses a vehicle by a two-leg trial query on the reservation table, not by unimpeded travel time.
-Two optimizations---admissible lower-bound pruning and winner-path reuse---do not change the selected vehicle or the timetable.
+\emph{Reservation-table-aware dispatching} selects a vehicle by trial-querying both transport legs on the reservation table, not by unimpeded travel time.
+Two low-overhead optimizations---admissible lower-bound pruning and winner-path reuse---change neither the selected vehicle nor the timetable.
 
 On \NCases{} controlled instances of one size, with contention from \ContentionLo{} to \ContentionHi{}, a four-level ladder, \NSeeds{} seeds, and an equal wall-clock budget, the closed loop reduces makespan by \GainLoopRule{} ($p\PLoopRule$) relative to the open loop;
 within the closed loop, reservation-table-aware dispatching reduces it by a further \GainProbeLoop{} ($p\PProbeLoop$);
 end-to-end the reduction is \GainEndToEnd{} (\WinEndToEnd{} wins, \LoseEndToEnd{} losses, $p\PEndToEnd$), close to the independent product \GainIndepProduct{}.
-The closed loop is the larger effect and remains significant on \CellsSigLoopAdj{} instances after correction; dispatching is smaller and significant only in the aggregate.
+The closed loop is the main effect and remains significant per instance on \CellsSigLoopAdj{} instances after correction; dispatching is a much smaller secondary effect, significant only when all instances are pooled and on none individually.
 The two are near-additive; no positive interaction is detected.
 \end{abstract}
 
@@ -530,7 +530,7 @@ An \emph{existence demonstration}: of $1200$ nearby parameter combinations, $205
 \end{figure*}
 
 Existing work typically treats flexible-job-shop scheduling or conflict-free travel, not both; when they are combined, the assignment is usually fixed first and routing then absorbs the contention, so delay cannot revise the schedule.
-An exact method already writes both into one problem and solves small instances to proven optimality~\cite{vanos2026exact}; this paper adopts that setting, and the contribution is the solver, not the problem definition.
+An exact method already formulates both in one problem and solves small instances to proven optimality~\cite{vanos2026exact}; this paper adopts that problem setting, and its contribution is the solver, not the problem definition.
 Beyond that exact size, heuristics still schedule then resolve~\cite{sun2023integrated}, or write realized durations back onto the time axis of the current solution only, on a benchmark with one machine per operation~\cite{li2026framework}.
 The trade-off in which flexibility, heterogeneous efficiency, and corridor contention are present at once, and every candidate is ranked by the makespan after yielding wait, is therefore still open at heuristic size.
 The literature position is in Section~\ref{sec:Chapter_II}.
@@ -541,14 +541,14 @@ This paper connects the two levels along an evaluation path and a decision path,
 The upper level assigns machines and sequences operations; the lower level generates conflict-free paths by time-window reservation.
 
 The \emph{evaluation path} takes the fitness of each candidate as the makespan after conflict-free routing, so yielding wait enters the search objective.
-One such decode costs about an order of magnitude more than a lookup of the unimpeded matrix.
+One such decode is more than an order of magnitude more expensive than a lookup of the unimpeded matrix; under a fixed compute budget, a higher cost per evaluation leaves fewer evaluations.
 \cite{li2026framework} lists a fully iterative loop as future work, but does not report that cost or its effect on makespan.
 
-The \emph{decision path} uses \emph{reservation-table-aware vehicle dispatching}: a two-leg trial query on the reservation table (empty pickup, then loaded delivery; the query does not write the timetable) selects the vehicle with the earliest feasible delivery, replacing the idle-first rule of~\cite{li2026framework}.
-Two optimizations that do not change the output---admissible lower-bound pruning and winner-path reuse---keep each evaluation low-overhead.
-A surcharge on occupied corridor--time slots, and reassignment or staggering from the yield record, were also implemented; neither yields a stable gain under the same budget (Section~\ref{sec:Chapter_V}).
+The \emph{decision path} uses \emph{reservation-table-aware dispatching}: both transport legs (empty pickup, then loaded delivery) are trial-queried on the reservation table without writing the timetable, and the vehicle with the earliest feasible delivery is selected, replacing the idle-first rule of~\cite{li2026framework}.
+Two output-preserving optimizations---admissible lower-bound pruning and winner-path reuse---keep each evaluation low-overhead.
+A surcharge on occupied corridor--time slots, and reassignment or staggering from the yield record, were also implemented; neither further reduces makespan under the same budget (Section~\ref{sec:Chapter_V}).
 
-A four-level ladder separates the two paths.
+Four configurations in a $2\times 2$ design (open or closed loop $\times$ rule-based or reservation-table-aware dispatching) separate the two paths.
 \textbf{B0} is open-loop planning plus actual execution~\cite{li2026framework};
 \textbf{B0+} replaces only vehicle assignment on a frozen schedule~\cite{sun2023integrated};
 \textbf{B1} is closed-loop planning plus rule-based dispatching;
@@ -557,17 +557,17 @@ Every schedule is executed by the same conflict-free planner; what is compared i
 Moving congestion into the search reduces makespan by \GainLoopRule{} ($p\PLoopRule$), the larger effect;
 within the closed loop, reservation-table-aware dispatching reduces it by a further \GainProbeLoop{} ($p\PProbeLoop$), a smaller but still significant effect;
 end-to-end the reduction is \GainEndToEnd{} (\WinEndToEnd{} wins, \LoseEndToEnd{} losses, $p\PEndToEnd$).
-The two speed-ups give a factor of \SpeedupProbe{}, cut router calls by \RouteCallCut{}, and press the cost multiple from \CostMultBefore{} to \CostMultAfter{}.
-The two factors are near-additive (\GainEndToEnd{} close to \GainIndepProduct{}) and are not substitutes: open-loop dispatching is only \GainProbeOpen{} ($p\PProbeOpen$).
-After Holm correction by family, the closed loop remains significant on \CellsSigLoopAdj{}/\NCases{} instances; dispatching is significant on none of the instances on its own (before correction, \CellsSigProbe{}).
-With \NSeeds{} seeds per instance the sample is not sufficient to identify on which class of instances the dispatching gain is stable.
-The protocol is in Section~\ref{sec:protocol}; per-instance readings are in Section~\ref{sec:whichcongestion}.
+The two speed-ups give a factor of \SpeedupProbe{}, cut router calls by \RouteCallCut{}, and lower the cost multiple from \CostMultBefore{} to \CostMultAfter{}.
+The two factors are near-additive (\GainEndToEnd{} close to \GainIndepProduct{}) and are not substitutes: open-loop dispatching gives only \GainProbeOpen{} ($p\PProbeOpen$).
+After Holm correction by family, the closed loop remains significant on \CellsSigLoopAdj{}/\NCases{} instances; dispatching is significant only when instances are pooled and on none individually (\CellsSigProbe{} before correction).
+With \NSeeds{} seeds per instance, the sample cannot yet determine on which class of instances the dispatching gain is stable.
+The protocol is in Section~\ref{sec:protocol}; per-instance results are in Section~\ref{sec:whichcongestion}.
 
-The contribution is the solver, not the problem definition, in four claims that Section~\ref{sec:contributions} restates with the supporting numbers:
-\textbf{(1)}~a controllable characterization of contention intensity---how high contention must be before counting yielding wait in the schedule yields a gain;
-\textbf{(2)}~routing-in-the-loop evaluation, so every candidate is ranked by the makespan after conflict-free routing;
-\textbf{(3)}~reservation-table-aware dispatching with two output-preserving speed-ups, so a trial query remains affordable under the same wall-clock;
-\textbf{(4)}~a separate reading of the two effects---the closed loop larger and per-instance robust, dispatching significant only in the aggregate, the two near-additive and not substitutes.
+The four contributions, restated with supporting numbers in Section~\ref{sec:contributions}, are:
+\textbf{(1)~Instances:}~a controllable characterization of the reassignment trade-off---how high contention must be before counting yielding wait in the schedule yields a gain;
+\textbf{(2)~Evaluation:}~routing-in-the-loop evaluation, so every candidate is ranked by the makespan after conflict-free routing;
+\textbf{(3)~Dispatching:}~reservation-table-aware dispatching with two output-preserving speed-ups, so the trial query remains affordable under the same wall-clock budget;
+\textbf{(4)~Evidence:}~the two paths differ in magnitude, are near-additive, and are not substitutes---the closed loop is larger and robust per instance, while dispatching is significant only when pooled.
 
 The notation of the paper is collected in Table~\ref{tab:notation}.
 
@@ -674,7 +674,7 @@ $M=\{1,\dots,N_M\}$, $\Omega_{ji}\subseteq M$ & robotic arms; option set of $O_{
 $t^P_{jim}$ & processing time of $O_{ji}$ on arm $m\in\Omega_{ji}$ \\
 $K=\{1,\dots,N_A\}$ & homogeneous unit-load vehicles \\
 $G=(V,E)$, $\tau_e$ & shop-floor graph; traversal time of corridor $e$ \\
-$v_0$, $\mathrm{loc}(m)$ & load/unload station; node of arm $m$ \\
+$v_0$, $\mathrm{loc}(m)$ & load/unload point; node of arm $m$ \\
 $t^{*}(a,b)$ & shortest-path time $a\to b$ in $G$, ignoring contention \\
 $\delta_{\mathrm{ret}}\in\{0,1\}$ & finished job returns to $v_0$ (baseline $1$) \\
 $S_{ji}$, $C_{ji}$, $A_{ji}$, $C_{\max}$ & start, completion, arrival; makespan \\
@@ -704,7 +704,7 @@ $S_{ji}$, $C_{ji}$, $A_{ji}$, $C_{\max}$ & start, completion, arrival; makespan 
 A1, A2, A4, and A5 are standard in FJSP\_PT~\cite{xin2025review}.
 What shapes this paper is A3 (machine-dependent times on partially flexible arms) and A6 (contention as an exclusive-resource constraint, not a constant matrix): transport duration is an output of routing, not a fixed input.
 Deadlock-freedom is not assumed.
-A4 and A6, with Proposition~\ref{prop:decodable} in Section~\ref{sec:router}, imply that any assignment and sequence decodes to a conflict-free, deadlock-free timetable, so the search need not repair infeasible solutions.
+A4 and A6, with Proposition~\ref{prop:decodable} in Section~\ref{sec:upper}, imply that any assignment and sequence decodes to a conflict-free, deadlock-free timetable, so the search need not repair infeasible solutions.
 
 \subsection{Decision variables and induced transport tasks}
 
@@ -818,7 +818,7 @@ $N_A/N_M$ is the vehicle-to-arm ratio (smaller: transport bottleneck more likely
 Two further quantities exist only on an explicit road network; what matters is how much congestion reassignment can avoid.
 Contention intensity is the share of travel time that is yielding wait on the initial random population---read off the structure, not supplied as input---and is used to order instances (Table~\ref{tab:instances}).
 Let $\mathrm{cut}(v_0)$ be a smallest set of corridors whose deletion disconnects $v_0$ from every arm; $|\mathrm{cut}(v_0)|$ (funnel width) bounds how many vehicles can leave $v_0$ at once, and the layout factor varies it by adding or removing parallel exits (\texttt{funnel} halves the \texttt{high} value).
-A funnel-share $\varphi$ and a far-group cut were tried and not adopted (item~(1) of Section~\ref{sec:future_work}).
+A funnel share $\varphi$ and a far-group cut were also examined but did not separate the intended layout classes, so they are not used (item~(1) of Section~\ref{sec:future_work}).
 
 Each instance carries a composite lower bound
 $\mathrm{LB}=\max(\mathrm{LB}_{\text{chain}},\mathrm{LB}_{\text{load}},
@@ -829,7 +829,7 @@ the job-chain relaxation ignores inter-arm moves and queues; the load relaxation
 C_{\max}\ \ge\ X\Bigl/\sum_{e\in \mathrm{cut}(v_0)}\tau_e^{-1}.
 \end{equation}
 On these instances $\mathrm{LB}_{\text{cut}}$ is largest on eight of ten and $\mathrm{LB}_{\text{chain}}$ on the other two.
-The bound is loose (gap \LBGapLo{} to \LBGapHi{}) and is used only to check the order of magnitude.
+The bound is fairly loose (gap \LBGapLo{} to \LBGapHi{} to the best known solution) and is used only to check the order of magnitude, not to certify near-optimality.
 
 \section{Closed-loop bilevel framework}
 \label{sec:Chapter_IV}
@@ -841,7 +841,7 @@ The upper level searches assignment and sequencing with a memetic algorithm~\cit
 The output is an executable timetable and its makespan.
 The evaluation path (blue) returns that makespan as fitness, once per candidate, yielding wait included.
 The decision path (orange) chooses a vehicle by a two-leg trial query on the reservation table---empty pickup, then loaded delivery; the query does not write the timetable---rather than by an unimpeded-time estimate.
-Two further interfaces---a surcharge on occupied corridor--time slots, and reassignment from the yield record---are controls (Sections~\ref{sec:interface} and~\ref{sec:ls}); under an equal wall-clock budget neither yields a stable gain.
+Two further interfaces---a surcharge on occupied corridor--time slots, and reassignment from the yield record---serve as controls (Sections~\ref{sec:interface} and~\ref{sec:ls}); under an equal wall-clock budget neither further reduces makespan.
 
 %% From fig/fig_framework.py; a schematic, no data.
 %% Do not reuse fig/fig_hdp_architecture*.pdf (HDP framework of a previous paper).
@@ -983,10 +983,9 @@ A chromosome therefore maps to a unique timetable, so the seed-paired comparison
 The outer search is a conventional genetic algorithm, so the gains of Section~\ref{sec:Chapter_V} can be attributed to the mechanisms above rather than to operator tuning.
 The initial population is random (uniform arm from $\Omega_{ji}$, shuffled sequence), plus two seeds: every operation on its fastest arm, and a load-balance greedy.
 Selection is tournament with a small elite; the sequence uses precedence-preserving order crossover, the assignment uniform crossover; mutation swaps two sequence positions or moves an operation to another optional arm.
-Fitness is the decoded makespan.
-These settings are not listed as contributions; hyperparameters are in Section~\ref{sec:impl}.
+Fitness is the decoded makespan; hyperparameters are in Section~\ref{sec:impl}.
 
-\subsection{Reservation-table-aware vehicle dispatching}
+\subsection{Reservation-table-aware dispatching}
 \label{sec:dispatch}
 
 A vehicle may be chosen either by an unimpeded-shortest-path estimate or by a trial query on the reservation table.
@@ -999,22 +998,21 @@ The open-loop rule scores each vehicle by
 which does not consult the reservation table and may therefore select a vehicle that is geometrically near but whose corridor is already occupied.
 The formula is the same as the idle-first dispatching of~\cite{li2026framework}, and is a typical single-attribute rule in surveys of multi-AGV dispatching~\cite{lu2022agv}.
 
-The closed-loop default is instead \emph{reservation-table-aware vehicle dispatching}.
-For each candidate vehicle: first write and plan the empty leg on the reservation table, then plan the loaded leg without writing the final timetable, record the earliest feasible delivery time obtained by the trial query, and restore the table to its state before the trial query.
-The empty leg must be written first; otherwise the loaded leg cannot see that occupancy, the two legs may be packed into the same corridor--time slot, and the trial query would be optimistically early.
+The closed-loop default is instead \emph{reservation-table-aware dispatching}.
+For each candidate vehicle, the empty leg is planned and temporarily written to the reservation table, the loaded leg is then planned against that state, the earliest feasible delivery time is recorded, and the table is rolled back to its state before the trial query.
+The empty leg must be written temporarily; otherwise the loaded leg cannot see its occupancy, the two legs may be placed in the same corridor--time slot, and the trial query would be optimistically early.
 The vehicle with the earliest feasible delivery is selected, not the vehicle that \eqref{eq:rule} estimates as best.
 
-Vehicles have identical capability (assumption~A5); they differ only in current location and corridor occupancy, so contention on the reservation table can decide which vehicle to choose.
-Reassigning a robotic arm also changes the processing time, and the processing-time gap is often larger than the gap in corridor wait, so the same trial query used to choose an arm yields little.
+Vehicles have identical capability (assumption~A5) and differ only in current location and corridor occupancy, so contention on the reservation table determines the choice.
 
 The trial query raises routing calls per transport from $2$ to at most $2N_A$, about \CostMultBefore{} times an unimpeded-time selection.
-Without the speed-ups of Section~\ref{sec:speedup} that overhead eats the makespan gain under an equal wall-clock budget; Section~\ref{sec:Chapter_V} therefore compares the two rules only under the same wall-clock limit.
+Without the speed-ups of Section~\ref{sec:speedup}, this overhead offsets the makespan gain under an equal wall-clock budget; Section~\ref{sec:Chapter_V} therefore compares the two rules only under the same wall-clock limit.
 
 \subsubsection{Three choices for the inter-layer interface}
 \label{sec:interface}
 
 With the two levels fixed, the remaining choice is what the lower level returns.
-This paper implements three interfaces and measures each under an equal wall-clock budget; only the first yields a stable makespan gain (Section~\ref{sec:Chapter_V}).
+This paper implements three interfaces and measures each under an equal wall-clock budget; only the first reduces makespan (Section~\ref{sec:Chapter_V}).
 
 \paragraph{Return realized durations only.}
 The lower level returns traversal times after conflict-free routing---the evaluation path, and the quantity that a trial query reads.
@@ -1023,20 +1021,19 @@ Every candidate is ranked by the makespan after yielding wait; schedule-then-rou
 \paragraph{Return a surcharge on corridor--time slots.}
 A shadow price $\pi(e,b)$ is attached to each occupied corridor--time slot; path planning then minimizes ``arrival time $+\theta\cdot$cost'' on the Pareto front ($\theta\ge0$ is the only knob).
 Two estimates are implemented: perturbing one slot and re-solving, and a low-cost approximation refreshed each generation.
-Contention wait already enters arrival time, then makespan through \eqref{eq:bind}; a further cost on the same occupancy counts the delay twice.
-Lemma~\ref{lem:label} adds a second cost: price is a second criterion, so single-label Dijkstra must become a multi-label Pareto search whether a surcharge is finally applied or not.
-Under an equal wall-clock budget, makespan stably worsens; Section~\ref{sec:Chapter_V} attributes that mainly to the overhead.
+Contention wait already enters arrival time and, through \eqref{eq:bind}, makespan, so the surcharge adds no new information.
+It also adds cost: by Lemma~\ref{lem:label}, price is a second criterion, so single-label Dijkstra must become a multi-label Pareto search whether or not a surcharge is finally applied.
+Under an equal wall-clock budget makespan consistently worsens, and Section~\ref{sec:Chapter_V} attributes the loss mainly to this search overhead.
 
 \paragraph{Return the yield record.}
 A yield triple (corridor, time slot, preceding transport) generates the local-search neighbourhood of Section~\ref{sec:ls} without double-counting the delay.
-Under an equal wall-clock budget the neighbourhood is pointed accurately, but the hit rate does not offset the extra evaluations.
+Under an equal wall-clock budget the neighbourhood is well targeted, but its hit rate does not offset the extra evaluations.
 
 \subsection{Low overhead: admissible lower-bound pruning and winner-path reuse}
 \label{sec:speedup}
 
-At equal generation count the trial query beats rule-based dispatching by \GainProbeSameGen{}, but one evaluation is \CostMultBefore{} times more expensive, so under equal wall-clock time that gain is eaten and the net is almost zero.
-Lowering the evaluation cost without changing any selection is itself the gain.
-Two optimizations do that.
+At equal generation count the trial query beats rule-based dispatching by \GainProbeSameGen{}, but one evaluation is \CostMultBefore{} times more expensive, so under equal wall-clock time the gain is offset and the net effect is almost zero.
+The two optimizations below lower the evaluation cost without changing any selection.
 
 \paragraph{Admissible lower-bound pruning.}
 Conflict-free routing can only become later because of yielding; it can never be faster than the unimpeded shortest path.
@@ -1072,7 +1069,6 @@ What $\textsc{Route}(\cdot,\textit{commit}=\text{true})$ does is merely write th
 
 Together the two optimizations give a \SpeedupProbe{}-fold speed-up, cut routing calls by \RouteCallCut{}, and reduce the cost multiple of a single evaluation from \CostMultBefore{} to \CostMultAfter{}.
 These three numbers are the \emph{joint} effect of the two: the experiment measures them as one on/off switch (Table~\ref{tab:prune}), and this paper does not attribute them separately to pruning or reuse.
-Without the two optimizations, the same mechanism has almost no net gain under an equal wall-clock budget.
 
 The effect of pruning varies with fleet size.
 The tighter the bound and the earlier a good trial-query delivery is obtained, the more vehicles need not call routing; the larger the fleet, the more candidates, and the total trial-query cost grows approximately linearly with $N_A$.
@@ -1193,7 +1189,7 @@ Contention intensity is yielding wait as a share of travel time on the initial r
 \label{sec:protocol}
 
 Four rules govern every contrast.
-Every schedule is executed by the same conflict-free planner and checked by a validator independent of the decoder; the open loop's self-reported makespan is often infeasible (the gap is the contention intensity; on the funnel it can reach \ContentionHi{}), so what is compared is the realized makespan.
+Every schedule is executed by the same conflict-free planner and checked by a validator independent of the decoder; the open loop's self-reported makespan is often unattainable (the gap between self-reported and realized values, hereafter the optimism margin, is especially large on the funnel layout), so what is compared is the realized makespan.
 A single evaluation can differ by about two orders of magnitude, so equal generation count would give the more expensive method more compute: the main batch shares a $90$-second budget, a generation cap of $2000$ (never fires), and early stopping after $400$ generations without improvement.
 Early stopping fires on every open-loop run (a little over four hundred generations, one to three tenths of the budget); both closed-loop configurations run the full $90$ seconds, which favours the baseline---the open loop is not cut off, and it completes as many evaluations as closed-loop rule-based dispatching, or more (Section~\ref{sec:costlaw}).
 Companion batches have their own budgets, marked at first citation.
@@ -1208,22 +1204,21 @@ Runs that fail the validator or fall below the composite lower bound are reporte
 \label{sec:impl}
 The experiments run single-threaded on an Intel Xeon W-1270 @ $3.40$\,GHz, in pure Python ($\ge 3.9.6$), standard library only, no solver.
 Hyperparameters are defaults, untuned, and identical across configurations: population $60$, crossover $0.8$, mutation $0.2$, elite $5$, binary tournament; local search each generation on the top $10\%$, at most $L=5$ critical operations per round and three rounds.
-They stay conventional and do not carry a mechanism claim.
 Absolute runtimes cannot be compared with a compiled implementation: a faster code would let every configuration complete more evaluations inside the same budget, but would not change the exchange among configurations that share this implementation.
 
 \subsection{Four-level baseline ladder}
 \label{sec:arms}
 
-The ladder (Table~\ref{tab:arms}) has two factors: whether the search includes conflict-induced delay, and whether a vehicle is chosen by unimpeded time or by a trial query.
-Reporting only ablations would not line up with the literature; reporting only a literature comparison would count conflict-free routing itself as a mechanism of this paper.
+The four levels form a $2\times2$ design (Table~\ref{tab:arms}) along two factors: whether the search counts conflict-induced delay, and whether a vehicle is selected by unimpeded time or by a trial query.
+Ablations alone cannot be mapped onto published structures, while a literature comparison alone would credit the gain of conflict-free routing itself to our mechanisms.
 \textbf{B0} is open-loop planning plus realized execution, corresponding to~\cite{li2026framework} (idle-first, the same formula as \eqref{eq:rule}).
-\textbf{B0+} changes only vehicle selection on a frozen open-loop schedule, corresponding to the two-stage structure of~\cite{sun2023integrated}; the trial query is a greedy stand-in for that second stage, and is not necessarily weaker than that paper's genetic algorithm.
+\textbf{B0+} changes only vehicle selection on a frozen open-loop schedule, corresponding to the two-stage structure of~\cite{sun2023integrated}; the trial query serves as a greedy approximation of that second stage.
 \textbf{B1} is closed-loop planning with rule-based dispatching; \textbf{B2} is this paper.
 Only a same-row or same-column contrast differs in one factor; $\text{B0+}\to\text{B1}$ crosses both and cannot measure the closed loop.
 
 \begin{table}[t]
-\caption{The four-level ladder along two factors.
-Only a same-row or same-column contrast differs in one factor; a diagonal contrast cannot be read apart.}
+\caption{The $2\times2$ structure of the four-level ladder.
+Only a same-row or same-column contrast differs in one factor; a diagonal contrast cannot be decomposed.}
 \label{tab:arms}
 \footnotesize
 \begin{tabular}{@{}lcc@{}}
@@ -1269,8 +1264,8 @@ The open loop completes several times as many evaluations inside the same budget
 
 Fixing the loop, reservation-table-aware dispatching inside the closed loop is $-\GainProbeLoop$ ($p\PProbeLoop$; HL \HLProbeLoop{}, $95\%$ CI \CIProbeLoop{}).
 The two levels share the same search and budget and differ only in the trial query.
-The interval does not cross zero, but its lower end is less than one percentage point from zero; after Holm correction no instance is significant on its own (uncorrected \CellsSigProbe{}), and on ratios $1.0$ and $2.0$ B2 is slower than B1.
-Thus $-\GainProbeLoop$ is an aggregate on this family, not a per-instance point estimate (Section~\ref{sec:whichcongestion}).
+This is a pooled result: the interval does not cross zero, but its lower end is less than one percentage point from zero; after Holm correction no instance is significant individually (\CellsSigProbe{} before correction), and at ratios $1.0$ and $2.0$ B2 is slower than B1 (Table~\ref{tab:bytag}).
+Thus $-\GainProbeLoop$ is a pooled mean on this family, not a per-instance point estimate (Section~\ref{sec:whichcongestion}).
 Under the open loop the same rule is $-\GainProbeOpen$ ($p\PProbeOpen$), significant but far smaller than $\GainLoopRule$, and corresponds to the two-stage segment of~\cite{sun2023integrated} relative to~\cite{li2026framework}.
 
 End-to-end, $\text{B0}\to\text{B2}$ is $-\GainEndToEnd$ ($p\PEndToEnd$; $\WinEndToEnd$ wins, $\LoseEndToEnd$ losses, $1$ tie).
@@ -1278,7 +1273,7 @@ End-to-end, $\text{B0}\to\text{B2}$ is $-\GainEndToEnd$ ($p\PEndToEnd$; $\WinEnd
 If the two factors were independent, the compound of $\GainLoopRule$ and $\GainProbeOpen$ would be $\GainIndepProduct$; the measurement is slightly below that---no positive interaction, near-additive.
 Open-loop dispatching cannot replace the closed loop: a two-stage structure of the~\cite{sun2023integrated} kind reaches $\GainProbeOpen$; the closed-loop reduction requires yielding wait in fitness.
 B2 is best end-to-end because it stacks the two, not because they amplify each other.
-The gap of schedule-then-resolve is not the second-stage $\GainProbeOpen$, but that the first stage never sees yielding wait; that drop is a measurement on this family, not a proven bound.
+The gap of schedule-then-resolve is not the second-stage $\GainProbeOpen$, but that the first stage never sees yielding wait.
 
 \subsection{Three-factor scans and per-instance resolution}
 \label{sec:whichcongestion}
@@ -1288,8 +1283,8 @@ The closed loop can be read as a trend by family; dispatching cannot be resolved
 Per-instance tests are Holm-corrected by family: the family is the $\NCases$ instances of one effect, not the twenty pooled.
 After correction the closed loop remains significant on \CellsSigLoopAdj{} instances (uncorrected \CellsSigLoop{}; largest corrected site $p\PLoopCellMax$); the only exception is the tightest fleet ($\text{B0}\to\text{B1}$ is \GainLoopStarve{}).
 Dispatching is significant on \CellsSigProbe{} instances before correction (the two ends of Family~C, $p\PProbeFlexLoRaw$ and $p\PProbeFlexHiRaw$) and on \CellsSigProbeAdj{} after (Holm $p\PProbeFlexLoHolm$, $p\PProbeFlexHiHolm$; Benjamini--Hochberg $p\PProbeFlexLoBH$, $p\PProbeFlexHiBH$, likewise not significant).
-A few percentage points is the lower limit that $\NSeeds$ seeds on one instance can resolve; only the $\NPairs$ pairs in the aggregate lift it out (pseudomedian \HLProbeLoop{}, $95\%$ interval \CIProbeLoop{}, lower end less than one point from zero).
-Per-instance dispatching readings below are direction only.
+A few percentage points is of the same order as the smallest effect that $\NSeeds$ seeds on one instance can resolve; only the $\NPairs$ pooled pairs distinguish it from noise (pseudomedian \HLProbeLoop{}, $95\%$ interval \CIProbeLoop{}, lower end less than one percentage point from zero).
+Per-instance dispatching results below are reported as directions only.
 
 \begin{table}[t]
 \caption{Per-instance ladder and the two effects, blocked by family ($n=\NSeeds$ seed-pairs).
@@ -1339,34 +1334,33 @@ What remains is the span (\GainLoopFunnel{} versus \GainLoopScatter{}, about two
 Dispatching is not significant on any instance of this family; four of five signs match the closed loop.
 
 \emph{Vehicle-to-arm ratio.}
-The intended fleet-size upper bound is not found.
+This family does not determine an upper bound of applicability for dispatching.
 Dispatching at the four levels is $-\GainProbeStarve$ ($0.5$), \GainProbeFleetOne{} ($1.0$), \GainProbeFleetBase{} ($1.5$), \GainProbeFleetTwo{} ($2.0$): the sign alternates, and none is significant even before correction ($p\PProbeFleetHalfRaw$, $p\PProbeFleetOneRaw$, $p\PProbeFleetBaseRaw$, $p\PProbeFleetTwoRaw$).
-Dropping the base point manufactures the monotone curve a previous version treated as an upper bound at $N_A/N_M\ge 1$; subset selection of a noisy effect can do that.
-The cost-law upper bound of Section~\ref{sec:costlaw} remains an untested prediction.
-The closed loop at $1.0$ and $2.0$ is \GainLoopFleetOne{} and \GainLoopFleetTwo{}, both significant: a larger fleet mainly changes how much the closed loop can reduce.
+Without the base point the curve would show the monotone rise predicted by the cost law; when an effect is of the same order as per-instance noise, subset selection alone can produce a spurious trend.
+The cost-law upper bound of Section~\ref{sec:costlaw} therefore remains untested.
+The closed loop at $1.0$ and $2.0$ is \GainLoopFleetOne{} and \GainLoopFleetTwo{}, both significant: fleet size mainly affects the closed-loop gain, not dispatching.
 
 \emph{Flexibility.}
-A per-instance conclusion for dispatching was withdrawn after Holm correction.
-At $F=0.3$, $0.6$, and $1.0$ the gains are \GainProbeFlexLo{}, \GainProbeFleetBase{}, and \GainProbeFlexHi{}, all the same sign; the two ends are the largest among the $\NCases$ instances and lose significance after correction ($p\PProbeFlexLoHolm$, $p\PProbeFlexHiHolm$).
-The family is directional evidence only.
-Same sign at $F=0.3$, where reassignment room is smallest, is compatible with contention being handled mainly by vehicle selection and timing, not with a bypass that needs another arm; compatibility is not confirmation.
+After Holm correction, dispatching is not significant in this family either.
+At $F=0.3$, $0.6$, and $1.0$ the gains are \GainProbeFlexLo{}, \GainProbeFleetBase{}, and \GainProbeFlexHi{}, all of the same sign; the two ends are the largest among the $\NCases$ instances but are no longer significant after correction ($p\PProbeFlexLoHolm$, $p\PProbeFlexHiHolm$), so the family provides directional evidence only.
+The same sign at $F=0.3$, where the room for reassignment is smallest, is compatible with dispatching acting mainly through vehicle selection and timing rather than through reassignment to another arm.
 The closed loop is \GainLoopFlexLo{} and \GainLoopFlexHi{}, still significant per instance after correction.
 
 \paragraph{An independent batch, and heterogeneity is not an amplifier.}
 A contended cross-check ($\MatrixCells$ instances $\times$ $10$ seeds, two-stage surrogate baseline, per-instance wall-clock $30.2$--$72.9$\,s) gives an integration gain of \GainIntegMatrix{}, significant on \SigIntegMatrix{} instances (uncorrected counts from that batch; the second exception of Section~\ref{sec:protocol}), from \GainIntegMatrixLo{} to \GainIntegMatrixHi{}.
 By $H$ bin the same gain is \GainIntegHZero{} at $H=0$, \GainIntegHLow{} at $0.15$ (measured \MatrixHMeasLow{}, near the public median \PubHMed{}), \GainIntegHMid{} at $0.3$, and \GainIntegHHigh{} at $0.5$; the rank correlation is a weakly negative \RhoIntegH{}.
 $H$ above the literature range did not inflate the closed-loop gain; $H=0$ is the highest bin, consistent with Section~\ref{sec:features}.
-Dispatching on that batch is \GainProbePre{}, significant on $0$ instances: it ran before the speed-ups of Section~\ref{sec:speedup}.
+Dispatching on that batch is \GainProbePre{}, significant on $0$ instances; the most likely reason is that the batch ran before the speed-ups of Section~\ref{sec:speedup} (Section~\ref{sec:costlaw}).
 
 \subsection{Ablations and controlled negative controls}
 \label{sec:pricing}
 
 Of the three interfaces in Section~\ref{sec:interface}, only reservation-table-aware dispatching has a net gain under an equal wall-clock budget.
 On the $\MatrixCells$-instance data of Section~\ref{sec:whichcongestion}, turning off yield-record feedback is \GainCertMatrix{} (significant on $1$ instance) and turning off staggering is \GainStaggerMatrix{} (significant on $2$).
-Neither is positive: those evaluations are better returned to the population cycle.
+Neither ablation worsens makespan, so the evaluations spent on these operators are better used by the population cycle.
 This earlier batch may be cited for these two ablations---their cost does not depend on the speed-ups---but not for dispatching.
-A $\theta$ scan on two $8\times4\times4$ instances (not Families A/B/C), collected before the speed-ups, confirms the double-counting argument of Section~\ref{sec:interface}: under equal wall-clock every $\theta$ worsens makespan, flat over a ten-fold range; under equal evaluations the same comparison cannot be distinguished from zero.
-Priced routing completes about one fifth as many evaluations; $\theta$ is not a useful knob, and the extra cost is the multi-label search of Lemma~\ref{lem:label}.
+A $\theta$ scan on two $8\times4\times4$ instances (not Families A/B/C), collected before the speed-ups, is consistent with the observation of Section~\ref{sec:interface} that the surcharge adds no new information: under equal wall-clock every $\theta$ worsens makespan, flat over a ten-fold range; under equal evaluations the same comparison cannot be distinguished from zero.
+Priced routing completes about one fifth as many evaluations, so the measured loss comes mainly from the multi-label search overhead of Lemma~\ref{lem:label}, so $\theta$ is not a useful parameter.
 
 \label{sec:whycost}
 The yield-record neighbourhood is small and directed (Section~\ref{sec:ls}), yet fewer than one in fifty neighbours improve makespan; three repairs of the operators were not significant under an equal number of evaluations.
@@ -1374,15 +1368,15 @@ Removing one corridor delay promotes another constraint, so the realized improve
 The default therefore keeps dispatching and does not use the yield record to generate the neighbourhood.
 
 
-\subsection{The cost law and the effect of the two speed-ups}
+\subsection{The cost law and the effect of the speed-ups}
 \label{sec:costlaw}
 
-The same dispatching rule is in the noise before the speed-ups and significantly positive after them, so the two themselves are measured.
+The same dispatching rule is indistinguishable from noise before the speed-ups and significantly positive after them, so the speed-ups themselves are measured here.
 Figure~\ref{fig:protocol} locks cost per evaluation and evaluations completed onto a shared wall-clock hyperbola.
 The cheaper configuration completes more evaluations; the open loop uses less than two tenths of the wall-clock to complete the most.
 Before the speed-ups, reservation-table-aware dispatching is \GainProbeSameGen{} ($p\PProbeSameGen$) at equal generation count and \GainProbeSameClock{} ($p\PProbeSameClock$) at equal wall-clock---almost zero.
 Equal generation count asks whether the extra routing step improved that generation's ranking; equal wall-clock asks whether makespan fell in the same stretch of time.
-Both are well posed; one must not be reported as the other.
+Both questions are well posed, but they must not be conflated.
 
 \begin{figure}[t]
 \centering
@@ -1395,7 +1389,7 @@ pruning ablation off and on; a callout marks the on setting.}
 \caption{Equal wall-clock time locks cost per evaluation and evaluations completed onto a hyperbola; the grey line is the shared $90$-second cap.
 Closed-loop runs sit on the line; the open loop sits below it (early stop after $\sim$17\,s, Section~\ref{sec:protocol}).
 B0 and B0$^+$ share a point.
-Filled markers are geometric means of three instances (the product that a log axis preserves); pale points are the instances.
+Pale points are per-instance measurements on three instances; filled markers are their geometric mean, which preserves cost $\times$ count on a log axis.
 Orange markers are pruning and winner-path reuse off and on (callout at the on setting): Proposition~\ref{prop:speedup_equiv} guarantees that the output does not change.}
 \label{fig:protocol}
 %% From fig/fig_protocol.py; ladder_cost.csv and prune_ablation.csv.
@@ -1407,7 +1401,7 @@ Orange markers are pruning and winner-path reuse off and on (callout at the on s
 Reservation-table-aware dispatching raises the routing calls per transport task from $2$ to at most $2N_A$, so cost grows linearly with fleet size.
 The pruning bound is tighter when contention is weaker; the larger the fleet and the stronger the contention, the smaller the cut.
 The self-check of Section~\ref{sec:speedup} gives this direction: of six instances the highest cut is on the least congested one (\RouteCallCutHi{}) and the lowest on the largest fleet (\RouteCallCutLo{}).
-The two trends \emph{predict} that when the fleet is large enough and contention is strong enough, trial-query cost will catch the gain; that remains a prediction.
+The two trends \emph{predict} that when the fleet is large enough and contention strong enough, trial-query cost will offset the gain.
 On the four $N_A/N_M$ levels of Section~\ref{sec:whichcongestion} the sign alternates and none is significant, so the upper bound is not confirmed.
 The cost law itself (cost linear in $N_A$, pruning effect falling with $N_A$) is measured; the upper bound deduced from it is not.
 
@@ -1489,24 +1483,24 @@ The self-generated instances cannot inherit this proportion: their bound contain
 
 \section{Conclusion}
 
-Flexible assignment and conflict-free AGV routing must be decided together: travel time is produced by routing, and once the corridor to a fast arm is congested, a slower, better-connected arm may be the better assignment.
-Existing methods schedule on a constant matrix or freeze the assignment first, so yielding wait cannot enter every candidate.
-The bilevel framework connects the two levels along an evaluation path and a decision path and measures them separately under the same wall-clock budget.
+Flexible assignment and conflict-free AGV routing must be decided jointly: travel time is produced by routing, and when the corridor to a fast arm is congested, a slower, better-connected arm may be the better assignment.
+Existing methods schedule on a constant matrix or freeze the assignment first, so yielding wait does not enter the evaluation of candidates.
+Our bilevel framework connects the two levels by an evaluation path and a decision path and measures them separately under the same wall-clock budget; because a conflict-free evaluation is more than an order of magnitude more expensive than a matrix lookup, it also includes output-preserving speed-ups.
 
 \subsection{Findings and contributions}
 \label{sec:contributions}
 
-The four claims of Section~\ref{sec:Chapter_I} are restated with the numbers that support them.
-This paper adopts the problem class of~\cite{vanos2026exact}; the contribution is the solver, not the problem definition, together with a controllable characterization of contention intensity (Section~\ref{sec:whichcongestion}).
+The four contributions of Section~\ref{sec:Chapter_I} are restated with their supporting numbers.
 \begin{enumerate}[leftmargin=*,topsep=2pt,itemsep=2pt]
-\item Routing-in-the-loop evaluation reduces makespan by $\GainLoopRule$ under rule-based dispatching ($p\PLoopRule$) and by $\GainLoopProbe$ under reservation-table-aware dispatching ($p\PLoopProbe$).
+\item \textbf{Instances.} On top of the problem setting of~\cite{vanos2026exact}, instance families with controllable contention intensity characterize how high contention must be before counting yielding wait in the schedule yields a gain (Section~\ref{sec:whichcongestion}).
+\item \textbf{Evaluation.} Routing-in-the-loop evaluation reduces makespan by $\GainLoopRule$ under rule-based dispatching ($p\PLoopRule$) and by $\GainLoopProbe$ under reservation-table-aware dispatching ($p\PLoopProbe$).
 Proposition~\ref{prop:decodable} and Lemma~\ref{lem:label} guarantee that every chromosome is decodable and that the evaluation matches the conflict model of Section~\ref{sec:Chapter_III}.
-\item Within the closed loop a two-leg trial query reduces makespan by a further $\GainProbeLoop$ ($p\PProbeLoop$).
-Admissible lower-bound pruning and winner-path reuse do not change the selected vehicle or the timetable (Proposition~\ref{prop:speedup_equiv}), cut router calls by \RouteCallCut{}, and press the cost multiple from \CostMultBefore{} to \CostMultAfter{}.
-\item The two effects are not of the same size and are not substitutes.
-The closed loop remains significant after Holm correction on \CellsSigLoopAdj{} of the $\NCases$ instances; dispatching is significant only in the aggregate ($95\%$ interval \CIProbeLoop{}), and the sample is not sufficient to identify on which class of instances that gain is stable.
-The end-to-end $\GainEndToEnd$ is close to the independent composite $\GainIndepProduct$ (near-additive, no positive interaction); open-loop dispatching ($\GainProbeOpen$) is far from a substitute for the closed loop.
-\item A surcharge on occupied corridor--time slots, and reassignment or staggering from the yield record, do not yield a stable gain under the same budget.
+\item \textbf{Dispatching.} Within the closed loop, trial-querying both legs reduces makespan by a further $\GainProbeLoop$ ($p\PProbeLoop$).
+Admissible lower-bound pruning and winner-path reuse change neither the selected vehicle nor the timetable (Proposition~\ref{prop:speedup_equiv}), cut router calls by \RouteCallCut{}, and lower the cost multiple from \CostMultBefore{} to \CostMultAfter{}.
+\item \textbf{Evidence.} The two paths differ in magnitude, are near-additive, and are not substitutes.
+The closed loop remains significant after Holm correction on \CellsSigLoopAdj{} of the $\NCases$ instances; dispatching is significant only when pooled ($95\%$ interval \CIProbeLoop{}) and on no instance individually.
+The end-to-end $\GainEndToEnd$ is close to the prediction under independent composition, $\GainIndepProduct$ (no positive interaction detected); open-loop dispatching ($\GainProbeOpen$) cannot replace the closed loop.
+A surcharge on occupied corridor--time slots, and reassignment or staggering from the yield record, do not further reduce makespan under the same budget.
 \end{enumerate}
 
 \subsection{Limitations and future work}
@@ -1514,35 +1508,34 @@ The end-to-end $\GainEndToEnd$ is close to the independent composite $\GainIndep
 \label{sec:future_work}
 
 \textbf{(1) Instance families.}
-The main experiment fixes size and varies only structure (Section~\ref{sec:features}), so this paper makes no claim about how the mechanisms vary with size.
-$H$ is fixed at $0.3$; ``the gain does not rise with $H$'' comes from the smaller independent batch of Section~\ref{sec:whichcongestion}.
-The layout family is spliced: the three dumbbells move only capacity; the two grids change topology and distance together (\LegDumbbell{} versus \LegGrid{}, Section~\ref{sec:instances}).
-Contention intensity does not say how much wait can be bypassed by reassignment, so only the three dumbbells can be attributed to capacity.
-Instances had to be self-generated: published FJSP\_PT is a constant matrix, \PubNLayoutAsym{}/\PubNLayout{} of the matrices are asymmetric and \PubNLayoutBad{} are not a shortest-path closure (Section~\ref{sec:instances}), and work with an explicit road network cannot be compared directly because the reservation unit differs (Section~\ref{sec:fjsppt}).
-A follow-up is to remeasure on a larger corridor network and split ``whether congestion can be bypassed by reassignment'' from ``whether the critical chain has only one dominant bottleneck''; $\varphi$ failed to separate those families.
+The main experiment fixes size and varies only structure (Section~\ref{sec:features}), so we draw no conclusion about how the mechanisms vary with size.
+$H$ is fixed at $0.3$; ``the gain does not rise with $H$'' comes from the smaller independent batch of Section~\ref{sec:whichcongestion} and holds only at that size.
+The layout family is spliced from two topologies: the three dumbbells change only capacity, while the two grids change topology and distance together (\LegDumbbell{} versus \LegGrid{}, Section~\ref{sec:instances}).
+Contention intensity is a one-dimensional measure that does not separate the wait reassignment can bypass, so only the differences among the three dumbbells can be attributed to capacity alone.
+Self-generated instances are used because no usable public benchmark exists: common FJSP\_PT benchmarks publish constant matrices, \PubNLayoutAsym{}/\PubNLayout{} of the examined matrices are asymmetric and \PubNLayoutBad{} are not a shortest-path closure (Section~\ref{sec:instances}), and works with an explicit road network use different reservation units (Section~\ref{sec:fjsppt}).
+Future work should remeasure on a larger corridor network and treat ``whether congestion can be bypassed by reassignment'' and ``whether the critical chain has a single dominant bottleneck'' as separate factors; $\varphi$ failed to separate the corresponding layout classes.
 
-\textbf{(2) Dispatching is positive on average, but not yet resolved per instance.}
+\textbf{(2) Dispatching is positive on average, but its per-instance stability is not yet determined.}
 $\NSeeds$ seeds suffice for the closed loop ($\CellsSigLoopAdj/\NCases$ after Holm).
-Reservation-table-aware dispatching is a few percentage points, of the same order as the seed-to-seed dispersion: $\CellsSigProbe/\NCases$ instances are significant before correction and $\CellsSigProbeAdj/\NCases$ after, so the aggregate of $\NPairs$ pairs is positive ($95\%$ interval \CIProbeLoop{}) but the sample is not sufficient to identify on which class of instances the gain is stable.
-An order-of-magnitude more seeds, and denser $N_A/N_M$ levels, would be needed to identify that class and to test the cost-law upper bound of Section~\ref{sec:costlaw}.
+The effect of reservation-table-aware dispatching is a few percentage points, of the same order as the seed-to-seed dispersion: $\CellsSigProbe/\NCases$ instances are significant before correction and $\CellsSigProbeAdj/\NCases$ after, so the gain is confirmed as positive only on the $\NPairs$ pooled pairs ($95\%$ interval \CIProbeLoop{}).
+About an order of magnitude more seeds, and denser $N_A/N_M$ levels, would be needed to determine the class of instances on which it is stable and to test the cost-law upper bound of Section~\ref{sec:costlaw}.
 
-\textbf{(3) Distance to the optimum under corridor contention is unknown.}
-The configurations share one codebase, so differences among levels are not an artefact of search strength.
-Section~\ref{sec:external} is bitwise identical to the literature on $\PubNMatch{}/\PubNInst{}$ instances; all $10$ small instances hit a proven optimum.
-The four largest average \PubGapBig{}, and \PubBudgetRatio{} times the compute buys only $\PubBudgetGainPP$ percentage points---a capability boundary, not a short budget.
-On the \PubNOpt{} proven-optimum instances the search shortfall is at most $\PubLBResidMax$ percentage points; almost all of the gap is slack in the bound.
-On the self-generated instances the bound contains no contention, so the median gap \LBGapMed{} must not be read as a search gap.
-A few-percentage-point effect such as \GainProbeLoop{} is of the same order as that unknown distance.
-A follow-up is to separate slack from a search shortfall on contended instances; exact solutions by logic-based Benders decomposition are the comparison at small size.
+\textbf{(3) The distance of solutions from the optimum under corridor contention is unknown.}
+The configurations share one code base, so the strength of the upper-level search does not affect the differences among levels.
+Section~\ref{sec:external} is bitwise identical to the literature on $\PubNMatch{}/\PubNInst{}$ instances, and all $10$ small instances reach a proven optimum.
+The four largest average \PubGapBig{}, and \PubBudgetRatio{} times the compute improves this by only $\PubBudgetGainPP$ percentage points, so the gap reflects a capability limit rather than an insufficient budget.
+On the \PubNOpt{} proven-optimum instances the search solution is at most $\PubLBResidMax$ percentage points from the optimum, and the bound gap comes almost entirely from slack in the bound.
+On the self-generated instances the bound contains no contention, so its median gap \LBGapMed{} cannot be read as a search gap; a secondary effect of a few percentage points such as \GainProbeLoop{} may be of the same order as the unknown distance to the optimum.
+Exact solutions by logic-based Benders decomposition~\cite{vanos2026exact} on small contended instances would separate bound slack from search shortfall.
 
-\textbf{(4) The two thicker interfaces must be remeasured if their own cost is pressed down.}
-The surcharge and yield-record-guided local search were judged in the same codebase and under the same wall-clock budget.
-A constant-factor speedup of every configuration leaves the exchange rate, and the sign, unchanged; only pressing down the cost of one interface on its own can change the sign, as the dispatching speed-ups of Section~\ref{sec:speedup} already did.
-Re-solving only the perturbed suffix of a chromosome would let that local search be remeasured under the same wall-clock.
+\textbf{(4) The surcharge and yield-record-guided local search must be remeasured if their own cost is reduced.}
+Both were assessed in the same code base under the same wall-clock budget, so what was measured is the trade-off between cost per evaluation and number of evaluations.
+Speeding up all configurations by the same factor leaves that trade-off and the sign unchanged; only reducing the cost of one interface separately could change the sign, as the dispatching speed-ups of Section~\ref{sec:speedup} illustrate.
+Re-solving only the perturbed suffix of a chromosome would allow that local search to be remeasured under the same wall-clock budget.
 
 \textbf{(5) Failures and online arrivals are out of scope.}
-Assumption A7 leaves robotic-arm and vehicle failures and dynamic arrivals outside the model.
-The reported ratios are for a static horizon; when a failure or an online arrival occurs, the value of a mechanism also includes the speed at which it repairs the schedule~\cite{gui2023dynamic,xiong2024dynamic,dauzereperes2024fjsp}.
+Assumption A7 excludes robotic-arm and vehicle failures and dynamic arrivals from the model.
+The reported results hold for a static horizon; with failures or online arrivals, the value of a mechanism also includes how fast it repairs a schedule~\cite{gui2023dynamic,xiong2024dynamic,dauzereperes2024fjsp}.
 
 
 %\section*{Acknowledgments}

@@ -20,8 +20,15 @@ ARCHIVE = os.path.abspath(os.path.join(
     HERE, "..", "..", "slid", "output", "alarm_walkthrough.json"))
 
 
-def _short(op):
-    return op.rsplit("/", 1)[-1] if op else ""
+def _short(op, width=11):
+    name = op.rsplit("/", 1)[-1] if op else ""
+    lines = []
+    for tok in name.split("_"):
+        if lines and len(lines[-1]) + 1 + len(tok) <= width:
+            lines[-1] += "_" + tok
+        else:
+            lines.append(tok)
+    return "_\n".join(lines)
 
 
 def _panel(ax, rows, title, labels):
@@ -75,12 +82,12 @@ def main():
     with open(ARCHIVE, encoding="utf-8") as f:
         blob = json.load(f)
     draw(blob, {
-        "A2": "(a) A2 infeasible injection — hard-layer veto",
-        "A3": "(b) A3 race replay — graded residual + CUSUM",
+        "A2": "(a) A2 physically infeasible injection: vetoed by the hard-constraint layer",
+        "A3": "(b) A3 early-completion replay: graded residuals accumulated by CUSUM",
     }, {
         "z": r"timing $z$",
         "S": r"CUSUM $S$",
-        "hard": "hard veto",
+        "hard": "hard-constraint veto",
         "ylabel": r"$z$ / $S$",
     }, "fig_alarm")
 

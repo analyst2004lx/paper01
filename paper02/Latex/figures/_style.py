@@ -5,6 +5,7 @@ from __future__ import print_function, division
 import os
 import shutil
 import subprocess
+import sys
 
 import matplotlib
 matplotlib.use("Agg")
@@ -13,11 +14,17 @@ from matplotlib.font_manager import FontProperties
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+# Chinese figures are produced by the *_CN.py entry scripts (some of which
+# reuse the drawing code of the English scripts); everything else is English.
+IS_CN = os.path.basename(sys.argv[0] or "").endswith("_CN.py")
+
 _FONT_CANDIDATES = [
     r"C:\Windows\Fonts\simsun.ttc",
     r"C:\Windows\Fonts\simhei.ttf",
     r"C:\Windows\Fonts\msyh.ttc",
     r"C:\Windows\Fonts\msyh.ttf",
+] if IS_CN else [
+    r"C:\Windows\Fonts\times.ttf",
 ]
 
 
@@ -72,6 +79,12 @@ def apply_style():
         "savefig.bbox": "tight",
         "savefig.pad_inches": 0.04,
     })
+    if not IS_CN:
+        plt.rcParams.update({
+            "font.family": "serif",
+            "font.serif": ["Times New Roman", "DejaVu Serif"],
+            "mathtext.fontset": "stix",
+        })
 
 
 def subset_pdf(path):

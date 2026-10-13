@@ -13,6 +13,16 @@
 本工具跑真实 GA,记录局部搜索实际选中的那些工序的归一化 OS 位置分布。
 
 运行(clbs/ 目录下):  py -m tools.reuse_diag [--gens N] [--seeds a,b]
+
+Reusable fraction for incremental decoding: after reassigning one operation, how much decode work need not be redone?
+
+Three attempts (price routing, conflict certificates, probe scoring) all stall at the same place: the oracle is about 17%, and any local score is about 10%. Since "predict the makespan effect of one reassignment" cannot be done, the remaining path is to stop predicting and decode the candidates. Whether that path works depends on one number: after reassigning one operation, how much of the earlier decode result can be reused as-is.
+
+Event-driven decoding advances along the OS sequence. Reassigning operation (j, i) to another arm affects only that operation and events after it; operations, transports, and reservations before it are unchanged. The upper bound on the reusable fraction is therefore that operation's normalized position in the OS sequence. Local search reassigns only **critical-chain** operations, which need not be uniform — if they tend to sit early, the reusable fraction is low and this path fails outright.
+
+This tool runs a real GA and records the distribution of normalized OS positions of the operations local search actually selects.
+
+Run (from the clbs/ directory):  py -m tools.reuse_diag [--gens N] [--seeds a,b]
 """
 from __future__ import annotations
 
@@ -42,7 +52,10 @@ CONFIGS = [
 
 def collect(inst: Instance, net: Network, seeds: Sequence[int],
             gens: int) -> List[float]:
-    """局部搜索会改派的那些工序,其在 OS 序列中的归一化位置。"""
+    """局部搜索会改派的那些工序,其在 OS 序列中的归一化位置。
+
+    Normalized OS-sequence positions of the operations local search would reassign.
+    """
     cfg = GAConfig(pop=40, seed=seeds[0], theta=0.0, dispatch="rule",
                    use_conflict_ops=True)
     out: List[float] = []

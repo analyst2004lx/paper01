@@ -9,6 +9,18 @@
     20 个分组的 rho* 跨度 1.6% ~ 98.6%,中位 sigma=0.207 -> 38.2%
 
 用法(在 paper02/slid/ 下):  py -m tools.timing_diag
+
+Check M4 against probe_aft*.py / probe_timing.py after it lands.
+
+Target numbers:
+    sigma_log  unconditional                          = 0.355
+    sigma_log  route-conditioned (seen routes)        = 0.116
+    sigma_log  additive AFT extrapolated to unseen    = 0.279
+    sigma_log  planned-time cold-start prior          = 0.159
+    gap between additive and per-route saturated residuals = 0.000 (every group's route graph is a forest)
+    rho* span over 20 groups: 1.6% ~ 98.6%; median sigma=0.207 -> 38.2%
+
+Usage (from paper02/slid/):  py -m tools.timing_diag
 """
 from __future__ import annotations
 

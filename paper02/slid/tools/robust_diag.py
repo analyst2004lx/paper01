@@ -4,6 +4,12 @@ C' 用 gold standard 拟合,在第三方含错日志(NTP/重复/缺失)上测 FP
 不注入攻击。E9 把测试折按工作流是否在训练折出现过切开。
 
 用法(在 paper02/slid/ 下):  py -m tools.robust_diag
+
+Deployment-setting false alarms: temporal-order comparison, corrupted variant C', and product-switch E9.
+
+C' is fit on the gold standard and measures FPR on a third-party corrupted log (NTP / duplicates / omissions), with no attack injected. E9 splits the test fold by whether the workflow appeared in the training fold.
+
+Usage (from paper02/slid/):  py -m tools.robust_diag
 """
 from __future__ import annotations
 
@@ -47,7 +53,10 @@ def time_order_fpr(live, model, seeds: int) -> dict:
 
 
 def _score_fpr(det, stream, rng) -> dict:
-    """生产三路在一段良性流上的经验误报(硬层或共形越界)。"""
+    """生产三路在一段良性流上的经验误报(硬层或共形越界)。
+
+    Empirical false-alarm rate of the production three paths on one benign stream (hard-constraint layer or conformal crossing).
+    """
     det._reset_online()
     n = hard = 0
     hits = {c: {a: 0 for a in OD.ALPHAS} for c in CHANNELS}
@@ -82,7 +91,10 @@ def dirty_cprime(gold, dirty, model) -> dict:
 
 
 def product_shift(live, model) -> dict:
-    """E9:测试折里未见工作流 vs 已见工作流的 FPR。"""
+    """E9:测试折里未见工作流 vs 已见工作流的 FPR。
+
+    E9: FPR of unseen versus seen workflows in the test fold.
+    """
     by_case = OD._by_case(live)
     keys = sorted(by_case, key=lambda k: min(
         (a.t_consume for a in by_case[k] if a.t_consume is not None),

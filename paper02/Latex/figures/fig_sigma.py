@@ -48,8 +48,8 @@ def main():
     ax.set_ylim(0.0, 1.05)
     ax.yaxis.grid(True, linestyle=":", color="#DDDDDD")
     ax.set_axisbelow(True)
-    set_cjk(ax, xlabel=r"Timing variation $\sigma$",
-            ylabel=r"Race-amount bound $\rho^*$")
+    set_cjk(ax, xlabel=r"Timing variability $\sigma$",
+            ylabel=r"Critical relative advance $\rho^*$")
     legend(ax, loc="lower right")
     fig.tight_layout()
     save(fig, "fig_sigma")

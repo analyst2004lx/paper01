@@ -8,6 +8,16 @@
   Q3 该按通道分别校准再合成,还是对合成统计量整体校准一次?
 
 用法(在 paper02/slid/ 下):  py -m tools.fusion_diag
+
+M6 fusion-layer measurement: how strong the channel dependence is, how wrong Fisher actually is, and which layer should be calibrated.
+
+Three questions that so far had only an argument and no measurement:
+
+  Q1 Are the three channels correlated at all on benign data? "Structure and interlock both become cross-cutting channels" is reasoning, not a measurement.
+  Q2 By how much does Fisher inflate the false-alarm rate? "It underestimates the p-value" is qualitative; the paper needs a number.
+  Q3 Calibrate each channel and then fuse, or calibrate the fused statistic once as a whole?
+
+Usage (from paper02/slid/):  py -m tools.fusion_diag
 """
 from __future__ import annotations
 
@@ -31,6 +41,11 @@ def channel_pvalues(acts_by_case, keys, models, tm, q_inter, rng,
     `advance`  A4 抢跑幅度,只作用于时序通道。
     `misplace` 伪造状态上报落在错误的工序位置的概率,作用于结构与互锁通道
                ——模拟同时触碰多个通道的攻击,用来检验合成是否真的换来覆盖面。
+
+    Compute the three channel p-values per activity.
+
+    `advance`  the A4 early-reporting amount, acting only on the timing channel.
+    `misplace` the probability that a forged state report lands on the wrong operation, acting on the structure and interlock channels — simulating an attack that touches several channels at once, to test whether fusion really buys coverage.
     """
     rows = []
     for k in keys:
@@ -38,6 +53,7 @@ def channel_pvalues(acts_by_case, keys, models, tm, q_inter, rng,
         for i, a in enumerate(seq):
             wrong = misplace > 0 and rng.random() < misplace
             # --- 时序 ---
+            # timing
             p_t = 1.0
             m = models.get((a.device, a.op))
             if m is not None and m.informative:
@@ -50,6 +66,7 @@ def channel_pvalues(acts_by_case, keys, models, tm, q_inter, rng,
                     if v is not None:
                         p_t = v
             # --- 结构 ---
+            # structure
             p_s = 1.0
             if i > 0:
                 prev = seq[i - 1].op
@@ -60,6 +77,7 @@ def channel_pvalues(acts_by_case, keys, models, tm, q_inter, rng,
                 if v is not None:
                     p_s = v
             # --- 互锁(软层,二值 -> 随机化 p 值) ---
+            # interlock (soft layer, binary -> randomised p-value)
             viol = a.params.get("_viol", False) or wrong
             u = rng.random()
             p_i = u * q_inter if viol else q_inter + u * (1.0 - q_inter)
@@ -68,7 +86,10 @@ def channel_pvalues(acts_by_case, keys, models, tm, q_inter, rng,
 
 
 def mark_violations(by_case, model, all_by_case):
-    """把软层互锁违反标注回活动上,供逐活动打分使用。"""
+    """把软层互锁违反标注回活动上,供逐活动打分使用。
+
+    Mark soft-layer interlock violations back onto the activities, for per-activity scoring.
+    """
     n_viol = n_tot = 0
     for case, acts in by_case.items():
         for a in acts:
@@ -110,6 +131,7 @@ def main() -> int:
 
     methods = ("simes", "harmonic", "minp", "fisher")
     # 三种校准架构
+    # three calibration architectures
     arms = ("late", "early", "both")
     fpr = {(m, s): {a: [] for a in ALPHAS} for m in methods for s in arms}
     pw = {(m, s): [] for m in methods for s in arms}
@@ -122,6 +144,7 @@ def main() -> int:
         rng = np.random.default_rng(seed)
         tr, ca, te = conformal.split(keys, seed=seed)
         # 校准折再对半分:ca1 校准各通道,ca2 校准合成统计量
+        # split the calibration fold in half again: ca1 calibrates each channel, ca2 calibrates the fused statistic
         half = len(ca) // 2
         ca1, ca2 = ca[:half], ca[half:]
         models = timing.fit([a for k in tr for a in by_case[k]])
@@ -143,6 +166,7 @@ def main() -> int:
                      for i, j in ((0, 1), (0, 2), (1, 2))])
         floor.append(float((A[:, 0] <= 1e-11).mean()))
         # 下溢成因:训练折见过该路线(真·失配) vs 回落到计划工时(冷启动)
+        # cause of an underflow: the training fold has seen the route (a real mismatch) versus a fallback to planned time (cold start)
         seen = miss = 0
         for k in te:
             for a in by_case[k]:
@@ -159,6 +183,7 @@ def main() -> int:
         floor_cause.append((seen, miss))
 
         # 逐通道 conformal:用 ca1 建校准器,把原始 p 值换成 conformal p 值
+        # per-channel conformal: build the calibrator on ca1 and replace the raw p-value with a conformal p-value
         cals = []
         for j in range(3):
             c = conformal.Calibrator(
@@ -173,6 +198,7 @@ def main() -> int:
         R_multi = recal(P_multi)
 
         # 单通道基线:只用时序,同样过一次逐通道 conformal,同一 alpha
+        # single-channel baseline: timing only, the same one per-channel conformal pass, the same alpha
         solo["fpr"].append(float(np.mean([r[0] <= 0.01 for r in R_te])))
         solo["power"].append(float(np.mean([r[0] <= 0.01 for r in R_atk])))
         solo["power_multi"].append(
@@ -186,11 +212,14 @@ def main() -> int:
             raw_mu, rec_mu = s(P_multi), s(R_multi)
             for a in ALPHAS:
                 # late  先合成原始 p 值,只在末端校准一次
+                # fuse the raw p-values first; calibrate only once at the end
                 t = float(np.quantile(raw_ca2, a))
                 fpr[(m, "late")][a].append(float((raw_te <= t).mean()))
                 # early 先逐通道校准,再合成,用名义零分布判定
+                # calibrate each channel first, then fuse, and decide with the nominal null
                 fpr[(m, "early")][a].append(float((rec_te <= a).mean()))
                 # both  先逐通道校准,合成后再校准一次
+                # calibrate each channel first, fuse, then calibrate once more
                 t = float(np.quantile(rec_ca2, a))
                 fpr[(m, "both")][a].append(float((rec_te <= t).mean()))
             t = float(np.quantile(raw_ca2, 0.01))

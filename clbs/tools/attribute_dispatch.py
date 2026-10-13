@@ -7,6 +7,12 @@
 
 同时报告两档各自拿到的评价次数:规则派车不查预约表,单次解码便宜得多,同挂钟下能
 多跑很多代。若它在质量上仍不落后,说明精确派车没能为自己的成本挣回收益。
+
+What exact dispatch is worth: a clean attribution that differs from nofeedback in dispatch only.
+
+The `opendispatch` arm changes dispatch on top of the full method (including local search), so it and `nofeedback` (exact dispatch, no local search) differ in two factors at once; subtracting them does not isolate dispatch. `opendispatch_nols` also turns local search off, so that pair differs in dispatch only and can be attributed.
+
+Also report evaluations each arm receives: rule dispatch does not consult the reservation table, so each decode is much cheaper and, under the same wall-clock, it can run many more generations. If it still does not fall behind in quality, exact dispatch has not earned back its cost.
 """
 from __future__ import annotations
 
@@ -49,7 +55,7 @@ def main() -> int:
         if not pairs:
             print("  %-10s (无数据)" % title)
             return
-        # 正数 = 精确派车(nofeedback)更好
+        # 正数 = 精确派车(nofeedback)更好 / Positive = exact dispatch (nofeedback) is better.
         gains = [(a - b) / a for a, b in pairs if a > 0]
         w = wilcoxon_signed_rank([a for a, _ in pairs], [b for _, b in pairs])
         wins = sum(1 for a, b in pairs if b < a)

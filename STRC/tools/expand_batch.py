@@ -3,6 +3,12 @@
 用法(在 STRC/ 下):
     py -m tools.expand_batch
     py -m tools.expand_batch --seeds 42,7,2024,99,123 --budget-sec 2
+
+Expanded seed/instance batch: E1/E2/E3 + scale_compare, results written to experiments/expanded/.
+
+Usage (from STRC/):
+    py -m tools.expand_batch
+    py -m tools.expand_batch --seeds 42,7,2024,99,123 --budget-sec 2
 """
 from __future__ import annotations
 
@@ -49,6 +55,13 @@ def _instances():
     后两个补的是布局维度:funnel(LD11,装卸点最小割最窄)与 mid(LD22,出口更多),
     与 high(LD21)同规模同柔性,只差走廊拓扑,故闭包规模的差异可归因于布局。
     种子默认与 paper01 的十种子表对齐,合计 5x10=50 对。
+
+    Five instance cells.
+
+    Originally only the first three, 3x5=15 pairs, while paper01 has 100 pairs — on review this was the weakest point of this paper.
+    The last two fill in the layout dimension: funnel (LD11, the narrowest min-cut at the load/unload point) and mid (LD22, more exits),
+    same scale and flexibility as high (LD21), differing only in corridor topology, so a difference in closure size can be attributed to the layout.
+    Seeds default to paper01's ten-seed table, 5x10=50 pairs in total.
     """
     from algorithm.clbs_bridge import CLBS_INPUT
     ext = lambda n: os.path.join(CLBS_INPUT, "ext", n)  # noqa: E731
@@ -243,6 +256,11 @@ def _run_e5(inst_path, inst_name, seed, t_frac, rows):
 
         默认 R0+ 走固定前缀解码;此列在拥堵例上仍可能为 1(同工件后道已出车)。
         把越界条数与该臂的读数记在同一行,是为了让这层口径不必回到正文去找。
+
+        Under assumption A2, reservations with t_end <= t_now must not be rewritten; this counts how many were.
+
+        R0+ uses fixed-prefix decoding by default; on the congested instance this column can still be 1 (a later operation of the same job has already dispatched a vehicle).
+        The out-of-bound count is recorded on the same row as that arm's reading, so this convention does not have to be hunted down in the text.
         """
         if not rep.feasible or rep.result is None:
             return None, None
@@ -287,6 +305,15 @@ def _run_e6_types(inst_path, inst_name, seed, t_frac, rows):
       A 类(碰任务图)  :ra_failure、agv_breakdown
     注意车辆故障被判为 A 类:它虽不改工序指派,却使该车承运的工序无法执行,
     按定义 A 的「可执行性失效」成立,且任务图上确有非空种子(经车-任务映射)。
+
+    E6: disturbance type × boundary definition. This fills the large "not yet measured" region of the coverage matrix.
+
+    All four types are reported on the boundary axis. All four are open on the repair axis: blockage/slowdown still only reroute; a vehicle fault switches vehicles and a robot-arm fault reassigns (assumption A5 is open for class A).
+
+    The A/B split follows algorithm.disturbance.TOUCHES_TASK_GRAPH:
+      Class B (does not touch the task graph): corridor_block, corridor_slowdown
+      Class A (touches the task graph): ra_failure, agv_breakdown
+    Note that a vehicle fault is class A: it does not change operation assignment, but the operations that vehicle was to carry cannot be executed. "Executability failure" in definition A holds, and the task graph does have a nonempty seed (via the vehicle-task map).
     """
     from algorithm.clbs_bridge import Network, load_instance
     from algorithm.closure import (
@@ -317,6 +344,7 @@ def _run_e6_types(inst_path, inst_name, seed, t_frac, rows):
     ]
 
     # 车辆故障:取 t_now 之后剩余运输段最多的那辆车,避免挑到一辆已经收工的。
+# Vehicle fault: take the vehicle with the most remaining transport segments after t_now, so a vehicle that has already finished is not picked.
     fut = defaultdict(int)
     for r in bundle.reservations:
         if r.t_end > t_now:
@@ -327,6 +355,7 @@ def _run_e6_types(inst_path, inst_name, seed, t_frac, rows):
             type="agv_breakdown", t_now=t_now, agv=int(agv))))
 
     # 机械臂故障:取 t_now 之后剩余工序最多的那台机器,失效工序为其全部未完工序。
+# Robot-arm fault: take the machine with the most remaining operations after t_now; the failed operations are all of its unfinished operations.
     mfut = defaultdict(list)
     for rec in bundle.result.ops.values():
         if getattr(rec, "pseudo", False) or rec.machine is None:
@@ -340,6 +369,7 @@ def _run_e6_types(inst_path, inst_name, seed, t_frac, rows):
             extra={"failed_ops": mfut[mac]})))
 
     # 与 release_set_r1 内部逐字同构,否则 T_impact 与 |R1| 会来自两套 meta。
+# Isomorphic, word for word, with the inside of release_set_r1; otherwise T_impact and |R1| would come from two different metas.
     atasks = defaultdict(list)
     for tr in bundle.result.transports:
         if tr.arrive > t_now:
@@ -540,7 +570,7 @@ def main() -> int:
 
     if not args.skip_scale:
         print("=== expand_batch: scale_compare ===")
-        # 规模扫描:小例+争用例(跳过生成器 high 以控时)
+        # 规模扫描:小例+争用例(跳过生成器 high 以控时) / Scale sweep: the small instance plus the congested instance (skip generator high to keep the time down)
         for name, path in _instances()[:2]:
             for seed in seeds:
                 _run_scale(path, name, seed, args.t_now_frac,

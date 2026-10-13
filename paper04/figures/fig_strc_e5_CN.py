@@ -65,6 +65,7 @@ def main() -> None:
     ax.set_xlabel("墙钟时间 (ms)")
     ax.set_ylabel(r"$C_{\max}$")
     ax.set_xscale("log")
+    ax.set_xlim(0.5, 5000)
     ax.legend(loc="upper right")
     ax.set_title("时间–完工时间权衡")
 
@@ -72,7 +73,7 @@ def main() -> None:
     ax.plot(budgets, r0_chg, "s--", color="#c45c26", label="R0+")
     ax.axhline(r2_chg_mean, color="#1f4e79", linestyle="-", label="STRC")
     ax.set_xlabel("R0+ 预算 (s)")
-    ax.set_ylabel("预约变更比例")
+    ax.set_ylabel("占用改动比例")
     ax.set_ylim(0, 1.08)
     ax.legend(loc="center right")
     ax.set_title("排程稳定性")

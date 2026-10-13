@@ -10,6 +10,17 @@
   4. 带宽折算：见证集规模 × 事件率，与 `budget.py` 的心跳带宽合并成总账。
 
 用法(在 paper03/tessera/ 下):  py -m tools.baseline_diag
+
+Tier-2 baselines: a contrast of witness-set **selection rules**.
+
+Protocol, cryptography, window, and dispatch allowance are all the same; only `WitnessPolicy` changes, so a difference can come only from the selection principle. Four things:
+
+  1. Witness-set size distribution — direct evidence for the $O(1)$ claim, and the scale factor of bandwidth.
+  2. **False-alarm rate** on the benign stream. Look at this first: the detection rates of `W2`/`W3` are lifted by false alarms.
+  3. Detection rates of P1/P3, always reported as **detection rate minus false-alarm rate**. Reporting only the detection rate yields the wrong conclusion that "random witnesses also work."
+  4. Bandwidth conversion: witness-set size times event rate, merged with the heartbeat bandwidth from `budget.py` into one account.
+
+Usage (from paper03/tessera/):  py -m tools.baseline_diag
 """
 from __future__ import annotations
 
@@ -36,7 +47,10 @@ def load(xes, bpmn):
 
 
 def run(recs, g, policy, family, *, rate: float, seed: int) -> dict:
-    """同一协议下跑一条基线：良性误报 + P1/P3 检出。"""
+    """同一协议下跑一条基线：良性误报 + P1/P3 检出。
+
+    Run one baseline on the same protocol: benign false alarms plus P1/P3 detection.
+    """
     benign = corroborate.replay(attacks.benign_stream(recs), g, policy=policy)
     n_fa = len([e for e in benign.evidence if e.claim_seen])
     far = n_fa / max(len(recs), 1)
@@ -64,6 +78,7 @@ def main() -> int:
     ap.add_argument("--xes", default=None)
     ap.add_argument("--bpmn", default=None)
     # 与 detect_diag 及断言集一致，否则两处报出的数无法互相引用。
+    # Match detect_diag and the assertion set, or the two places cannot cite each other's numbers.
     ap.add_argument("--rate", type=float, default=0.2)
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()

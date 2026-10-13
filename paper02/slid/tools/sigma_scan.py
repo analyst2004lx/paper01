@@ -4,6 +4,12 @@
 在 z 空间被压缩。不重拟合检测器。k=1 对应该产线全局口径。
 
 用法(在 paper02/slid/ 下):  py -m tools.sigma_scan
+
+E5: how early-reporting detectability collapses as timing variation grows.
+
+On the real residuals from bound_curve, scale each group's sigma by k. That compresses the same physical early reporting in z-space. The detector is not refit. k=1 is this line's global setting.
+
+Usage (from paper02/slid/):  py -m tools.sigma_scan
 """
 from __future__ import annotations
 
@@ -49,7 +55,7 @@ def main() -> int:
         za = (z_test + d / s_test) / k
         dr = float(np.mean(-za > thr))
         streams = []
-        # 按设备切短窗,残差除以 k
+        # 按设备切短窗,残差除以 k / split short windows by device; divide residuals by k
         by = {}
         for r, zi in zip(test, za):
             by.setdefault(r["dev"], []).append(timing.norm_cdf(zi))

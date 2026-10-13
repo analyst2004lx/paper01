@@ -43,6 +43,36 @@ lenient 对基线更宽容,故取它为主报口径,strict 一并给出以示我
 
 运行(clbs/ 目录下):
   py -u -m tools.baseline_ladder [--budget 90] [--seeds a,b,c,d] [--only 名字,名字]
+
+Baseline ladder: split "comparison with the literature" and "our contribution" into two gaps that do not claim each other's credit.
+
+Why it is needed. Every previous A/B (dispatch_ab / abc_matrix / exhaustive_ab / price_matrix) set conflict_free=True on both arms, so it measured an ablation of "our method with one contribution removed" — the steepest step of the ladder. FJSP-T methods in the literature generally use a constant travel-time matrix and do not model AGV conflicts; that step was never measured. Reporting only the ablation understates the size of the problem; reporting only the literature comparison would claim the value of conflict-free routing itself as this paper's contribution.
+
+The fairness pivot is a **common executor**: whatever the plan's origin, it must be executed on the same conflict-free router, pass the same validator, and report a realizable makespan. Otherwise an open-loop method reports a number that is infeasible on the real system (its optimism equals the contention share, up to 32% on funnel instances), and the comparison is meaningless.
+
+Four-level ladder; the first two match the two closest published works:
+
+  B0  Open-loop planning + real execution. The upper level searches with ideal shortest paths (conflict_free=False); the finished plan is executed on the real router. Corresponds to Sensors 2026, 26:543 (Li & Mao et al.): the scheduling layer emits a Gantt chart that ignores transport, a downstream PBS resolves conflicts, and arrival times are shifted back onto the timeline; its dispatch uses "Idle Priority" k*=argmin Cost(path_k, L_start), the same form as this framework's dispatch_rule.
+  B0+ Open-loop planning + conflict-aware dispatch. The upper level is likewise frozen, but vehicle assignment consults the reservation table. Corresponds to Sensors 2023, 23:4526: stage one is a hybrid GA on a **constant travel-time matrix**; stage two is an AGV-encoded GA that optimizes vehicle assignment on the frozen schedule and handles conflicts, with no feedback. Probe dispatch is used here as a greedy approximation of that second stage — it is not necessarily weaker than their GA, so this level is **lenient to the baseline**.
+  B1  Closed-loop planning + rule dispatch. Conflicts are counted during search; dispatch still estimates from the ideal matrix. Information-equivalent to B2.
+  B2  Closed-loop planning + probe dispatch. This paper's method.
+
+Each gap has an owner and must not claim another's credit:
+  B0 → B0+  what optimizing vehicle assignment on a frozen schedule is worth (the step from 2026 to 2023)
+  B0+→ B1   what **moving congestion into the search objective** is worth, i.e. the value of the closed loop itself. This is the framework's claim, and it is the future work the 2026 paper states in its conclusion ("extending this mechanism into a fully iterative loop"), so it can be claimed legitimately, but it must be reported separately from the next gap.
+  B1 → B2   differs only in one dispatch decision, with fully equivalent information: the contribution of that specific decision-level closed-loop mechanism.
+
+If B0+ ≈ B1, the "closed loop" claim does not stand — a reviewer who knows the 2023 paper will ask, so we must measure it ourselves first.
+
+Execution protocol for B0. The open-loop plan contains a dispatch decision, and there are two ways to reproduce it at execution:
+  strict   forced_dispatch reproduces the original dispatch verbatim — "execute the plan as decided"
+  lenient  re-dispatch by the rule at execution — "the shop floor may reassign"
+Lenient is more generous to the baseline, so it is the primary reported protocol; strict is also given so we did not pick the variant that favors us.
+
+The three arms share one wall-clock budget. B0's search is given the same time; it is not given less because it is cheap.
+
+Run (from the clbs/ directory):
+  py -u -m tools.baseline_ladder [--budget 90] [--seeds a,b,c,d] [--only name,name]
 """
 from __future__ import annotations
 
@@ -77,6 +107,10 @@ def main() -> int:
 
     # B0 取"复现计划派车"而非"执行时重新派车":前者既是 2026 那篇的忠实模型,实测
     # 亦更强(funnel 格 63.00 对 78.00),对基线取强者。B0宽松仅作对账保留。
+    # B0 uses "reproduce the planned dispatch" rather than "re-dispatch at
+    # execution": the former is the faithful model of the 2026 paper and is
+    # stronger in measurement (funnel cell 63.00 vs 78.00), so the baseline
+    # gets the stronger one. B0-lenient is kept only for reconciliation.
     keys = ("B0", "B0宽松", "B0+", "B1", "B2")
     mk: Dict[str, Dict[str, List[float]]] = {k: {} for k in keys}
     cont: Dict[str, float] = {}
@@ -95,6 +129,7 @@ def main() -> int:
             cfg = replace(base, seed=s)
 
             # B0:开环搜索(理想矩阵,不查预约表),再放进真实路由器执行
+            # B0: open-loop search (ideal matrix, no reservation table), then execute on the real router.
             out0 = run_ga(inst, net, replace(cfg, dispatch="rule"),
                           conflict_free=False, use_ls=True)
             ch = out0["best_chrom"]
@@ -104,6 +139,7 @@ def main() -> int:
                            dispatch="rule",
                            forced_dispatch=out0["best_result"].dispatch_order)
             # B0+:排产仍冻结,只把车辆指派换成查预约表的(2023 那篇第二阶段的近似)
+            # B0+: schedule stays frozen; only vehicle assignment consults the reservation table (approximation of the 2023 paper's second stage).
             r_cav = decode(inst, net, ch["ma"], ch["os"],
                            conflict_free=True, dispatch="exact")
             mk["B0"][nm].append(r_str.makespan)
@@ -111,6 +147,7 @@ def main() -> int:
             mk["B0+"][nm].append(r_cav.makespan)
 
             # B1 / B2:闭环搜索,只差派车
+            # B1 / B2: closed-loop search, differing only in dispatch.
             for key, disp in (("B1", "rule"), ("B2", "exact")):
                 out = run_ga(inst, net, replace(cfg, dispatch=disp),
                              conflict_free=True, use_ls=True)
@@ -138,6 +175,9 @@ def main() -> int:
 
     # 各配对的相对增益在此累积,供末尾的互补性小结引用,避免把结论写死在字符串里:
     # 换一批数据就该跟着变的数字,不能靠人记得去改。
+    # Accumulate each pair's relative gain here for the complementarity summary,
+    # so the conclusion is not hardcoded: numbers that must change with a new
+    # batch cannot depend on someone remembering to edit them.
     gains: Dict[str, float] = {}
 
     def paired(a: str, b: str, note: str) -> None:
@@ -155,6 +195,12 @@ def main() -> int:
     # 规则派车,故 B0+→B1 同时跨两个因子,**不能**用来量闭环的价值——B NA/NM 0.5
     # 那格该对比为正,只因试探派车在那格特别值钱、被 B0+ 白拿了去。干净的对比是
     # 固定一个因子只动另一个,即下面四行。
+    # These four arms are a 2x2 factorial (closed loop or not × dispatch), not a
+    # chain. B0+ uses probe dispatch and B1 uses rule dispatch, so B0+→B1 crosses
+    # two factors and **cannot** measure the value of the closed loop — the
+    # B NA/NM 0.5 cell comes out positive only because probe dispatch is especially
+    # valuable there and B0+ received it for free. A clean contrast holds one
+    # factor fixed and moves the other: the four rows below.
     print(f"\n{'':>16s}{'规则派车':>10s}{'试探派车':>10s}")
     for row, (ka, kb) in (("开环", ("B0", "B0+")), ("闭环", ("B1", "B2"))):
         va = sum(sum(mk[ka][c["name"]]) for c in cases) / (len(cases) * len(seeds))
@@ -181,6 +227,10 @@ def main() -> int:
 
     # 互补性小结:两个机制若彼此独立,端到端应恰为二者的乘积复合;实测超出即为正交互。
     # 这几个数一律现算,不写死——上一版这里印的是初跑的固定数字,补跑之后就与表自相矛盾。
+    # Complementarity: if the two mechanisms are independent, end-to-end should
+    # equal their product; beating that is a positive interaction. These numbers
+    # are always computed, never hardcoded — the previous version printed the
+    # first run's fixed digits and contradicted the table after the extra runs.
     g_open, g_loop = gains.get("B0->B0+", 0.0), gains.get("B1->B2", 0.0)
     g_rule, g_e2e = gains.get("B0->B1", 0.0), gains.get("B0->B2", 0.0)
     indep = (1.0 + g_rule) * (1.0 + g_open) - 1.0
@@ -193,6 +243,7 @@ def main() -> int:
     print("  明写,它把两个贡献焊成一体。")
 
     # 逐种子原始数据落盘,便于事后换口径重算而不必重跑
+    # Write per-seed raw data so a later protocol change can be recomputed without a rerun.
     out_csv = os.path.join(os.path.dirname(__file__), "..", "output",
                            "baseline_ladder.csv")
     os.makedirs(os.path.dirname(out_csv), exist_ok=True)

@@ -18,6 +18,20 @@ Trier 数据集的每个活动有三个生命周期事件,给出三个时刻:
     complete/success    -> t_end    操作结束(取 inProgress 事件的
                                     operation_end_time,缺失时回落到
                                     success/failure 事件的时间戳)
+
+M1 event-stream parsing and per-device chain splitting.
+
+Parse a raw log into a uniform stream of activity instances, and split it into the chains the detector actually consumes.
+
+Hard constraints (from measurement; do not change them):
+  - The online detector always keeps chain context by **(device, case)**, not by a device-global timeline. A device-global chain puts two adjacent operations in different cases, while feasibility mask F comes from within-workflow reachability and does not apply across a case boundary — that once produced the false alarm "only 48.6% of transitions lie in F". Split by case, it is 100.0% (953/953). The log's `case` field and the command URL's `business_key` make this feasible in practice.
+  - **Which sequence the structural channel consumes depends on device semantics**; see chain_granularity(): stateful devices use a (device, case) chain, stateless service endpoints use a case-level chain.
+  - Time must be the receive-side timestamp, never the timestamp carried in the message (the attacker controls the latter).
+
+Each activity in the Trier dataset has three lifecycle events and therefore three times:
+    scheduled/assigned  -> t_cmd    command enters the device queue
+    start/inProgress    -> t_start  operation starts
+    complete/success    -> t_end    operation ends (operation_end_time of the inProgress event; if missing, fall back to the success/failure event timestamp)
 """
 from __future__ import annotations
 
@@ -33,31 +47,42 @@ XES = "{http://www.xes-standard.org/}"
 
 @dataclass
 class Activity:
-    """一次活动实例,即检测器的一个观测单元。"""
+    """一次活动实例,即检测器的一个观测单元。
+
+    One activity instance, the detector's unit of observation.
+    """
     case: str
     event_id: str
     device: str                      # org:resource
     op: str                          # concept:name,如 /vgr/pick_up_and_transport
+    # e.g. /vgr/pick_up_and_transport
     workflow: str | None = None      # process_model_id
     t_cmd: datetime | None = None    # assigned
     t_start: datetime | None = None  # inProgress
     t_end: datetime | None = None    # operation_end_time of inProgress
-    t_done: datetime | None = None   # success / failure 事件时间戳
+    t_done: datetime | None = None   # success / failure 事件时间戳 / success / failure event timestamp
     start_pos: str | None = None     # parameter_start_position
     end_pos: str | None = None       # parameter_end_position
     planned_s: float | None = None   # planned_operation_time,仅作冷启动先验
+    # planned_operation_time, used only as a cold-start prior
     outcome: str | None = None       # success / failure
     params: dict = field(default_factory=dict)
 
     @property
     def order(self) -> int:
-        """同一时刻的稳定排序键(event_id 在 Trier 中是递增整数)。"""
+        """同一时刻的稳定排序键(event_id 在 Trier 中是递增整数)。
+
+        Stable sort key for the same timestamp (event_id is an increasing integer in Trier).
+        """
         return int(self.event_id) if self.event_id.isdigit() else 0
 
     @property
     def duration_s(self) -> float | None:
         """执行时长。派发阶段时长不在此暴露:实测 p95 达 253.6 s、
-        sigma_log=1.475,由调度器排队竞争主导,不可作时长检验。"""
+        sigma_log=1.475,由调度器排队竞争主导,不可作时长检验。
+
+        Execution sojourn time. Dispatch-stage duration is not exposed here: the measured p95 reaches 253.6 s and sigma_log=1.475, dominated by scheduler queue contention, so it cannot be a duration test.
+        """
         if self.t_start and self.t_end:
             d = (self.t_end - self.t_start).total_seconds()
             return d if d > 0 else None
@@ -65,13 +90,19 @@ class Activity:
 
     @property
     def t_consume(self) -> datetime | None:
-        """令牌消耗时刻(操作开始)。"""
+        """令牌消耗时刻(操作开始)。
+
+        Token consumption time (operation start).
+        """
         return self.t_start or self.t_cmd
 
     @property
     def t_produce(self) -> datetime | None:
         """令牌产出时刻(操作结束)。与 t_consume 分离是必须的:同时消耗产出
-        会把并发活动误判为乱序(v3 -> v4 的修正)。"""
+        会把并发活动误判为乱序(v3 -> v4 的修正)。
+
+        Token production time (operation end). Separating it from t_consume is required: consuming and producing at the same instant mislabels concurrent activities as out of order (the v3 -> v4 fix).
+        """
         return self.t_end or self.t_done or self.t_consume
 
     @property
@@ -86,7 +117,10 @@ class Activity:
 
 
 def _parse_planned(s: str | None) -> float | None:
-    """`planned_operation_time` 形如 '0 days 00:00:52'。"""
+    """`planned_operation_time` 形如 '0 days 00:00:52'。
+
+    `planned_operation_time` looks like '0 days 00:00:52'.
+    """
     if not s:
         return None
     try:
@@ -120,6 +154,10 @@ def read_xes(path: str, member: str | None = None) -> list[Activity]:
 
     不要解压整包:清洗版解压后 66.6 GB、含错版 54.2 GB,而全部分析只需要
     其中的 MainProcess.xes(约 10 MB)。
+
+    Read the main XES log. When `member` is set or path is a zip, stream it from inside the archive.
+
+    Do not unpack the whole package: the cleaned edition expands to 66.6 GB and the corrupted edition to 54.2 GB, while all analysis needs only MainProcess.xes inside it (about 10 MB).
     """
     if member or path.lower().endswith(".zip"):
         with zipfile.ZipFile(path) as zf:
@@ -168,6 +206,7 @@ def _build(source) -> list[Activity]:
 
 
 #: 数据字典结论。HAI 公开 CSV 是 1 Hz 过程标签,不是调度作业流。
+#: Data-dictionary conclusion. The public HAI CSV is 1 Hz process tags, not a scheduling job stream.
 HAI_DICTIONARY = {
     "sampling_hz": 1,
     "processes": ("P1 boiler", "P2 turbine", "P3 water", "P4 HIL"),
@@ -187,12 +226,18 @@ HAI_DICTIONARY = {
 
 
 def hai_dictionary_verdict() -> dict:
-    """不读 CSV 也能给出的 E7 前置判定。"""
+    """不读 CSV 也能给出的 E7 前置判定。
+
+    The E7 precondition verdict, which does not require reading the CSV.
+    """
     return dict(HAI_DICTIONARY)
 
 
 def read_hai(path: str) -> list[Activity]:
-    """HAI 不能映射为调度层活动流。有 CSV 也不装成作业日志。"""
+    """HAI 不能映射为调度层活动流。有 CSV 也不装成作业日志。
+
+    HAI cannot be mapped to a scheduling-layer activity stream. Even with a CSV, do not dress it up as a job log.
+    """
     raise NotImplementedError(
         HAI_DICTIONARY["reason"] + f" path={path}"
     )
@@ -204,6 +249,10 @@ def valid(acts: Iterable[Activity], *, drop_failure: bool = True):
     `drop_failure=True` 时排除 failure——这是**离线建模**的口径(时长分布
     必须按 success/failure 分层,见结论三)。在线检测不得丢弃 failure,
     它本身就是需要解释的信号。
+
+    Activities the detector actually consumes: a device, an operation, and a start time.
+
+    `drop_failure=True` drops failures — that is the **offline modeling** rule (the sojourn-time distribution must be stratified by success/failure; see conclusion 3). Online detection must not drop failures; a failure is itself a signal that needs an explanation.
     """
     out = [a for a in acts if a.device and a.op and a.t_consume is not None]
     if drop_failure:
@@ -212,7 +261,10 @@ def valid(acts: Iterable[Activity], *, drop_failure: bool = True):
 
 
 def split_chains(acts: Iterable[Activity]) -> dict[tuple[str, str], list[Activity]]:
-    """按 (设备, case) 切链,链内按操作开始时刻升序。"""
+    """按 (设备, case) 切链,链内按操作开始时刻升序。
+
+    Split chains by (device, case); within a chain, sort by operation start time.
+    """
     chains: dict[tuple[str, str], list[Activity]] = {}
     for a in acts:
         chains.setdefault((a.device, a.case), []).append(a)
@@ -222,7 +274,10 @@ def split_chains(acts: Iterable[Activity]) -> dict[tuple[str, str], list[Activit
 
 
 def case_chains(acts: Iterable[Activity]) -> dict[str, list[Activity]]:
-    """按 case 切链,用于 case 级工作流结构通道。"""
+    """按 case 切链,用于 case 级工作流结构通道。
+
+    Split chains by case, for the case-level workflow structural channel.
+    """
     chains: dict[str, list[Activity]] = {}
     for a in acts:
         chains.setdefault(a.case, []).append(a)
@@ -241,6 +296,12 @@ def chain_granularity(acts: Iterable[Activity], *,
     链长度为 1,3,062 个活动只产出 953 次转移,结构 p 值取值唯一)。
 
     返回 ('device'|'case', 诊断量)。
+
+    Decide automatically which sequence layer the structural channel should use.
+
+    Criterion: whether the device has an internal state machine that persists across jobs. Two observables stand in for that — the mean length of each (device, case) chain, and the total number of transitions. A mean length below 2 means the device is a stateless service endpoint that is called, and the device-level structural channel degenerates (Trier: 65.1% of chains have length 1; 3,062 activities yield only 953 transitions; the structural p-value takes a single value).
+
+    Returns ('device'|'case', diagnostics).
     """
     chains = split_chains(acts)
     if not chains:
@@ -255,7 +316,10 @@ def chain_granularity(acts: Iterable[Activity], *,
 
 
 def stream(acts: Sequence[Activity]) -> Iterator[Activity]:
-    """按接收时刻回放为在线消息流,供检测器逐条消费。"""
+    """按接收时刻回放为在线消息流,供检测器逐条消费。
+
+    Replay by receive time as an online message stream, for the detector to consume one message at a time.
+    """
     yield from sorted(acts, key=lambda a: (a.t_consume, a.order))
 
 
@@ -266,7 +330,10 @@ def default_log_path() -> str:
 
 
 def default_dirty_log_path() -> tuple[str, str]:
-    """含错版 (NTP/重复/缺失) 的 zip 与包内 MainProcess.xes 成员。"""
+    """含错版 (NTP/重复/缺失) 的 zip 与包内 MainProcess.xes 成员。
+
+    Zip of the corrupted edition (NTP / duplicates / omissions) and the MainProcess.xes member inside it.
+    """
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     z = os.path.normpath(os.path.join(
         here, "..", "database", "ft_trier_iot_log", "DQI_Event_Log.zip"))

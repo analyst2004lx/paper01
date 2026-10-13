@@ -1,4 +1,7 @@
-"""规格文档第九节 T1–T14 测试断言。运行方式(clbs/ 目录下): py -m tests.test_all"""
+"""规格文档第九节 T1–T14 测试断言。运行方式(clbs/ 目录下): py -m tests.test_all
+
+Test assertions T1–T14 of specification section 9. Run from the clbs/ directory: py -m tests.test_all
+"""
 from __future__ import annotations
 
 import json
@@ -29,11 +32,15 @@ def _load():
 
 
 def _base_os(inst):
-    """一个固定的实工序 OS(不含伪工序)。"""
+    """一个固定的实工序 OS(不含伪工序)。
+
+    A fixed OS of real operations (no pseudo-operations).
+    """
     return [1, 1, 1, 2, 2, 3, 3]
 
 
 # ---------------- T1 理想最短路矩阵 ----------------
+# T1 ideal shortest-path matrix
 
 def t1_ideal_dist():
     _inst, net = _load()
@@ -46,15 +53,20 @@ def t1_ideal_dist():
 
 
 # ---------------- T2 建模文档参考方案(makespan=51)通过校验 ----------------
+# T2 the modeling-document reference plan (makespan=51) passes validation
 
 def _reference_timetable():
-    """建模文档第七节的可行方案完整时刻表(人工推演,已消解全部冲突)。"""
+    """建模文档第七节的可行方案完整时刻表(人工推演,已消解全部冲突)。
+
+    Full timetable of the feasible plan in section 7 of the modeling document (worked out by hand; every conflict resolved).
+    """
     ops = [
         (1, 1, 1, 4, 8), (1, 2, 2, 18, 23), (1, 3, 3, 27, 32),
         (2, 1, 2, 9, 13), (2, 2, 3, 17, 23),
         (3, 1, 1, 12, 15), (3, 2, 2, 30, 34),
     ]
     # (agv, u, v, enter, exit, task);伪工序编号 = n(j)+1
+    # (agv, u, v, enter, exit, task); pseudo-operation index = n(j)+1
     segs = [
         # AGV1
         (1, "v0", "c1", 0, 2, "J1-1-loaded"), (1, "c1", "r1", 2, 4, "J1-1-loaded"),
@@ -96,6 +108,7 @@ def t2_reference_plan_valid():
 
 
 # ---------------- T3 任意染色体解码可行(三重保证) ----------------
+# T3 any chromosome decodes to a feasible plan (the triple guarantee)
 
 def t3_random_chromosomes_feasible():
     inst, net = _load()
@@ -110,6 +123,7 @@ def t3_random_chromosomes_feasible():
 
 
 # ---------------- T4 解码确定性 ----------------
+# T4 decode determinism
 
 def t4_decode_deterministic():
     inst, net = _load()
@@ -122,6 +136,7 @@ def t4_decode_deterministic():
 
 
 # ---------------- T5 同机连续工序无运输任务(C4) ----------------
+# T5 consecutive operations on the same machine have no transport task (C4)
 
 def t5_same_machine_no_transport():
     inst, net = _load()
@@ -136,6 +151,7 @@ def t5_same_machine_no_transport():
 
 
 # ---------------- T6 回运开关 δ_return ----------------
+# T6 return-haul switch δ_return
 
 def t6_delta_return_switch():
     inst1, net1 = _load()
@@ -158,12 +174,14 @@ def t6_delta_return_switch():
 
 
 # ---------------- T7 冲突消解:两车抢同一走廊,后到者让行 ----------------
+# T7 conflict resolution: two vehicles contest one corridor; the later one yields
 
 def t7_conflict_resolution():
     inst, net = _load()
     ma = {(1, 1): 1, (3, 1): 1, (1, 2): 2, (1, 3): 3,
           (2, 1): 2, (2, 2): 3, (3, 2): 2}
     os_seq = [1, 3, 1, 1, 2, 2, 3, 1, 2, 3]  # J1、J3 首道相继从 v0 发往 r1
+    # The first operations of J1 and J3 leave v0 for r1 one after the other.
     result = decode(inst, net, ma, os_seq, conflict_free=True)
     tr = next(t for t in result.transports if t.job == 3 and t.i == 1)
     assert tr.agv == 2, f"J3 首道应派给 AGV2,实际 AGV{tr.agv}"
@@ -175,6 +193,7 @@ def t7_conflict_resolution():
 
 
 # ---------------- T8 GA 有效性:小算例应不劣于人工参考方案(51) ----------------
+# T8 GA effectiveness: on the small instance it should be no worse than the hand reference (51)
 
 def t8_ga_beats_reference():
     inst, net = _load()
@@ -190,6 +209,7 @@ def t8_ga_beats_reference():
 
 
 # ---------------- T9 禁派集:被禁车辆不得承接,且全禁时仍可解码 ----------------
+# T9 forbidden-vehicle set: a banned vehicle must not take the task, and a full ban still decodes
 
 def t9_forbid_vehicles():
     inst, net = _load()
@@ -202,6 +222,7 @@ def t9_forbid_vehicles():
     assert tr0.agv == 2, f"基线下 J3 首道应派给 AGV2,实际 AGV{tr0.agv}"
 
     # 禁掉 AGV2 后,该任务必须换车,且方案仍可行
+    # After AGV2 is banned, that task must change vehicle, and the plan stays feasible.
     res = decode(inst, net, ma, os_seq, conflict_free=True, forbid={(3, 1): {2}})
     tr = next(t for t in res.transports if t.job == 3 and t.i == 1)
     assert tr.agv != 2, "禁派集未生效:AGV2 仍承接了 (3,1)"
@@ -209,6 +230,7 @@ def t9_forbid_vehicles():
     assert not errors, "禁派后方案不可行:\n" + "\n".join(errors)
 
     # 全禁则回退到完整车队(保可解码性),不得抛异常或产生无限完工时间
+    # A full ban falls back to the whole fleet (decodability is kept); it must not raise or produce an infinite completion time.
     res_all = decode(inst, net, ma, os_seq, conflict_free=True,
                      forbid={(3, 1): {1, 2}})
     assert res_all.makespan < float("inf"), "全禁时应回退到完整车队"
@@ -216,6 +238,7 @@ def t9_forbid_vehicles():
 
 
 # ---------------- T10 占用率两套算法一致(顺带验预约表回滚无残留) ----------------
+# T10 the two occupancy algorithms agree (and reservation-table rollback leaves no residue)
 
 def t10_occupancy_consistency():
     inst, net = _load()
@@ -224,12 +247,15 @@ def t10_occupancy_consistency():
           (2, 1): 2, (2, 2): 3, (3, 2): 2}
     os_seq = [1, 3, 1, 1, 2, 2, 3, 1, 2, 3]
     # dispatch=exact 会做试探性落表再回滚;若回滚有残留,预约表侧会多出占用
+    # dispatch=exact writes a probe into the table and then rolls it back; leftover reservations would show extra occupation on the table side.
     res = decode(inst, net, ma, os_seq, conflict_free=True, dispatch="exact",
                  bucket_width=delta, collect_occupancy=True)
     assert res.occupancy, "collect_occupancy=True 时应采集到占用率"
 
     from_table = res.occupancy                                  # 预约表侧
+    # Reservation-table side
     from_tt = corridor_occupancy(res.to_timetable(), delta)      # 时刻表侧(独立重算)
+    # Timetable side (independent recomputation)
     assert set(from_table) == set(from_tt), (
         f"占用槽位不一致: 仅预约表 {set(from_table) - set(from_tt)}, "
         f"仅时刻表 {set(from_tt) - set(from_table)}(疑似回滚残留)")
@@ -241,6 +267,7 @@ def t10_occupancy_consistency():
 
 
 # ---------------- T11 生成算例可解码、下界合法、H=0 退化 ----------------
+# T11 generated instances decode, the lower bound is valid, and H=0 degenerates correctly
 
 def t11_generated_instances():
     rng = random.Random(0)
@@ -269,11 +296,13 @@ def t11_generated_instances():
                 errors = validate(gi, res.to_timetable())
                 assert not errors, f"{tag} 生成算例不可行:\n" + "\n".join(errors)
                 # 下界必须真的是下界,否则 (a) 界推导错 或 (b) 解码违反了某条约束
+                # The lower bound must really be a lower bound, or else (a) the bound is derived wrong or (b) the decode violated a constraint.
                 assert res.makespan >= lb - 1e-6, \
                     f"{tag}: C_max {res.makespan} 低于下界 {lb},界或解码有错"
 
 
 # ---------------- T12 拥堵度旋钮只改容量:high/funnel 与 mid/high 受控对比 ----------------
+# T12 congestion knobs change capacity only: controlled contrasts of high/funnel and mid/high
 
 def t12_congestion_knobs_isolated():
     def gen(tag):
@@ -287,6 +316,7 @@ def t12_congestion_knobs_isolated():
     funnel, f_funnel = gen("funnel")
 
     # high vs funnel:仅 LU 出口容量不同,其余逐字段相同
+    # high vs funnel: only LU-exit capacity differs; every other field matches.
     assert high["proc_time"] == funnel["proc_time"], "high/funnel 加工时间应完全相同"
     assert high["machines"] == funnel["machines"], "high/funnel 机器位置应完全相同"
     assert abs(f_high["Tt_over_Tp"] - f_funnel["Tt_over_Tp"]) < 1e-9, \
@@ -295,11 +325,13 @@ def t12_congestion_knobs_isolated():
         f"LU 割应为 2 vs 1,实测 {f_high['lu_min_cut']} vs {f_funnel['lu_min_cut']}"
 
     # mid vs high:仅中段通道数不同,LU 割相同
+    # mid vs high: only the number of mid-segment lanes differs; the LU cut is the same.
     assert (f_mid["far_group_cut"], f_high["far_group_cut"]) == (2, 1), \
         f"远端割应为 2 vs 1,实测 {f_mid['far_group_cut']} vs {f_high['far_group_cut']}"
     assert f_mid["lu_min_cut"] == f_high["lu_min_cut"] == 2, "mid/high 的 LU 割应相同"
 
     # 同种子必须逐字节可复现(F1)
+    # The same seed must be reproducible byte for byte (F1).
     again = build_instance(make_spec("high", heterogeneity=0.3, flexibility=0.6,
                                      num_jobs=6, num_machines=4, num_agvs=4,
                                      ops_per_job=3, seed=5))
@@ -308,15 +340,18 @@ def t12_congestion_knobs_isolated():
 
 
 # ---------------- T13 统计工具:与已知精确值逐位一致 ----------------
+# T13 statistics utilities: match known exact values bit for bit
 
 def t13_statistics():
     from algorithm.stats import describe, spearman, wilcoxon_signed_rank
 
     # 全部同向 5 对:零分布下 P(W+ <= 0) = 1/32,两侧 p = 0.0625
+    # Five pairs, all the same sign: under the null, P(W+ <= 0) = 1/32, two-sided p = 0.0625.
     w = wilcoxon_signed_rank([2, 3, 4, 5, 6], [1, 1, 1, 1, 1])
     assert w["method"] == "exact" and abs(w["p_value"] - 0.0625) < 1e-9, w
 
     # 教科书算例(与 scipy.stats.wilcoxon 一致:statistic=5, p=0.0391)
+    # Textbook example (agrees with scipy.stats.wilcoxon: statistic=5, p=0.0391).
     x = [1.83, 0.50, 1.62, 2.48, 1.68, 1.88, 1.55, 3.06, 1.30]
     y = [0.878, 0.647, 0.598, 2.05, 1.06, 1.29, 1.06, 3.14, 1.29]
     w = wilcoxon_signed_rank(x, y)
@@ -324,16 +359,19 @@ def t13_statistics():
     assert abs(w["p_value"] - 0.0390625) < 1e-4, w
 
     # 全平局:makespan 取整后最常见的情形,必须如实报出 n_eff=0 而非伪显著
+    # All ties: the most common case after makespan is rounded. Must report n_eff=0 rather than a spurious significance.
     w = wilcoxon_signed_rank([70, 72, 70], [70, 72, 70])
     assert w["n_eff"] == 0 and w["p_value"] == 1.0 and w["method"] == "all-ties", w
 
     d = describe([71, 69, 80])          # 规格 13.2 的实测三种子
+    # The three measured seeds of spec 13.2.
     assert d["range"] == 11 and abs(d["mean"] - 73.333) < 1e-3, d
     assert spearman([1, 2, 3, 4], [2, 4, 6, 9]) > 0.999
     assert spearman([1, 1, 1], [1, 2, 3]) is None, "无变异时应返回 None 而非 0"
 
 
 # ---------------- T14 批跑基础设施:预算闸门、账本续跑、配对不错位 ----------------
+# T14 batch infrastructure: budget gate, ledger resume, and pairing that does not shift
 
 def t14_batch_infrastructure():
     import shutil
@@ -343,6 +381,7 @@ def t14_batch_infrastructure():
     inst, net = _load()
 
     # (1) 时间预算必须真的掐停:早停与代数上限都放开,只能由预算终止
+    # (1) The time budget must actually cut the run off: stall and the generation cap are both released, so only the budget can stop it.
     cfg = GAConfig(pop=30, max_gen=10 ** 9, stall_gen=10 ** 9, seed=42,
                    time_budget_sec=1.0)
     out = run_ga(inst, net, cfg, conflict_free=True, use_ls=True)
@@ -351,11 +390,13 @@ def t14_batch_infrastructure():
     assert not validate(inst, out["best_result"].to_timetable())
 
     # 不给预算时行为不变(向后兼容:stopped_by 只能是 stall / max_gen)
+    # With no budget the behavior is unchanged (backward compatible: stopped_by can only be stall / max_gen).
     out2 = run_ga(inst, net, GAConfig(pop=20, max_gen=3, stall_gen=99, seed=42),
                   conflict_free=True, use_ls=False)
     assert out2["stopped_by"] == "max_gen", out2["stopped_by"]
 
     # (2) 账本:追加即落盘,重新打开后能识别已完成项(续跑的唯一依据)
+    # (2) Ledger: an append is written immediately, and reopening recognizes finished items (the only basis for resuming a run).
     tmp = tempfile.mkdtemp(prefix="clbs_ledger_")
     try:
         led = Ledger(tmp)
@@ -371,6 +412,8 @@ def t14_batch_infrastructure():
 
     # (3) high/funnel 配对:high 侧多一个 funnel 没有的种子(seed=3,且其增益极大)。
     #     只有按 (H, 种子) 取交集才会把它排除;若按列表顺序拼接,它会被算进均值。
+    # (3) high/funnel pairing: the high side has one extra seed that funnel does not (seed=3, and its gain is huge).
+    #     Only the intersection on (H, seed) excludes it; concatenating in list order would fold it into the mean.
     cells = {
         ("HI", "closed"): {42: 80.0, 7: 90.0, 3: 100.0},
         ("HI", "nofeedback"): {42: 88.0, 7: 99.0, 3: 200.0},
@@ -398,6 +441,10 @@ def t15_matrix_only_instance():
     公开基准的行驶时间矩阵可能**有向**、且可能**不满足三角不等式**,这两种性质
     没有任何无向走廊图能承载。若哪天有人图省事把它改成"造一张完全图跑最短路",
     本测试会立刻失败——因为最短路会把非度量的那一项抄近道抹平。
+
+    Matrix-form instance (degenerate benchmark on public instances, spec 12.2 / 12.4 item 2).
+
+    What is asserted is exactly why `ideal_dist` must be a bypass and must not be reconstructed as a corridor graph: a public benchmark's travel-time matrix may be directed and may violate the triangle inequality, and no undirected corridor graph can carry either property. If someone later "saves effort" by building a complete graph and running shortest paths, this test fails immediately — shortest paths would shortcut the non-metric entry and flatten it.
     """
     data = {
         "name": "matrix_only",
@@ -411,6 +458,9 @@ def t15_matrix_only_instance():
             # 有向:LU->m1=10 而 m1->LU=3;
             # 非度量:m2->m1 直达 9 > 绕行 m2->LU->m1 = 1+10 = 11?不,取 9 < 11。
             # 真正的非度量项是 m1->m2 直达 8 > m1->LU->m2 = 3+2 = 5。
+            # Directed: LU->m1=10 while m1->LU=3.
+            # Non-metric: a direct m2->m1 of 9 > the detour m2->LU->m1 = 1+10 = 11? No; 9 < 11.
+            # The real non-metric entry is a direct m1->m2 of 8 > m1->LU->m2 = 3+2 = 5.
             "ideal_dist": {
                 "LU": {"LU": 0, "m1": 10, "m2": 2},
                 "m1": {"LU": 3, "m1": 0, "m2": 8},
@@ -423,17 +473,20 @@ def t15_matrix_only_instance():
     net.check_reachability()
 
     assert net.dist_is_given and not net.routable
-    # (1) 有向性保留
+    # (1) 有向性保留 / (1) directedness is preserved
     assert net.ideal_dist["LU"]["m1"] == 10 and net.ideal_dist["m1"]["LU"] == 3
     # (2) 非度量项**不被抹平**:若走了最短路合成,m1->m2 会变成 5
+    # (2) The non-metric entry is not flattened: shortest-path synthesis would turn m1->m2 into 5.
     assert net.ideal_dist["m1"]["m2"] == 8, "非度量项被最短路抄了近道"
 
     # (3) 退化解码用的就是这张矩阵:LU->m1 = 10,加工 5,δ_return=0 -> 15
+    # (3) Degenerate decoding uses this matrix: LU->m1 = 10, processing 5, δ_return=0 -> 15.
     res = decode(inst, net, {(1, 1): 1}, [1], conflict_free=False)
     assert abs(res.makespan - 15.0) < 1e-9, res.makespan
     assert not validate(inst, res.to_timetable())
 
     # (4) 没有走廊图时,冲突模型必须显式拒绝而不是给出无意义的解
+    # (4) With no corridor graph, the conflict model must reject explicitly rather than return a meaningless solution.
     try:
         decode(inst, net, {(1, 1): 1}, [1], conflict_free=True)
     except ValueError:
@@ -443,6 +496,7 @@ def t15_matrix_only_instance():
 
 
 # ---------------- 运行器 ----------------
+# Runner
 
 TESTS = [
     ("T1 理想最短路矩阵", t1_ideal_dist),

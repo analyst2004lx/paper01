@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""命令/事件回环（中文版，paper02 fig:system）。"""
+"""指派/事件回环（中文版，paper02 fig:system）。"""
 from __future__ import annotations
 
 import os
@@ -74,11 +74,11 @@ def main() -> None:
 
     arrow(ax, s_bot_l, d_top_l)
     ax.text(s_bot_l[0] - 0.18, (s_bot_l[1] + d_top_l[1]) / 2,
-            r"命令 $u_t$", ha="right", va="center", fontsize=9, color=C_NOTE)
+            "指派（下行）", ha="right", va="center", fontsize=9, color=C_NOTE)
 
     arrow(ax, d_top_r, s_bot_r)
     ax.text(s_bot_r[0] + 0.18, (s_bot_r[1] + d_top_r[1]) / 2,
-            r"状态 $s_t$", ha="left", va="center", fontsize=9, color=C_NOTE)
+            "活动事件（上行）", ha="left", va="center", fontsize=9, color=C_NOTE)
 
     arrow(ax, s_r, t_l, ls=(0, (3.2, 1.8)))
     ax.text((s_r[0] + t_l[0]) / 2, s_r[1] + 0.50,
@@ -91,7 +91,7 @@ def main() -> None:
     arrow(ax, (t_bot[0] + 0.28, t_bot[1]), t_bot, ls=(0, (3.2, 1.8)), lw=1.2)
 
     ax.text(0.55, 0.28,
-            r"攻击者控制 $s_t$ 的内容与时刻，",
+            "攻击者控制上行事件的内容与时刻，",
             ha="left", va="center", fontsize=8.0, color=C_NOTE)
     ax.text(0.55, -0.08,
             r"不控制物理节拍与 $\mathcal{L}$、$\mathbf{F}$",

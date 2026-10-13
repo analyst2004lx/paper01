@@ -13,6 +13,28 @@
     即对手方本地传感证据在现实中真的产生了。
   - **未建模**:活动的位置对不在任何 BPMN 里(paper02 实测 2.62% 的物料移动
     如此)。这类按"未知"处理,不能算作违反,也不能算作互证失败。
+
+Corroboration coverage and the no-counterpart interval.
+
+Two questions that must be quantified first:
+  1. What fraction of logged activities has a counterpart witness (the
+     structural coverage ceiling). That is the fraction coupled corroboration
+     can reach, the same kind of question as paper02's "the binary feasibility
+     mask covers only 31% of messages" — a mechanism cannot govern what it
+     does not cover, and it is better to know that early.
+  2. What the uncovered part is. That is the **no-counterpart interval**, which
+     on-demand active corroboration must fill (`../paper03-NewIdea.md`,
+     supplement 2). The list is also the input to probing cost.
+
+Coverage has three layers and they must not be mixed:
+  - **Model-corroborable**: the task graph has a counterpart witness for
+    (device class, operation). This is the design ceiling.
+  - **Realized**: another device class in the same case actually picked the
+    part up from the delivery position, so the counterpart's local sensor
+    evidence really occurred.
+  - **Unmodeled**: the activity's position pair is in no BPMN (paper02 measured
+    2.62% of material moves this way). Treat these as "unknown": neither a
+    violation nor a corroboration failure.
 """
 from __future__ import annotations
 
@@ -28,6 +50,13 @@ from .taskgraph import TaskGraph, consumed_at, device_class, produced_at
 #: 设备**,故不存在独立的第二方传感证据(原地多工步加工即如此);后者是本 case
 #: 内根本无人从该位置取件。二者对按需主动互证的含义不同——前者要换一个
 #: 见证者,后者要造一个事件。
+#: Coverage outcomes, in degradation order.
+#: SELF_ONLY and NO_REALIZED must stay separate: in the former the handover
+#: did happen but the receiver is the **same device**, so there is no
+#: independent second-party sensor evidence (in-place multi-step machining);
+#: in the latter nobody in this case picked up from that position. They mean
+#: different things for on-demand active corroboration — one needs a different
+#: witness, the other needs an event to be created.
 OK = "corroborated"
 SELF_ONLY = "same_device_only"
 NO_REALIZED = "no_realized_witness"
@@ -36,13 +65,16 @@ NO_MODEL = "no_model_witness"
 
 @dataclass
 class Corroboration:
-    """一次交付声明的互证结果。"""
+    """一次交付声明的互证结果。
+
+    Corroboration result for one delivery statement.
+    """
     act: Activity
     pos: str
     status: str
     witness: Activity | None = None
     delay_s: float | None = None
-    terminal: bool = False   # 是否为该 case 的末位活动
+    terminal: bool = False   # 是否为该 case 的末位活动 / whether this is the case's last activity
 
     @property
     def key(self) -> tuple[str, str]:
@@ -62,6 +94,23 @@ def realized(acts, graph: TaskGraph) -> list[Corroboration]:
     因为 vgr_1 与 vgr_2 是两台独立的机械手,各有自己的夹爪与光电传感器。
     按类判独立性会误杀本数据集中最有价值的一类互证事件——两条产线之间的
     工件交换正是 vgr_2 交付至 dm_2_sink_pos、vgr_1 从该位置取走。
+
+    For each activity, find the counterpart witness that actually appears in the log.
+
+    Scope is the case: a position is a physical place shared across cases, and
+    taking a counterpart across cases mixes concurrent parts (the cause of LATE
+    violations on paper02's interlock channel).
+
+    **Witness eligibility is by device class; witness independence is by device
+    instance.** The two granularities differ on purpose: eligibility is "can
+    this class of sensor observe the event", which is known only from the BPMN,
+    and the 16 models instantiate only some devices — reading by instance would
+    mark uninstantiated devices ineligible (same cause as paper02 rule 13).
+    Independence is "is the witness another physical machine", which must be
+    by instance, because vgr_1 and vgr_2 are two grippers with their own jaws
+    and photosensors. Judging independence by class would discard the most
+    valuable corroboration events in this dataset — the cross-line part
+    exchange is vgr_2 delivering to dm_2_sink_pos and vgr_1 picking up there.
     """
     out: list[Corroboration] = []
     for chain in case_chains(acts).values():
@@ -108,6 +157,14 @@ def summarize(records: list[Corroboration], *, top: int = 12) -> dict:
     `delay_s` 的分位数直接给出耦合互证的 pending 窗口 Δ 该取多大——它是路 1
     检测时延的上界,并经安全裕度定理接入 FHI 时间预算(budget.py)。负延迟是
     并发导致的乱序(paper02 在互锁通道上实测 17 次),不是互证失败。
+
+    Coverage and corroboration-window diagnostics.
+
+    Quantiles of `delay_s` say how large the coupled-corroboration pending
+    window Δ should be — it is the upper bound on path-1 detection latency and
+    is fed into the FHI time budget by the safety-margin theorem (`budget.py`).
+    A negative delay is reordering from concurrency (paper02 measured 17 such
+    events on the interlock channel), not a corroboration failure.
     """
     n = len(records)
     by_status = Counter(r.status for r in records)
@@ -138,6 +195,12 @@ def no_counterparty_ops(graph: TaskGraph) -> set[tuple[str, str]]:
 
     按需主动互证的作用对象。返回的是**模型级**清单,与日志无关,因此可在
     任务下发时预先判定,不必等运行时才发现无从互证。
+
+    (device class, operation) pairs in the task graph with no counterpart witness.
+
+    The target of on-demand active corroboration. The returned list is at
+    **model** level and independent of the log, so it can be decided at
+    dispatch time instead of discovering at runtime that corroboration is impossible.
     """
     return {(dc, op) for dc, ops in graph.capable.items() for op in ops
             if not graph.corroborable(dc, op)}

@@ -13,6 +13,18 @@
   - 时间序划分,与部署口径一致。
 
 用法(在 paper02/slid/ 下):  py -m tools.coverage_matrix
+
+Replace the handwritten "attack type x detection-channel coverage matrix" with a measured one.
+
+The matrix in 新想法.md (● / ○ / ✗) was **written by reasoning**, and "only the interlock channel can catch A4" is one of the headline claims of the whole text. This project already has a poor record of handwritten claims being overturned by measurement (the row-versus-column split of the structural channel, whether Fisher is usable, and the preferred calibration architecture have all flipped), so it must be measured.
+
+Rule:
+  - each channel is judged **alone**, with no fusion — the question is "can this channel see this attack", not "does the whole system catch it".
+  - each channel uses its own conformal calibrator, and the threshold is the same alpha, so the false-alarm rates line up and the DRs can be compared across channels.
+  - the hard-constraint layer (the F mask, command-response causality) is not a p-value channel, and its trigger rate is counted separately.
+  - temporal split, matching deployment.
+
+Usage (from paper02/slid/):  py -m tools.coverage_matrix
 """
 from __future__ import annotations
 
@@ -25,6 +37,7 @@ from algorithm.detector import CHANNELS, Detector, DetectorConfig
 
 FAMILIES = ("A1", "A2", "A3", "A4", "A5", "A6")
 #: 新想法.md 覆盖矩阵的手写声称,用于逐格对照
+#: handwritten claims of the coverage matrix in 新想法.md, for a cell-by-cell check
 CLAIMED = {
     "A1": {"hard": "○", "struct": "●", "time": "●", "inter": "○"},
     "A2": {"hard": "●", "struct": "●", "time": "○", "inter": "○"},
@@ -40,6 +53,10 @@ def score_stream(det: Detector, stream, rng):
 
     与 observe 的差别:硬层触发后**不**丢弃消息,继续给出三通道 p 值——
     覆盖矩阵要问的是每个通道各自看得见什么,不是在线判决顺序。
+
+    Per message, return (whether the hard-constraint layer fired, the three channels' conformal p-values).
+
+    Unlike observe: after the hard-constraint layer fires the message is **not** dropped, and the three channel p-values are still produced — the coverage matrix asks what each channel can see on its own, not the order of the online decision.
     """
     det._reset_online()
     rows = []
@@ -78,6 +95,7 @@ def measure(det, benign, family, alpha, seed, rate, rho):
     out["_n"] = len(pos)
 
     # 序贯层:同一攻击流走完整在线流水线,按延迟预算算检出
+    # sequential layer: the same attack stream runs the full online pipeline, and detection is scored by the delay budget
     det._reset_online()
     alarms = det.replay(stream, rng=rng)
     rep = metrics.evaluate(alarms, labels, det.cfg, stream=stream)
@@ -91,6 +109,10 @@ def grade(dr: float, fpr: float) -> str:
 
     阈值是报告约定而非统计判据:相对基准误报有实质提升才算 ○,
     显著高于其它通道才算 ●。
+
+    Fold a measured DR into the same symbols as the handwritten matrix, for a cell-by-cell check.
+
+    The thresholds are a reporting convention, not a statistical criterion: a substantial lift over the baseline false-alarm rate counts as ○, and standing clearly above the other channels counts as ●.
     """
     lift = dr - fpr
     if lift >= 0.25:
@@ -131,6 +153,9 @@ def main() -> int:
     # **必须关掉在线更新。** replay 会触发 M9 的 EWMA 改写时长模型,于是
     # 测完一类攻击后模型已经变了,后面几类测的不是同一个检测器——覆盖矩阵
     # 要求横向可比,只能在固定模型上测。
+    # **Online update must be off.** replay triggers M9's EWMA and rewrites the sojourn model, so
+    # after one attack family the model has already changed and later families are not the same detector — the coverage matrix
+    # requires a cross-family comparison, so it can only be measured on a fixed model.
     det = Detector(DetectorConfig(alpha=args.alpha, online_update=False,
                                   timing_score=args.timing_score)).fit(
         fit_acts, model=model, rng=np.random.default_rng(0), temporal=True)

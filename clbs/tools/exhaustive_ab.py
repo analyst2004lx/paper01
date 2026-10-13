@@ -17,6 +17,18 @@
 超时即停。穷举档跑的代数必然更少,若它仍然赢,才说明这笔钱花得值。
 
 运行(clbs/ 目录下):  py -m tools.exhaustive_ab [--budget 15] [--seeds a,b,c]
+
+Same-wall-clock A/B: should the reassignment operator "score and pick one machine" or "exhaustively decode every candidate"?
+
+Background. Three attempts (price routing, conflict certificates, probe scoring) all stall at the same place (tools/regime_curve.py --attrib, about 1000 converged cases): picking a candidate at random hits 7.0%, any local score reaches only 10.0%, and cases with an improving candidate are 17.4%. Measured from the random baseline, scoring captures a bit more than a quarter of the attainable interval; the regret view gives the same fraction. The remaining three quarters cannot be predicted and must be taken by a true decode.
+
+Do not measure scoring by subtracting 10.0% from 17.4%: the oracle may pick among all 4–6 candidates, while scoring picks one, and the 7.0% random baseline is exactly what "trying a few more times" is worth. This script is not affected — the exhaustive arm really tries every candidate and is really charged for those 4–6 decodes.
+
+On the cost side, exhausting one case decodes 4–6 candidates rather than 1; the measured reusable fraction of incremental decoding is 46.8% (tools/reuse_diag.py), which at best halves that cost. Multiplying the two sides, exhaustive search is about 2–3× the current cost for a 1.8× hit rate — roughly a wash on paper, so it has to be measured.
+
+This script therefore does not compare generation counts. It compares only the **final makespan under the same wall-clock budget**: both arms share time_budget_sec and stop when time is up. The exhaustive arm necessarily runs fewer generations; it is worth the money only if it still wins.
+
+Run (from the clbs/ directory):  py -m tools.exhaustive_ab [--budget 15] [--seeds a,b,c]
 """
 from __future__ import annotations
 

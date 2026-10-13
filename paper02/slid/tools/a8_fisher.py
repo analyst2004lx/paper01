@@ -15,6 +15,18 @@ alpha 固定)问三件事:
 判定规则写在 verdict() 里,不在跑完后再解释。
 
 用法(在 paper02/slid/ 下):  py -m tools.a8_fisher
+
+A8 red-team attack: whether the Fisher fusion path should be kept.
+
+Conclusion 25 used a score-level `misplace` (randomly rewriting the predecessor at scoring time) and measured Fisher at 0.413 against timing-only 0.108, which left the fork "either add A8 or drop the fusion path". This tool replaces that hand perturbation with a real injector, then asks three questions under the E1 main-table rule (sequential at 10, chance-alarm floor subtracted, total alpha fixed):
+
+  Q1  Is A8 realizable on Trier? If no F-allowed non-modal successor can be found, it cannot endorse the fusion path, and a score-level misplace cannot stand in for it.
+  Q2  Is A8 really cross-channel? The hard-constraint-layer DR should be near zero (otherwise it is A2), and both timing and structure should show a visible residual (otherwise it is A3 or a "weak A4").
+  Q3  On the production config (hard-constraint layer + timing + structure), does adding Fisher gain more on A8 than it costs by spreading the budget on A1–A6?
+
+The decision rule is written in verdict(), not interpreted after the run.
+
+Usage (from paper02/slid/):  py -m tools.a8_fisher
 """
 from __future__ import annotations
 
@@ -33,6 +45,7 @@ from tools.baseline_diag import attack_stream, split  # noqa: E402
 PATHS = ("硬层", "时序", "结构", "互锁", "合成")
 COST_FAMS = ("A1", "A2", "A3", "A4", "A5", "A6")
 #: 生产配置三路 vs 三路+Fisher。互锁权重恒 0:天花板判据已剔除它。
+#: production config, three paths versus three paths plus Fisher. The interlock weight is always 0: the ceiling criterion already dropped it.
 WEIGHTS = {
     "三路(现行)":     (1 / 3, 1 / 3, 1 / 3, 0.0, 0.0),
     "三路+Fisher":    (1 / 4, 1 / 4, 1 / 4, 0.0, 1 / 4),
@@ -43,7 +56,10 @@ WEIGHTS = {
 
 
 def score_parts(det, stream, rng):
-    """五路原始分数(越大越异常)。E1 口径:不做冻结 conformal,交给 judge。"""
+    """五路原始分数(越大越异常)。E1 口径:不做冻结 conformal,交给 judge。
+
+    Five raw scores (larger means more anomalous). E1 rule: no frozen conformal; hand them to judge.
+    """
     det._reset_online()
     rows = []
     for a in stream:
@@ -64,7 +80,10 @@ def net(det, benign, stream, lab, alpha, rng, weights):
 
 
 def coverage(det, stream, lab, alpha, rng):
-    """逐通道单消息 DR/FPR,问的是看得见与否,不是端到端。"""
+    """逐通道单消息 DR/FPR,问的是看得见与否,不是端到端。
+
+    Per-channel per-message DR/FPR. The question is whether the channel can see the attack, not the end-to-end result.
+    """
     det._reset_online()
     hard, pvals = [], []
     for a in stream:
@@ -89,7 +108,10 @@ def coverage(det, stream, lab, alpha, rng):
 
 
 def injector_stats(test, spec):
-    """A8 有多少受害者能真正落下,落下去的是不是非众数。"""
+    """A8 有多少受害者能真正落下,落下去的是不是非众数。
+
+    How many A8 victims can actually be landed, and whether what lands is non-modal.
+    """
     tm = spec.struct_model
     bad, lab = attacks.inject(test, spec)
     n_hit = sum(lab)
@@ -99,6 +121,7 @@ def injector_stats(test, spec):
         if not hit:
             continue
         # 插入条的前驱是它在同 case 里、时刻更早的那条
+        # the inserted activity's predecessor is the earlier activity in the same case
         prev = None
         for b in bad:
             if b.case == a.case and b.t_consume is not None \
@@ -119,15 +142,20 @@ def injector_stats(test, spec):
 
 
 def verdict(stats, cov, a8, cost):
-    """三条必须同时成立才留 Fisher,缺一条就撤。"""
+    """三条必须同时成立才留 Fisher,缺一条就撤。
+
+    Fisher is kept only if all three hold; if any one fails, drop it.
+    """
     realizable = stats["injected"] >= 0.3 * stats["attempted"]
     not_a2 = cov["hard"][0] < 0.10
     multi = (cov["time"][0] - cov["time"][1] >= 0.05
              and cov["struct"][0] - cov["struct"][1] >= 0.05)
     gain = a8["三路+Fisher"] - a8["三路(现行)"]
     tax = cost["三路(现行)"] - cost["三路+Fisher"]   # >0 表示加 Fisher 在 A1-A6 上亏
+    # >0 means adding Fisher loses on A1-A6
     unique = gain >= 0.08
     worth = gain >= tax                           # A8 增益盖得住 A1-A6 的税
+    # the A8 gain covers the A1-A6 tax
     stay = realizable and not_a2 and multi and unique and worth
     reasons = []
     if not realizable:
@@ -186,6 +214,7 @@ def main() -> int:
     print()
 
     # --- Q2 覆盖 ---
+    # Q2 coverage
     covs = []
     a8_net = {k: [] for k in WEIGHTS}
     a8_fpr = {k: [] for k in WEIGHTS}
@@ -216,6 +245,7 @@ def main() -> int:
     print()
 
     # --- Q3 代价:A1-A6 上三路 vs 三路+Fisher ---
+    # Q3 cost: three paths versus three paths plus Fisher on A1-A6
     cost = {"三路(现行)": [], "三路+Fisher": []}
     per = {f: {"三路(现行)": [], "三路+Fisher": []} for f in COST_FAMS}
     for fam in COST_FAMS:

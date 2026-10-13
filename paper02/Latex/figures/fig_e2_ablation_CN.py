@@ -1,7 +1,12 @@
 ﻿# -*- coding: utf-8 -*-
-"""E2: production-relevant arms, per-channel alpha fixed, alpha=0.05."""
+"""E2: production three-path ablation, per-channel alpha fixed, alpha=0.01.
+
+Reads slid/output/e2_prod_archive.json (tools/ablate_prod.py).
+"""
 from __future__ import print_function, division
 
+import io
+import json
 import os
 import sys
 
@@ -17,14 +22,24 @@ from _style import (  # noqa: E402
 )
 
 ATTACKS = [u"A1", u"A2", u"A3", u"A4", u"A5", u"A6"]
+ARCHIVE = os.path.join(HERE, "..", "..", "slid", "output", "e2_prod_archive.json")
+ALPHA = 0.01
+
+
+def _arm(runs, arm):
+    return np.array([np.mean([r["seq_net"] for r in runs
+                              if r["arm"] == arm and r["family"] == f])
+                     for f in ATTACKS])
 
 
 def main():
     apply_style()
-    full = np.array([0.45, 0.74, 0.27, 0.15, 0.70, 0.15])
-    no_t = np.array([0.54, 0.84, 0.01, 0.22, -0.02, 0.21])
-    no_f = np.array([0.29, 0.51, 0.27, 0.09, 0.70, 0.15])
-    no_s = np.array([0.37, 0.81, 0.26, 0.04, 0.78, -0.03])
+    with io.open(ARCHIVE, encoding="utf-8") as f:
+        runs = [r for r in json.load(f)["runs"] if r["alpha"] == ALPHA]
+    full = _arm(runs, "full")
+    no_t = _arm(runs, "no_timing")
+    no_f = _arm(runs, "no_hard")
+    no_s = _arm(runs, "no_structural")
     series = [
         (u"完整", full, C_OURS),
         (u"去时序", no_t, C_TIME),
@@ -53,7 +68,7 @@ def main():
            columnspacing=0.7, handlelength=1.1, handletextpad=0.3)
 
     ax2 = axes[1]
-    deltas = np.array([-0.11, -0.07, -0.04])
+    deltas = np.array([a.mean() - full.mean() for a in (no_t, no_f, no_s)])
     labels = [u"去时序", u"去硬约束层", u"去结构"]
     cols = [C_TIME, C_HARD, C_STR]
     y = np.arange(3)
@@ -61,7 +76,7 @@ def main():
     ax2.axvline(0.0, color=C_LINE, linewidth=0.6)
     ax2.set_yticks(y)
     ax2.set_yticklabels(labels, fontproperties=FP_SM)
-    ax2.set_xlim(-0.20, 0.03)
+    ax2.set_xlim(-0.25, 0.03)
     ax2.xaxis.grid(True, linestyle=":", color="#DDDDDD", zorder=0)
     ax2.set_axisbelow(True)
     set_cjk(ax2, xlabel=u"均值变化 $\\Delta$")

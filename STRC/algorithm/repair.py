@@ -2,6 +2,11 @@
 
 Phase B 最小引擎 = 升级阶梯第 1 级(只改路径、原车不变)。
 R1/R2 只差 release_set 的来源(任务图 vs 时空闭包)。
+
+Bounded repair: release reservations inside the impact set, install the disturbance, then replay the original OS (freeze the outside, reroute the inside).
+
+The Phase B minimal engine is level 1 of the escalation ladder (reroute only; the original vehicle stays).
+R1 and R2 differ only in where release_set comes from (task graph vs. spatiotemporal closure).
 """
 from __future__ import annotations
 
@@ -68,6 +73,12 @@ def _segments_to_reroute(
     空载段进闭包必然带着满载段一起(两者是同车相邻预约,同车后继边由前者指向
     后者),反之不成立。第二个返回值里的 or 只是防御:若边集将来变动导致这个
     蕴含不再成立,重路空载段而冻结满载段会让满载段的起点失去依据。
+
+    Decide, for this operation, whether the empty segment and the loaded segment each need rerouting.
+
+    The release set is one set of **reservations**, not a set of operations. The earlier test was per operation: if either segment fell inside the closure, the whole operation was replanned. When only the loaded segment was in the closure, the empty segment was rewritten too, and its task label was not in the release set, so E2b recorded an "outside drift". Of the 84 drifted reservations in the 26 failing cells, every one was an empty segment of the same operation, and 71 of them had already finished before t_now; rewriting them also violated assumption A2. The test is therefore per segment.
+
+    An empty segment entering the closure always brings the loaded segment with it (they are adjacent reservations of the same vehicle, and the same-vehicle successor edge points from the former to the latter); the converse does not hold. The `or` in the second return value is only defensive: if the edge set later changes and that implication fails, rerouting the empty segment while freezing the loaded segment would leave the loaded segment's start without a basis.
     """
     need_empty = f"J{j}-{i}-empty" in closed_tasks
     need_loaded = f"J{j}-{i}-loaded" in closed_tasks
@@ -94,7 +105,10 @@ def _failed_machine(dist: Disturbance) -> Optional[int]:
 
 def _ma_under_failure(inst: Instance, bundle: ScheduleBundle, dist: Disturbance
                       ) -> Dict[Tuple[int, int], int]:
-    """机械臂故障:未完工工序改派到工时最短的其它可行机。已完工的不动。"""
+    """机械臂故障:未完工工序改派到工时最短的其它可行机。已完工的不动。
+
+    Robot-arm failure: reassign unfinished operations to the other feasible machine with the shortest processing time. Finished operations stay put.
+    """
     ma = dict(bundle.ma)
     dead = _failed_machine(dist)
     if dead is None:
@@ -138,6 +152,12 @@ def _precommit_frozen(
 
     把历史腿在这里一次性占位(而不是等重放走到该工序时再补),是为了避免顺序依赖:
     若晚于其他改路发生,别的段可能已经抢走该时空槽位,reserve 就会失败。
+
+    Pre-commit every reservation that may not be rewritten: all of those outside the closure, plus those inside the closure that have **already finished**.
+
+    The second kind is easy to miss, and missing it is the same as allowing history to be rewritten. The release set is applied to the replay by task label, and one label (such as `J8-1-empty`) may span several corridor legs. If any leg has t_end after t_now, the whole label enters the release set, so even legs that **already finished** before t_now get replanned. Under assumption A2 those occupations must not be revised. Note rem:e2b_history fixed the coarser mismatch of "per operation vs. per segment"; this is the finer mismatch of "per segment vs. per corridor leg".
+
+    Historical legs are reserved here in one pass (rather than filled in when replay reaches that operation) to avoid order dependence: if this happened after other reroutes, another segment might already have taken that spatiotemporal slot, and reserve would fail.
     """
     from algorithm.block_context import block_windows_from_dist
     errs: List[str] = []
@@ -177,10 +197,19 @@ def _reroute_tail(
     历史,车在 t_now 时位于最后一条历史腿的终点,改路从那里接着走。
 
     历史腿的占位已由 _precommit_frozen 完成,此处不重复 reserve。
+
+    Replan only the part of this segment after t_now; corridor legs already finished are kept as they are.
+
+    The old code replanned the whole segment from fallback_start, which sent the vehicle back to the segment start to travel it again. If the segment crossed t_now, legs already finished were rewritten (violating A2). Here the cut is per leg: a leg with exit <= t_now is history. At t_now the vehicle is at the end of the last historical leg, and rerouting continues from there.
+
+    Historical legs were already reserved by _precommit_frozen; do not reserve them again here.
     """
     if old_plan.arrive <= t_now + EPS:
         # 整段在决策时刻前已结束。目的地未变则原样保留;改派后目的地变了,
         # 必须从旧终点续一跳,否则 loc 写成新终点、轨迹仍停在旧终点,路径断裂。
+        # The whole segment finished before the decision time. If the destination is unchanged, keep it.
+        # After reassignment the destination changed, so one more hop must continue from the old end;
+        # otherwise loc is written as the new end while the trajectory still stops at the old end, and the path breaks.
         if old_plan.goal == goal:
             return old_plan
         hop = router.route(
@@ -199,6 +228,9 @@ def _reroute_tail(
         # 该段在 t_now 前已抵达终点(标签因同工序另一段的腿而进释放集)。原样沿用,
         # 但若还有 exit > t_now 的腿(路径绕经终点后又离开),它们没被 _precommit_frozen
         # 占位,必须在此补上,否则预约表会留下空洞让别的车叠进来。
+        # This segment reached its goal before t_now (the label entered the release set because of a leg of another segment of the same operation). Keep it as is.
+        # If any leg still has exit > t_now (the path passed the goal and left again), _precommit_frozen did not reserve it.
+        # It must be filled in here, or the reservation table keeps a hole that another vehicle can stack into.
         for s in old_plan.segments:
             if s.exit > t_now + EPS:
                 router.table.reserve(s.corridor, s.enter, s.exit, agv, task)
@@ -211,6 +243,7 @@ def _reroute_tail(
         tail.arrive,
         list(done) + list(tail.segments),
         # 只记新规划那部分的等待:历史腿上的让行已经发生,不该再计入本次拥堵归因
+        # Record waiting only for the newly planned part: yielding on historical legs already happened and should not be counted again in this congestion attribution.
         dict(tail.wait_by_corridor),
         tail.price_cost,
     )
@@ -227,6 +260,10 @@ def replay_reroute(
 
     A 类故障在此开口假设 A5:车辆故障把故障车从车队摘除并换车;
     机械臂故障把未完工工序改派到其它可行机。B 类仍只改路。
+
+    Level-1 repair: release transport of tasks in `release`, and by default force a reroute replay on the original vehicle.
+
+    Class-A faults open assumption A5 here: a vehicle fault removes the failed vehicle from the fleet and switches vehicles; a robot-arm fault reassigns unfinished operations to another feasible machine. Class B still only reroutes.
     """
     t_wall0 = time.perf_counter()
     base = bundle.result
@@ -412,6 +449,7 @@ def replay_reroute(
             ops[(j, i)] = OpRecord(j, i, m, arrive, start, finish, bind, mprev, pseudo)
             pos[j], ready[j] = dest, finish
     except Exception as e:  # noqa: BLE001 — 修复失败统一收口
+        # noqa: BLE001 — a failed repair is collected at this one exit
         wall_ms = (time.perf_counter() - t_wall0) * 1000
         return RepairResult(
             feasible=False, release_size=len(release), level_used=1,
@@ -490,6 +528,10 @@ def expand_release_job_suffix(
     """把释放集内每个工序的同工件后继(含自身)未来预约并入。
 
     用于消除校验 (f) 运输-工序衔接在「只放中间、冻后缀」时的不一致。
+
+    Add, for every operation in the release set, the future reservations of its same-job successors (including itself).
+
+    This removes the inconsistency in check (f), transport-to-operation linking, when only the middle is released and the suffix is frozen.
     """
     mins: Dict[int, int] = {}
     for r in release:
@@ -517,7 +559,10 @@ def expand_release_agv_suffix(
     *,
     t_now: float,
 ) -> List[ReservationRef]:
-    """把释放集内出现过的 AGV 在 t_now 之后的全部预约并入。"""
+    """把释放集内出现过的 AGV 在 t_now 之后的全部预约并入。
+
+    Add every reservation after t_now of each AGV that appears in the release set.
+    """
     agvs = {r.agv for r in release}
     t0 = {a: min(r.t_start for r in release if r.agv == a) for a in agvs}
     extra = [
@@ -551,6 +596,14 @@ def repair_with_scope_escalation(
       1  + 同工件后继
       2  + 同车后继
       3  全部未来预约(仍是单遍改路,不是 GA)
+
+    Level-1 reroute, then widen the domain and repair again on failure.
+
+    Rounds:
+      0  initial_release (usually the spatiotemporal closure)
+      1  + same-job successors
+      2  + same-vehicle successors
+      3  all future reservations (still one reroute pass, not a GA)
     """
     t0 = time.perf_counter()
     release = list(initial_release)
@@ -579,7 +632,7 @@ def repair_with_scope_escalation(
             nxt = expand_release_all_future(
                 bundle.reservations, t_now=dist.t_now)
         if len(nxt) <= len(release):
-            # 无法再扩大
+            # 无法再扩大 / Cannot widen any further
             if round_i >= 2:
                 break
             release = nxt
@@ -601,7 +654,7 @@ def repair_with_scope_escalation(
 
 def release_set_r2(bundle: ScheduleBundle, dist: Disturbance) -> List[ReservationRef]:
     seeds = seed_failed_reservations(dist, bundle.reservations)
-    # 多微阻断:与任一阻断重叠的预约也作种子
+    # 多微阻断:与任一阻断重叠的预约也作种子 / Multiple micro-blockages: a reservation overlapping any blockage is also a seed
     from algorithm.block_context import block_windows_from_dist
     blocks = block_windows_from_dist(dist)
     if blocks:
@@ -613,7 +666,7 @@ def release_set_r2(bundle: ScheduleBundle, dist: Disturbance) -> List[Reservatio
                 if r.corridor == cid and r.overlaps(a, b):
                     extra.append(r)
                     break
-        # 去重合并
+        # 去重合并 / Merge, dropping duplicates
         seen = set(seeds)
         for r in extra:
             if r not in seen:
@@ -651,7 +704,10 @@ def release_set_r1(bundle: ScheduleBundle, dist: Disturbance, *, theta: int = 2
 
 def repair_a5_fault(inst: Instance, net: Network, bundle: ScheduleBundle,
                     dist: Disturbance) -> RepairResult:
-    """A 类故障:固定前缀 + 换车/改派。不走原车强制改路。"""
+    """A 类故障:固定前缀 + 换车/改派。不走原车强制改路。
+
+    Class-A fault: fixed prefix plus a vehicle switch or reassignment. Do not force a reroute on the original vehicle.
+    """
     from algorithm.prefix_decode import decode_from_now
     t0 = time.perf_counter()
     dead = _failed_agv(dist)
@@ -695,6 +751,10 @@ def repair_with_strc(inst: Instance, net: Network, bundle: ScheduleBundle,
     """R2:时空闭包界定 + 第 1 级改路;默认失败则扩域再修。
 
     A 类故障改走 repair_a5_fault(换车/改派),扩域开关对它们不改变动作集合。
+
+    R2: bound the domain by the spatiotemporal closure, then level-1 reroute; on failure, widen the domain and repair again by default.
+
+    Class-A faults go through repair_a5_fault (vehicle switch / reassignment); the widen-on-failure switch does not change their action set.
     """
     if dist.type in ("agv_breakdown", "ra_failure"):
         return repair_a5_fault(inst, net, bundle, dist)
@@ -721,6 +781,12 @@ def repair_with_all_future(inst: Instance, net: Network, bundle: ScheduleBundle,
 
     RA 同样按 A2 可采纳(t_end <= t_now 的预约仍然冻结),且已经是最大释放集,
     因此不需要失败扩域。
+
+    RA: draw no boundary. Release every reservation after t_now, then run the same reroute replay.
+
+    This is the other side of the question "is there a boundary". E3 compares two different boundary definitions (R1 task graph vs. R2 spatiotemporal closure); here the comparison is "use a boundary" versus "use no boundary". RA and R2 share replay_reroute, the freeze test, and blockage installation. The only difference is that the release set takes the trivial upper bound. The gap between the two arms can therefore be attributed entirely to the closure itself, not to the engine, the protocol, or the implementation.
+
+    RA is also admissible under A2 (reservations with t_end <= t_now stay frozen), and it is already the largest release set, so it does not need to widen the domain on failure.
     """
     release = expand_release_all_future(bundle.reservations, t_now=dist.t_now)
     out = replay_reroute(inst, net, bundle, dist, release)
@@ -733,7 +799,10 @@ def repair_with_task_graph(inst: Instance, net: Network, bundle: ScheduleBundle,
                            dist: Disturbance, *, theta: int = 2,
                            expand_on_fail: bool = True,
                            **_kwargs) -> RepairResult:
-    """R1:任务图影响域界定 + 第 1 级改路;默认失败则扩域再修。"""
+    """R1:任务图影响域界定 + 第 1 级改路;默认失败则扩域再修。
+
+    R1: bound the domain by the task-graph impact set, then level-1 reroute; on failure, widen the domain and repair again by default.
+    """
     release = release_set_r1(bundle, dist, theta=theta)
     if expand_on_fail:
         out = repair_with_scope_escalation(
@@ -752,7 +821,10 @@ def outside_reservations_unchanged(
     after: DecodeResult,
     release: Sequence[ReservationRef],
 ) -> List[str]:
-    """E2b:闭包外预约应逐字段不变。"""
+    """E2b:闭包外预约应逐字段不变。
+
+    E2b: reservations outside the closure should be unchanged in every field.
+    """
     closed = {r.task for r in release}
     bef = {(r.task, r.corridor, r.agv): (r.t_start, r.t_end)
            for r in reservations_from_result(before) if r.task not in closed}

@@ -19,6 +19,26 @@
     CUSUM(ARL0>=500):rho=0.15 检出 0.868 中位延迟 10 条
 
 用法(在 paper02/slid/ 下):  py -m tools.bound_curve
+
+The impact-detectability tradeoff: the theoretical bound versus the measured detection rate, and how far the sequential layer pushes it.
+
+Attack model A4 early reporting: the device falsely reports early completion, and the observed sojourn shrinks to (1-rho)*tau. In log space that is a pure location shift Delta = log(1-rho), so the standardized shift is Delta/sigma, and the per-message power at level alpha is
+    one-sided  DR(rho) = Phi(-z1 - Delta/sigma)
+    two-sided  DR(rho) = Phi(-z2 - Delta/sigma) + 1 - Phi(z2 - Delta/sigma)
+
+Two things make the measurement fall below the prediction, and the point of this script is to quantify them:
+  - sigma is estimated from a finite training sample, not known;
+  - the threshold comes from conformal calibration of the real residuals, whose tail is not exactly Gaussian.
+
+Target numbers (probe_bound.py):
+    20 modelable groups, sigma 0.007 to 1.843, test weighted mean 0.239
+    conformal threshold at alpha=0.01: two-sided 5.626 / one-sided 2.568 (Gaussian reference 2.576/2.326)
+    empirical FPR on the clean test set: two-sided 0.0028 / one-sided 0.0084
+    with a Gaussian threshold: two-sided 0.0196 / one-sided 0.0140 (nominal 0.01)
+    per-message DR at rho=0.50: one-sided 0.874 (predicted 0.851), two-sided 0.338 (predicted 0.357)
+    CUSUM (ARL0>=500): at rho=0.15, detection 0.868, median delay 10 messages
+
+Usage (from paper02/slid/):  py -m tools.bound_curve
 """
 from __future__ import annotations
 
@@ -40,6 +60,10 @@ def build_folds(acts, seed: int = 7):
 
     按路线分层划分,保证三折都覆盖同样的路线集合——否则测试折里出现
     fit 折没见过的路线,量到的就不是检测功效而是外推误差(见 T6)。
+
+    Split fit/calib/test by (group, route), then standardize with the location and scale of the fit fold.
+
+    Stratify the split by route, so all three folds cover the same set of routes — otherwise a route unseen in the fit fold appears in the test fold, and what is measured is extrapolation error rather than detection power (see T6).
     """
     rng = np.random.default_rng(seed)
     by_key = defaultdict(list)
@@ -82,6 +106,8 @@ def build_folds(acts, seed: int = 7):
         sigmas[grp] = sigma
         # NIG 后验预测:小样本下 sigma 本身有估计误差,后验预测把它折进
         # 更厚的尾部。scale > 1、自由度有限,正是插值 sigma 所缺的两件事。
+        # NIG posterior prediction: with a small sample sigma itself is estimated with error, and the posterior
+        # prediction folds that into a heavier tail. scale > 1 and finite degrees of freedom are exactly the two things an interpolated sigma lacks.
         post = timing.nig_update(timing.NIGPrior(),
                                  np.asarray(resid) / sigma)
         for parts, sink in ((cal_p, cal), (test_p, test)):
@@ -101,6 +127,11 @@ def _scores(rows, shift=0.0, mode: str = "z"):
 
     mode='z'  插值 sigma 的原始 z(probe_bound 的口径)
     mode='t'  NIG -> Student-t 后验预测的概率积分变换
+
+    Turn a recorded fold into (one-sided, two-sided) nonconformity scores; larger means more anomalous.
+
+    mode='z'  the raw z of an interpolated sigma (the rule of probe_bound)
+    mode='t'  the probability-integral transform of the NIG -> Student-t posterior prediction
     """
     z = np.array([r["z"] for r in rows])
     if shift:
@@ -118,6 +149,10 @@ def stability(acts, alpha: float, n_seeds: int) -> None:
     这不是可有可无的诊断。混合校准把 sigma 相差两个数量级的分组放进同一个
     分位数里(dm_2 /dm/lower 的 0.008 与 hw_1 的 1.846),于是 |z| 的 99%
     分位由低 sigma 组的少数极端点决定,单个种子的结果不可信。
+
+    How sensitive the threshold and the power are to the fold-split seed.
+
+    This is not an optional diagnostic. Pooled calibration puts groups whose sigma differs by two orders of magnitude into one quantile (0.008 for dm_2 /dm/lower and 1.846 for hw_1), so the 99% quantile of |z| is decided by a few extreme points from the low-sigma groups, and a single seed's result is not trustworthy.
     """
     d = log(0.5)
     arms = (("z", False, "插值 sigma + 混合校准"),
@@ -142,6 +177,7 @@ def stability(acts, alpha: float, n_seeds: int) -> None:
                 for g in {r["grp"] for r in cal}:
                     m = [i for i, r in enumerate(cal) if r["grp"] == g]
                     if len(m) + 1 < 1 / alpha:      # 规则 3:alpha 不可达
+                        # rule 3: alpha is unreachable
                         n_bad += 1
                         continue
                     q1[g] = float(np.quantile(c1[m], 1 - alpha))
@@ -260,8 +296,10 @@ def main() -> int:
     print()
 
     # ---------------- 序贯层 ----------------
+    # sequential layer
     print(f"=== CUSUM:给定延迟预算下的检出率(ARL0>={args.arl0}) ===")
     # 单侧左尾 p 值:抢跑使 z 变负,故 p = Phi(z) 越小越异常
+    # one-sided left-tail p-value: early reporting makes z negative, so a smaller p = Phi(z) is more anomalous
     p_cal = np.array([timing.norm_cdf(z) for z in z_cal])
     h = sequential.calibrate_h(p_cal, args.arl0, k=1.5)
     print(f"  k=1.5, h={h:.2f}(在良性校准流上定标)")

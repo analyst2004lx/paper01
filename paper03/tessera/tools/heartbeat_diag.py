@@ -9,6 +9,17 @@
   U1  交接点全传感器先知     覆盖率 1.0；差额 = 本文覆盖缺口
 
 用法(在 paper03/tessera/ 下):  py -m tools.heartbeat_diag
+
+Tier-3 and tier-4 baselines: equal-bandwidth latency, an unbound heartbeat, TESLA attribution failure, and the oracle ceiling.
+
+This tier **does not compare P1 detection rates** — that is tier 1's structural 0. What it attaches to is the bandwidth–safety margin theorem and the cryptographic boundary:
+
+  H1  equal-bandwidth periodic full reports   latency scales by report/token at the same bandwidth
+  H2  GOOSE heartbeat with no binding         liveness yes, attribution no
+  H3  TESLA-style delayed keys                authentication yes, non-repudiation no (forgeable after disclosure)
+  U1  sensor oracle at every handover         coverage 1.0; the difference is this paper's coverage gap
+
+Usage (from paper03/tessera/):  py -m tools.heartbeat_diag
 """
 from __future__ import annotations
 

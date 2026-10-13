@@ -7,6 +7,15 @@
   B. tab:cheap 的「平均退化」两列之差，是否等于正文所报的配对差均值
   C. RA 与 R2 有多少格是「两法恒等」（释放集 = 全部未结束占用），
      剔除后胜负平与平均降幅变成多少
+
+Check the arithmetic claims in the audit report, always going back to the original CSV rather than working backwards.
+
+Three things:
+  A. Which denominator E8's "impact-set ratio" uses, and what it becomes as Cl/|R_alive|
+     (this decides whether "does the ratio rise toward 1" was answered correctly)
+  B. Whether the difference of the two "mean degradation" columns in tab:cheap equals the mean paired difference reported in the text
+  C. How many cells of RA and R2 are "the two methods coincide" (release set = all unfinished occupations),
+     and what the win/tie/loss and the mean reduction become after those cells are dropped
 """
 import csv
 import io
@@ -81,7 +90,10 @@ w("")
 
 
 def deg(r):
-    """完工时间相对扰动前参照的退化率。"""
+    """完工时间相对扰动前参照的退化率。
+
+Degradation rate of makespan relative to the pre-disturbance reference.
+"""
     return (float(r["makespan"]) - float(r["makespan_ref"])) / float(r["makespan_ref"])
 
 

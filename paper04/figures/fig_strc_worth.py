@@ -1,4 +1,4 @@
-"""E7 post hoc rule: release share vs stability reduction.  Reads
+"""E7 post hoc rule: rewritable share vs reduction in rewrite fraction.  Reads
 cheap_baselines.csv; runs no new experiment."""
 from __future__ import annotations
 
@@ -69,7 +69,7 @@ def main() -> None:
     ax.axvline(THRESH, color="0.35", linestyle="--", linewidth=1.0,
                label=rf"post hoc threshold ${THRESH:g}$")
     ax.set_xlabel(r"rewritable share $\mathrm{Cl}/|R^{\circ}|$")
-    ax.set_ylabel("stability reduction (RA $-$ R2)")
+    ax.set_ylabel("reduction in rewrite fraction (RA $-$ R2)")
     ax.set_xlim(0.74, 1.02)
     ax.legend(loc="upper right", fontsize=7, ncol=2, framealpha=0.92)
     fig.tight_layout()

@@ -2,6 +2,10 @@
 """为 paper04 的 P17(离散度口径)与 NEW-05(E5 交叉)算一次读数。
 
 输出写文件,不走 stdout,避免 Windows 控制台编码问题。
+
+Compute one reading for paper04's P17 (dispersion convention) and NEW-05 (E5 crossing).
+
+Write the output to a file, not stdout, to avoid Windows console encoding problems.
 """
 import csv
 import io
@@ -26,7 +30,10 @@ def load(*parts):
 
 
 def quantile(sorted_vals, q):
-    """线性插值分位数,口径与 numpy 默认一致。"""
+    """线性插值分位数,口径与 numpy 默认一致。
+
+Linearly interpolated quantile, the same convention as numpy's default.
+"""
     if not sorted_vals:
         return float("nan")
     if len(sorted_vals) == 1:
@@ -64,6 +71,7 @@ def fmt(d, nd=3):
 
 # ---------------------------------------------------------------- P17 (1)
 # tab:e1 与 fig:e1e3 左幅:每算例 10 个随机种子的 Cl/|R|、|Cl|、|Seeds|、|R|
+# tab:e1 and the left panel of fig:e1e3: Cl/|R|, |Cl|, |Seeds|, |R| over 10 random seeds per instance
 w("=" * 72)
 w("P17-A  tab:e1 / fig:e1e3(左):逐算例 10 种子的离散度")
 w("        源 expanded/e1_miss.csv")
@@ -98,6 +106,7 @@ w("  >>> 逐算例 IQR 的最小值 = %.4f" % min(
 
 # ---------------------------------------------------------------- P17 (2)
 # fig:scale:congested_8x4x4 上按 phi 分档,逐档种子间离散度
+# fig:scale: on congested_8x4x4, bin by phi and report between-seed dispersion at each level
 w("")
 w("=" * 72)
 w("P17-B  fig:scale:phi 扫描逐档离散度   源 expanded/scale_compare.csv")

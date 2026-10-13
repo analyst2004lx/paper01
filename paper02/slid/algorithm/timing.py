@@ -21,6 +21,22 @@
 
 本模块只依赖 numpy 与标准库:Student-t 的 CDF 由正则化不完全 Beta 函数
 自带实现,以免在线检测器为一个分布函数拖进 scipy。
+
+M4 timing channel: a semi-Markov sojourn-time model with covariates.
+
+The semi-Markov kernel factors as Q_ij(tau) = P_ij * F_ij(tau), where P_ij is exactly the existing transition matrix (strictly backward compatible). Sojourn time is log-normal. An NIG conjugate prior gives a closed-form Student-t posterior predictive (the tail thickens automatically on a small sample, which avoids a false-alarm storm).
+
+The covariate form is fixed by measurement as an **additive AFT**:
+    log tau = mu + a_start + b_end + beta^T x + eps
+
+Measured basis:
+  - Route covariates explain 89.3% of the variance; sigma_log falls from 0.355 to 0.116. vgr_1 falls from 0.480 to 0.149, the same order as vgr_2's conditioned 0.052.
+  - The additive parameterization and the per-route saturated model have **exactly equal** residuals (difference 0.000), because the material-flow route graph is a forest (the start->end bipartite graph of all 7 groups is acyclic).
+  - But a forest means every route is a bridge. Removing one makes its endpoint effects unidentifiable, so the additive model **cannot extrapolate to an unseen route** (leave-one-route residual 0.416, almost the unconditioned 0.480). Unseen routes must fall back to the planned_operation_time cold-start prior, measured sigma=0.159, clearly better than the additive extrapolation's 0.279.
+
+Four observation cases correspond to four branches; see dwell_pvalue.
+
+This module depends only on numpy and the standard library: the Student-t CDF is implemented from the regularized incomplete beta, so the online detector does not pull in scipy for one distribution function.
 """
 from __future__ import annotations
 
@@ -32,19 +48,26 @@ import numpy as np
 
 # 只查"太快"的方向性备择。抢跑是有向攻击,双侧白白损失约一半功效
 # (rho=0.5 时实测 DR 0.874 对 0.338)。
+# One-sided alternative that only checks "too fast". Early reporting is a directed attack;
+# a two-sided test throws away about half the power (at rho=0.5, measured DR 0.874 versus 0.338).
 JUMP, HEARTBEAT, TIMEOUT, INTERVAL = "jump", "heartbeat", "timeout", "interval"
 
 # 人在回路工序在时序通道上不可检测(sigma=1.843 -> rho* 约 98.6%),
 # 必须靠互锁通道兜住。这里不是丢弃,而是标记为"时序无信息",
 # 让 M6 在合成时不把它当作有效证据。
+# A human-in-the-loop operation is undetectable on the timing channel (sigma=1.843 -> rho* about 98.6%)
+# and must be caught by the interlock channel. This is not a drop. It is marked "timing carries no information"
+# so M6 does not treat it as valid evidence at fusion.
 MANUAL_OPS = frozenset({"/hw/human_review"})
 UNINFORMATIVE_SIGMA = 1.0   # sigma 超过此值时 rho* > 90%,时序通道形同虚设
+# above this sigma, rho* > 90% and the timing channel is effectively absent
 
 NO_ROUTE = ("-", "-")
 
 
 # --------------------------------------------------------------------------
 # 分布函数(纯标准库实现,避免在线路径依赖 scipy)
+# distribution functions (stdlib only, so the online path does not depend on scipy)
 # --------------------------------------------------------------------------
 
 def norm_cdf(x: float) -> float:
@@ -52,7 +75,10 @@ def norm_cdf(x: float) -> float:
 
 
 def norm_ppf(p: float) -> float:
-    """二分求逆。只在标定时调用几次,精度足够而无需引入 scipy。"""
+    """二分求逆。只在标定时调用几次,精度足够而无需引入 scipy。
+
+    Invert by bisection. Called only a few times at calibration; the precision is enough and scipy is not needed.
+    """
     lo, hi = -12.0, 12.0
     for _ in range(200):
         mid = (lo + hi) / 2.0
@@ -64,7 +90,10 @@ def norm_ppf(p: float) -> float:
 
 
 def _betacf(a: float, b: float, x: float) -> float:
-    """不完全 Beta 的连分式(修正 Lentz 法)。"""
+    """不完全 Beta 的连分式(修正 Lentz 法)。
+
+    Continued fraction for the incomplete beta (modified Lentz method).
+    """
     maxit, eps, fpmin = 300, 3e-16, 1e-300
     qab, qap, qam = a + b, a + 1.0, a - 1.0
     c = 1.0
@@ -88,7 +117,10 @@ def _betacf(a: float, b: float, x: float) -> float:
 
 
 def betainc(a: float, b: float, x: float) -> float:
-    """正则化不完全 Beta 函数 I_x(a, b)。"""
+    """正则化不完全 Beta 函数 I_x(a, b)。
+
+    Regularized incomplete beta function I_x(a, b).
+    """
     if x <= 0.0:
         return 0.0
     if x >= 1.0:
@@ -101,7 +133,10 @@ def betainc(a: float, b: float, x: float) -> float:
 
 
 def student_t_cdf(t: float, nu: float) -> float:
-    """自由度 nu 的标准 Student-t 分布函数。"""
+    """自由度 nu 的标准 Student-t 分布函数。
+
+    CDF of the standard Student-t with nu degrees of freedom.
+    """
     if nu <= 0:
         return norm_cdf(t)
     if nu > 1e6:
@@ -111,12 +146,15 @@ def student_t_cdf(t: float, nu: float) -> float:
 
 
 # --------------------------------------------------------------------------
-# 观测与模型
+# 观测与模型 / observations and the model
 # --------------------------------------------------------------------------
 
 @dataclass
 class Obs:
-    """一次时长观测。log_tau 取自然对数秒。"""
+    """一次时长观测。log_tau 取自然对数秒。
+
+    One sojourn observation. log_tau is the natural log of seconds.
+    """
     route: tuple[str, str]
     log_tau: float
     planned_s: float | None = None
@@ -130,6 +168,10 @@ class NIGPrior:
 
     默认值弱信息且偏保守:sigma 的先验均值约 0.42,略宽于全线无条件尺度
     0.355。宁可先验偏宽——小样本下预测区间自动变宽,避免冷启动误报风暴。
+
+    Normal-Inverse-Gamma prior, giving a closed-form Student-t posterior predictive.
+
+    The defaults are weakly informative and conservative: the prior mean of sigma is about 0.42, a bit wider than the line-wide unconditional scale 0.355. Prefer a wide prior — on a small sample the predictive interval widens automatically, which avoids a cold-start false-alarm storm.
     """
     mu0: float = 0.0
     kappa0: float = 1.0
@@ -150,7 +192,10 @@ class NIGPosterior:
 
     @property
     def scale(self) -> float:
-        """后验预测的尺度 sqrt(beta_n (kappa_n + 1) / (alpha_n kappa_n))。"""
+        """后验预测的尺度 sqrt(beta_n (kappa_n + 1) / (alpha_n kappa_n))。
+
+        Scale of the posterior predictive, sqrt(beta_n (kappa_n + 1) / (alpha_n kappa_n)).
+        """
         return sqrt(self.beta_n * (self.kappa_n + 1.0)
                     / (self.alpha_n * self.kappa_n))
 
@@ -176,20 +221,27 @@ class DwellModel:
 
     route_effect 存的是**加性 AFT 的拟合位置**而非逐路线均值。在森林结构上
     二者恒等(T4),但存拟合值保证在线查表是 O(1),不必带着设计矩阵。
+
+    Sojourn model of one (device, op) group.
+
+    route_effect stores the **fitted location of the additive AFT**, not a per-route mean. On a forest the two are identical (T4), but storing the fitted value keeps the online lookup O(1), with no design matrix to carry.
     """
     device: str
     op: str
     route_effect: dict[tuple[str, str], float] = field(default_factory=dict)
     sigma: float = 0.0
     df: int = 0
-    plan_bias: float = 0.0          # \hat c,用于未见路线的冷启动
-    stratum: str = "success"        # 必须按 success/failure 分层,见 fit
+    plan_bias: float = 0.0          # \hat c,用于未见路线的冷启动 / \hat c, cold start for an unseen route
+    stratum: str = "success"        # 必须按 success/failure 分层,见 fit / must stratify by success/failure; see fit
     posterior: NIGPosterior | None = None
     n: int = 0
 
     @property
     def informative(self) -> bool:
-        """时序通道在本组是否携带有效证据。"""
+        """时序通道在本组是否携带有效证据。
+
+        Whether the timing channel carries valid evidence in this group.
+        """
         return self.op not in MANUAL_OPS and self.sigma < UNINFORMATIVE_SIGMA
 
     def location(self, route, planned_s: float | None) -> float | None:
@@ -197,6 +249,10 @@ class DwellModel:
 
         两条路都走不通时返回 None——此时时序通道**弃权**,不能拿一个编造的
         位置去算 p 值。弃权由 M6 按"该通道无证据"处理。
+
+        A seen route uses the additive AFT posterior; an unseen route falls back to log(plan) + plan_bias.
+
+        Return None when neither path works — the timing channel then **abstains**, and must not compute a p-value from an invented location. M6 treats abstention as "this channel has no evidence".
         """
         route = tuple(route) if route else NO_ROUTE
         if route in self.route_effect:
@@ -207,7 +263,10 @@ class DwellModel:
 
     def standardise(self, duration_s: float, route=None,
                     planned_s: float | None = None) -> float | None:
-        """标准化残差 z。抢跑使 z 变负。"""
+        """标准化残差 z。抢跑使 z 变负。
+
+        Standardized residual z. Early reporting makes z negative.
+        """
         if duration_s is None or duration_s <= 0:
             return None
         loc = self.location(route, planned_s)
@@ -217,13 +276,17 @@ class DwellModel:
 
 
 # --------------------------------------------------------------------------
-# 拟合
+# 拟合 / fitting
 # --------------------------------------------------------------------------
 
 def collect(activities, stratum: str = "success") -> dict:
     """按 (device, op) 收集时长观测。
 
     只取有正时长的活动。`stratum` 为 None 时不分层(仅供对照实验)。
+
+    Collect sojourn observations by (device, op).
+
+    Only activities with a positive duration are kept. `stratum=None` does not stratify (control experiments only).
     """
     out: dict[tuple[str, str], list[Obs]] = {}
     for a in activities:
@@ -251,7 +314,10 @@ def _design(routes, s_idx, e_idx):
 
 
 def _fit_additive(routes, y):
-    """最小二乘拟合 mu + a_start + b_end。返回 (拟合值, 秩)。"""
+    """最小二乘拟合 mu + a_start + b_end。返回 (拟合值, 秩)。
+
+    Least-squares fit of mu + a_start + b_end. Returns (fitted values, rank).
+    """
     s_idx = {p: i for i, p in enumerate(sorted({s for s, _ in routes}))}
     e_idx = {p: i for i, p in enumerate(sorted({e for _, e in routes}))}
     X = _design(routes, s_idx, e_idx)
@@ -267,6 +333,10 @@ def fit_group(device: str, op: str, obs: list[Obs],
     必须按 `success`/`failure` 分层:hbw_2 /hbw/unload 曾出现 sigma_log=1.798
     而变异系数仅 0.294 的矛盾组合,是重左尾/多峰的典型特征——少量中止执行
     把对数方差抬高而均值稳定。单一对数正态硬拟合会严重高估 sigma。
+
+    Fit one (device, op) group.
+
+    Must stratify by `success`/`failure`: hbw_2 /hbw/unload once showed the contradictory pair sigma_log=1.798 with a coefficient of variation of only 0.294, the typical signature of a heavy left tail or multiple modes — a few aborted executions inflate the log-variance while the mean stays put. Forcing a single log-normal badly overestimates sigma.
     """
     if len(obs) < 2:
         return None
@@ -284,6 +354,9 @@ def fit_group(device: str, op: str, obs: list[Obs],
     # 冷启动偏置:log tau - log(plan) 的均值。planned_operation_time 不是
     # 实际时长的校准估计(实测比值中位数 0.87、跨设备从 0.30 到 1.02),
     # 但作为未见路线的先验位置显著优于加性外推。
+    # Cold-start bias: mean of log tau - log(plan). planned_operation_time is not
+    # a calibrated estimate of the real sojourn (measured median ratio 0.87, from 0.30 to 1.02 across devices),
+    # but as a prior location for an unseen route it is clearly better than additive extrapolation.
     biases = [o.log_tau - log(o.planned_s)
               for o in obs if o.planned_s and o.planned_s > 0]
     plan_bias = float(np.mean(biases)) if biases else 0.0
@@ -300,6 +373,10 @@ def fit(activities, min_route_n: int = 8, prior: NIGPrior | None = None,
 
     `min_route_n` 是路线获得自己的效应所需的最少观测数;不足者并入分组的
     共同截距,以免用一两个样本去辨识一个端点效应。
+
+    Fit every group, one (device, op) at a time.
+
+    `min_route_n` is the minimum number of observations before a route gets its own effect. Routes below that are pooled into the group's common intercept, so one or two samples are not used to identify an endpoint effect.
     """
     models = {}
     for (dev, op), obs in collect(activities, stratum=stratum).items():
@@ -316,7 +393,7 @@ def fit(activities, min_route_n: int = 8, prior: NIGPrior | None = None,
 
 
 # --------------------------------------------------------------------------
-# 在线打分
+# 在线打分 / online scoring
 # --------------------------------------------------------------------------
 
 def dwell_pvalue(model: DwellModel, duration_s: float, route=None,
@@ -332,6 +409,17 @@ def dwell_pvalue(model: DwellModel, duration_s: float, route=None,
       'timeout'   超时无消息 -> 同一生存函数,由定时器在 99.9% 分位触发(覆盖 A6)
       'interval'  周期轮询   -> 区间删失,取区间上端定位(HAI 必需,否则量化
                   误差系统性污染似然;取上端使左侧检验保守,不会因量化误报)
+
+    Return a p-value for the observation case. Return None (abstain) when the location cannot be set.
+
+    kind:
+      'jump'      state jump -> **left-tail** p-value T_nu(t), checking only "too fast" (early reporting).
+                  Measured one-sided versus two-sided DR at rho=0.5 is 0.874 versus 0.338;
+                  under a directional alternative a two-sided test throws away half the power.
+      'heartbeat' same-state re-report -> right-censored survival 1 - T_nu(t); alarm only when "waiting too long"
+      'timeout'   timeout with no message -> the same survival function, fired by a timer at the 99.9% quantile (covers A6)
+      'interval'  periodic polling -> interval censoring; locate at the upper end of the interval (required for HAI, or quantization
+                  error systematically contaminates the likelihood; the upper end makes the left-tail test conservative and will not false-alarm from quantization)
     """
     if duration_s is None or duration_s <= 0:
         return None
@@ -355,7 +443,7 @@ def dwell_pvalue(model: DwellModel, duration_s: float, route=None,
 
 
 # --------------------------------------------------------------------------
-# 理论界
+# 理论界 / theoretical bound
 # --------------------------------------------------------------------------
 
 def rho_star(sigma: float, alpha: float = 0.01, one_sided: bool = True) -> float:
@@ -383,6 +471,24 @@ def rho_star(sigma: float, alpha: float = 0.01, one_sided: bool = True) -> float
     产线整体可检测性由最易变工序决定,故必须逐组报告而非给全线均值。
     协变量条件化的收益也由本式量化:sigma 0.355 -> 0.116 使 rho*
     从 56.2% 收紧到 23.7%(用未取整的 sigma 算得 23.6%,差异纯属取整)。
+
+    Theoretical bound: the early-reporting amount at 50% power, rho* = 1 - exp(-z_{1-alpha} * sigma).
+
+    **z is always the one-sided quantile** (alpha=0.01 -> 2.3263). Early reporting is a directional alternative, and a two-sided test throws away about half the power. "Stalling / suppression" is covered separately by the survival branch of dwell_pvalue. one_sided=False is only a paper control.
+
+    **A cited rho* must come with its reporting rule**, or the numbers of two probes get mixed. Trier has two sets, both correct:
+
+      Route-conditioned, 20 modelable groups with n>=30 (probe_bound.py, M4's working rule):
+        span from 1.6% (dm_2 /dm/lower, sigma=0.007) to 98.6%
+        (hw_1 /hw/human_review, sigma=1.843); median-group sigma=0.155 -> 30.9%;
+        13 groups have rho* <= 40%; after dropping the manual station the worst is sm_1 /sm/sort at 51.9%.
+
+      Unconditioned, 31 groups with n>=5 (probe_timing.py, the start of the improvement chain):
+        median sigma=0.207 -> 38.2%.
+
+    An earlier docstring took the endpoints from the first and the median from the second — apples and oranges. Conditioning presses the median from 0.207 to 0.139 (see the three-tier comparison in group_sigmas), which is exactly this channel's gain, and mixing the two erases it.
+
+    Line-wide detectability is set by the most variable operation, so rho* must be reported per group rather than as a line-wide mean. The gain of covariate conditioning is also quantified by this formula: sigma 0.355 -> 0.116 tightens rho* from 56.2% to 23.7% (23.6% with the unrounded sigma; the difference is rounding only).
     """
     z = norm_ppf(1.0 - alpha) if one_sided else norm_ppf(1.0 - alpha / 2.0)
     return 1.0 - exp(-z * sigma)
@@ -391,10 +497,13 @@ def rho_star(sigma: float, alpha: float = 0.01, one_sided: bool = True) -> float
 def predicted_dr(sigma: float, rho: float, threshold: float,
                  one_sided: bool = True) -> float:
     """理论检出率 Phi(-z - log(1-rho)/sigma)。实测与预测全区间平均绝对
-    偏差约 0.03(见 tools/ 的界验证实验)。"""
+    偏差约 0.03(见 tools/ 的界验证实验)。
+
+    Theoretical detection rate Phi(-z - log(1-rho)/sigma). The mean absolute deviation between measurement and prediction over the whole range is about 0.03 (see the bound-check experiment under tools/).
+    """
     if sigma <= 0 or rho <= 0 or rho >= 1:
         return float("nan")
-    shift = log(1.0 - rho) / sigma          # 负数
+    shift = log(1.0 - rho) / sigma          # 负数 / negative
     dr = norm_cdf(-threshold - shift)
     if not one_sided:
         dr += 1.0 - norm_cdf(threshold - shift)
@@ -402,7 +511,7 @@ def predicted_dr(sigma: float, rho: float, threshold: float,
 
 
 # --------------------------------------------------------------------------
-# 诊断:支撑 T4 / T5 / T6 的三条断言
+# 诊断:支撑 T4 / T5 / T6 的三条断言 / diagnostics backing the three assertions T4 / T5 / T6
 # --------------------------------------------------------------------------
 
 def route_graph_is_forest(routes) -> tuple[bool, int, int]:
@@ -410,6 +519,10 @@ def route_graph_is_forest(routes) -> tuple[bool, int, int]:
 
     森林意味着每条路线都是桥:移除一条,其端点效应即不可辨识。这正是
     "加性与饱和残差完全相等"和"无法外推到未见路线"这两件事的同一根源。
+
+    Whether the start->end bipartite graph is a forest. Returns (is forest, node count, edge count).
+
+    A forest means every route is a bridge: remove one and its endpoint effects become unidentifiable. That is the single root of both "additive and saturated residuals are exactly equal" and "cannot extrapolate to an unseen route".
     """
     parent: dict = {}
 
@@ -444,6 +557,10 @@ def group_sigmas(activities, *, stratum: str | None = None,
     `stratum=None, conditioned=False` 即 probe_timing.py 的基线口径,是本文
     改进链条的起点;`stratum='success', conditioned=True` 是 M4 实际使用的
     口径。把两者并排报告才能说清协变量与分层各自贡献了多少。
+
+    sigma_log of each (device, op). The four reporting rules can be combined freely.
+
+    `stratum=None, conditioned=False` is the baseline rule of probe_timing.py, the start of this paper's improvement chain. `stratum='success', conditioned=True` is the rule M4 actually uses. Only reporting them side by side shows how much the covariate and the stratification each contribute.
     """
     rows = []
     for (dev, op), obs in collect(activities, stratum=stratum).items():
@@ -465,7 +582,10 @@ def group_sigmas(activities, *, stratum: str | None = None,
 
 
 def sigma_summary(rows: list[dict]) -> dict:
-    """把逐组表折算成论文里报告的跨度与中位。"""
+    """把逐组表折算成论文里报告的跨度与中位。
+
+    Fold the per-group table into the span and the median reported in the paper.
+    """
     if not rows:
         return {"n_groups": 0}
     s = np.array([r["sigma"] for r in rows])
@@ -480,6 +600,10 @@ def sigma_diagnostics(activities, min_n: int = 15, min_routes: int = 2) -> dict:
 
     返回 pooled / conditioned / loo_additive / loo_planned 四个按样本量
     加权的 sigma_log,以及逐组明细。
+
+    Reproduce the four aggregate scales of probe_aft_v2, for a regression check.
+
+    Returns the sample-size-weighted sigma_log of pooled / conditioned / loo_additive / loo_planned, plus the per-group detail.
     """
     groups = collect(activities, stratum="success")
     per_group, agg = [], {k: [] for k in
@@ -497,7 +621,7 @@ def sigma_diagnostics(activities, min_n: int = 15, min_routes: int = 2) -> dict:
         s_pool = float(y.std(ddof=1))
         fitted, _, _ = _fit_additive(rs, y)
         s_cond = float((y - fitted).std(ddof=1))
-        # 逐路线饱和模型:每条路线一个自由均值
+        # 逐路线饱和模型:每条路线一个自由均值 / per-route saturated model: one free mean per route
         sat = np.array([float(y[[i for i, r in enumerate(rs) if r == o.route]]
                               .mean()) for o in obs])
         s_sat = float((y - sat).std(ddof=1))

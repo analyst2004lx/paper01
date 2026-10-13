@@ -50,19 +50,19 @@ def main() -> None:
 
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.75))
     ax = axes[0]
-    ax.plot(phis, p04_t, "o-", label=r"STRC", color="#1f4e79")
+    ax.plot(phis, p04_t, "o-", label=r"R2 (STRC)", color="#1f4e79")
     ax.plot(phis, p01_t, "s--", label=r"R0+ (2s)", color="#c45c26")
-    ax.set_xlabel(r"affected fraction $\varphi$")
-    ax.set_ylabel("wall time (ms)")
+    ax.set_xlabel(r"fraction of disturbed operations $\varphi$")
+    ax.set_ylabel("runtime (ms)")
     ax.set_yscale("log")
     ax.set_xlim(min(phis) - 0.06, max(phis) + 0.06)
     ax.legend(loc="center right")
     ax.set_title("Response time")
 
     ax = axes[1]
-    ax.plot(phis, p04_c, "o-", label=r"STRC", color="#1f4e79")
+    ax.plot(phis, p04_c, "o-", label=r"R2 (STRC)", color="#1f4e79")
     ax.plot(phis, p01_c, "s--", label=r"R0+ (2s)", color="#c45c26")
-    ax.set_xlabel(r"affected fraction $\varphi$")
+    ax.set_xlabel(r"fraction of disturbed operations $\varphi$")
     ax.set_ylabel(r"$C_{\max}$ (mean, feasible)")
     ax.set_xlim(min(phis) - 0.06, max(phis) + 0.06)
     ax.legend(loc="upper left")

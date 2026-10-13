@@ -16,6 +16,16 @@
    5 条路（硬层 + 三通道 + 合成），良性参照流 508 条时 alpha=0.01 只够
    5 条路的极限，故本工具默认 alpha=0.05；用 0.01 跑会落在分辨率边缘，
    各臂之间的差值将不可信。
+
+E2 ablation: remove, one at a time, the hard-constraint layer / timing / structure / interlock / fusion / sequential layer / covariate / conformal.
+
+It shares `baselines.judge` with E1: the same empirical p-value transform, the same k, the same ARL0=1/alpha, the same delay budget, and **the same subtraction of the chance-alarm floor** (conclusion 38). So the numbers in this table can be read next to the main-result row of E1.
+
+Two rules are the premise of this table being usable, and both were forced by measurement:
+
+1. **Removing a channel must be split into two arms** (conclusion 25). The online detector runs both "an independent decision per channel" and "Fisher fusion", so "remove timing" has two meanings: `no_timing` also removes its independent decision, and `fused_wo_timing` only takes it out of the fusion while the independent decision stays. The latter can sometimes **raise** the detection rate of some attack (one less uninformative channel diluting the evidence). If that counter-intuitive fact is not stated up front, a reviewer will take it for an implementation bug.
+
+2. **The number of parallel paths is constrained by m <= alpha*(n_b+1)** (conclusion 39, T35). The full arm has 5 paths (hard-constraint layer + three channels + fusion). With a benign reference stream of 508 messages, alpha=0.01 is only just enough for 5 paths, so this tool defaults to alpha=0.05. Running at 0.01 sits on the edge of the resolution, and the differences between arms will not be trustworthy.
 """
 from __future__ import annotations
 
@@ -32,6 +42,7 @@ from algorithm.detector import CHANNELS, Detector, DetectorConfig  # noqa: E402
 from tools.baseline_diag import attack_stream, split  # noqa: E402
 
 #: 臂名 -> (去掉的硬层?, 完全去掉的通道, 仅从合成去掉的通道, 去掉合成路?)
+#: arm name -> (hard-constraint layer removed?, channels fully removed, channels removed from fusion only, fusion path removed?)
 ARMS = {
     "full":                (False, (),         (),         False),
     "no_hard":             (True,  (),         (),         False),
@@ -44,8 +55,10 @@ ARMS = {
     "no_fusion":           (False, (),         (),         True),
 }
 #: 需要单独重新拟合检测器的臂
+#: arms that need the detector refit on their own
 REFIT = ("no_covariate",)
 #: 只改在线打分方式的臂
+#: arms that only change the online scoring rule
 RESCORE = ("no_conformal",)
 
 ZH = {
@@ -65,7 +78,10 @@ FAMILIES = ("A1", "A2", "A3", "A4", "A5", "A6")
 
 
 def rows(det, stream, rng, *, conformal=True):
-    """按在线语义逐消息取 (硬层指示, 三通道分数)。"""
+    """按在线语义逐消息取 (硬层指示, 三通道分数)。
+
+    Per message, under the online semantics, take (hard-constraint-layer indicator, three channel scores).
+    """
     det._reset_online()
     out = []
     for a in stream:
@@ -78,7 +94,10 @@ def rows(det, stream, rng, *, conformal=True):
 
 
 def paths(rs, arm: str):
-    """把打分行装配成该臂的并行子检测器分数流(越大越异常)。"""
+    """把打分行装配成该臂的并行子检测器分数流(越大越异常)。
+
+    Assemble the scored rows into this arm's parallel sub-detector score streams (larger means more anomalous).
+    """
     no_hard, gone, fused_out, no_fuse = ARMS.get(arm, ARMS["full"])
     out = []
     if not no_hard:
@@ -130,7 +149,7 @@ def main() -> int:
             temporal=True)
 
     det = build()
-    det_nc = build(min_route_n=10 ** 9)          # no_covariate 臂
+    det_nc = build(min_route_n=10 ** 9)          # no_covariate 臂 / the no_covariate arm
 
     n_paths = len(paths(rows(det, benign[:5], np.random.default_rng(0)),
                         "full"))

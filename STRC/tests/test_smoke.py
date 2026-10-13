@@ -1,4 +1,7 @@
-"""桥接 + E1/E2/E3 核心路径自检。在 STRC/ 下: py -m tests.test_smoke"""
+"""桥接 + E1/E2/E3 核心路径自检。在 STRC/ 下: py -m tests.test_smoke
+
+Smoke test of the bridge plus the E1/E2/E3 core path. From STRC/: py -m tests.test_smoke
+"""
 from __future__ import annotations
 
 import os
@@ -65,7 +68,10 @@ class TestSmoke(unittest.TestCase):
         self.assertIsNotNone(rep.result)
 
     def test_abutting_yield_closes_known_leak(self):
-        """example_3x3x2 seed 42:接壤占用必须进闭包,延后泄漏应为 0。"""
+        """example_3x3x2 seed 42:接壤占用必须进闭包,延后泄漏应为 0。
+
+example_3x3x2 seed 42: an abutting occupation must enter the closure, and delay leaks should be 0.
+"""
         from algorithm.clbs_bridge import CLBS_INPUT, Network, load_instance
         from algorithm.disturbance import Disturbance
         from algorithm.repair import release_set_r2
@@ -89,7 +95,10 @@ class TestSmoke(unittest.TestCase):
         self.assertEqual(n_agv, 0)
 
     def test_r0_under_block_smoke(self):
-        """R0 在阻断下能出解或干净失败;补丁不泄漏到后续 Router。"""
+        """R0 在阻断下能出解或干净失败;补丁不泄漏到后续 Router。
+
+Under a blockage, R0 either returns a solution or fails cleanly; the patch does not leak into later Routers.
+"""
         from algorithm.block_context import corridor_block_active
         from algorithm.clbs_bridge import CLBS_INPUT, Network, Router, load_instance
         from algorithm.disturbance import Disturbance
@@ -116,7 +125,7 @@ class TestSmoke(unittest.TestCase):
                 bundle.reservations, reservations_from_result(rep.result),
                 t_now=t_now)
             self.assertEqual(pc, 0)
-        # 补丁已拆除:新建 Router 不应自动带 BLOCK
+        # 补丁已拆除:新建 Router 不应自动带 BLOCK / Patch removed: a newly built Router should not carry BLOCK automatically
         r = Router(net, conflict_free=True)
         blocked = any(task == "__BLOCK__"
                       for lst in r.table.all_reservations().values()
@@ -125,7 +134,10 @@ class TestSmoke(unittest.TestCase):
         _ = corridor_block_active  # imported for side-doc
 
     def test_prefix_decode_keeps_history(self):
-        """固定前缀解码不得改写 t_end <= t_now 的占用,且原染色体可续跑。"""
+        """固定前缀解码不得改写 t_end <= t_now 的占用,且原染色体可续跑。
+
+Fixed-prefix decoding must not rewrite occupations with t_end <= t_now, and the original chromosome must be able to continue.
+"""
         from algorithm.clbs_bridge import CLBS_INPUT, Network, load_instance, validate
         from algorithm.disturbance import Disturbance
         from algorithm.metrics import reservation_delta_before
@@ -151,7 +163,10 @@ class TestSmoke(unittest.TestCase):
         self.assertEqual(pc, 0)
 
     def test_prefix_decode_keeps_demoted_empty(self):
-        """同工件后道已出车时,历史空载前缀仍须出现在结果里(拥堵例已知泄漏格)。"""
+        """同工件后道已出车时,历史空载前缀仍须出现在结果里(拥堵例已知泄漏格)。
+
+When a later operation of the same job has already dispatched a vehicle, the historical empty prefix must still appear in the result (a known leak cell on the congested instance).
+"""
         from algorithm.clbs_bridge import CLBS_INPUT, Network, load_instance, validate
         from algorithm.disturbance import Disturbance
         from algorithm.metrics import reservation_delta_before
@@ -178,29 +193,36 @@ class TestSmoke(unittest.TestCase):
         self.assertEqual(pc, 0)
 
     def test_piecewise_tau_only_scales_overlap(self):
-        """窗外原速、窗内按倍率;擦边重叠不得整段乘 2。"""
+        """窗外原速、窗内按倍率;擦边重叠不得整段乘 2。
+
+Original speed outside the window, scaled speed inside; a grazing overlap must not multiply the whole segment by 2.
+"""
         from algorithm.block_context import effective_tau, piecewise_duration
 
         self.assertAlmostEqual(piecewise_duration(0.0, 10.0, []), 10.0)
         self.assertAlmostEqual(effective_tau("e", 0.0, 10.0, []), 10.0)
-        # 全程在窗内
+        # 全程在窗内 / Entirely inside the window
         self.assertAlmostEqual(
             piecewise_duration(0.0, 10.0, [(0.0, 100.0, 2.0)]), 20.0)
-        # 无重叠:窗在穿越之后
+        # 无重叠:窗在穿越之后 / No overlap: the window is after the crossing
         self.assertAlmostEqual(
             piecewise_duration(0.0, 10.0, [(10.0, 20.0, 2.0)]), 10.0)
-        # 前半原速、后半降速: 5 + 5*2 = 15
+        # 前半原速、后半降速: 5 + 5*2 = 15 / First half at the original speed, second half slowed: 5 + 5*2 = 15
         self.assertAlmostEqual(
             piecewise_duration(0.0, 10.0, [(5.0, 100.0, 2.0)]), 15.0)
         # 窗在穿越中途结束: 6 个单位走完 0.3,余 0.7 原速 = 13
+# The window ends mid-crossing: 6 units cover 0.3, the remaining 0.7 at the original speed = 13
         self.assertAlmostEqual(
             piecewise_duration(0.0, 10.0, [(0.0, 6.0, 2.0)]), 13.0)
-        # 进入时刻在窗外
+        # 进入时刻在窗外 / The entry time is outside the window
         self.assertAlmostEqual(
             effective_tau("e", 20.0, 10.0, [("e", 0.0, 5.0, 2.0)]), 10.0)
 
     def test_slowdown_is_not_a_block(self):
-        """降速不得写成 __BLOCK__;修复应能在拉长的 τ 下恢复可行。"""
+        """降速不得写成 __BLOCK__;修复应能在拉长的 τ 下恢复可行。
+
+A slowdown must not be written as __BLOCK__; repair should be able to recover feasibility under the stretched τ.
+"""
         from algorithm.block_context import (
             attach_slowdown,
             block_windows_from_dist,
@@ -248,7 +270,10 @@ class TestSmoke(unittest.TestCase):
         self.assertTrue(callable(ladder.solve_arm))
 
     def test_agv_breakdown_swaps_vehicle(self):
-        """车辆故障:故障车不再承运未来运输,第 1 级应能换车恢复。"""
+        """车辆故障:故障车不再承运未来运输,第 1 级应能换车恢复。
+
+Vehicle fault: the failed vehicle no longer carries future transport, and level 1 should recover by switching vehicles.
+"""
         from algorithm.clbs_bridge import CLBS_INPUT, Network, load_instance
         from algorithm.disturbance import Disturbance
         from algorithm.repair import repair_with_strc
@@ -271,7 +296,10 @@ class TestSmoke(unittest.TestCase):
         self.assertFalse(any(r.agv == agv for r in future))
 
     def test_ra_failure_reassigns_machine(self):
-        """机械臂故障:未完工工序改派到其它可行机。"""
+        """机械臂故障:未完工工序改派到其它可行机。
+
+Robot-arm fault: unfinished operations are reassigned to another feasible machine.
+"""
         from algorithm.clbs_bridge import CLBS_INPUT, Network, load_instance
         from algorithm.disturbance import Disturbance
         from algorithm.repair import repair_with_strc
@@ -301,7 +329,10 @@ class TestSmoke(unittest.TestCase):
                 self.assertNotEqual(rec.machine, mac)
 
     def test_ra_failure_hard_cells(self):
-        """E6 曾失败的两格:前道改派后后道不得按原时刻冻结,也不得拽走正在执行的车。"""
+        """E6 曾失败的两格:前道改派后后道不得按原时刻冻结,也不得拽走正在执行的车。
+
+Two cells that used to fail in E6: after the predecessor is reassigned, the successor must not be frozen at the original times, and must not pull away a vehicle that is still executing.
+"""
         from algorithm.clbs_bridge import CLBS_INPUT, Network, load_instance
         from algorithm.disturbance import Disturbance
         from algorithm.repair import repair_with_strc
@@ -329,7 +360,10 @@ class TestSmoke(unittest.TestCase):
             self.assertTrue(rep.feasible, msg=f"{path} seed={seed}: {rep.errors[:6]}")
 
     def test_redecode_respects_a2(self):
-        """RD 默认走固定前缀,小例不得改写 t_end <= t_now 的占用。"""
+        """RD 默认走固定前缀,小例不得改写 t_end <= t_now 的占用。
+
+RD uses a fixed prefix by default; on the small instance it must not rewrite occupations with t_end <= t_now.
+"""
         from algorithm.clbs_bridge import CLBS_INPUT, Network, load_instance
         from algorithm.disturbance import Disturbance
         from algorithm.metrics import reservation_delta_before

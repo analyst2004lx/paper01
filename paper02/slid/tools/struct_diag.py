@@ -12,6 +12,18 @@
   Q3 对 A2/A4 的检出:设备敏感性到底换来多少
 
 用法(在 paper02/slid/ 下):  py -m tools.struct_diag
+
+M3 state granularity: operation name versus (device, operation).
+
+The measured coverage matrix exposed this: the state of a case-level structural chain is the **operation name**, so "the wrong device performs the right operation" is invisible to the structural channel. An A2 physically infeasible injection can rely only on mask F, and F is queryable only when the same device has a predecessor in the same case, at 31% coverage.
+
+Replacing the state with the pair (device, operation) should restore device sensitivity, but it raises the state count, dilutes the support of each transition, and may scatter the calibration set until Dirichlet smoothing dominates. Both the gain and the cost have to be measured:
+
+  Q1 state space and support: state count, observed transitions, mean support per transition, number of p-value values
+  Q2 temporal-order conformal FPR: does calibration still hold after the granularity is refined
+  Q3 detection of A2/A4: how much device sensitivity is actually bought
+
+Usage (from paper02/slid/):  py -m tools.struct_diag
 """
 from __future__ import annotations
 
@@ -43,7 +55,10 @@ def build(live, model, *, arm: str, alpha: float, seed: int):
 
 def support(tm) -> dict:
     """转移矩阵的支撑度画像。Dirichlet 平滑会让低支撑转移的 p 值趋于一致,
-    从而使结构通道钝化,所以支撑度是粒度取舍的核心量。"""
+    从而使结构通道钝化,所以支撑度是粒度取舍的核心量。
+
+    A support portrait of the transition matrix. Dirichlet smoothing makes the p-values of low-support transitions tend to agree, which dulls the structural channel, so support is the central quantity in the granularity choice.
+    """
     counts = np.asarray(tm.counts, dtype=float)
     seen = counts[counts > 0]
     return {
@@ -57,7 +72,10 @@ def support(tm) -> dict:
 
 
 def struct_pvalues(det, stream, rng):
-    """只取结构通道的 conformal p 值。"""
+    """只取结构通道的 conformal p 值。
+
+    Take only the structural channel's conformal p-value.
+    """
     det._reset_online()
     out = []
     for a in stream:

@@ -10,6 +10,16 @@
 Pareto 前沿,并按 arrive + theta * price_cost 择优。price_cost 由上层下发的
 影子价格 PriceTable 计价,与 makespan 同量纲,因此 theta 是无量纲协调强度:
 theta = 0 时退化为纯最早到达(与价格协调前的实现逐字节等价)。
+
+Road network, ideal shortest paths t*, capacitated reservation table, corridor-time shadow prices, and price-aware multi-label routing.
+
+Conflict model (spec 5.1):
+- the travel resource is a physical corridor; both directions share one reservation resource, default capacity 1 (exclusive);
+- occupation windows are half-open intervals [t, t+tau);
+- waiting happens at node berths (capacity is ample, so they are not reserved); a node crossing has measure zero and is not reserved.
+
+Inter-level interface (price-coordination version, spec 5.5):
+the lower level no longer answers only "what is the earliest arrival". It keeps the Pareto front between "arrival time" and "the cost of occupying someone else's resource", and picks by arrive + theta * price_cost. price_cost is priced by the shadow-price PriceTable issued by the upper level and has the same dimension as makespan, so theta is a dimensionless coordination strength. theta = 0 falls back to pure earliest arrival (byte-for-byte equivalent to the implementation before price coordination).
 """
 from __future__ import annotations
 
@@ -23,7 +33,10 @@ BucketKey = Tuple[str, int]  # (corridor_id, bucket_index)
 
 @dataclass(frozen=True)
 class Segment:
-    """一次走廊穿越:从 u 于 enter 时刻进入,exit = enter + tau 时刻到达 v。"""
+    """一次走廊穿越:从 u 于 enter 时刻进入,exit = enter + tau 时刻到达 v。
+
+    One corridor traversal: enter from u at time enter, and arrive at v at exit = enter + tau.
+    """
     corridor: str
     u: str
     v: str
@@ -35,11 +48,12 @@ class Segment:
 class RoutePlan:
     start: str
     goal: str
-    t0: float                      # 最早出发时刻
-    arrive: float                  # 到达 goal 的时刻
+    t0: float                      # 最早出发时刻 / Earliest departure time
+    arrive: float                  # 到达 goal 的时刻 / Arrival time at goal
     segments: List[Segment] = field(default_factory=list)
     wait_by_corridor: Dict[str, float] = field(default_factory=dict)
     price_cost: float = 0.0        # 本条路径占用的走廊-时段的影子价格总额
+    # Total shadow price of the corridor-time slots this path occupies
 
     @property
     def total_wait(self) -> float:
@@ -54,6 +68,10 @@ class RoutePlan:
 
         与 wait_by_corridor 的区别是保留了**时刻**,关键路径归因与影子价格的时段
         定位都需要它——只有标量总量无法回答"哪个时段的通行权更值钱"。
+
+        Per-yield events (corridor, wait start, wait end, wait duration).
+
+        Unlike wait_by_corridor, this keeps the time. Critical-path attribution and the time-slot location of shadow prices both need it — a scalar total cannot answer "which period's right-of-way is worth more".
         """
         out: List[Tuple[str, float, float, float]] = []
         at_time = self.t0
@@ -65,7 +83,10 @@ class RoutePlan:
 
 
 def corridor_id(u: str, v: str) -> str:
-    """双向走廊的规范 id(与方向无关)。"""
+    """双向走廊的规范 id(与方向无关)。
+
+    Canonical id of a bidirectional corridor (independent of direction).
+    """
     return f"{u}|{v}" if u <= v else f"{v}|{u}"
 
 
@@ -84,6 +105,15 @@ class Network:
 
     给定 `ideal_dist` 时 `corridors` 为空,网络无法路由,只能跑 `conflict_free=False`
     的退化档;`Router` 对此有显式拦截。
+
+    Corridor graph plus the ideal shortest-path matrix t*.
+
+    The `ideal_dist` argument (spec 12.2 / 12.4 item 2) is for the degenerate benchmark on public instances: the literature publishes one location-pair duration matrix, and it is used as t* as-is, with no shortest-path synthesis. The bypass is required because such a matrix has two properties that "undirected corridor graph + shortest paths" cannot express:
+
+    1. Directed — the two directions between the same pair of locations can have unequal durations (inevitable for one-way guideways), whereas `corridors` are undirected and a corridor has a single `time`;
+    2. It may violate the triangle inequality — a direct duration can exceed a detour (measured on the two "randomly generated" HF layouts 3-M / 7-M). The shortest-path closure of any graph satisfies the triangle inequality, so such a matrix is not the shortest-path closure of any graph. Reconstructing one would only produce an instance easier than the original.
+
+    When `ideal_dist` is given, `corridors` is empty, the network cannot route, and only the degenerate arm `conflict_free=False` can run. `Router` rejects the other case explicitly.
     """
 
     def __init__(self, nodes: List[str], corridors: List[dict], lu_node: str,
@@ -108,11 +138,17 @@ class Network:
 
     @property
     def routable(self) -> bool:
-        """是否存在可路由的走廊图(矩阵型算例为假)。"""
+        """是否存在可路由的走廊图(矩阵型算例为假)。
+
+        Whether a routable corridor graph exists (false for matrix-form instances).
+        """
         return bool(self.corridor_time)
 
     def _all_pairs_shortest(self) -> Dict[str, Dict[str, float]]:
-        """无预约理想最短路矩阵 t*(规格 5.4)。"""
+        """无预约理想最短路矩阵 t*(规格 5.4)。
+
+        Ideal shortest-path matrix t* with no reservations (spec 5.4).
+        """
         dist_all: Dict[str, Dict[str, float]] = {}
         for src in self.nodes:
             dist = {src: 0.0}
@@ -139,11 +175,15 @@ class Network:
                     raise ValueError(f"路网不连通: {a} 无法到达 {b}(违反 D1)")
 
     # ---------------- 结构指标(算例特征;规格 12.3) ----------------
+    # Structural indicators (instance features; spec 12.3)
 
     def shortest_path_corridors(self, a: str, b: str) -> List[str]:
-        """a→b 一条最短路上的走廊序列(并列时取字典序最小,保证确定性)。"""
+        """a→b 一条最短路上的走廊序列(并列时取字典序最小,保证确定性)。
+
+        Corridor sequence of one shortest path from a to b (lexicographically smallest on ties, so the result is deterministic).
+        """
         dist = {a: 0.0}
-        prev: Dict[str, Tuple[str, str]] = {}      # node -> (前驱节点, 走廊)
+        prev: Dict[str, Tuple[str, str]] = {}      # node -> (前驱节点, 走廊) / node -> (predecessor node, corridor)
         heap = [(0.0, a)]
         while heap:
             d, u = heapq.heappop(heap)
@@ -176,6 +216,10 @@ class Network:
         不论工序派给哪台 RA——这部分拥堵**不含决策杠杆**,只抬高所有方案的
         基线延误,不为改派/错峰提供可利用的差异。该值越低,机制可利用的信号
         越强。局限:只刻画 LU 侧的强制流量,不含机器间换机运输。
+
+        Structural share of decision-independent congestion in [0,1]: the fraction of time, on a typical LU→robotic-arm trip, that falls on corridors shared by every LU→robotic-arm shortest path.
+
+        Motive: every job's first delivery and finished-goods return haul must cross the shared corridors on the LU-exit side, no matter which robotic arm the operation is assigned to. That congestion has no decision lever. It only raises the baseline delay of every solution and does not create a difference that reassignment or stagger can exploit. The lower this value, the stronger the signal a mechanism can use. Limitation: it describes only the forced flow on the LU side, not changeover travel between machines.
         """
         targets = [m for m in dict.fromkeys(machine_nodes) if m != self.lu_node]
         if not targets:
@@ -196,11 +240,16 @@ class Network:
         = LU 到"全体 RA 超汇"的走廊连通度(单位容量最大流 / 最小割)。宽度给出
         LU 同时能发出的车辆数上限:值为 1 意味着存在单点漏斗,该走廊上的排队与
         指派决策无关(参见 funnel_share 与 lu_cut_bound)。
+
+        Funnel: the smallest set of corridors whose removal disconnects the LU from every robotic arm. Returns (width, corridor list).
+
+        Equal to the corridor connectivity from the LU to a super-sink of all robotic arms (unit-capacity max flow / min cut). The width is an upper bound on how many vehicles the LU can send at once. A value of 1 means a single-point funnel exists, and queueing on that corridor does not depend on the assignment decision (see funnel_share and lu_cut_bound).
         """
         targets = [m for m in dict.fromkeys(machine_nodes) if m != self.lu_node]
         if not targets or self.lu_node in targets:
             return 0, []
         # 每条物理走廊建一对反向弧,各容量 1(无向单位容量走廊)
+        # Each physical corridor gets a pair of opposite arcs, capacity 1 each (undirected unit-capacity corridor).
         cap: Dict[Tuple[str, str], int] = {}
         for cid in self.corridor_time:
             u, v = cid.split("|", 1)
@@ -210,6 +259,7 @@ class Network:
         big = len(self.corridor_time) + 1
         for m in targets:
             cap[(m, sink)] = big                               # 汇侧不设限
+            # The sink side is not capacity-limited.
             cap[(sink, m)] = 0
         adj: Dict[str, set] = {}
         for (u, v) in cap:
@@ -237,6 +287,7 @@ class Network:
             flow += push
 
         # 残量图中从源可达的一侧 S,割边即 S→V\S 且原容量>0 的物理走廊
+        # Side S reachable from the source in the residual graph. Cut edges are physical corridors from S to V\S whose original capacity was > 0.
         reach = {self.lu_node}
         queue = [self.lu_node]
         while queue:
@@ -259,6 +310,10 @@ class Network:
         达 tau(c)。把 X 次穿越分配到各割边、令 x_c 为落在 c 上的次数,则耗时
         >= max_c x_c*tau(c);在 sum(x_c)=X 下最小化该上界得 X / sum_c (1/tau(c))。
         故 C_max >= X / sum_c (1/tau(c))。这是零成本可得的合法下界。
+
+        Makespan lower bound given by the LU funnel (a hard floor independent of any scheduling decision).
+
+        Argument: when δ_return=1 every job must cross the funnel twice (out on the first delivery, in on the finished-goods return haul); when δ_return=0, at least once. The funnel is k exclusive corridors, and one crossing occupies corridor c for tau(c). Assign X crossings to the cut edges and let x_c be the number that fall on c. The time taken is at least max_c x_c*tau(c). Minimizing that bound subject to sum(x_c)=X yields X / sum_c (1/tau(c)). Hence C_max >= X / sum_c (1/tau(c)). This is a valid lower bound obtained at zero cost.
         """
         _k, cut = self.lu_cut(machine_nodes)
         if not cut:
@@ -274,6 +329,10 @@ class Network:
         `lu_min_cut` 只看 LU 出口,看不到路网深处的争用;而单台 RA 的连通度恒被
         它自己那条支线卡成 1,也没有区分力。故取"到 LU 的理想距离高于中位数"的
         RA 作为一组求最小割:哑铃布局下它恰等于中段并行通道数。
+
+        Deep-bottleneck capacity: the minimum number of corridors needed to isolate the "far robotic-arm group".
+
+        `lu_min_cut` only sees the LU exits and misses contention deep in the road network. A single robotic arm's connectivity is always pinned at 1 by its own spur, which has no discriminating power. The robotic arms whose ideal distance to the LU is above the median are therefore taken as one group and a min cut is computed. On a dumbbell layout this equals the number of parallel mid-segment lanes.
         """
         ds = {m: self.ideal_dist[self.lu_node].get(m, float("inf"))
               for m in dict.fromkeys(machine_nodes) if m != self.lu_node}
@@ -283,6 +342,7 @@ class Network:
         mid = vals[len(vals) // 2]
         far = [m for m, d in ds.items() if d > mid]
         if not far:                                   # 全等距时退化为取最远的一组
+            # When all distances are equal, fall back to the farthest group.
             mx = max(vals)
             far = [m for m, d in ds.items() if d >= mx]
         k, _cut = self.lu_cut(far)
@@ -300,7 +360,10 @@ class Network:
 
 
 def _path_nodes(parent: Dict[str, Optional[str]], sink: str) -> List[str]:
-    """增广路上除源点外的节点序列(自源向汇)。"""
+    """增广路上除源点外的节点序列(自源向汇)。
+
+    Node sequence on an augmenting path, excluding the source (from source toward the sink).
+    """
     out: List[str] = []
     cur = sink
     while parent[cur] is not None:
@@ -311,7 +374,7 @@ def _path_nodes(parent: Dict[str, Optional[str]], sink: str) -> List[str]:
 
 
 # --------------------------------------------------------------------------
-# 走廊-时段影子价格(规格 5.5)
+# 走廊-时段影子价格(规格 5.5) / Corridor-time shadow prices (spec 5.5)
 # --------------------------------------------------------------------------
 
 class PriceTable:
@@ -324,6 +387,12 @@ class PriceTable:
 
     这一点正是价格化接口替代原"lam * 累计让行等待"启发式的理由:后者把一个随算例
     规模增长的全局累计量与单道工序尺度的量相加,lam 无法跨算例可比。
+
+    Shadow price pi(c,b): the marginal makespan cost, per unit of occupation time, of corridor c inside time bucket b.
+
+    On dimension (this is what makes the priced interface valid): pi = (makespan improvement from relaxing that space-time slot by one capacity unit) / bucket width, a dimensionless "time/time" ratio. A path's price_cost = sum(pi * occupation time) therefore has the dimension of time and can be added directly to the arrival time. arrive + theta * price_cost is a dimensionally consistent scalarization, and theta is a dimensionless coordination strength.
+
+    This is exactly why the priced interface replaces the old "lam * cumulative yield-wait" heuristic: the latter adds a global cumulative quantity that grows with instance size to a quantity on the scale of a single operation, and lam is not comparable across instances.
     """
 
     def __init__(self, bucket_width: float):
@@ -354,7 +423,10 @@ class PriceTable:
         return self._pi.items()
 
     def interval_cost(self, cid: str, ts: float, te: float) -> float:
-        """一次占用 [ts, te) 的价格总额:跨桶按各桶内的重叠时长加权。"""
+        """一次占用 [ts, te) 的价格总额:跨桶按各桶内的重叠时长加权。
+
+        Total price of one occupation [ts, te): across buckets, weighted by the overlap duration inside each bucket.
+        """
         if te <= ts:
             return 0.0
         total = 0.0
@@ -372,6 +444,10 @@ class PriceTable:
 
         用于上层评分(规格 6.5):衡量"把工序放到该 RA 处,其进出运输要买多贵的路"。
         取均值而非求和,使不同度数的节点可比。
+
+        "Right-of-way price" of a node at time t: the mean price of adjacent corridors in that period.
+
+        Used by upper-level scoring (spec 6.5): how expensive a road must be bought for the transport into and out of a robotic arm if the operation is placed there. The mean, rather than the sum, keeps nodes of different degree comparable.
         """
         cids = net.incident_corridors(node)
         if not cids:
@@ -381,7 +457,7 @@ class PriceTable:
 
 
 # --------------------------------------------------------------------------
-# 容量化预约表(规格 5.2)
+# 容量化预约表(规格 5.2) / Capacitated reservation table (spec 5.2)
 # --------------------------------------------------------------------------
 
 class ReservationTable:
@@ -390,23 +466,32 @@ class ReservationTable:
     容量默认为 1(与独占语义等价)。容量提升仅用于影子价格的有限差分探测
     (pricing.finite_difference_prices):把某个 (c,b) 的容量临时加 1,重解一次,
     makespan 的改善量即该槽位的边际价值。
+
+    Per-corridor lists of occupation windows, with per corridor-time capacity, cancellation, and checkpoint rollback.
+
+    Capacity defaults to 1 (equivalent to exclusive use). Raising capacity is used only for finite-difference probes of shadow prices (pricing.finite_difference_prices): temporarily add 1 to the capacity of some (c,b), re-solve once, and the makespan improvement is that slot's marginal value.
     """
 
     def __init__(self, bucket_width: float = 0.0,
                  capacity_override: Optional[Dict[BucketKey, int]] = None):
         # cid -> 按 t_start 排序的 [t_start, t_end, agv, task];容量 > 1 时允许重叠
+        # cid -> [t_start, t_end, agv, task] sorted by t_start; overlap is allowed when capacity > 1.
         self._res: Dict[str, List[Tuple[float, float, int, str]]] = {}
         self.bucket_width = float(bucket_width)
         self._cap: Dict[BucketKey, int] = dict(capacity_override or {})
         self._undo: List[Tuple[str, Tuple[float, float, int, str]]] = []
 
     # ---- 容量 ----
+    # Capacity
 
     def _bucket(self, t: float) -> int:
         return int(t // self.bucket_width) if self.bucket_width > 0 else 0
 
     def capacity(self, cid: str, ts: float, te: float) -> int:
-        """占用区间跨越的所有时段中的最小容量(保守取法)。"""
+        """占用区间跨越的所有时段中的最小容量(保守取法)。
+
+        Minimum capacity among all periods the occupation interval crosses (the conservative choice).
+        """
         if not self._cap:
             return 1
         cap = 1 << 30
@@ -418,12 +503,14 @@ class ReservationTable:
         return max(1, cap)
 
     # ---- 查询 ----
+    # Queries
 
     def _overlap_count(self, cid: str, ts: float, te: float) -> int:
         cnt = 0
         for a, b, _agv, _task in self._res.get(cid, []):
             if a >= te - 1e-12:
                 break                       # 列表按 a 升序,后续不可能重叠
+                # The list is sorted by a ascending, so later entries cannot overlap.
             if b > ts + 1e-12:
                 cnt += 1
         return cnt
@@ -433,11 +520,15 @@ class ReservationTable:
         return self._overlap_count(cid, ts, te) < self.capacity(cid, ts, te)
 
     def earliest_entry(self, cid: str, t: float, tau: float) -> float:
-        """从 t 起最早可占用 [t', t'+tau) 的时刻。"""
+        """从 t 起最早可占用 [t', t'+tau) 的时刻。
+
+        Earliest time, from t onward, at which [t', t'+tau) can be occupied.
+        """
         for cand in self._entry_candidates(cid, t):
             if self._is_free(cid, cand, tau):
                 return cand
         # 所有既有占用结束之后必然可行
+        # After every existing occupation has ended, entry is necessarily feasible.
         ends = [b for _a, b, _agv, _task in self._res.get(cid, [])]
         return max([t] + ends)
 
@@ -454,6 +545,10 @@ class ReservationTable:
 
         除"最早可行"外,还给出后续时间桶的边界时刻——价格感知路由据此可以选择
         "多等一会儿,进一个更便宜的时段",这是单标签最早到达搜索无法表达的决策。
+
+        Several feasible entry times from t onward (ascending; the first is the earliest).
+
+        Besides the earliest feasible entry, later bucket boundaries are also offered. Price-aware routing can then choose to "wait a little longer and enter a cheaper period", a decision that single-label earliest-arrival search cannot express.
         """
         first = self.earliest_entry(cid, t, tau)
         out = [first]
@@ -474,6 +569,7 @@ class ReservationTable:
         return out
 
     # ---- 修改 ----
+    # Modifications
 
     def reserve(self, cid: str, ts: float, te: float, agv: int, task: str) -> None:
         lst = self._res.setdefault(cid, [])
@@ -484,7 +580,10 @@ class ReservationTable:
         self._undo.append((cid, item))
 
     def release_all(self, task: str) -> int:
-        """撤销某任务的全部占用(规格 5.2);返回撤销的区间数。"""
+        """撤销某任务的全部占用(规格 5.2);返回撤销的区间数。
+
+        Cancel every occupation of a task (spec 5.2); return how many intervals were removed.
+        """
         removed = 0
         for cid, lst in self._res.items():
             keep = [r for r in lst if r[3] != task]
@@ -496,7 +595,10 @@ class ReservationTable:
         return removed
 
     def checkpoint(self) -> int:
-        """记录当前状态令牌,供 rollback 回退(供派车试探与价格探测使用)。"""
+        """记录当前状态令牌,供 rollback 回退(供派车试探与价格探测使用)。
+
+        Record a token for the current state, so rollback can undo it (used by dispatch probes and price probes).
+        """
         return len(self._undo)
 
     def rollback(self, token: int) -> None:
@@ -510,6 +612,7 @@ class ReservationTable:
                 lst.pop(idx)
 
     # ---- 统计 ----
+    # Statistics
 
     def all_reservations(self) -> Dict[str, List[Tuple[float, float, int, str]]]:
         return self._res
@@ -519,6 +622,10 @@ class ReservationTable:
 
         这是**前瞻性**拥堵信号(我若此刻前往可能受阻),与解码器统计的实际让行
         等待(**回顾性**信号:这里已经真的堵了)含义不同,不可混用。
+
+        Occupancy of each corridor-time slot, util[c][b] = occupied time inside the bucket / bucket width, in [0,1].
+
+        This is a forward-looking congestion signal (I may be blocked if I head there now). It does not mean the same thing as the actual yield-wait counted by the decoder (a retrospective signal: it really was congested here), and the two must not be mixed.
         """
         util: Dict[BucketKey, float] = {}
         if bucket_width <= 0:
@@ -536,15 +643,16 @@ class ReservationTable:
 
 
 # --------------------------------------------------------------------------
-# 路由层(规格 5.3)
+# 路由层(规格 5.3) / Routing layer (spec 5.3)
 # --------------------------------------------------------------------------
 
 @dataclass
 class _Label:
-    t: float          # 到达该节点的时刻
-    g: float          # 累计价格代价
+    t: float          # 到达该节点的时刻 / Arrival time at this node
+    g: float          # 累计价格代价 / Cumulative price cost
     node: str
     parent: int       # 上一个 label 在 pool 中的下标,-1 表示起点
+    # Index of the previous label in the pool; -1 means the start.
     seg: Optional[Segment]
 
 
@@ -552,10 +660,16 @@ class Router:
     """时间窗路由:价格为空或 theta=0 时为单标签最早到达;否则为价格加权多标签搜索。
 
     conflict_free=False 时退化为查理想最短路 t*(规格 12.2 第一层对标)。
+
+    Time-window routing: single-label earliest arrival when prices are empty or theta=0; otherwise price-weighted multi-label search.
+
+    When conflict_free=False, it falls back to looking up the ideal shortest path t* (layer-1 benchmark of spec 12.2).
     """
 
     # 全局路由调用计数器,仅供诊断工具统计"降本减少了多少次路由"用,不参与任何决策。
     # 用类属性而非实例属性,是因为 decode() 内部自建 Router 且不外露,实例计数取不到。
+    # Global routing-call counter, used only by diagnostic tools to count how many routes the cost cut avoided. It takes part in no decision.
+    # A class attribute, not an instance attribute, because decode() builds its own Router and does not expose it, so an instance counter cannot be read.
     total_route_calls = 0
 
     def __init__(self, network: Network, conflict_free: bool = True,
@@ -579,6 +693,7 @@ class Router:
                                       capacity_override=capacity_override)
 
     # ---- 是否启用价格感知搜索 ----
+    # Whether price-aware search is enabled.
     def _price_aware(self) -> bool:
         return (self.conflict_free and self.theta > 0.0
                 and self.prices is not None and not self.prices.is_empty())
@@ -591,6 +706,7 @@ class Router:
 
         if not self.conflict_free:
             # 退化模式:运输时间 = 理想最短路,无预约
+            # Degenerate mode: travel time = ideal shortest path, no reservations.
             arrive = t0 + self.net.ideal_dist[start][goal]
             return RoutePlan(start, goal, t0, arrive)
 
@@ -599,6 +715,7 @@ class Router:
                                     else self._search_earliest(start, goal, t0))
 
         # 等待统计:进入某走廊前在其上游节点停靠的时长,记到该走廊头上
+        # Wait statistics: time spent waiting at the upstream node before entering a corridor, charged to that corridor.
         waits: Dict[str, float] = {}
         at_time = t0
         for s in segs:
@@ -614,6 +731,7 @@ class Router:
         return RoutePlan(start, goal, t0, arrive, segs, waits, price_cost)
 
     # ---- 单标签最早到达(价格协调前的原始行为) ----
+    # Single-label earliest arrival (the original behavior before price coordination).
 
     def _search_earliest(self, start: str, goal: str,
                          t0: float) -> Tuple[List[Segment], float, float]:
@@ -650,6 +768,7 @@ class Router:
         return segs, best[goal], cost
 
     # ---- 价格加权多标签 Pareto 搜索 ----
+    # Price-weighted multi-label Pareto search.
 
     def _search_priced(self, start: str, goal: str,
                        t0: float) -> Tuple[List[Segment], float, float]:
@@ -658,6 +777,10 @@ class Router:
         正确性:每条弧使 t 与 g 均非减,故 key = t + theta*g 沿路径单调非减,
         首次弹出 goal 即该标量化下的最优;支配关系 (t1<=t2 且 g1<=g2) 有效,
         因为节点可无限等待(停靠位不占通行资源),早到者能模拟晚到者的任何后续。
+
+        Pareto dominance pruning on (arrival time t, cumulative price g), dequeued by t + theta*g.
+
+        Correctness: every arc leaves both t and g nondecreasing, so key = t + theta*g is monotone along a path, and the first time goal is popped is optimal for that scalarization. Dominance (t1<=t2 and g1<=g2) is valid because a node may wait indefinitely (a berth does not consume travel resource), so an earlier arrival can imitate any continuation of a later arrival.
         """
         prices = self.prices
         assert prices is not None
@@ -701,6 +824,7 @@ class Router:
 
         if goal_idx is None:
             # 预算耗尽或未达:回退到最早到达搜索,保证解码永不失败(建模文档 B4)
+            # Budget exhausted or goal not reached: fall back to earliest-arrival search, so decoding never fails (modeling document B4).
             return self._search_earliest(start, goal, t0)
 
         segs: List[Segment] = []

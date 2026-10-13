@@ -1,4 +1,8 @@
 # STRC 为纯 Python 标准库实现,无第三方依赖。
+# STRC is a pure-Python standard-library implementation, with no third-party dependencies.
 # 下层复用仓库内 clbs/(同要求)。
+# The lower layer reuses in-repo clbs/ (same requirement).
 # 要求 Python >= 3.7。论文各表各图的读数实测于 CPython 3.7.6(64 位, Windows 10);
+# Python >= 3.7 is required. Every table and figure was measured on CPython 3.7.6 (64-bit, Windows 10);
 # 更高版本未逐一复跑。因无第三方依赖,复现不需要锁定版本。
+# higher versions were not re-run one by one. With no third-party dependencies, reproduction does not need a pinned version.

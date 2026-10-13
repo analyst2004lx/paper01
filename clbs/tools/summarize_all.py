@@ -4,6 +4,10 @@
 单个格子只有 10 对配对,分辨不出 1~2% 的效应;把全部格子按种子配对汇总,才谈得上
 "这个机制到底有没有用"。同时按拥堵档与异构度分层给出,以便看清收益随算例结构
 如何变化(而不是只报一个平均数)。
+
+Aggregate ledger over all instances: 16 instances × 10 seeds, same-wall-clock protocol.
+
+A single cell has only 10 pairs and cannot resolve a 1–2% effect; pooling every cell with seed-wise pairing is what lets us say whether a mechanism works at all. Results are also stratified by congestion level and heterogeneity, so the gain can be seen as a function of instance structure rather than as one average.
 """
 from __future__ import annotations
 
@@ -35,7 +39,10 @@ def load(name):
 
 
 def paired(rows, base_arm, ref_arm="closed"):
-    """按 (算例, 种子) 配对,返回 [(对照档, 参照档), ...]。"""
+    """按 (算例, 种子) 配对,返回 [(对照档, 参照档), ...]。
+
+    Pair by (instance, seed) and return [(baseline arm, reference arm), ...].
+    """
     idx = defaultdict(dict)
     for r in rows:
         idx[(r["instance"], r["seed"])][r["arm"]] = r
@@ -101,6 +108,7 @@ def main() -> int:
             report(sub, "拥堵档 = %s" % tag, ref)
 
     # 集成收益随结构如何变化
+    # How the integrated gain varies with structure.
     print()
     print("### 集成收益(相对两阶段)随算例结构的变化")
     print("  %-9s %-7s %8s %6s" % ("拥堵档", "H", "收益", "n"))
@@ -120,6 +128,7 @@ def main() -> int:
         print("  Spearman(集成收益, H) = %.3f" % spearman(xs_h, ys_g))
 
     # 以两阶段为共同基准,看清哪一档才是本方法该主打的配置
+    # With two-stage as the common baseline, see which arm this method should lead with.
     print()
     print("### 各档相对两阶段的收益(正数 = 优于两阶段)")
     idx = defaultdict(dict)

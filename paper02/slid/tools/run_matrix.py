@@ -8,6 +8,16 @@
     main    主表(全部攻击族 x 全部基线 x 5 种子)
     sweep   rho 扫描曲线,与理论界对照
     full    完整矩阵
+
+Matrix batch runner: dataset x attack family x rho x tier x seed, with resume.
+
+The ledger is written to output/matrix/<preset>/records.jsonl. Each record carries a configuration fingerprint, and completed tasks are skipped on rerun; --report-only reports from the existing ledger.
+
+Presets:
+    smoke   pipeline self-check (1 dataset x 2 attack families x 2 seeds)
+    main    main table (all attack families x all baselines x 5 seeds)
+    sweep   rho sweep curve, compared with the theoretical bound
+    full    full matrix
 """
 from __future__ import annotations
 

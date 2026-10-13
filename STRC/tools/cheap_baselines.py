@@ -18,6 +18,27 @@ R2 关闭失败扩域),故本表可与 tab:e3 并读。
 用法:
     py -m tools.cheap_baselines
     py -m tools.cheap_baselines --out experiments/cheap_baselines.csv
+
+Fill the missing middle rung of the comparison ladder: cheap global recomputation, compared with closure repair under the same protocol.
+
+The ladder was R1 (empty release set = do nothing) → R2 (closure repair) → R0+ (population search, 0.2--2 s).
+Two cheap methods were missing in the middle, and they are exactly what a reviewer would ask about:
+
+  RS  Global right-shift. Do not change paths, assignments, or sequence; push everything unfinished back past the blockage window as one delay.
+      Admissible under A2 (same freeze test as R2), O(|R|). The standard fast-response method in the literature.
+  RD  Re-decode the original chromosome. Keep machine assignment and scan order, and solve once on the routing layer with the blockage installed.
+      By default it uses the same fixed-prefix decode as R0+ (assumption A2); the old replay from t=0 is kept only when
+      respect_a2=False. This tool still reports past_changed cell by cell.
+  RA  Draw no boundary: release every reservation after t_now, then reroute and replay. It shares the engine and the
+      freeze test with R2; the only difference is that the release set takes the trivial upper bound, so the gap between the arms is entirely due to the closure itself.
+      This arm answers "once the closure already covers nine tenths of the live reservations, how much use is left in drawing this boundary".
+
+The protocol matches E1/E2/E3 in expand_batch exactly (one window blocking the busy corridor, t_now=0.35 Cmax,
+R2 with widen-on-failure off), so this table can be read next to tab:e3.
+
+Usage:
+    py -m tools.cheap_baselines
+    py -m tools.cheap_baselines --out experiments/cheap_baselines.csv
 """
 from __future__ import annotations
 
@@ -61,7 +82,10 @@ def _instances():
 
 
 def _redecode(inst, net, bundle, dist, *, respect_a2=True):
-    """RD:保持染色体重解码。默认固定前缀;respect_a2=False 才从 t=0 重放。"""
+    """RD:保持染色体重解码。默认固定前缀;respect_a2=False 才从 t=0 重放。
+
+RD: re-decode while keeping the chromosome. Fixed prefix by default; replay from t=0 only when respect_a2=False.
+"""
     from algorithm.block_context import block_windows_from_dist, corridor_block_active
     from algorithm.clbs_bridge import decode, validate
     from algorithm.metrics import evaluate_deviation
@@ -204,8 +228,10 @@ def main() -> int:
                 tie += 1
         print(f"  R2 vs {other}: 赢 {win} 平 {tie} 输 {lose}")
 
-    # R2 vs RA 是本表的关键对照:同一引擎、同一冻结判据,只差释放集取闭包还是取
-    # 平凡上界。稳定性(改动比例)而非 Cmax 才是闭包该兑现的那个量。
+# R2 vs RA 是本表的关键对照:同一引擎、同一冻结判据,只差释放集取闭包还是取
+# 平凡上界。稳定性(改动比例)而非 Cmax 才是闭包该兑现的那个量。
+# R2 vs RA is the key comparison in this table: same engine, same freeze test; the release set is either the closure or
+# the trivial upper bound. Stability (the change ratio), not Cmax, is what the closure is supposed to deliver.
     print("\nR2 vs RA(画边界 vs 不画边界,同引擎):")
     d_ms, d_rf, d_rel = [], [], []
     rf_win = rf_tie = rf_lose = 0

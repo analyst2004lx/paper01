@@ -12,6 +12,17 @@
 故这一列本身就是 M7 的对照,不是不公平的比较)。
 
 用法(在 paper02/slid/ 下):  py -m tools.baseline_diag
+
+E1 main comparison: detection rates of this method and the baselines on each attack family, under the same false-alarm budget.
+
+Three rules, and without any one of them the comparison does not hold:
+  1. **The same false-alarm budget.** Baseline raw scores are on different scales (l2 distance, negative log-likelihood, z), so the threshold can be compared only after it is set to the same nominal alpha on the same benign calibration fold.
+  2. **The same temporal split.** Train / calibration / test are cut by the time a case first appears, matching deployment (rule 6).
+  3. **The same attack stream.** The same stream, generated from the same injection seed, is fed to every method, including the same model-aware A4 attacker (rule 12).
+
+This method reports two numbers: per message (the same rule as a baseline's per-observation decision) and sequential at 10 (baselines have no accumulation, so that column is itself M7's control, not an unfair comparison).
+
+Usage (from paper02/slid/):  py -m tools.baseline_diag
 """
 from __future__ import annotations
 
@@ -24,6 +35,7 @@ from algorithm.detector import Detector, DetectorConfig
 
 FAMILIES = ("A1", "A2", "A3", "A4", "A5", "A6")
 #: 本方法的并行子检测器,顺序与 _parts 和 Detector.path_q 一致
+#: this method's parallel sub-detectors, in the same order as _parts and Detector.path_q
 PATHS = ("硬层", "时序", "结构", "互锁")
 
 
@@ -62,6 +74,12 @@ def _parts(det, stream, rng, *, conformal: bool = False):
     于是我方被**比较装置**而非设计本身罚掉一截(实测结构通道 -0.05)。
     部署时只有一层校准,即冻结的 conformal;这里的 judge 是它的替身,不是
     附加层。`conformal=True` 保留旧口径,仅用于复现这一测量。
+
+    Four sub-detector score streams of this method: the hard-constraint layer plus three channels (larger means more anomalous).
+
+    Same structure as a baseline — one stream per sub-detector, handed to the same judge for a parallel decision.
+
+    `conformal=False` hands over the **raw nonconformity score**, so judge's empirical p-value transform is the only calibration, exactly isomorphic to a baseline. **That is the correct rule for this table.** If a frozen randomised conformal layer is applied first and the stream is then handed to judge, the same stream is randomised twice: the first U*(1+eq)/(n+1) term is enough, where ties are dense, to scramble the order of neighbouring atoms, while a baseline passes through only once, so our side is penalised by the **comparison apparatus** rather than by the design itself (measured, the structural channel loses 0.05). At deployment there is only one calibration layer, the frozen conformal; the judge here stands in for it and is not an extra layer. `conformal=True` keeps the old rule, only to reproduce that measurement.
     """
     det._reset_online()
     rows = []
@@ -83,6 +101,10 @@ def ours(det, benign, attacked, labels, alpha, rng, weights=None):
     `weights` 由 `Detector.path_weights` 在**良性选择折**上算出并冻结,不碰
     测试折。实测在相邻折上按攻击表现选配额会选出测试折上最差的那个(结论
     四十八),只有良性天花板判据可用(结论四十九)。
+
+    This method goes through **exactly the same** judge as a baseline: the same threshold machine, the same ARL0, the same budget-split rule. It does not use the built-in h of `det.replay`, or the comparison would be of two threshold machines. The numbers of the full pipeline (including the gated update and the watchdog) are reported separately in main.py and online_diag, and are not mixed into this comparison table.
+
+    `weights` is computed by `Detector.path_weights` on the **benign selection fold** and then frozen; it does not touch the test fold. Measured, choosing the allocation by attack performance on an adjacent fold selects the worst one on the test fold (conclusion 48); only the benign ceiling criterion is usable (conclusion 49).
     """
     pb = _parts(det, benign, np.random.default_rng(rng.integers(1 << 30)))
     pa = _parts(det, attacked, rng)
@@ -121,11 +143,15 @@ def main() -> int:
     # 本方法**只用 train 拟合**,与基线一致(fit_baseline 也只吃 train)。
     # 原先吃 train+calib 是给自己让利,且会把 calib 变成样本内,使天花板判据
     # 读到训练折的 q(0.005)而非部署折的 q(0.03),互锁就剔不掉了(结论四十七)。
+    # This method **fits on train only**, matching the baselines (fit_baseline also eats only train).
+    # Eating train+calib used to be a concession to ourselves, and it put calib in-sample, so the ceiling
+    # criterion read the training-fold q (0.005) rather than the deployment-fold q (0.03) and could not drop the interlock (conclusion 47).
     det = Detector(DetectorConfig(alpha=args.alpha,
                                   online_update=False)).fit(
         train, model=model, rng=np.random.default_rng(0), temporal=True)
 
     # alpha 配额:在**良性选择折 calib** 上按天花板判据选,冻结后搬到 test。
+    # alpha allocation: chosen by the ceiling criterion on the **benign selection fold calib**, then frozen and moved to test.
     w, qs, keep = det.path_weights(baselines.order_stream(calib),
                                    alpha=args.alpha)
     names = list(baselines.IMPLEMENTED)

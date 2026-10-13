@@ -23,6 +23,25 @@ E' 减 D 才是"开价格"的干净效应;E' 减 E 是进入时刻选择本身�
 
 运行(clbs/ 目录下):
   py -u -m tools.entry_options_ab [算例路径] [--budget 秒] [--samegen 代数]
+
+When the pricing mechanism was declared dead, had its time-dimension freedom already been switched off?
+
+Background. GAConfig.theta defaults to 0 because a comment cites tools/sweep_price.py as showing that "price-weighted routing is systematically harmful". In that sweep, the only priced arm E is also the only arm with max_entry_options set to 1. network.feasible_entries with limit<=1 returns only the earliest feasible entry time, so price-aware routing can no longer express "wait a bit and enter a cheaper slot" — which, by that function's own comment, is why multi-label routing exists. E is left with spatial detours only, and its gap from A–D confounds "prices on or off" with "can entry times be chosen", so the attribution does not hold.
+
+This tool compares only three arms, each differing by one switch:
+
+  D   theta=0            entry-time options=3   (prices off)
+  E   theta=0.15         entry-time options=1   (the priced arm in the original sweep)
+  E'  theta=0.15         entry-time options=3   (only that one setting restored to the default)
+
+E' minus D is the clean effect of turning prices on; E' minus E is what entry-time choice itself is worth.
+
+Both protocols must be run, or the conclusion cannot be attributed:
+- Same wall-clock (default): closer to practice, but price-aware routing costs 2–4× per decode, generations are squeezed out, and "poor guidance" is mixed with "too slow".
+- Same generation count (--samegen): removes the throughput gap and measures guidance quality alone. If the priced arm is no longer worse at a fixed generation count, theta=0 should be attributed to compute cost rather than to double counting.
+
+Run (from the clbs/ directory):
+  py -u -m tools.entry_options_ab [instance path] [--budget seconds] [--samegen generations]
 """
 from __future__ import annotations
 

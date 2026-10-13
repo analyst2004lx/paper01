@@ -41,9 +41,9 @@ def main():
     ax.axhspan(lo, hi, color="#EEEEEE", zorder=0)
     ax.plot(t, tau, "o-", color=C_OURS, markersize=4, linewidth=1.1, zorder=2)
     ax.axhline(mu, color=C_LAB, linestyle="--", linewidth=0.8, zorder=1)
-    set_cjk(ax, ylabel=r"Dwell $\tau$")
+    set_cjk(ax, ylabel=r"Sojourn $\tau$")
     ax.set_title(
-        r"Schematic: $\rho{=}0.22$ race stays inside the clock guard",
+        r"Illustration: same-direction early reports with $\rho{=}0.22$ all stay inside the guard",
         fontproperties=FP_SM, loc="left")
     ax.set_ylim(lo * 0.85, hi * 1.08)
 

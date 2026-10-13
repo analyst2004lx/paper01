@@ -15,21 +15,29 @@ sys.path.insert(0, HERE)
 from _style import FP, FP_SM, FP_TINY, C_LINE, apply_style, save  # noqa: E402
 
 ATTACKS = [u"A1", u"A2", u"A3", u"A4", u"A5", u"A6"]
-ATTACK_EN = [u"replay", u"infeas.", u"race", u"mimic", u"drift", u"suppress"]
+ATTACK_EN = [u"replay", u"infeasible", u"early", u"mimicry", u"drift", u"suppression"]
+
+
+ARCHIVE = os.path.join(HERE, os.pardir, os.pardir, "slid", "output",
+                       "coverage_archive.json")
+ROWS = ("hard", "struct", "time")
+
+
+def _load():
+    import io
+    import json
+    with io.open(ARCHIVE, encoding="utf-8") as f:
+        fam = json.load(f)["families"]
+    dr = np.array([[round(fam[a]["mean"][r]["dr"], 2) for a in ATTACKS]
+                   for r in ROWS])
+    fpr = np.array([[round(fam[a]["mean"][r]["fpr"], 2) for a in ATTACKS]
+                    for r in ROWS])
+    return dr, fpr
 
 
 def main():
     apply_style()
-    dr = np.array([
-        [0.22, 0.98, 0.00, 0.03, 0.00, 0.00],
-        [0.19, 0.29, 0.02, 0.02, 0.01, 0.17],
-        [0.03, 0.00, 0.43, 0.00, 0.48, 0.04],
-    ], dtype=float)
-    fpr = np.array([
-        [0.00, 0.06, 0.00, 0.00, 0.00, 0.00],
-        [0.02, 0.03, 0.01, 0.03, 0.01, 0.02],
-        [0.03, 0.02, 0.02, 0.02, 0.03, 0.02],
-    ], dtype=float)
+    dr, fpr = _load()
     lift = dr - fpr
 
     cmap = LinearSegmentedColormap.from_list(
@@ -40,7 +48,8 @@ def main():
     ax.set_yticks(np.arange(3))
     ax.set_xticklabels([u"%s %s" % (a, z) for a, z in zip(ATTACKS, ATTACK_EN)],
                        fontproperties=FP_SM)
-    ax.set_yticklabels([u"Hard F", u"Structure", u"Timing"], fontproperties=FP)
+    ax.set_yticklabels([u"Hard-constraint layer $\\mathbf{F}$", u"Structural", u"Timing"],
+                       fontproperties=FP)
     ax.spines["top"].set_visible(True)
     ax.spines["right"].set_visible(True)
     for i in range(3):

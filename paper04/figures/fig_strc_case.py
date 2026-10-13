@@ -63,7 +63,7 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
     # block window as translucent band
     cid, t0, t1 = block
     ax.axvspan(t0, t1, color="#e8a0a0", alpha=0.35, zorder=0)
-    ax.text((t0 + t1) / 2, -0.95, f"block on {cid}",
+    ax.text((t0 + t1) / 2, -0.95, f"blockage on {cid}",
             ha="center", va="top", fontsize=6.5, color="#8b1e1e")
 
     ax.set_yticks(list(ymap.values()))
@@ -77,9 +77,9 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
     ax.spines["right"].set_visible(False)
     if show_legend:
         ax.legend(handles=[
-            Patch(facecolor="#1f4e79", edgecolor="#222222", label="op in Cl (released)"),
-            Patch(facecolor="#b0b8c0", edgecolor="#222222", label="op outside (frozen)"),
-            Patch(facecolor="#e8a0a0", alpha=0.5, label="corridor block window"),
+            Patch(facecolor="#1f4e79", edgecolor="#222222", label="op in Cl (rerouted)"),
+            Patch(facecolor="#b0b8c0", edgecolor="#222222", label="op outside Cl (kept as planned)"),
+            Patch(facecolor="#e8a0a0", alpha=0.5, label="blockage window"),
         ], loc="lower right", fontsize=6.5, frameon=False)
 
 
@@ -119,7 +119,7 @@ def main() -> None:
     _draw_panel(
         axes[1], rep.result, closed_ops,
         t_now=t_now, block=block,
-        title=(f"(b) After STRC level-1  $C_{{\\max}}={rep.makespan:.0f}$  "
+        title=(f"(b) After level-1 rerouting  $C_{{\\max}}={rep.makespan:.0f}$  "
                f"wall={rep.wall_ms:.1f} ms"),
         show_legend=False,
     )

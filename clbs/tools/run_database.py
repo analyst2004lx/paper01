@@ -24,6 +24,30 @@
 3. **校验失败**:每个解都过 `validator.validate`。注意退化档没有 AGV 分段,故校验项
    (d)(e)(f)(h) 天然为空——这一档的校验强度**低于**争用档,不能用"校验通过"充当
    转换正确的证据;真正的证据是第 1 条(与独立求得的最优值比对)。
+
+Batch runner for the public-dataset branch: the degenerate benchmark arm plus automatic gap computation (spec 12.2).
+
+Usage (from the clbs/ directory):
+
+    py -m tools.run_database --smoke                 # 3 seeds, check the flow and the runtime first
+    py -m tools.run_database --seeds 10              # the real run
+    py -m tools.run_database --only sfjs             # only instances whose name contains this string
+    py -m tools.run_database --report-only           # rebuild the report from an existing ledger
+
+Outputs:
+    output_database/<instance>/summary.json          # per-instance, per-seed detail
+    output_database/records.jsonl                    # resumable ledger (one line appended per finished cell)
+    experiments_database/instances.csv               # instance features
+    experiments_database/runs.csv                    # one record per (instance, seed)
+    experiments_database/gap_ideal.csv               # gap versus literature reference values
+    experiments_database/fidelity.csv                # whether a layout reconstructs as a corridor graph
+    experiments_database/meta.json                   # commit / time / configuration
+
+Three hard checks (listed alone at the top of the report; any one of them must be investigated before the conclusion is read):
+
+1. **Below a proven optimum**: if this method's solution is smaller than an optimum already proved by MILP, that is not a win; the definitions disagree or the implementation is wrong. The degenerate arm and the literature solve the same mathematical problem, and a proven optimum is a hard floor.
+2. **Below the zero-cost composite lower bound**: likewise, violating our own lower bound means the decoder or the bound itself is wrong.
+3. **Validation failure**: every solution passes `validator.validate`. The degenerate arm has no AGV segments, so checks (d)(e)(f)(h) are naturally empty — this arm's validation is **weaker** than the contention arm, and "validation passed" cannot be evidence that the conversion is correct. The real evidence is item 1 (comparison with an independently obtained optimum).
 """
 from __future__ import annotations
 
@@ -53,10 +77,12 @@ EXP = os.path.join(HERE, "experiments_database")
 
 ARM = "ideal"
 DEFAULT_TAG = "p100g200s30"      # 规格 7 的默认参数,汇总写在 experiments_database/ 根下
+                                 # spec 7 defaults; the summary is written at the experiments_database/ root
 
 
 # --------------------------------------------------------------------------
 # 参考值
+# Reference values
 # --------------------------------------------------------------------------
 
 def load_refvalues(key: str) -> Dict[str, List[dict]]:
@@ -77,6 +103,10 @@ def pick_reference(rows: List[dict]) -> Optional[dict]:
     优先取 `proven_optimal`(可证最优,是硬地板,gap 有绝对含义);其次取全部行的
     最小值作为 `best_known`(只是当前最好的已知上界,gap 为负不代表求得最优)。
     两者绝不合并成一列——见 database/refvalues/README.md。
+
+    Pick a reference for the gap, and keep its strength grade.
+
+    Prefer `proven_optimal` (a proved optimum, a hard floor, so the gap has an absolute meaning); otherwise take the minimum of all rows as `best_known` (only the best known upper bound so far; a negative gap does not mean the optimum was found). The two are never merged into one column — see database/refvalues/README.md.
     """
     proven = [r for r in rows if r["kind"] == "proven_optimal"]
     if proven:
@@ -92,6 +122,7 @@ def pick_reference(rows: List[dict]) -> Optional[dict]:
 
 # --------------------------------------------------------------------------
 # 账本
+# Ledger
 # --------------------------------------------------------------------------
 
 def budget_tag(args: argparse.Namespace) -> str:
@@ -100,6 +131,10 @@ def budget_tag(args: argparse.Namespace) -> str:
     账本键只有 (算例, 种子),不含预算;若同一文件里混进两种预算的记录,续跑会
     静默跳过、报告会把两种算力的数字并进同一列均值,而这种错误在结果里看不出来。
     故预算进文件名,并在载入时逐行核对。
+
+    Fingerprint of the compute budget. Records from different budgets **must use separate ledgers**.
+
+    The ledger key is only (instance, seed), with no budget. If one file mixes two budgets, a resume silently skips cells and the report averages two compute levels into one column, and that error is invisible in the results. So the budget goes into the filename, and every line is checked on load.
     """
     return "p%dg%ds%d" % (args.pop, args.gen, args.stall)
 
@@ -109,7 +144,10 @@ def ledger_path(args: argparse.Namespace) -> str:
 
 
 def exp_dir(args: argparse.Namespace) -> str:
-    """默认预算的汇总写在 experiments_database/ 根下;其他预算各占一个子目录。"""
+    """默认预算的汇总写在 experiments_database/ 根下;其他预算各占一个子目录。
+
+    The default budget's summary is written at the experiments_database/ root; every other budget gets its own subdirectory.
+    """
     return EXP if budget_tag(args) == DEFAULT_TAG else os.path.join(EXP, budget_tag(args))
 
 
@@ -119,7 +157,7 @@ def load_ledger(args: argparse.Namespace) -> Dict[Tuple[str, int], dict]:
     if not os.path.exists(p):
         return done
     tag = budget_tag(args)
-    with open(p, "r", encoding="utf-8-sig") as f:      # 容忍 BOM
+    with open(p, "r", encoding="utf-8-sig") as f:      # 容忍 BOM / tolerate a BOM
         for n, line in enumerate(f, start=1):
             line = line.strip()
             if not line:
@@ -143,6 +181,7 @@ def append_ledger(rec: dict, args: argparse.Namespace) -> None:
 
 # --------------------------------------------------------------------------
 # 跑一格
+# Run one cell
 # --------------------------------------------------------------------------
 
 def run_cell(path: str, seed: int, args: argparse.Namespace) -> dict:
@@ -180,6 +219,7 @@ def run_cell(path: str, seed: int, args: argparse.Namespace) -> dict:
 
 # --------------------------------------------------------------------------
 # 报告
+# Report
 # --------------------------------------------------------------------------
 
 def write_csv(path: str, fieldnames: List[str], rows: List[dict]) -> None:
@@ -320,6 +360,10 @@ def compare_budgets(paths: List[str], refs: Dict[str, List[dict]],
     这个对比必须做,否则"我们比文献差 x%"这句话没有意义:文献的 MILP 在
     MFJST06 上花了 34796 秒,我们花了 2 秒,两个数字直接相减读者无法解释。
     只有当加大预算**不再显著改善**时,才能说这个 x% 是方法本身的能力边界。
+
+    Place results from two compute budgets side by side, and answer whether the gap is a search ceiling or an insufficient budget.
+
+    This comparison is required, or "we are x% worse than the literature" is meaningless: the literature's MILP spent 34796 seconds on MFJST06 and we spent 2 seconds, and a reader cannot interpret a raw subtraction. Only when a larger budget **no longer improves the result significantly** can that x% be called the method's own capability boundary.
     """
     a_tag = budget_tag(args)
     a = load_ledger(args)
@@ -478,7 +522,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                   + ("" if rec["valid"] else "  !! 校验失败"))
         print(f"\n跑完,总耗时 {time.time()-t0:.1f}s")
 
-    # 逐算例 summary.json
+    # 逐算例 summary.json / per-instance summary.json
     for path in paths:
         name = os.path.basename(path)[:-5]
         cells = [r for (nm, _s), r in ledger.items() if nm == name]

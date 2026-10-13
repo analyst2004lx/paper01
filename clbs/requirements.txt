@@ -1,2 +1,4 @@
 # CLBS 为纯 Python 标准库实现,无第三方依赖。
 # 要求 Python >= 3.8。
+# CLBS is pure Python standard library, with no third-party dependencies.
+# Requires Python >= 3.8.

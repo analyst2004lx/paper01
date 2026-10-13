@@ -2,6 +2,11 @@
 
 产出 slid/output/alarm_walkthrough.json,供 fig_alarm*.py 作图。
 用法(在 paper02/slid/ 下):  py -m tools.alarm_walkthrough
+
+Extract one explainable walkthrough of an A2 hard-constraint-layer rejection and one of an A3 timing accumulation.
+
+Writes slid/output/alarm_walkthrough.json for fig_alarm*.py.
+Usage (from paper02/slid/):  py -m tools.alarm_walkthrough
 """
 from __future__ import annotations
 
@@ -13,7 +18,10 @@ from tools.baseline_diag import attack_stream, split
 
 
 def _trace(det, stream, labels, *, rng, window=7):
-    """按在线语义重放,记录硬层原因、时序 z、结构分数与时序 CUSUM。"""
+    """按在线语义重放,记录硬层原因、时序 z、结构分数与时序 CUSUM。
+
+    Replay under online semantics, recording the hard-constraint-layer reason, timing z, structural score, and timing CUSUM.
+    """
     det._reset_online()
     cusum = sequential.CUSUM(k=1.5, h=7.8)
     rows = []
@@ -65,6 +73,7 @@ def pick_a3(rows):
         if r["injected"] and r["cusum_fire"]:
             return _window(rows, r["i"])
     # 若单条未越界,取注入段里 |z| 最负且 S 最大的位置
+    # if no single point crosses, take the injected-segment position with the most negative z and the largest S
     inj = [r for r in rows if r["injected"] and r["z"] is not None]
     if not inj:
         return None

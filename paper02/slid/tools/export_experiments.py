@@ -1,4 +1,7 @@
-"""把评测存档汇总成 experiments/ 下的论文级 CSV。只读 JSON,不重跑实验。"""
+"""把评测存档汇总成 experiments/ 下的论文级 CSV。只读 JSON,不重跑实验。
+
+Aggregate evaluation archives into paper-level CSVs under experiments/. Read JSON only; do not rerun experiments.
+"""
 from __future__ import annotations
 
 import csv

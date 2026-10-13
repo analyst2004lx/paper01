@@ -15,6 +15,17 @@ tools/dispatch_speedup.py 的逐位等价验证):可采纳下界剪枝 + 胜者�
 
 运行(clbs/ 目录下):
   py -u -m tools.dispatch_ab [--budget 秒] [--seeds a,b,c] [--only 名字片段,...]
+
+After the cost reduction, can dispatch probing beat rule dispatch under the same wall-clock?
+
+Of the three contributions, only dispatch probing was shown to have a decision gain: about 3% better than rule dispatch at a fixed generation count (output/matrix/gen100: congestion +3.39%, funnel +2.42%, one cell S8x4x4-LD11-H0 p=0.0246), but each evaluation costs 4.6× (15.9 vs 3.5 ms), so under the same wall-clock the gain is eaten by compute (output/matrix/p3: -0.12%, 40 wins 39 losses, p=0.53).
+
+decoder.dispatch_exact then received two **provably equivalent** cost reductions (see its docstring and the bit-wise equivalence check in tools/dispatch_speedup.py): admissible lower-bound pruning plus winner-path reuse. Routing calls are halved, wall-clock speeds up 1.82×, and the cost ratio falls from 4.6× to about 2.5×. If that 3% decision gain is real, it should show up under the same wall-clock after the speedup — that is what this tool decides.
+
+The protocol is **same wall-clock**: the least favorable protocol for probing dispatch, and the one closest to practice. Generations reached by each arm are recorded too, so "where the win comes from" is clear: a better decision, or merely generations catching up.
+
+Run (from the clbs/ directory):
+  py -u -m tools.dispatch_ab [--budget seconds] [--seeds a,b,c] [--only name fragments,...]
 """
 from __future__ import annotations
 
@@ -41,6 +52,9 @@ def main() -> int:
              if "--seeds" in args else [42, 7, 2024, 13, 101])
     # 20 秒预算下高争用格的代数塌到 8~16 代,pop=60 的 GA 那时几乎还没离开随机初始化,
     # 失利可能只是预算假象。--only 用于在这些格上单独加大预算复核。
+    # Under a 20 s budget, high-contention cells collapse to 8–16 generations; a
+    # pop=60 GA has barely left random initialization, so a loss may be a budget
+    # artifact. --only rechecks those cells alone with a larger budget.
     only = args[args.index("--only") + 1].split(",") if "--only" in args else None
     cases = [c for c in CASES if only is None or any(k in c["name"] for k in only)]
 

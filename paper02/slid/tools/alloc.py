@@ -13,6 +13,14 @@ E2 已经证明均分不是最优：互锁、Fisher 合成、路线协变量三�
 子集选择可解释（"互锁该不该拿预算"是个能写进论文的问题），且在 5 条路时
 只有 31 个候选，不存在搜索噪声。连续权重在 508 条良性流上分辨不出来
 （T35：每路配额低于 1/509 就没有意义）。
+
+Choose the alpha-budget allocation on the **calibration fold**, then evaluate it on the test fold.
+
+E2 already shows a uniform split is not optimal: interlock, Fisher fusion, and the route covariate each have a negative net contribution (conclusions 42 through 44), and the budget they consume for nothing could have gone to the timing channel. But "which path should get more" **must be fixed on the calibration fold** — picking weights on the test fold is tuning fraud, and it is one of the easiest things for a reviewer to catch, because it makes the ablation table contradict the main table.
+
+So there is one hard discipline here: this tool splits the log into train / calib / test, **chooses the weights only on calib, freezes them, and moves them unchanged to test**, and reports the numbers of both folds. If the allocation chosen on calib does not work on test, that is overfitting and should be reported as it is — that is itself a conclusion.
+
+The search space is the subsets of "which paths get a budget", plus a coarse tier that doubles the timing channel, rather than continuous weights: a subset choice is interpretable ("should the interlock get a budget" is a question that can be written into the paper), and with 5 paths there are only 31 candidates, so there is no search noise. Continuous weights cannot be resolved on a benign stream of 508 messages (T35: a per-path allocation below 1/509 is meaningless).
 """
 from __future__ import annotations
 
@@ -39,6 +47,10 @@ def candidates(m: int, n_b: int, alpha: float):
 
     每路配额必须 >= 1/(n_b+1)，否则该路的经验 p 值根本达不到阈值（T35）。
     达不到的候选直接剔除，而不是让它悄悄退化成"取良性最大值作阈值"。
+
+    Candidate allocations: a uniform split inside each non-empty subset, plus a "timing doubled" tier.
+
+    Each path's allocation must be >= 1/(n_b+1), or that path's empirical p-value can never reach the threshold (T35). A candidate that cannot reach it is dropped, rather than quietly degenerating into "take the benign maximum as the threshold".
     """
     floor = 1.0 / (n_b + 1)
     out = []
@@ -49,7 +61,7 @@ def candidates(m: int, n_b: int, alpha: float):
                 w[i] = 1.0 / r
             if alpha / r >= floor:
                 out.append((f"均分{{{','.join(PATHS[i] for i in sub)}}}", w))
-            if 1 in sub and r > 1:          # 时序通道拿双份
+            if 1 in sub and r > 1:          # 时序通道拿双份 / timing channel takes a double share
                 w2 = [0.0] * m
                 for i in sub:
                     w2[i] = 2.0 if i == 1 else 1.0
@@ -75,6 +87,16 @@ def benign_q(det, ref):
 
     这不是取巧：结论四十七的公式 power <= 触发率 * min(1, alpha_i/q) 本身就
     是对二值通道的分析结果，而 q 可由良性数据估计，故整条判据不碰攻击标签。
+
+    The benign rate q of each path's "discrete anomalous event", using only benign data.
+
+    **A generic atom statistic cannot do this; it was tried and it failed:** every benign score of the hard-constraint layer ties at 0 (zero benign violations), so "the atom mass at the most anomalous point" is read as 1.0 and the path is wrongly dropped; on the interlock side a randomised p-value spreads the atom q into a continuous interval [0, q], and 4.7% cannot be read back out either. The ceiling comes from **channel semantics**, and each channel must declare what its discrete anomalous event is:
+
+    - hard-constraint layer: an F violation or a missing causal link (measured 0 on benign data)
+    - interlock soft layer: a missing material token (measured 2%-5% on benign data, and 9 times higher on the deployment fold than on the training fold)
+    - timing / structure / fusion: continuous, no atom, the ceiling does not bind
+
+    This is not a trick: the formula of conclusion 47, power <= trigger rate * min(1, alpha_i/q), is itself the analysis of a binary channel, and q can be estimated from benign data, so the whole criterion never touches an attack label.
     """
     det._reset_online()
     n = hard = tok = 0
@@ -95,6 +117,10 @@ def ceiling_weights(det, ref, alpha, *, min_ceiling=0.5):
 
     天花板要用**该路自己的配额**算，而配额又依赖给谁预算，故迭代到不动点；
     保留集单调递减，最多 m 轮收敛。
+
+    Set the allocation from benign data only: a path whose ceiling is too low gets no budget, and the rest are split uniformly.
+
+    The ceiling must be computed from **that path's own allocation**, and the allocation depends on who gets a budget, so iterate to a fixed point. The kept set decreases monotonically and converges in at most m rounds.
     """
     qs = benign_q(det, ref)
     m = len(qs)
@@ -112,7 +138,10 @@ def ceiling_weights(det, ref, alpha, *, min_ceiling=0.5):
 
 
 def evaluate(det, ref, target, alpha, weights, seeds, rho, rate):
-    """在一条参照良性流与一条目标流上，按给定配额评平均净检出率。"""
+    """在一条参照良性流与一条目标流上，按给定配额评平均净检出率。
+
+    On one reference benign stream and one target stream, evaluate the mean net detection rate under a given allocation.
+    """
     tot = []
     for fam in FAMILIES:
         per = []
@@ -149,6 +178,8 @@ def main() -> int:
 
     # 拟合只用 train：calib 要留作选配额的"held-out 攻击模拟"折，
     # 若把 calib 也拿去拟合，选出的配额就见过自己的校准数据了。
+    # Fit on train only: calib is kept as the held-out fold that chooses the allocation,
+    # and if calib were also used to fit, the chosen allocation would have seen its own calibration data.
     det = Detector(DetectorConfig(alpha=args.alpha, online_update=False)).fit(
         train, model=model, rng=np.random.default_rng(0), temporal=True)
 
@@ -191,6 +222,7 @@ def main() -> int:
     print()
 
     # --- 只用良性数据的天花板判据 -------------------------------------
+    # ceiling criterion that uses only benign data
     cw, qs, keep = ceiling_weights(det, baselines.order_stream(calib),
                                    args.alpha)
     c_cal, _ = evaluate(det, calib, calib, args.alpha, cw,

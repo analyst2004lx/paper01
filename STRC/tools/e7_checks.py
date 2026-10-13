@@ -4,6 +4,12 @@
 1. \WorthVanishN=8 与 "取到 1.00 的 4 个格两法恒等" 是否矛盾（8 格降幅 0 里有几格真在 1.00）
 2. \RAStabWTL 的那 1 个反例格，降幅到底是 +0.007 还是 -0.007（符号口径）
 3. P08：RD 对 R2 的 C_max 差，补一个配对检验与区间，判断是否可区分
+
+B02f construction check: three doubts in the four-arm E7 readings.
+
+1. Whether \WorthVanishN=8 contradicts "the two methods coincide on the 4 cells that reach 1.00" (of the 8 cells with reduction 0, how many are really at 1.00)
+2. For the 1 counterexample cell of \RAStabWTL, whether the reduction is +0.007 or -0.007 (sign convention)
+3. P08: the C_max gap of RD versus R2, with a paired test and an interval, to judge whether they can be distinguished
 """
 import csv
 import io
@@ -54,7 +60,10 @@ def median(vals):
 
 
 def wilcoxon_signed_rank(diffs):
-    """双侧 Wilcoxon 符号秩，正态近似（含零差剔除与并列秩平均）。"""
+    """双侧 Wilcoxon 符号秩，正态近似（含零差剔除与并列秩平均）。
+
+Two-sided Wilcoxon signed rank, normal approximation (zero differences dropped, tied ranks averaged).
+"""
     nz = [d for d in diffs if d != 0.0]
     n = len(nz)
     if n == 0:
@@ -78,7 +87,7 @@ def wilcoxon_signed_rank(diffs):
     if sigma == 0:
         return w, None, n
     z = (w - mu) / sigma
-    # 双侧 p，用 erfc 近似正态尾概率
+    # 双侧 p，用 erfc 近似正态尾概率 / Two-sided p, with erfc approximating the normal tail probability
     import math
     p = math.erfc(abs(z) / (2 ** 0.5))
     return w, p, n
@@ -93,13 +102,14 @@ def main():
     w("配对格数（R2 与 RA 同时存在）：%d" % len(keys))
 
     # ---- 疑点 1 与 2：R2 对 RA 的改动比例降幅，逐格 ----
+# ---- Doubts 1 and 2: per-cell reduction in change ratio of R2 versus RA ----
     recs = []
     for k in keys:
         r2, ra = by_key[k]["R2"], by_key[k]["RA"]
-        drop = fnum(ra, "res_frac") - fnum(r2, "res_frac")  # 正 = R2 改得更少
+        drop = fnum(ra, "res_frac") - fnum(r2, "res_frac")  # 正 = R2 改得更少 / Positive = R2 rewrites less
         alive = fnum(r2, "alive_size")
         rel = fnum(r2, "release_size")
-        share = (rel / alive) if alive else None  # 允许改写占比 Cl/|R°|
+        share = (rel / alive) if alive else None  # 允许改写占比 Cl/|R°| / Share of the reservation set admitted for rewriting, Cl/|R°|
         recs.append((k, drop, share))
 
     wins = sum(1 for _, d, _ in recs if d > 0)
@@ -148,7 +158,7 @@ def main():
       % ", ".join("%s/%d" % (k[0], k[1]) for k, d, s in recs
                   if s is not None and abs(s - 1.0) < 1e-9))
 
-    # 分档均值复核
+    # 分档均值复核 / Recheck of the binned means
     hi = [d for _, d, s in recs if s is not None and s >= 0.93]
     lo = [d for _, d, s in recs if s is not None and s < 0.93]
     w("")
@@ -158,12 +168,12 @@ def main():
     w("  占比 <  0.93：%d 格，平均降幅 %.4f（宏 \\WorthLowN=27、\\WorthLowMean=0.094）"
       % (len(lo), mean(lo) if lo else float("nan")))
 
-    # ---- 疑点 3：P08，RD 对 R2 的 C_max ----
+    # ---- 疑点 3：P08，RD 对 R2 的 C_max ---- / ---- Doubt 3: P08, C_max of RD versus R2 ----
     w("")
     w("== 疑点 3：P08 —— RD 对 R2 的 C_max 配对比较 ==")
     kk = sorted(k for k in by_key if "R2" in by_key[k] and "RD" in by_key[k])
     w("  配对格数：%d" % len(kk))
-    # 退化率 = (makespan - makespan_ref) / makespan_ref
+    # 退化率 = (makespan - makespan_ref) / makespan_ref / Degradation rate = (makespan - makespan_ref) / makespan_ref
     deg = []
     for k in kk:
         r2, rd = by_key[k]["R2"], by_key[k]["RD"]
@@ -173,7 +183,7 @@ def main():
         deg.append((k, d_r2, d_rd))
     w("  平均退化 R2 = %.4f，RD = %.4f（正文作 49.8%% 对 49.0%%）"
       % (mean([a for _, a, _ in deg]), mean([b for _, _, b in deg])))
-    diffs = [a - b for _, a, b in deg]  # 正 = R2 退化更多 = RD 更优
+    diffs = [a - b for _, a, b in deg]  # 正 = R2 退化更多 = RD 更优 / Positive = R2 degrades more = RD is better
     w("  配对差（R2 退化 − RD 退化，正 = RD 更优）：")
     w("    均值 %+.4f，中位 %+.4f" % (mean(diffs), median(diffs)))
     lo_m, hi_m = bootstrap_ci(diffs, mean)
@@ -189,7 +199,7 @@ def main():
     w("    逐格 RD 更优/持平/R2 更优 = %d/%d/%d（宏 \\WinVsRedecode = 14/14/22，"
       % (rd_better, same, r2_better))
     w("     该宏是 R2 的赢/平/输，故对应 RD 更优 = 22）")
-    # C_max 比值
+    # C_max 比值 / C_max ratio
     ratios = []
     for k in kk:
         r2, rd = by_key[k]["R2"], by_key[k]["RD"]

@@ -6,6 +6,15 @@
 用法:
     py -m tools.e3_boundary
     py -m tools.e3_boundary --also-ra-failure
+
+E3 boundary ablation: a size version plus a quality version (level-1 reroute).
+
+  Size: |R1_release| vs |R2_closure|
+  Quality: feasible / Cmax / reservation disturbance under the same replay_reroute engine
+
+Usage:
+    py -m tools.e3_boundary
+    py -m tools.e3_boundary --also-ra-failure
 """
 from __future__ import annotations
 
@@ -39,6 +48,7 @@ def _row_for(inst, net, bundle, dist, theta: int, *, expand_on_fail: bool) -> di
     r1_set = release_set_r1(bundle, dist, theta=theta)
     r2_set = release_set_r2(bundle, dist)
     # E3 归因边界:默认关闭扩域,否则 R1 可靠「释放全部未来」偶然可行
+# E3 attribution boundary: scope expansion is off by default, or R1 could become feasible by chance via "release all future"
     rep1 = repair_with_task_graph(
         inst, net, bundle, dist, theta=theta, expand_on_fail=expand_on_fail)
     rep2 = repair_with_strc(
@@ -72,7 +82,7 @@ def _row_for(inst, net, bundle, dist, theta: int, *, expand_on_fail: bool) -> di
     }
     row.update(_pack("R1", r1_set, rep1))
     row.update(_pack("R2", r2_set, rep2))
-    # 质量胜者:可行优先,其次 makespan,再次预约改动更少
+    # 质量胜者:可行优先,其次 makespan,再次预约改动更少 / Quality winner: feasibility first, then makespan, then fewer reservation changes
     winner = "tie"
     if rep1.feasible and not rep2.feasible:
         winner = "R1"
@@ -131,6 +141,7 @@ def main() -> int:
                 extra={"failed_ops": failed_ops},
             )
             # A 类暂不跑质量版修复(无走廊阻断安装逻辑);只报规模
+# Class A does not yet run the quality repair (no corridor-blockage install); report size only
             from algorithm.repair import release_set_r1, release_set_r2
             r1_set = release_set_r1(bundle, dist_a, theta=args.theta)
             r2_set = release_set_r2(bundle, dist_a)
@@ -162,7 +173,7 @@ def main() -> int:
         if row.get("R2_feasible") is False:
             print("    (R2 errors suppressed; see experiments detail if needed)")
 
-    # 统一字段
+    # 统一字段 / Align the fields
     keys = []
     for row in rows:
         for k in row:
@@ -179,7 +190,7 @@ def main() -> int:
     print(f"  wrote {args.out}")
 
     ok = all(r.get("miss_on_B") for r in rows if r["disturb_class"] == "B")
-    # 质量:B 类上 R2 应可行(否则修复引擎未就绪)
+    # 质量:B 类上 R2 应可行(否则修复引擎未就绪) / Quality: on class B, R2 should be feasible (otherwise the repair engine is not ready)
     for r in rows:
         if r["disturb_class"] == "B" and r.get("R2_feasible") is False:
             ok = False

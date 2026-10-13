@@ -13,6 +13,17 @@
   并与同批 theta=0 的读数一并打印,以便正文引用的是同一批内部的对比而非跨批次对比。
 
 运行(clbs/ 目录下):py -m tools.eval_cost
+
+Cost per evaluation: the single source of the three millisecond figures cited in subsection 4.8.
+
+Why this exists. Subsection 4.8 says "two-stage 0.39 ms, full closed-loop 15.4 ms, plus pricing 77.9 ms". Those three numbers were typed into the text by hand, while a macro comment in the preamble computes a B2 mean of 14.15 ms from ladder_cost.csv — the same CSV, and the text and the comment differ by 1.2 ms. The hand-typed numbers came from an earlier batch and were never updated when the data changed. This script recomputes the three numbers from the CSV on disk and prints them as macros, so they have one source like the rest.
+
+Definitions:
+  Open-loop (B0/B0+) share one search, so both arms have the same ms_per_eval; their mean is the "two-stage" figure.
+  Closed-loop rule (B1) and closed-loop probe (B2) are each averaged separately.
+  The priced arm is not in the ladder batch; it comes from the theta_sweep batch (before the cost reduction). Take the mean over theta>0, and also print the theta=0 reading from the same batch, so the text cites a within-batch comparison rather than a cross-batch one.
+
+Run (from the clbs/ directory): py -m tools.eval_cost
 """
 from __future__ import annotations
 

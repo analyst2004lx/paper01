@@ -4,6 +4,12 @@
 一行 CSV。扩样到 5x10 之后旧稿的 15 对读数全部作废,靠手抄极易漏改,故集中在此。
 
 用法(在 STRC/ 下): py -m tools.paper_numbers
+
+Aggregate experiments/expanded/*.csv into the few numbers that the paper04 text cites.
+
+The reason is the same as paper01's tools/eval_cost.py: every percentage in the text must point back to a row of CSV. After the sample grew to 5x10, every 15-pair reading in the old draft was void, and copying by hand is easy to miss, so it is centralized here.
+
+Usage (from STRC/): py -m tools.paper_numbers
 """
 from __future__ import annotations
 
@@ -165,7 +171,10 @@ def _read_exp(name):
 
 
 def _wtl(rows, other):
-    """R2 对 other 臂的 Cmax 赢/平/输。只数两臂都可行的格。"""
+    """R2 对 other 臂的 Cmax 赢/平/输。只数两臂都可行的格。
+
+Cmax win/tie/loss of R2 against the other arm. Count only cells where both arms are feasible.
+"""
     idx = {(r["instance"], r["seed"], r["arm"]): r for r in rows}
     keys = sorted({(r["instance"], r["seed"]) for r in rows})
     w = t = l = 0
@@ -187,6 +196,10 @@ def _signrank_p(diffs) -> float:
     """Wilcoxon 符号秩检验的正态近似双侧 p(含并列秩平均)。
 
     样本量 33 量级,正态近似够用;这里不引 scipy 是为了让 STRC 保持零外部依赖。
+
+    Two-sided p of the Wilcoxon signed-rank test under the normal approximation (tied ranks averaged).
+
+    At a sample size on the order of 33, the normal approximation is enough; scipy is not imported so that STRC keeps zero external dependencies.
     """
     nz = sorted((d for d in diffs if abs(d) > 1e-9), key=abs)
     n = len(nz)
@@ -211,6 +224,10 @@ def _closure_vs_all_future(cheap, idx) -> None:
     这是「画这条边界还剩多少用」的直接读数。闭包该兑现的是稳定性(命题
     prop:outside 讲的正是外侧字段不变),不是 Cmax,也不是耗时——后两项两臂本该
     几乎相同,若不同反而说明实现有别。
+
+    R2 versus RA: same engine, same freeze test; the release set is either the closure or the trivial upper bound.
+
+    This is the direct reading of "how much use is left in drawing this boundary". What the closure should deliver is stability (proposition prop:outside is exactly that outside fields stay unchanged), not Cmax and not time — those two should be almost the same for the two arms, and a difference would instead mean the implementations differ.
     """
     d_rf, d_ms, share = [], [], []
     for k in sorted({(r["instance"], r["seed"]) for r in cheap}):
@@ -242,6 +259,11 @@ def cheap_section() -> None:
 
     两批都不并入上面的 50 对读数:E7 与 E1--E3 同协议但多了两条臂,E8 换的是算例规模。
     RD 默认已走固定前缀;past_changed>0 的格是前缀泄漏,不是「从 t=0 重放」。
+
+    Cheap comparison arms (E7) and the instance-scale sweep (E8).
+
+    Neither batch is folded into the 50-pair readings above: E7 uses the same protocol as E1--E3 but adds two arms, and E8 changes the instance scale.
+    RD already uses a fixed prefix by default; a cell with past_changed>0 is a prefix leak, not "replay from t=0".
     """
     cheap = _read_exp("cheap_baselines.csv")
     if cheap is None:
@@ -265,6 +287,7 @@ def cheap_section() -> None:
         for other in ("RS", "RD", "RA"):
             print("  R2 vs %s  win/tie/loss %d/%d/%d" % ((other,) + _wtl(cheap, other)))
         # RD 越界与否分层:未越界的格才是「受 A2 约束时差距有多大」的上界估计
+# Stratify RD by whether it stepped outside the bound: only the cells that did not are an upper-bound estimate of "how large the gap is when A2 binds"
         idx = {(r["instance"], r["seed"], r["arm"]): r for r in cheap}
         w = t = l = 0
         for k in sorted({(r["instance"], r["seed"]) for r in cheap}):
@@ -311,6 +334,10 @@ def pub_section() -> None:
 
     这一批是独立账本,不并入上面的 50 对。它回答的是"闭包规模的结构可预测性那条负
     结果,到底出自结构指标还是出自算例集"——两组算例逐参数同口径,只差布局来源。
+
+    Externally sourced layout batch (experiments/pub_layouts/).
+
+    This batch is a separate ledger and is not folded into the 50 pairs above. It answers whether the negative result on structural predictability of closure size comes from the structural indicators or from the instance set — the two groups use the same parameter protocol and differ only in layout source.
     """
     if not os.path.isdir(PUB):
         print("\n== pub layouts ==\n  (无 experiments/pub_layouts/,"
@@ -361,7 +388,10 @@ def pub_section() -> None:
 
 
 def worth_section() -> None:
-    """E7 事后规则:释放占比对稳定性降幅。阈值在本样本上选定。"""
+    """E7 事后规则:释放占比对稳定性降幅。阈值在本样本上选定。
+
+E7 post-hoc rule: release share versus the stability reduction. The threshold was chosen on this sample.
+"""
     cheap = _read_exp("cheap_baselines.csv")
     if cheap is None:
         return
@@ -398,7 +428,10 @@ def worth_section() -> None:
 
 
 def extra_section() -> None:
-    """边集试探 / 降速修复 / 边权扫描——有 CSV 才打。"""
+    """边集试探 / 降速修复 / 边权扫描——有 CSV 才打。
+
+Edge-set probe / slowdown repair / edge-weight sweep — print only when the CSV exists.
+"""
     probe = _read_exp("edge_probe.csv")
     if probe:
         print("\n== edge probe ==")

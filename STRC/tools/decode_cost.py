@@ -12,6 +12,18 @@ GA 至少要跑完一代才检查终止条件,一代 = 种群规模次解码。�
 用法:
     py -m tools.decode_cost
     py -m tools.decode_cost --reps 50
+
+Measure the response-time floor of the global re-solve arm: the cost of one decode, and its ratio to one bounded repair.
+
+Why measure this alone. In E5, R0+ cannot hold a small budget (measured `budget_honored=False`), because the GA checks termination only after a generation finishes, and one generation is population-size decodes. But "one generation" is a configuration quantity; a reviewer can say just shrink the population. **One decode is not a configuration quantity**: any decode-based search, whatever the population and whether local search is used, pays for one decode per candidate. So
+
+    response-time floor >= one decode
+
+is a bound independent of configuration. Comparing it directly with the wall-clock of one bounded repair is the clean comparison.
+
+Usage:
+    py -m tools.decode_cost
+    py -m tools.decode_cost --reps 50
 """
 from __future__ import annotations
 
@@ -71,7 +83,7 @@ def main() -> int:
         ma = clbs_ga.ma_min_time(inst)
         os_seq = clbs_ga.random_os(inst, rng)
 
-        decode(inst, net, ma, os_seq, conflict_free=True, dispatch="exact")  # 预热
+        decode(inst, net, ma, os_seq, conflict_free=True, dispatch="exact")  # 预热 / Warm-up
         ds = []
         for _ in range(args.reps):
             t0 = time.perf_counter()
@@ -84,7 +96,7 @@ def main() -> int:
         cid, _, _, _ = pick_busy_corridor(bundle.reservations, t_now=t_now)
         dist = Disturbance(type="corridor_block", t_now=t_now, corridor=cid,
                            t_start=t_now, t_end=bundle.makespan + 1.0)
-        repair_with_strc(inst, net, bundle, dist)  # 预热
+        repair_with_strc(inst, net, bundle, dist)  # 预热 / Warm-up
         rs = []
         for _ in range(args.reps):
             rep = repair_with_strc(inst, net, bundle, dist)

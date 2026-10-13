@@ -31,6 +31,34 @@ tau=6、FAST=3 时 SLOW 最小取 14。也就是说,这里的异构度已取到"
 运行(clbs/ 目录下):
   py -u -m tools.motivating            # 打印四个数并写 output/motivating.json
   py -u -m tools.motivating --sweep    # 附带在参数网格上统计反转出现的比例
+
+Motivating instance for the introduction: a constant travel-time matrix and conflict-free routing give opposite assignment orders.
+
+This is not a statistical conclusion. It is an **existence demonstration** — it shows that "an order reversal can happen", not that reversals are common. The instance is hand-built and fully recomputable, and its geometry matches Figure 1(a) of the paper one for one. --sweep adds a robustness reading: the reversal is not an isolated point in parameter space.
+
+Instance (4 jobs / 3 arms / 6 nodes / 5 corridors / 2 AGVs). One exclusive trunk v1--v2 (tau=6) is the only path to the two far arms M1/M3; the near arm M2 hangs on its own spur (v1--m2, tau=2) and does not contend with the trunk.
+
+      m2                        m1
+       |                         |
+      (2)                       (1)
+       |                         |
+      v1 ==========(6)========= v2          == exclusive trunk, the only deep bottleneck
+       |                         |
+      (1)                       (1)
+       |                         |
+    v0(LU)                      m3
+
+The focal operation of job J1 has two candidates: M1 is fast (t^P=3) but beyond the trunk, M2 is slow (t^P=14) but before the trunk. Background jobs J2..J4 can use only M3, so they cross the trunk repeatedly and fill it. delta_return=1, so finished goods must return to LU.
+
+Why these parameter values. Under the ideal matrix, choosing M1 requires 2*tau+4+FAST < 6+SLOW, i.e. SLOW > 2*tau+FAST-2; with tau=6 and FAST=3 the smallest SLOW is 14. Heterogeneity is therefore set to the minimum at which a reversal can occur, not picked to inflate the effect.
+
+Two evaluations.
+  Ideal matrix      conflict_free=False: travel time is the shortest path; vehicles never meet (the literature's usual convention).
+  Conflict-free routing conflict_free=True: exclusive corridors, half-open windows, yield waits really happen.
+
+Run (from the clbs/ directory):
+  py -u -m tools.motivating            # print the four numbers and write output/motivating.json
+  py -u -m tools.motivating --sweep    # also count how often reversal appears on a parameter grid
 """
 from __future__ import annotations
 
@@ -46,11 +74,11 @@ from algorithm.network import Network
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-TRUNK = 6.0      # 干道 v1--v2 的通过时间,排他
-FAST = 3.0       # 焦点工序在 M1(远端快臂)上的加工时间
-SLOW = 14.0      # 焦点工序在 M2(近端慢臂)上的加工时间
-N_BG = 3         # 背景工件数,全部只能上 M3
-BG_PROC = 3.0    # 背景工序的加工时间
+TRUNK = 6.0      # 干道 v1--v2 的通过时间,排他 / traversal time of exclusive trunk v1--v2
+FAST = 3.0       # 焦点工序在 M1(远端快臂)上的加工时间 / proc. time of the focal op on far fast arm M1
+SLOW = 14.0      # 焦点工序在 M2(近端慢臂)上的加工时间 / proc. time of the focal op on near slow arm M2
+N_BG = 3         # 背景工件数,全部只能上 M3 / background jobs, all eligible only for M3
+BG_PROC = 3.0    # 背景工序的加工时间 / processing time of a background operation
 N_AGV = 2
 
 
@@ -59,7 +87,7 @@ def build(trunk=TRUNK, fast=FAST, slow=SLOW, n_bg=N_BG,
     nodes = ["v0", "v1", "v2", "m1", "m2", "m3"]
     corridors = [
         {"u": "v0", "v": "v1", "time": 1.0},
-        {"u": "v1", "v": "v2", "time": trunk},   # 排他干道
+        {"u": "v1", "v": "v2", "time": trunk},   # 排他干道 / exclusive trunk
         {"u": "v2", "v": "m1", "time": 1.0},
         {"u": "v2", "v": "m3", "time": 1.0},
         {"u": "v1", "v": "m2", "time": 2.0},
@@ -87,11 +115,14 @@ def build(trunk=TRUNK, fast=FAST, slow=SLOW, n_bg=N_BG,
 
 
 def evaluate(inst, net, focal_machine: int, n_bg: int = N_BG) -> dict:
-    """把 J1 的工序指派给 focal_machine,其余不变;两种评价各算一次。"""
+    """把 J1 的工序指派给 focal_machine,其余不变;两种评价各算一次。
+
+    Assign J1's operation to focal_machine, leave the rest unchanged, and evaluate once each way.
+    """
     ma = {(1, 1): focal_machine}
     for j in range(2, 2 + n_bg):
         ma[(j, 1)] = 3
-    os_seq = []                       # delta_return=1,故每个工件出现两次
+    os_seq = []                       # delta_return=1,故每个工件出现两次 / delta_return=1, so each job appears twice
     for j in [1] + list(range(2, 2 + n_bg)):
         os_seq += [j, j]
     return {tag: round(decode(inst, net, ma, os_seq,
@@ -100,7 +131,10 @@ def evaluate(inst, net, focal_machine: int, n_bg: int = N_BG) -> dict:
 
 
 def sweep() -> dict:
-    """反转在参数网格上出现得有多普遍(用于图注的稳健性说明)。"""
+    """反转在参数网格上出现得有多普遍(用于图注的稳健性说明)。
+
+    How often reversal appears on the parameter grid (robustness note for the caption).
+    """
     total = rev = 0
     for trunk in (4.0, 5.0, 6.0, 7.0, 8.0):
         for fast in (3.0, 4.0):
@@ -119,8 +153,8 @@ def sweep() -> dict:
 
 def main() -> int:
     inst, net = build()
-    m1 = evaluate(inst, net, 1)   # 快臂,在干道之后
-    m2 = evaluate(inst, net, 2)   # 慢臂,在干道之前
+    m1 = evaluate(inst, net, 1)   # 快臂,在干道之后 / fast arm, beyond the trunk
+    m2 = evaluate(inst, net, 2)   # 慢臂,在干道之前 / slow arm, before the trunk
 
     print(f"焦点工序 (1,1):M1 t^P={FAST:.0f} / M2 t^P={SLOW:.0f};"
           f"干道 tau={TRUNK:.0f} 排他,背景工件 {N_BG} 个只能上 M3,{N_AGV} 辆 AGV\n")

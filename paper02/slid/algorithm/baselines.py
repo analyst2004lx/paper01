@@ -28,6 +28,29 @@ B3/B7 都是逐观测立即判决,无证据累积 -> 弱信号下结构上够不
 
 消融(逐档递进,与 clbs 的消融链同构):
   full -> -sequential -> -conformal -> -interlock -> -structural -> -covariate
+
+Baselines and ablation tiers. Numbering matches the "baselines (replacing the straw man)" section of 新想法.md.
+
+  B1 mbdf        the original Markov-Bayesian two-layer framework, one-hot + l2 + a marginal-probability threshold.
+                 Used to demonstrate the T-a impossibility result, not only as a numerical control.
+  B2 markov      first-order Markov likelihood -log P, no sojourn time. Isolates the timing channel's contribution.
+  B3 butla       learned timed automaton (Maier & Niggemann 2011 / BUTLA). **Main baseline**
+  B4 tabor       timed automaton + within-station Bayesian network (TABOR, AsiaCCS'18). **Main baseline**
+  B5 hsmm        hidden semi-Markov likelihood (Tan & Xi, AMC'08). **Main baseline**
+  B6 lstm_ae     sequence autoencoder / Transformer, to show the cost in compute and interpretability
+  B7 flow        one traffic-class method kept (FMM or STBAD), a historical control, not a main baseline
+
+If the method cannot beat B3–B5 it does not hold; if it can, the gain must be attributed to the interlock channel, because those baselines also have the single-device timing part. Two structural blind spots, checked against the original papers, can be written directly into the results discussion:
+
+  B3's parallel structure is decomposed by **network topology**. Def. 1 assumes components execute in order, the detection algorithm iterates on a single automaton, and there is no cross-component check -> structurally incapable on A4/A7. It also states that its false-alarm problem is unsolved (a hand-set tolerance alpha, no distribution-free guarantee), which is exactly M8's control.
+  B4's Bayesian network is strictly confined to one stage, and it explicitly ignores network and command data -> command-response causal pairing cannot be expressed in its framework.
+
+B3 and B7 both decide immediately per observation, with no evidence accumulation -> under a weak signal they structurally cannot reach CUSUM (at rho=0.15, 86.8% versus 19.9%). That is M7's control.
+
+**The same false-alarm budget is the whole point of this module.** Each baseline's raw score has its own scale (l2 distance, negative log-likelihood, z), and comparing thresholds directly is meaningless. The only fair rule is to set each threshold to the same empirical FPR on the **same benign calibration fold**, then compare detection rates. `run_baseline` provides only that rule and does not accept an externally supplied threshold.
+
+Ablation (progressive, the same shape as the clbs ablation chain):
+  full -> -sequential -> -conformal -> -interlock -> -structural -> -covariate
 """
 from __future__ import annotations
 
@@ -38,6 +61,7 @@ from dataclasses import dataclass, field
 BASELINES = ("mbdf", "markov", "butla", "tabor", "hsmm", "lstm_ae", "flow")
 
 #: 已实现的基线。未实现的一律显式拒绝而不是悄悄退化——理由同 attacks.A7。
+#: Baselines that are implemented. Anything unimplemented is rejected explicitly rather than quietly degraded — same reason as attacks.A7.
 IMPLEMENTED = ("mbdf", "markov", "butla", "tabor", "hsmm")
 
 ABLATIONS = ("full", "no_sequential", "no_conformal",
@@ -47,23 +71,27 @@ EPS = 1e-12
 
 
 # --------------------------------------------------------------------------
-# 公共骨架
+# 公共骨架 / shared skeleton
 # --------------------------------------------------------------------------
 @dataclass
 class _Base:
     """基线的公共接口:拟合、按时间序逐条打分、可重置。
 
     分数一律**越大越异常**,以便统一用上分位数定阈值。
+
+    Shared interface of a baseline: fit, score one activity at a time in temporal order, and reset.
+
+    Scores are always **larger when more anomalous**, so a single upper quantile sets the threshold.
     """
     name: str = "?"
 
-    def fit(self, train):                       # pragma: no cover - 抽象
+    def fit(self, train):                       # pragma: no cover - 抽象 / abstract
         raise NotImplementedError
 
     def reset(self) -> None:
         pass
 
-    def score(self, act) -> float:              # pragma: no cover - 抽象
+    def score(self, act) -> float:              # pragma: no cover - 抽象 / abstract
         raise NotImplementedError
 
     def parts(self, act) -> tuple:
@@ -73,6 +101,10 @@ class _Base:
         直接取 max 会让哨兵值永远压过其它项——实测中 TABOR 因此退化成
         BUTLA、两者检出率逐格相同。正确做法是各子分数先各自转成良性经验
         p 值再取最小(即原文"任一子检测器报警即报警"的语义)。
+
+        Raw scores of each sub-detector.
+
+        They must be reported separately: the scales differ wildly (a sentinel for a structural violation versus a sojourn z), and taking the max lets the sentinel always dominate the rest — in measurement TABOR then collapses into BUTLA and the two detection rates match cell by cell. The right rule is to turn each sub-score into a benign empirical p-value and then take the minimum (the original meaning of "any sub-detector alarming counts as an alarm").
         """
         return (self.score(act),)
 
@@ -86,7 +118,10 @@ class _Base:
 
 
 def _quantile(xs, q: float) -> float:
-    """经验分位数,不引 numpy——基线要能在只有标准库的环境里跑。"""
+    """经验分位数,不引 numpy——基线要能在只有标准库的环境里跑。
+
+    Empirical quantile, without numpy — a baseline must run in a standard-library-only environment.
+    """
     s = sorted(xs)
     if not s:
         return float("inf")
@@ -95,13 +130,16 @@ def _quantile(xs, q: float) -> float:
 
 
 def order_stream(acts):
-    """时间序,与在线口径一致。"""
+    """时间序,与在线口径一致。
+
+    Temporal order, matching the online rule.
+    """
     return sorted((a for a in acts if a.t_consume is not None),
                   key=lambda a: (a.t_consume, a.order))
 
 
 # --------------------------------------------------------------------------
-# B1 MBDF:原方法
+# B1 MBDF:原方法 / B1 MBDF: the original method
 # --------------------------------------------------------------------------
 @dataclass
 class MBDF(_Base):
@@ -116,6 +154,12 @@ class MBDF(_Base):
 
     故本类的分数取 $\\delta/(1-\\hat p_i)$,即原文判决式左右比值;按同一误报
     预算定阈值等价于扫 $\\gamma$。
+
+    B1, the original Markov-Bayesian two-layer framework.
+
+    The deviation $\\delta = \\lVert \\hat p - e_i \\rVert_2$ and the adaptive threshold $\\gamma(1-\\hat p_i)$. **Both depend only on $\\hat p_i$**: $\\delta = \\sqrt{\\lVert\\hat p\\rVert^2 - 2\\hat p_i + 1}$ is, within a given row, a decreasing function of $\\hat p_i$, so the decision $\\delta > \\gamma(1-\\hat p_i)$ collapses to a single threshold on $\\hat p_i$ — that is the source of the T-a impossibility result: any observed label whose predicted probability is high enough is unmarked, whether or not it is real.
+
+    This class therefore scores $\\delta/(1-\\hat p_i)$, the ratio of the two sides of the original decision. Setting the threshold at the same false-alarm budget is equivalent to sweeping $\\gamma$.
     """
     states: list = field(default_factory=list)
     idx: dict = field(default_factory=dict)
@@ -142,7 +186,7 @@ class MBDF(_Base):
         prev = self._prev.get(act.case)
         self._prev[act.case] = act.op
         if prev is None or prev not in self.idx or act.op not in self.idx:
-            return 0.0                          # 无从判决,按正常
+            return 0.0                          # 无从判决,按正常 / no basis for a decision; treat as normal
         row = self.counts[self.idx[prev]]
         tot = sum(row)
         if tot <= 0:
@@ -155,7 +199,7 @@ class MBDF(_Base):
 
 
 # --------------------------------------------------------------------------
-# B2 一阶马尔可夫似然
+# B2 一阶马尔可夫似然 / B2 first-order Markov likelihood
 # --------------------------------------------------------------------------
 @dataclass
 class Markov(_Base):
@@ -163,11 +207,15 @@ class Markov(_Base):
 
     存在的意义是**隔离时序通道的贡献**:它与本方法的结构通道用同一个转移
     矩阵,差别只在没有时长、没有 conformal、没有序贯累积。
+
+    B2, a pure structural likelihood $-\\log P(o_t \\mid o_{t-1})$, ignoring sojourn time.
+
+    It exists to **isolate the timing channel's contribution**: it shares this method's transition matrix, and the only differences are no sojourn, no conformal layer, and no sequential accumulation.
     """
     states: list = field(default_factory=list)
     idx: dict = field(default_factory=dict)
     counts: list = field(default_factory=list)
-    alpha: float = 1.0                          # Dirichlet 平滑
+    alpha: float = 1.0                          # Dirichlet 平滑 / Dirichlet smoothing
     _prev: dict = field(default_factory=dict)
 
     fit = MBDF.fit
@@ -186,7 +234,7 @@ class Markov(_Base):
 
 
 # --------------------------------------------------------------------------
-# B3 BUTLA:学习型计时自动机
+# B3 BUTLA:学习型计时自动机 / B3 BUTLA: learned timed automaton
 # --------------------------------------------------------------------------
 @dataclass
 class BUTLA(_Base):
@@ -202,10 +250,21 @@ class BUTLA(_Base):
     3. **逐观测立即判决,无证据累积。** score 只看当条,不跨消息累加。
 
     分数取"结构不可行"与"时长偏离"的较大者,量纲用 z 值统一。
+
+    B3, the learned timed automaton of Maier & Niggemann (main baseline).
+
+    The three structural decisions of the original paper are kept as they are, and they are also its three blind spots:
+
+    1. **One automaton per component, with no check between components.** Def. 1 assumes components execute in order, and the detector iterates on a single automaton. So one automaton is learned per device, states are that device's operations, and cross-device coupling is not modelled at all -> structurally incapable on A4.
+    2. **Sojourn time is only an interval or a normal tolerance, with no covariate.** Routes are not conditioned on, so the variance of a transport sojourn is inflated by route mixture (measured median sigma 0.207 -> 0.116 after conditioning).
+    3. **An immediate decision per observation, with no evidence accumulation.** score looks only at the current activity and does not accumulate across messages.
+
+    The score is the larger of "structurally infeasible" and "sojourn deviation", both on a z scale.
     """
     trans: dict = field(default_factory=dict)   # 设备 -> {前驱: {后继}}
-    dwell: dict = field(default_factory=dict)   # (设备, 操作) -> (mu, sd)
-    big: float = 50.0                           # 不可行转移的分数
+    # device -> {predecessor: {successor}}
+    dwell: dict = field(default_factory=dict)   # (设备, 操作) -> (mu, sd) / (device, operation) -> (mu, sd)
+    big: float = 50.0                           # 不可行转移的分数 / score of an infeasible transition
     _prev: dict = field(default_factory=dict)
 
     def fit(self, train):
@@ -233,7 +292,10 @@ class BUTLA(_Base):
         self._prev = {}
 
     def parts(self, act) -> tuple:
-        """(结构不可行, 时长偏离 z)。两台子检测器,任一报警即报警。"""
+        """(结构不可行, 时长偏离 z)。两台子检测器,任一报警即报警。
+
+        (structural infeasibility, sojourn-deviation z). Two sub-detectors; an alarm from either counts as an alarm.
+        """
         key = (act.case, act.device)
         prev = self._prev.get(key)
         self._prev[key] = act.op
@@ -256,6 +318,7 @@ class BUTLA(_Base):
 
 # --------------------------------------------------------------------------
 # B4 TABOR:计时自动机 + 站内贝叶斯网络
+# B4 TABOR: timed automaton + within-station Bayesian network
 # --------------------------------------------------------------------------
 @dataclass
 class TABOR(_Base):
@@ -269,10 +332,17 @@ class TABOR(_Base):
     站内联合概率按朴素分解 $P(op)\\prod P(v \\mid op)$——原文用的是学到的
     站内结构,这里用它的一个上界友好的近似:朴素分解只会**高估**独立性从而
     给 TABOR 更平滑的似然,不会人为压低它的表现。
+
+    B4 TABOR (AsiaCCS'18, main baseline).
+
+    On top of B3's timed automaton it adds a Bayesian network **strictly confined to one stage**. On this dataset a stage is a device, and the within-station variables are (operation, start, end, outcome) — the original paper explicitly ignores network and command data, so `t_cmd` is never available and a command-response causal pairing is **inexpressible** in its framework. That is a structural difference from this method's M5 hard-constraint layer, not something tuning can close.
+
+    The within-station joint is the naive factorization $P(op)\\prod P(v \\mid op)$ — the original paper uses a learned within-station structure; this is an approximation that is friendly as an upper bound: a naive factorization only **overestimates** independence and therefore gives TABOR a smoother likelihood, and does not artificially suppress its performance.
     """
     auto: BUTLA = field(default_factory=lambda: BUTLA(name="butla"))
-    p_op: dict = field(default_factory=dict)        # 设备 -> {操作: 概率}
+    p_op: dict = field(default_factory=dict)        # 设备 -> {操作: 概率} / device -> {operation: probability}
     p_var: dict = field(default_factory=dict)       # (设备,操作,变量) -> 分布
+    # (device, operation, variable) -> distribution
     alpha: float = 0.5
     _n_var: dict = field(default_factory=dict)
 
@@ -298,7 +368,10 @@ class TABOR(_Base):
         self.auto.reset()
 
     def parts(self, act) -> tuple:
-        """(计时自动机的两项, 站内贝叶斯网络负对数似然)。"""
+        """(计时自动机的两项, 站内贝叶斯网络负对数似然)。
+
+        (the two timed-automaton terms, the within-station Bayesian-network negative log-likelihood).
+        """
         auto = self.auto.parts(act)
         pm = self.p_op.get(act.device)
         if not pm:
@@ -321,7 +394,7 @@ class TABOR(_Base):
 
 
 # --------------------------------------------------------------------------
-# B5 HSMM:隐半马尔可夫
+# B5 HSMM:隐半马尔可夫 / B5 HSMM: hidden semi-Markov
 # --------------------------------------------------------------------------
 @dataclass
 class HSMM(_Base):
@@ -343,6 +416,17 @@ class HSMM(_Base):
     与本方法的结构性差别在于它**没有**:参考模型(故不能区分"没见过"与
     "不允许",见结论三十五)、跨设备互锁、无分布的误报保证、跨消息证据累积。
     打得过它才能把增益归因到这四项。
+
+    B5, an explicit-duration hidden semi-Markov model (the Tan & Xi, AMC'08 family; main baseline).
+
+    This is a **real** hidden semi-Markov model, not an observable semi-Markov model renamed: it has hidden states, EM over those states, and an explicit duration distribution. The implementation uses a standard equivalence: **an explicit-duration HSMM with maximum duration D is an HMM on the expanded state space (hidden state z, remaining steps r)**, whose transition matrix is structured by (A, p). Standard scaled Baum-Welch then applies, and the M step maps the expanded transition counts back to A and p:
+
+        A[z,z'] ∝ sum_d xi((z,1) -> (z',d))
+        p[z][d] ∝ sum_z0 xi((z0,1) -> (z,d)) + initial mass
+
+    Observations are bivariate: an operation symbol (categorical) and a log sojourn (Gaussian), so it uses both structure and timing and is the baseline aligned with this method's M3+M4. The hidden-state count K is chosen by **held-out likelihood** over {2,3,4,6} — picking the best K for the baseline is a concession, not tuning fraud.
+
+    The structural difference from this method is what it **does not have**: a reference model (so it cannot tell "never seen" from "not allowed"; see conclusion 35), cross-device interlock, a distribution-free false-alarm guarantee, and cross-message evidence accumulation. Beating it is what lets the gain be attributed to those four items.
     """
     K: int = 4
     D: int = 6
@@ -359,6 +443,7 @@ class HSMM(_Base):
     _belief: dict = field(default_factory=dict)
 
     # -- 序列构造 --------------------------------------------------------
+    # sequence construction
     def _sequences(self, acts):
         by_case = defaultdict(list)
         for a in order_stream(acts):
@@ -372,6 +457,7 @@ class HSMM(_Base):
         return seqs
 
     # -- 扩展状态空间 ----------------------------------------------------
+    # expanded state space
     def _expand(self, K, D, A, pdur, pi0):
         S = K * D
         T = [[0.0] * S for _ in range(S)]
@@ -388,7 +474,10 @@ class HSMM(_Base):
         return T, pi
 
     def _emit_log(self, K, o, t, B, mu, sd):
-        """隐状态的对数发射概率。缺时长的活动只用符号部分。"""
+        """隐状态的对数发射概率。缺时长的活动只用符号部分。
+
+        Log emission probability of a hidden state. An activity with no sojourn uses only the symbol part.
+        """
         out = []
         for z in range(K):
             v = math.log(max(B[z][o], EPS)) if o >= 0 else math.log(EPS)
@@ -432,7 +521,7 @@ class HSMM(_Base):
                 n = len(o)
                 be = [self._emit_log(K, o[i], ts[i], B, mu, sd)
                       for i in range(n)]
-                # 缩放前向
+                # 缩放前向 / scaled forward
                 al = [[0.0] * S for _ in range(n)]
                 sc = [0.0] * n
                 for s in range(S):
@@ -450,7 +539,7 @@ class HSMM(_Base):
                     al[i] = [v / sc[i] for v in al[i]]
                 ll += sum(math.log(max(c, EPS)) for c in sc)
 
-                # 缩放后向
+                # 缩放后向 / scaled backward
                 bt = [[0.0] * S for _ in range(n)]
                 bt[n - 1] = [1.0] * S
                 for i in range(n - 2, -1, -1):
@@ -463,7 +552,7 @@ class HSMM(_Base):
                                         * bt[i + 1][s2])
                         bt[i][s1] = acc / sc[i + 1]
 
-                # 累计
+                # 累计 / accumulate
                 for i in range(n):
                     tot = sum(al[i][s] * bt[i][s] for s in range(S)) or EPS
                     for z in range(K):
@@ -482,7 +571,7 @@ class HSMM(_Base):
                             wt2[z] += g * ts[i] * ts[i]
                 for i in range(n - 1):
                     for z in range(K):
-                        s1 = z * D + 0          # 只有 r=1 才会换状态
+                        s1 = z * D + 0          # 只有 r=1 才会换状态 / only r=1 changes state
                         a1 = al[i][s1]
                         if not a1:
                             continue
@@ -497,7 +586,7 @@ class HSMM(_Base):
                                 nA[z][z2] += x
                                 nP[z2][d - 1] += x
 
-            # M 步
+            # M 步 / M step
             pi0 = [v / sum(nPi) for v in nPi]
             A = [[v / sum(r) for v in r] for r in nA]
             pdur = [[v / sum(r) for v in r] for r in nP]
@@ -559,6 +648,10 @@ class HSMM(_Base):
 
         用**预测**似然而非平滑似然:在线检测只能用过去。分成两项是为了与
         其它基线同口径(各子分数各自转经验 p 值再取最小)。
+
+        (structure: predictive negative log-probability of the symbol, timing: conditional negative log-density).
+
+        Uses the **predictive** likelihood, not the smoothed one: online detection can use only the past. The split into two terms matches the other baselines (each sub-score becomes an empirical p-value, then the minimum is taken).
         """
         S = self.K * self.D
         b = self._belief.get(act.case)
@@ -580,7 +673,7 @@ class HSMM(_Base):
         if t is not None and o >= 0 and p_sym > EPS:
             dens = 0.0
             for z in range(self.K):
-                w = pz[z] * self.B[z][o] / p_sym          # P(z | 符号, 历史)
+                w = pz[z] * self.B[z][o] / p_sym          # P(z | 符号, 历史) / P(z | symbol, history)
                 dens += w * math.exp(
                     -0.5 * ((t - self.mu[z]) / self.sd[z]) ** 2) \
                     / (self.sd[z] * math.sqrt(2 * math.pi))
@@ -602,7 +695,7 @@ REGISTRY = {"mbdf": MBDF, "markov": Markov, "butla": BUTLA, "tabor": TABOR,
 
 
 # --------------------------------------------------------------------------
-# 同一误报预算下的评测
+# 同一误报预算下的评测 / evaluation under the same false-alarm budget
 # --------------------------------------------------------------------------
 def combine_parts(benign_parts, target_parts) -> list[float]:
     """各子分数先转成良性经验 p 值,再取最小值的相反数作为统一分数。
@@ -610,6 +703,10 @@ def combine_parts(benign_parts, target_parts) -> list[float]:
     这是"任一子检测器报警即报警"的语义,也解决两件事:子分数量纲不可比(哨兵
     值会永远压过 z 值),以及不同基线的子检测器数目不同。经验分布取自**纯良性
     流**,不取自受攻击流——后者的"良性消息"里混着攻击造成的级联效应。
+
+    Turn each sub-score into a benign empirical p-value, then take the negation of the minimum as the unified score.
+
+    That is the meaning of "any sub-detector alarming counts as an alarm", and it also solves two things: sub-scores are not on a comparable scale (a sentinel always dominates a z), and different baselines have different numbers of sub-detectors. The empirical distribution is taken from the **pure benign stream**, not from the attacked stream — the latter's "benign messages" are mixed with cascade effects caused by the attack.
     """
     if not benign_parts:
         return [0.0] * len(target_parts)
@@ -621,9 +718,10 @@ def combine_parts(benign_parts, target_parts) -> list[float]:
         best = 1.0
         for j in range(k):
             # p = 良性中 >= 当前值的比例(离散分数下偏保守,对基线有利)
+            # p = fraction of benign scores >= the current value (conservative on discrete scores, which favors the baseline)
             lo, hi = 0, n
             col = cols[j]
-            while lo < hi:                       # 二分找第一个 >= r[j]
+            while lo < hi:                       # 二分找第一个 >= r[j] / binary search for the first >= r[j]
                 mid = (lo + hi) // 2
                 if col[mid] < r[j]:
                     lo = mid + 1
@@ -641,6 +739,10 @@ def dr_at_alpha(benign_scores, attack_scores, alpha: float):
     消息拿一个伪造的前驱去比对,产生攻击引起的级联触发。把它算成误报会
     (a) 冤枉方法,(b) 在级联率超过 alpha 时使阈值退化为 +inf、检出率假性归零
     ——实测本方法 A2 的 DR 就是这么被测成 0.00 的。
+
+    Set the threshold at the 1-alpha quantile of the **pure benign stream**, then compute the detection rate on attacked messages.
+
+    The threshold must never be set on the benign messages inside the attacked stream: an in-place rewrite such as A2 makes a later benign message compare against a forged predecessor and produces an attack-induced cascade. Counting that as a false alarm (a) blames the method and (b) makes the threshold collapse to +inf, and the detection rate falsely to zero, once the cascade rate exceeds alpha — that is how this method's A2 DR was once measured as 0.00.
     """
     if not benign_scores or not attack_scores:
         return float("nan"), float("nan")
@@ -651,7 +753,10 @@ def dr_at_alpha(benign_scores, attack_scores, alpha: float):
 
 def fit_baseline(name: str, train):
     """拟合一个基线。B5 的 EM + K 网格搜索约 20 s,故务必**复用**——每个
-    攻击族每个种子重拟合一次会白烧掉六分钟,而训练折是同一份。"""
+    攻击族每个种子重拟合一次会白烧掉六分钟,而训练折是同一份。
+
+    Fit one baseline. B5's EM plus the K grid search takes about 20 s, so it must be **reused** — refitting once per attack family per seed burns six minutes for nothing, and the training fold is the same copy.
+    """
     if name not in IMPLEMENTED:
         raise NotImplementedError(
             f"基线 {name} 尚未实现。当前仅 {IMPLEMENTED} 可用;"
@@ -666,6 +771,10 @@ class JudgeDetail:
     `delays` 与阳性消息一一对应:预算内检出为延迟(消息数),否则 None。
     未检出是删失,不进箱线;箱线与净检出率必须分列。
     `benign_gaps` 是纯良性流上相邻序贯告警的间隔,均值即实测 ARL0。
+
+    Per-trial archive of judge. Box plots and the ARL0 table read only this, not the summary scalars.
+
+    `delays` is aligned with the positive messages: a detection inside the budget is a delay (in messages), otherwise None. A miss is censored and does not enter the box plot; the box plot and the net detection rate must be reported separately. `benign_gaps` is the gap between successive sequential alarms on the pure benign stream; its mean is the measured ARL0.
     """
     dr: float
     fpr: float
@@ -709,7 +818,10 @@ class JudgeDetail:
 
 
 def _alarm_gaps(fired, n: int) -> list:
-    """从 0 起算到每个告警位置的间隔;无告警则空(ARL0 记为无穷)。"""
+    """从 0 起算到每个告警位置的间隔;无告警则空(ARL0 记为无穷)。
+
+    Gaps from 0 to each alarm index; empty when there is no alarm (ARL0 is recorded as infinity).
+    """
     if not fired:
         return []
     prev, gaps = -1, []
@@ -727,7 +839,10 @@ def _first_at_least(sorted_idx, i):
 
 def judge_detail(benign_parts, attack_parts, labels, *, alpha: float,
                  budget: int = 10, weights=None) -> JudgeDetail:
-    """与 judge 同一口径,额外留下逐次延迟与良性告警间隔。"""
+    """与 judge 同一口径,额外留下逐次延迟与良性告警间隔。
+
+    Same rule as judge, and it also keeps the per-trial delays and the benign alarm gaps.
+    """
     m = len(benign_parts)
     if weights is None:
         ws = [1.0 / m] * m
@@ -743,6 +858,7 @@ def judge_detail(benign_parts, attack_parts, labels, *, alpha: float,
     for w, pb_raw, pa_raw in zip(ws, benign_parts, attack_parts):
         if w <= 0:
             continue                    # 不给预算的路不参与判决
+            # a path given no budget does not take part in the decision
         a = alpha * w
         pb = empirical_p(pb_raw, pb_raw)
         pa = empirical_p(pb_raw, pa_raw)
@@ -797,6 +913,16 @@ def judge(benign_parts, attack_parts, labels, *, alpha: float,
     即均分。E2 已证明均分不是最优:互锁、Fisher 合成、路线协变量三项的净
     贡献为负(结论四十二至四十四),它们白吃的预算本可以给时序通道。
     **权重只能在校准折上选,在测试折上调即为作弊**,见 tools/alloc.py。
+
+    The decision rule shared by every method. Returns (per-message DR, FPR, sequential DR, sequential FPR).
+
+    `*_parts` is **one score stream per sub-detector** (larger means more anomalous). The rule treats every method the same: each sub-detector turns its scores into benign empirical p-values and holds its own CUSUM, the alpha budget is split across sub-detectors, and any trigger counts as an alarm.
+
+    Why the sub-detectors cannot be collapsed into one min-p stream: every message's score would then be contaminated by the noise of the other sub-detectors, and a weak signal is diluted while it accumulates (conclusion 25). Measured, collapsing this method's three channels into min-p drops A4's sequential detection rate from 0.42 to 0.17, and a likelihood baseline then beats it — that is caused by the rule, not by the method. Baselines likewise have 2-3 sub-detectors. Parallel channels are a rule that applies to both sides, not a back door opened for ourselves.
+
+    This method and the baselines **must go through this same function**. Otherwise one side uses the detector's own h and the other inverts h on the spot, and the comparison is of two threshold machines rather than of channel design.
+
+    `weights` gives a **non-uniform** split of alpha across sub-detectors (they must sum to 1, the length matches `*_parts`, and 0 means that path gets no budget and does not take part in the decision). The default None is a uniform split. E2 already shows the uniform split is not optimal: interlock, Fisher fusion, and the route covariate each have a negative net contribution (conclusions 42 through 44), and the budget they consume for nothing could have gone to the timing channel. **Weights may be chosen only on the calibration fold; tuning them on the test fold is cheating.** See tools/alloc.py.
     """
     return judge_detail(benign_parts, attack_parts, labels, alpha=alpha,
                         budget=budget, weights=weights).as_tuple()
@@ -811,6 +937,10 @@ def chance_floor(fpr: float, budget: int) -> float:
     0.43。实测 B1 MBDF 在 alpha=0.05 下六个攻击族全部落在 0.31-0.50,
     而它自己的地板是 0.326——它其实什么都没检出,而**这正是 T-a 不可能性
     结果的预期表现**。不减地板就会把它误读成"原方法也有三成检出率"。
+
+    The chance-alarm detection-rate floor under the delay-budget rule, 1-(1-fpr)^(budget+1).
+
+    This term must be reported together with the sequential detection rate, or every number in the table is inflated by one floor. When "a tampered message i counts as detected if any alarm falls in i..i+budget", the window has budget+1 chances to hit a false alarm; at alpha=0.05 and a budget of 10 messages the floor is as high as 0.43. Measured, B1 MBDF at alpha=0.05 lands every one of the six attack families in 0.31-0.50, while its own floor is 0.326 — it detected nothing, and **that is exactly the expected behaviour of the T-a impossibility result**. Leaving the floor in would misread it as "the original method also has a detection rate of about thirty percent".
     """
     return 1.0 - (1.0 - fpr) ** (budget + 1)
 
@@ -822,6 +952,10 @@ def _cusum_alarms(benign_p, attack_p, *, alpha: float, k: float = 1.5):
     永久停在上方、此后每条消息都告警——基线的序贯误报曾因此虚高到名义值
     的 22 倍,检出率也跟着虚高。calibrate_h 内部的 arl0 是显式复位的,
     两处口径必须一致。
+
+    Invert h on the benign stream for ARL0=1/alpha, and return the alarm indices on both streams.
+
+    After an alarm the statistic **must be reset**: CUSUM.update does not reset itself, and without a reset S stays above h forever and every later message alarms — a baseline's sequential false-alarm rate was once inflated to 22 times the nominal value this way, and the detection rate inflated with it. The arl0 inside calibrate_h resets explicitly. The two rules must match.
     """
     from algorithm import sequential
 
@@ -855,6 +989,12 @@ def run_baseline(name: str, train, calib, benign, attacked, labels, *,
     `fpr_calib` 改用 `calib`(良性、与 train 不重叠)定阈值再在 `benign` 上
     重测,它与名义 alpha 的比值就是该基线在时间序下的校准漂移——基线普遍
     没有无分布保证、阈值靠人工容差,这一项本身是与 M8 的对照结果。
+
+    Evaluate one baseline under the same false-alarm budget, and also report its calibration drift.
+
+    `benign` is the **uninjected** version of the same cases as `attacked`: the threshold is its $1-\\alpha$ quantile (an oracle, **a concession to the baseline**, so this method's advantage is conservative), and DR is computed on the messages marked inside `attacked`.
+
+    `fpr_calib` instead sets the threshold on `calib` (benign, disjoint from train) and remeasures it on `benign`. Its ratio to the nominal alpha is that baseline's calibration drift under temporal order — baselines generally have no distribution-free guarantee and their thresholds rest on a hand-set tolerance, so this item is itself the control against M8.
     """
     m = model if model is not None else fit_baseline(name, train)
     pb = m.parts_stream(order_stream(benign))
@@ -886,6 +1026,10 @@ def empirical_p(benign_scores, scores) -> list[float]:
 
     所有方法都必经这一步,横向比较才成立:此后每个方法拿到的都是一列
     H0 下近似均匀的 p 值,逐消息阈值与序贯阈值可以用完全相同的机器算。
+
+    Turn a score of any scale (larger means more anomalous) into a **benign empirical p-value**.
+
+    Every method must pass through this step before a cross-method comparison holds: afterwards each method holds a column of p-values that are approximately uniform under H0, and the per-message threshold and the sequential threshold can be computed by exactly the same machine.
     """
     col = sorted(benign_scores)
     n = len(col)
@@ -894,7 +1038,7 @@ def empirical_p(benign_scores, scores) -> list[float]:
     out = []
     for s in scores:
         lo, hi = 0, n
-        while lo < hi:                       # 第一个 >= s 的位置
+        while lo < hi:                       # 第一个 >= s 的位置 / index of the first value >= s
             mid = (lo + hi) // 2
             if col[mid] < s:
                 lo = mid + 1
@@ -917,6 +1061,12 @@ def dr_with_sequential(benign_p, attack_p, labels, *, alpha: float,
     ARL0 一旦超过流长,零误报会让 ARL0 记作无穷,二分搜索于是返回区间下界
     ——h 被定得过低、序贯检出率虚高。实测中基线曾因此拿到 0.66 的假成绩。
     达成的序贯误报率一并返回,必须核对。
+
+    **Wrap a baseline in the same sequential accumulation**, then compute the detection rate under the same delay budget.
+
+    This arm has to be run: otherwise "this method sequential versus a baseline per message" would be an unfair comparison. An immediate per-observation decision is indeed a design property of B3/B7 (and is exactly M7's control), but a likelihood baseline such as B2/B5 can perfectly well carry an external CUSUM. Only with this arm can the gain be **attributed** to channel design rather than to the accumulation mechanism.
+
+    The ARL0 target is 1/alpha and **must not** be larger: the benign stream has only a few hundred messages, and once the target ARL0 exceeds the stream length a zero false-alarm rate records ARL0 as infinity, so the binary search returns the lower end of the interval — h is set too low and the sequential detection rate is inflated. A baseline once scored a fake 0.66 this way. The achieved sequential false-alarm rate is returned with it and must be checked.
     """
     from algorithm import sequential
 
@@ -931,7 +1081,10 @@ def dr_with_sequential(benign_p, attack_p, labels, *, alpha: float,
         """告警后**必须复位**。CUSUM.update 自身不复位,不复位则 S 一旦越过
         h 就永久停在上方、此后每条消息都告警——基线的序贯误报曾因此虚高到
         名义值的 22 倍,检出率也跟着虚高。calibrate_h 内部的 arl0 就是显式
-        复位的,两处口径必须一致。"""
+        复位的,两处口径必须一致。
+
+        After an alarm the statistic **must be reset**. CUSUM.update does not reset itself; without a reset, once S crosses h it stays above forever and every later message alarms — a baseline's sequential false-alarm rate was once inflated to 22 times the nominal value this way, and the detection rate inflated with it. The arl0 inside calibrate_h resets explicitly. The two rules must match.
+        """
         c = sequential.CUSUM(k=k, h=h)
         out = []
         for i, p in enumerate(ps):
@@ -958,5 +1111,9 @@ def undetectable_set(transition_matrix, threshold) -> list[tuple[int, int]]:
     已实现于 tools/mbdf_undetectable.py,本函数供 run_baseline 复用。
     Trier 实测:6 个前驱状态的 delta 精确为 0(确定性转移),零误报可标记集
     恰为掩码已拒绝集 357/420,全 gamma 网格上 A4 得手率 >= 20.5%。
+
+    B1's constructive counterexample: enumerate the (predecessor, observed label) pairs that always fall inside the threshold.
+
+    Implemented in tools/mbdf_undetectable.py; this function is for run_baseline to reuse. Measured on Trier: six predecessor states have delta exactly 0 (deterministic transitions), the zero-false-alarm markable set is exactly the mask-rejected set 357/420, and A4's success rate is >= 20.5% over the whole gamma grid.
     """
     raise NotImplementedError

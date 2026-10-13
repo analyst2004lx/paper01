@@ -15,6 +15,18 @@
 运行(clbs/ 目录下):
     py -m tools.sweep_theta --n-seeds 10                      # 同挂钟
     py -m tools.sweep_theta --budget gen --gen 20 --n-seeds 5 # 同代数
+
+Controlled sweep of the price-coordination strength theta (the evidence chain for a negative result).
+
+The paper claims that "a priced interlayer interface is systematically harmful and worsens monotonically with theta". For that claim to hold, the sweep must satisfy three conditions, or a trivial explanation will swallow the conclusion:
+
+1. **Routing search width is held fixed throughout**: theta>0 runs a multi-label Pareto search on every evaluation and is naturally more expensive. Narrowing `max_entry_options` only for theta>0 to cut cost changes two variables at once, and "larger theta is worse" can then be explained as "the route search was narrower". Here every theta uses the same value.
+2. **Two budget protocols side by side**: same wall-clock answers "can we afford prices under a given compute budget"; same generation count answers "setting cost aside, is the direction the prices give correct". The first records "expensive" as "worse"; the second records "expensive" as free. Reporting only one is not enough to support the monotonicity claim (spec 8.2, protocols 1 and 3).
+3. **Paired multi-seed runs**: the same seed set at every theta, with paired gain versus theta=0 and a Wilcoxon p-value (protocol 2).
+
+Run (from the clbs/ directory):
+    py -m tools.sweep_theta --n-seeds 10                      # same wall-clock
+    py -m tools.sweep_theta --budget gen --gen 20 --n-seeds 5 # same generation count
 """
 from __future__ import annotations
 
@@ -44,6 +56,7 @@ SEED_POOL = [42, 7, 2024, 13, 99, 314, 2718, 1618, 577, 8191,
              101, 233, 1024, 4096, 65537]
 THETAS = [0.0, 0.05, 0.10, 0.15, 0.30, 0.50]
 # 默认取受控对比的两档:high 有决策杠杆,funnel 的拥堵基本无法回避
+# Default to the two controlled levels: high has a decision lever; funnel congestion is essentially unavoidable.
 DEFAULT_INSTANCES = ["S8x4x4-LD21-H0.3-F0.6-A4-s42",
                      "S8x4x4-LD11-H0.3-F0.6-A4-s42"]
 
@@ -97,6 +110,7 @@ def main() -> int:
         budget: Optional[float] = None
         if args.budget == "auto":
             # 预算标定:theta=0 的完整方法在默认停机规则下的自然用时
+            # Budget calibration: natural runtime of the full method at theta=0 under the default stopping rule.
             t0 = time.time()
             run_ga(inst, net, base, conflict_free=True, use_ls=True)
             natural = round(time.time() - t0, 2)
@@ -110,6 +124,7 @@ def main() -> int:
         for theta in args.thetas:
             for s in seeds:
                 # 同挂钟口径下必须放宽早停,否则预算根本用不完,"同算力"名存实亡
+                # Under same wall-clock, early stopping must be relaxed, or the budget is never used up and "same compute" is only nominal.
                 cfg = (replace(base, seed=s, theta=theta, max_gen=100000,
                                stall_gen=100000, time_budget_sec=budget)
                        if budget is not None else
@@ -152,6 +167,7 @@ def main() -> int:
           % (args.out, len(rows), (time.time() - t_all) / 60))
 
     # 汇总:各 theta 相对 theta=0 的配对增益(负数=更差)
+    # Summary: paired gain of each theta versus theta=0 (negative = worse).
     print("\n%-34s %6s %8s %8s %10s %8s" %
           ("算例", "theta", "均值", "相对0", "p", "毫秒/评价"))
     for name in dict.fromkeys(r["instance"] for r in rows):

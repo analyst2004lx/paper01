@@ -4,6 +4,10 @@
 同挂钟对比只能告诉我们"这个机制不划算",说不出它为何不划算。本脚本把 run_ga 内部
 的局部搜索计数取出来,给出两个可写进论文的数字:局部搜索占掉的解码次数份额,以及
 每个算子族的命中率。命中率极低而份额很大,就解释了为何把算力还给主循环更值。
+
+Local-search cost ledger: how much of the decode budget it spends, and how many neighbors actually improve makespan.
+
+A same-wall-clock comparison only says "this mechanism does not pay for itself"; it does not say why. This script reads the local-search counters inside run_ga and reports two paper-ready numbers: the share of decodes spent on local search, and the hit rate of each operator family. A very low hit rate with a large share explains why returning that compute to the main loop is worth more.
 """
 from __future__ import annotations
 

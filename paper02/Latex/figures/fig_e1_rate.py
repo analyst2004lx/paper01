@@ -14,15 +14,15 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
 from _style import (  # noqa: E402
-    C_OURS, C_B3, C_B4, C_B5, C_LAB, FP_TINY,
-    apply_style, save, set_cjk, legend,
+    C_OURS, C_B3, C_B4, C_B5, C_LAB, FP, FP_SM, FP_TINY,
+    apply_style, save, set_cjk,
 )
 
 ATTACKS = ["A1", "A2", "A3", "A4", "A5", "A6"]
-ATTACK_EN = ["replay", "infeas.", "race", "mimic", "drift", "suppress"]
+ATTACK_EN = ["replay", "infeasible", "early", "mimicry", "drift", "suppression"]
 METHODS = [
     ("butla", "BUTLA", C_B3),
-    ("tabor", "TABOR-like", C_B4),
+    ("tabor", "TABOR-style", C_B4),
     ("hsmm", "HSMM", C_B5),
     ("markov", "Label-only", C_LAB),
     ("ours", "Ours", C_OURS),
@@ -46,7 +46,7 @@ def load_curves(labels):
     return rates, curves, labels
 
 
-def draw(rates, curves, labels, ylabel, out_name):
+def draw(rates, curves, labels, ylabel, out_name, xlabel="Injection rate"):
     apply_style()
     fig, axes = plt.subplots(2, 3, figsize=(7.2, 4.4), sharex=True, sharey=True)
     for i, fam in enumerate(ATTACKS):
@@ -59,10 +59,14 @@ def draw(rates, curves, labels, ylabel, out_name):
         ax.yaxis.grid(True, linestyle=":", color="#DDDDDD")
         ax.set_axisbelow(True)
         ax.set_title("%s  %s" % (fam, labels[i]), fontproperties=FP_TINY, loc="left")
-        set_cjk(ax, xlabel="Injection rate" if i >= 3 else None,
-                ylabel=ylabel if i % 3 == 0 else None)
-    legend(axes[0][0], ncol=1, loc="lower right", handlelength=1.2)
-    fig.tight_layout()
+        set_cjk(ax, xlabel=xlabel if i >= 3 else None)
+    fig.tight_layout(rect=(0.03, 0.0, 1.0, 0.95))
+    handles, names = axes[0][0].get_legend_handles_labels()
+    axes[0][1].legend(handles, names, prop=FP_SM, ncol=len(METHODS),
+                      loc="lower center", bbox_to_anchor=(0.5, 1.10),
+                      frameon=False, handlelength=1.6, columnspacing=1.2)
+    fig.text(0.005, 0.53, ylabel, rotation=90, ha="left", va="center",
+             fontproperties=FP)
     save(fig, out_name)
 
 
@@ -70,7 +74,8 @@ def main():
     rates, curves, _ = load_curves(ATTACK_EN)
     if len(rates) < 2:
         raise SystemExit("e1_archive has only one injection rate; rerun with --rates")
-    draw(rates, curves, ATTACK_EN, "Net DR (floor subtracted)", "fig_e1_rate")
+    draw(rates, curves, ATTACK_EN, "Net detection rate (chance-alarm floor subtracted)",
+         "fig_e1_rate")
 
 
 if __name__ == "__main__":

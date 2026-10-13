@@ -24,6 +24,26 @@
 
 运行(clbs/ 目录下):
   py -u -m tools.prune_ablation [--budget 90] [--seeds a,b,c] [--only 名字,名字] [--check-only]
+
+Cost-reduction contrast: what "admissible lower-bound pruning + winner-path reuse" is worth under the same wall-clock budget.
+
+Why this experiment. The matrix batch (output/matrix/p3 and lowmid, run on 08-03/08-05, when the code had neither pruning nor reuse) measured reservation-table probe dispatch at -0.74% under the same wall-clock, significant in 0 of 16 cells, i.e. "not worth it". The baseline ladder (run after the cost reduction) measured the same mechanism at -5.8% inside the closed loop, and significant. The two differ in three things: the cost reduction, the baseline definition (two-stage vs B0), and the instance set. Putting the two batches side by side cannot attribute the sign flip to the cost reduction — three variables moved at once. This tool holds the other two fixed and moves only the cost reduction.
+
+The contrast is especially clean because the two optimizations **do not change the output**:
+  - Pruning: the ideal shortest path is an admissible lower bound on the measured arrival, so a vehicle whose bound is already no better than the incumbent cannot win on the true value either. The original keeps the first strictly better vehicle in id order; a pruned vehicle would not have been chosen.
+  - Reuse: the winner's two path segments are computed, after rollback, under the same table state; writing them directly matches recomputing them bit for bit.
+Turning them off only makes the method **slower**. The makespan gap under the same wall-clock is "how much solution quality the saved compute bought", with no other mechanism mixed in. Before the run, a bit-wise equivalence self-check turns the argument above into an observable fact.
+
+Two arms:
+  on    dispatch="exact"        pruning and reuse both on (the paper's default)
+  off   dispatch="exact_noopt"  both off, back to the unoptimized full probe
+
+Same seed means the same initial population and the same operator sequence, so the only difference is how many evaluations fit in a second.
+
+The default instance set is 6 cells rather than all 10: contention (A funnel/high/low) and fleet size (the three B levels) are the two factors that set probe cost, and pruning's effect varies with both. These 6 cells are enough and save half the machine time.
+
+Run (from the clbs/ directory):
+  py -u -m tools.prune_ablation [--budget 90] [--seeds a,b,c] [--only name,name] [--check-only]
 """
 from __future__ import annotations
 
@@ -52,6 +72,10 @@ def equivalence_check(cases: List[dict], n_chrom: int = 6) -> bool:
     """逐位等价性自检:同一染色体在两档下必须得到同一张时间表。
 
     这是论文命题(降本不改变输出)的实证。同时报告两档的路由调用数,给出降本的直接口径。
+
+    Bit-wise equivalence self-check: the same chromosome must yield the same timetable under both arms.
+
+    This is the empirical check of the paper's claim that the cost reduction does not change the output. Also report routing calls of both arms, the direct measure of the cost reduction.
     """
     import random
 
@@ -162,8 +186,8 @@ def main() -> int:
               f"{ea / max(eb, 1):>8.2f}x {ma:>11.2f} {mb:>8.2f} {mb / max(ma, 1e-9):>6.2f}x")
     print("-" * 100)
 
-    xa = [v for c in cases for v in mk["关"][c["name"]]]     # 基准档 = 关
-    xb = [v for c in cases for v in mk["开"][c["name"]]]     # 处理档 = 开
+    xa = [v for c in cases for v in mk["关"][c["name"]]]     # 基准档 = 关 / baseline arm = off
+    xb = [v for c in cases for v in mk["开"][c["name"]]]     # 处理档 = 开 / treatment arm = on
     rel = sum((x - y) / y for x, y in zip(xb, xa)) / len(xa)
     w = wilcoxon_signed_rank(xb, xa)
     win = sum(1 for x, y in zip(xb, xa) if x < y - 1e-9)

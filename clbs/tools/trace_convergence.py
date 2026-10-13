@@ -5,6 +5,12 @@
 GA 现在逐代记录 `history_sec`,本工具把它与 `history` 对齐后落盘。
 
 运行(clbs/ 目录下):  py -m tools.trace_convergence --n-seeds 5
+
+Record convergence traces for several arms (best C_max versus wall-clock time).
+
+Why the x-axis must be wall-clock rather than generations: the two-stage arm costs 0.4 ms per evaluation and the closed-loop arm 15.7 ms. Plotting by generation makes the most expensive arm look like it "converges fastest", when it has simply done more work per generation. The GA now records `history_sec` each generation; this tool aligns it with `history` and writes it out.
+
+Run (from the clbs/ directory):  py -m tools.trace_convergence --n-seeds 5
 """
 from __future__ import annotations
 
@@ -84,6 +90,9 @@ def main() -> int:
                 continue
             # 两阶段档的 history 来自它的第一阶段(理想运输模型),系统性低估;
             # surrogate 列把这件事记录在数据里,而不是只写在图注里
+            # The twostage arm's history comes from its first stage (ideal transport
+            # model) and systematically underestimates; the surrogate column records
+            # that in the data rather than only in the figure caption.
             surrogate = int(bool(out.get("history_is_surrogate")))
             for gen, (v, t) in enumerate(zip(hist, secs), start=1):
                 rows.append({"instance": inst.name,

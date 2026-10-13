@@ -13,6 +13,17 @@
 hf 的矩阵由 pdftotext 机读得到,故其体检并入转换器;bu 的原始 PDF 是纯栅格
 (无内嵌字体,pdftotext 全文仅 5 字符),矩阵只能人工转录,故单独放一个入口,
 输入是 `database/extracted/bu/layouts_4machines.txt`。
+
+Layout-matrix fidelity check: decide whether a travel-time matrix can be reconstructed as a graph (spec 12.4, item 3).
+
+Usage (from the clbs/ directory):
+
+    py -m tools.check_fidelity bu        # check the 4 Bilge & Ulusoy layouts
+    py -m tools.check_fidelity bu --csv  # also write experiments_database/fidelity_bu.csv
+
+The criteria share one implementation with `tools.convert_public` (imported, not copied), so hf and bu conclusions can be compared column by column. The two "reconstructible" columns are distinguished in the docstring of `convert_public.fidelity_report`: `digraph_reconstructible` checks only the triangle inequality, `corridor_reconstructible` also requires symmetry, and **the latter is the criterion for whether the contention arm (spec 12.3) can be run**.
+
+The hf matrices were machine-read by pdftotext, so their check is folded into the converter; the bu source PDF is a pure raster (no embedded fonts, pdftotext yields only 5 characters), so the matrices had to be transcribed by hand and get their own entry point. Input is `database/extracted/bu/layouts_4machines.txt`.
 """
 from __future__ import annotations
 
@@ -34,7 +45,10 @@ _ROW_RE = re.compile(r"^(LU|M\d+)\s+((?:-?\d+(?:\.\d+)?\s+)*-?\d+(?:\.\d+)?)\s*$
 
 
 def parse_layouts(path: str) -> Dict[int, List[List[float]]]:
-    """读人工转录的布局文件。注释行以 # 起头,表头行(纯标号)被忽略。"""
+    """读人工转录的布局文件。注释行以 # 起头,表头行(纯标号)被忽略。
+
+    Read a hand-transcribed layout file. Comment lines start with #; header rows (labels only) are ignored.
+    """
     layouts: Dict[int, List[List[float]]] = {}
     current: int = -1
     with open(path, encoding="utf-8") as fh:
@@ -76,6 +90,10 @@ def crosscheck_bu_layout1(bu: Dict[int, List[List[float]]]) -> str:
     而 hf 的矩阵是 `pdftotext` 从**另一份** PDF 机读来的,与 bu 的人工转录完全独立。
     两者若逐项相等,就等于用机器复核了转录的 25 格中的 25 格 —— 这是这份栅格 PDF
     唯一拿得到的自动化复核,故做成硬断言:不等即报错,不要只印一行警告。
+
+    Match the hand transcription against an **independently** obtained machine-read matrix.
+
+    The 4-machine layout in the hf family is, according to its source (Homayouni & Fontes), Bilge & Ulusoy layout 1. The hf matrix was machine-read by `pdftotext` from a **different** PDF and is fully independent of the bu hand transcription. If they match cell by cell, the machine has checked all 25 of the 25 transcribed cells — the only automated check this raster PDF affords — so it is a hard assertion: inequality is an error, not a one-line warning.
     """
     src = os.path.join(DB, "extracted", "hf", "layouts_2to8.txt")
     if not os.path.isfile(src):
@@ -108,6 +126,9 @@ def main(argv: List[str] | None = None) -> int:
     layouts = parse_layouts(src)
     # bu 的 4 个布局**都是 4 台机**,只是导轨走法不同,故按序号标号;沿用 hf 的 "{}-M"
     # 会把"布局 1"写成 "1-M",读起来像"1 台机的布局",与事实相反。
+    # All 4 bu layouts are **4 machines**; only the guideway routing differs, so
+    # label them by index. Reusing hf's "{}-M" would write layout 1 as "1-M",
+    # which reads as a 1-machine layout and is false.
     rows = fidelity_report(layouts, label_fmt="layout{}")
 
     print("== %s 布局保真度体检(输入:%s)==" % (args.key, os.path.relpath(src, HERE)))
