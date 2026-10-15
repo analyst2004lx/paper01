@@ -72,7 +72,9 @@ $Config = @{
     FetchRetries     = 5
     FetchRetrySec    = 6
     FetchTimeoutSec  = 180
-    FetchMaxSec      = 600
+    # Absolute cap. Idle timeout still kills a hung transfer; this only
+    # stops a slow-but-moving pack (WireGuard often sits around 50-100 KB/s).
+    FetchMaxSec      = 1800
 }
 # =============================================================
 
@@ -561,10 +563,19 @@ try {
         param([string]$RepoRoot, [int]$MinAgeSec = 60)
         $gitMeta = Join-Path $RepoRoot '.git'
         if (-not (Test-Path -LiteralPath $gitMeta)) { return }
-        $gitRunning = @(Get-Process -Name 'git','git-remote-https','git-remote-http' -ErrorAction SilentlyContinue)
-        if ($gitRunning.Count -gt 0) {
-            Write-Log ('Other git process running (PIDs: {0}); leave lock files alone.' -f `
-                (($gitRunning | ForEach-Object { $_.Id }) -join ',')) -Level WARN
+        # Cursor and other tools constantly run `git status` in this repo.
+        # Only a fetch/merge/rebase/commit should block lock cleanup.
+        $repoMark = $RepoRoot.TrimEnd('\')
+        $blocking = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+            Where-Object {
+                $_.Name -match '^(git|git-remote-https|git-remote-http)(\.exe)?$' -and
+                $_.CommandLine -and
+                ($_.CommandLine -like ('*{0}*' -f $repoMark)) -and
+                ($_.CommandLine -match '\s(fetch|pull|clone|merge|rebase|commit|gc|index-pack|unpack-objects|receive-pack)\b')
+            })
+        if ($blocking.Count -gt 0) {
+            Write-Log ('Git write still running in this repo (PIDs: {0}); leave lock files alone.' -f `
+                (($blocking | ForEach-Object { $_.ProcessId }) -join ',')) -Level WARN
             return
         }
         $locks = @(Get-ChildItem -LiteralPath $gitMeta -Filter '*.lock' -Force -ErrorAction SilentlyContinue)
@@ -733,12 +744,11 @@ try {
         Clear-StaleGitLocks -RepoRoot $Config.LocalFolder -MinAgeSec 0
         for ($i = 1; $i -le $maxTry; $i++) {
             Write-Log ('fetch attempt {0}/{1} (idle={2}s, max={3}s, ref={4})...' -f $i, $maxTry, $fetchIdle, $fetchMax, $fetchBranch)
-            if ($i -le 2) {
-                # Single branch + no tags: smaller pack than `fetch origin --prune`
-                $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', 'origin', $fetchBranch)
-            } else {
-                Write-Log 'Using shallow fetch fallback (depth=1; smaller download)...' -Level WARN
-                $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', '--depth', '1', 'origin', $fetchBranch)
+            # Do not use --depth 1 here. On an existing full repo it truncates history
+            # and leaves .git/shallow.lock if the download is killed.
+            $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', 'origin', $fetchBranch)
+            if ($i -gt 2) {
+                Write-Log 'Retrying full fetch (shallow fetch disabled; it would truncate local history)...' -Level WARN
             }
             $fetch = Invoke-Git -GitArgs $fetchArgs -AllowFail -HeartbeatSec 15 `
                 -TimeoutSec $fetchIdle -MaxSec $fetchMax -ProgressDir $packDir
