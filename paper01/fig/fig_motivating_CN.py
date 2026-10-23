@@ -11,9 +11,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import fig_motivating as src  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 
+plt.rcParams["font.sans-serif"] = ["Microsoft YaHei", "SimHei", "DejaVu Sans"]
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 STRINGS_CN = {
+    "delta_sep": "：",
     "title_a": "(a) 通往快臂的唯一通路是一条排他干道",
     "trunk_tau": "τ = {tau:.0f}（排他）",
     "avoids_trunk": "不经过干道",

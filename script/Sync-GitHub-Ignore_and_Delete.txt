@@ -26,6 +26,7 @@ texput.log
 paper04_CN_AI-Modify-26-09-17.aux
 paper04_CN_AI-Modify-26-09-17.fdb_latexmk
 paper01_new
+paper01_old
 paper01/figures
 汇报稿_应用场景介绍.files
 cursor_document_conversion_request.md

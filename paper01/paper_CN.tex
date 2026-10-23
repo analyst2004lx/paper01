@@ -555,7 +555,7 @@
 
 带运输时间的柔性作业车间调度长期建立在一个便利的假设之上：工件在两台机器之间移动所需的
 时间是一个常数，可从按位置对索引的矩阵中读出。这是文献中的主流约定~\cite{xin2025review}，
-近期的模型仍普遍沿用~\cite{meng2025cp,qin2026knowledge,fu2025integrated}。当车队规模
+近期的模型仍普遍沿用~\cite{meng2025cp,qin2026knowledge,jafarian2026integrated}。当车队规模
 相对于通道网络足够小、车辆彼此很少相遇时，该假设是合理的。然而实际车间并非如此构造：
 少量车辆共享同一组通道稀少的走廊网络，单车道路段无法在同一时刻被双向通行；一旦车队密度足够高，
 车队自身的交通便从次要干扰变成延误的主因~\cite{kim2026congestion}。承认这一点
@@ -641,7 +641,7 @@ Lyu 等~\cite{lyu2019approach} 已在遗传算法解码中嵌入时间窗路由�
 
 \subsection{主要结果}
 
-为分别度量闭环评价与预约表感知派遣的贡献，本文构造四级基线阶梯，前两级代表文献中两类常见的流程结构：\textbf{B0} 为开环结构，先按畅通行驶时间排产，再交由无冲突路由执行（按常数矩阵排产的方法~\cite{meng2025cp,qin2026knowledge,fu2025integrated} 在实际路网上执行即为此结构，Li 等~\cite{li2026framework} 的框架亦属此类）；\textbf{B0+} 为两阶段结构，排产冻结后只在第二阶段按预约表选车（如 Sun 等~\cite{sun2023integrated}）；
+为分别度量闭环评价与预约表感知派遣的贡献，本文构造四级基线阶梯，前两级代表文献中两类常见的流程结构：\textbf{B0} 为开环结构，先按畅通行驶时间排产，再交由无冲突路由执行（按常数矩阵排产的方法~\cite{meng2025cp,qin2026knowledge,jafarian2026integrated} 在实际路网上执行即为此结构，Li 等~\cite{li2026framework} 的框架亦属此类）；\textbf{B0+} 为两阶段结构，排产冻结后只在第二阶段按预约表选车（如 Sun 等~\cite{sun2023integrated}）；
 \textbf{B1} 为闭环规划加规则派车；\textbf{B2} 为本文方法。四个配置按两个维度构成 $2\times2$ 对照：搜索时是否计入冲突造成的延误，以及按畅通时间选车还是按预约表试算选车。
 只有仅改变一个维度的对比，才能将收益归于对应机制。
 四个配置共用同一上层搜索、同一路由器与同一挂钟预算，只在上述两处不同，因此差值只反映结构，而不反映各文献具体算法的实现强弱。
@@ -699,11 +699,11 @@ van Os 与 Basten~\cite{vanos2026exact} 以及 Lyu 等~\cite{lyu2019approach} �
 % [ref_check: key=xin2025review; claim="该综述覆盖至 2023 年的进展,并将求解方法分为精确/启发式/元启发式/群智能四类"; need=quote]
 % [ref_check: key=xin2025review; claim="常数行驶时间矩阵是 FJSP_PT 文献中占主导地位的建模约定"; need=quote]
 
-近年工作沿用这一矩阵，主要在求解方法上推进。Meng 等~\cite{meng2025cp} 提出多 AGV 情形下的约束规划模型与约束规划辅助的双种群遗传算法，关闭了 29 个开放基准算例并改进了 27 个最优已知解；Qin 等~\cite{qin2026knowledge} 结合质量--多样性存档与 Q 学习，并设计了由 AGV 与关键路径共同制导的局部搜索；Fu 等~\cite{fu2025integrated} 用改进遗传算法同时决策柔性装配车间的生产与物流。
+近年工作沿用这一矩阵，主要在求解方法上推进。Meng 等~\cite{meng2025cp} 提出多 AGV 情形下的约束规划模型与约束规划辅助的双种群遗传算法，关闭了 29 个开放基准算例并改进了 27 个最优已知解；Qin 等~\cite{qin2026knowledge} 结合质量--多样性存档与 Q 学习，并设计了由 AGV 与关键路径共同制导的局部搜索；Jafarian-Moghaddam 等~\cite{jafarian2026integrated} 以数学模型与元启发式框架联合优化 U 形柔性流水车间的排产与内部物流。
 但这些工作的运输时长均取自矩阵，车辆之间不会因争用走廊而互相推迟；关键链推理虽是作业车间局部搜索的成熟手段~\cite{otala2021graph,tamssaouet2023neighborhood}，在矩阵上计算的关键路径也只能追溯到前驱工序或机器繁忙，无法定位到具体走廊。
 Xin 等~\cite{xin2025review} 亦指出，这类假设「会降低问题复杂度，甚至改变问题的性质」，且现有算例「主要在规模上有差别，缺少针对关键问题参数取值的专门设计」，并把平均运输与加工时间之比 $\bar{T}_t/\bar{T}_p$ 列为极可能影响算法表现的量。
 % [ref_check: key=meng2025cp; claim="关闭 29 个此前开放的基准算例并改进 27 个最优已知解"; need=quote]
-% [ref_check: key=meng2025cp,qin2026knowledge,fu2025integrated; claim="三者的运输时长均取自常数矩阵,车辆之间不产生相互延误"; need=quote]
+% [ref_check: key=meng2025cp,qin2026knowledge,jafarian2026integrated; claim="三者的运输时长均取自常数矩阵,车辆之间不产生相互延误"; need=quote]
 % [ref_check: key=xin2025review; claim="该综述把常数行驶时间矩阵本身列为局限性建模选择而非已成定论"; need=quote]
 % [ref_check: key=xin2025review; claim="该综述把平均运输时间与平均加工时间之比列为极可能影响算法表现的参数,并呼吁扩充测试集"; need=quote]
 
@@ -748,7 +748,7 @@ Lyu 等~\cite{lyu2019approach} 将时间窗 Dijkstra 嵌入遗传算法解码，
 \toprule
 工作类别 & 文献 & 机器异构 & 走廊排他 & 排产评价所用运输时长 & 研究重点 \\
 \midrule
-FJSP\_PT 元启发式 & \cite{meng2025cp,qin2026knowledge,fu2025integrated}
+FJSP\_PT 元启发式 & \cite{meng2025cp,qin2026knowledge,jafarian2026integrated}
   & 有 & 否 & 畅通估计（常数矩阵） & 常数矩阵下改进求解质量 \\
 终身式 MAPF & \cite{gao2023mapf,zhang2024guidance}
   & --- & 是 & 无排产（任务外生） & 任务持续到达时的路网吞吐 \\
@@ -843,7 +843,7 @@ $t+\tau_e$ 进入。节点上设有容量充裕的停靠位，它与通行资源
 上，并且总是被允许的。
 
 \item \textbf{不在建模范围内。} 机器与车辆故障、有限缓冲与阻塞、电池充电，以及工件的动态
-到达~\cite{gui2023dynamic,xiong2024dynamic}，留待后续工作（第~\ref{sec:future_work}~节第 (5) 条）。
+到达~\cite{gui2023dynamic,zhao2026deep}，留待后续工作（第~\ref{sec:future_work}~节第 (5) 条）。
 \end{enumerate}
 
 其中 A1、A2、A4 与 A5 是 FJSP\_PT 文献中的标准假设~\cite{xin2025review}。决定本文问题特征的是 A3（部分柔性机械臂上与机器相关的加工时间）与 A6（将争用表述为显式的排他资源约束，而非常数行驶时间矩阵），
@@ -1548,7 +1548,7 @@ $\NSeeds$ 个种子足以在 $\NPairs$ 个配对的合计上分辨数个百分�
 \begin{description}[leftmargin=0pt,topsep=3pt,itemsep=3pt]
 \item[B0：开环规划 + 真实执行。]
 上层按畅通最短路时间搜索（搜索时不计冲突），搜完后经同一套无冲突路由器执行。
-代表开环结构：调度层产出忽略运输争用的计划，下游再用无冲突路由执行。按常数矩阵排产的 FJSP\_PT 方法~\cite{meng2025cp,qin2026knowledge,fu2025integrated} 在实际路网上执行即属此类，Li 等~\cite{li2026framework} 的框架亦然；派车为空闲优先，与本框架规则派车所用的式~\eqref{eq:rule} 相同。
+代表开环结构：调度层产出忽略运输争用的计划，下游再用无冲突路由执行。按常数矩阵排产的 FJSP\_PT 方法~\cite{meng2025cp,qin2026knowledge,jafarian2026integrated} 在实际路网上执行即属此类，Li 等~\cite{li2026framework} 的框架亦然；派车为空闲优先，与本框架规则派车所用的式~\eqref{eq:rule} 相同。
 \item[B0+：开环规划 + 预约表感知派遣。]
 排产同样按畅通行驶时间确定，只把选车改为按预约表试算。
 代表两阶段结构：第一阶段在\emph{常数运输时间矩阵}上排产，第二阶段才在已定排产上优化车辆指派并处理冲突，无回流（如 Sun 等~\cite{sun2023integrated}）。
@@ -2071,7 +2071,7 @@ $\PubNMatch{}/\PubNInst{}$ 个算例上最优解与参照值\emph{逐位相同}�
 对应局限 (4)。解码器状态单向推进，扰动只作用于序列某一位置之后时，此前的事件与预约不变。只重解被扰动的部分，相当于单独降低这类局部搜索的单次开销，随后在同挂钟下重新度量。
 
 \textbf{(5) 在机械臂与车辆故障下度量修复排程的速度。}
-对应局限 (5)。动态柔性作业车间工作已把机器故障、紧急插单与工件到达纳入重调度~\cite{gui2023dynamic,xiong2024dynamic,dauzereperes2024fjsp}。
+对应局限 (5)。动态柔性作业车间工作已把机器故障、紧急插单与工件到达纳入重调度~\cite{gui2023dynamic,zhao2026deep,dauzereperes2024fjsp}。
 此时机制的价值还包括修复排程的速度，而不仅是构建排程的时间与质量。须从头重解的评价器与只修改局部邻域的方法何者更具优势，不能直接沿用静态设定下的结论。
 
 

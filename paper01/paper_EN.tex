@@ -490,7 +490,7 @@ Most of the reduction comes from the closed loop: with the dispatching rule fixe
 \subsection{Background and motivation}
 
 Flexible job shop scheduling with transportation times has long rested on a convenient assumption: the time a job needs to move between two machines is a constant, read from a matrix indexed by location pairs.
-This is the dominant convention in the literature~\cite{xin2025review}, and recent models still widely adopt it~\cite{meng2025cp,qin2026knowledge,fu2025integrated}.
+This is the dominant convention in the literature~\cite{xin2025review}, and recent models still widely adopt it~\cite{meng2025cp,qin2026knowledge,jafarian2026integrated}.
 The assumption is reasonable when the fleet is small enough relative to the corridor network that vehicles rarely meet.
 Real shops, however, are not built that way: a few vehicles share a sparse corridor network, and a single-lane segment cannot be traversed in both directions at the same time; once fleet density is high enough, the fleet's own traffic turns from a secondary disturbance into the main cause of delay~\cite{kim2026congestion}.
 Once this is acknowledged, travel time is no longer fixed data but the outcome of two decisions: the path a vehicle takes (we call this conflict-free path planning routing), and the order of reservations on contended segments.
@@ -575,7 +575,7 @@ admissible lower-bound pruning and winner-path reuse. Both skip only routing tri
 
 \subsection{Main results}
 
-To measure the contributions of closed-loop evaluation and of reservation-table-aware dispatching separately, we construct a four-level baseline ladder whose first two levels represent two common process structures in the literature: \textbf{B0} is the open-loop structure, which first schedules by unimpeded travel times and then hands the schedule to conflict-free routing for execution (methods that schedule on a constant matrix~\cite{meng2025cp,qin2026knowledge,fu2025integrated} take exactly this structure when executed on a real road network, and the framework of Li et al.~\cite{li2026framework} also belongs to this class); \textbf{B0+} is the two-stage structure, which freezes the schedule and selects vehicles by the reservation table only in the second stage (e.g.\ Sun et al.~\cite{sun2023integrated});
+To measure the contributions of closed-loop evaluation and of reservation-table-aware dispatching separately, we construct a four-level baseline ladder whose first two levels represent two common process structures in the literature: \textbf{B0} is the open-loop structure, which first schedules by unimpeded travel times and then hands the schedule to conflict-free routing for execution (methods that schedule on a constant matrix~\cite{meng2025cp,qin2026knowledge,jafarian2026integrated} take exactly this structure when executed on a real road network, and the framework of Li et al.~\cite{li2026framework} also belongs to this class); \textbf{B0+} is the two-stage structure, which freezes the schedule and selects vehicles by the reservation table only in the second stage (e.g.\ Sun et al.~\cite{sun2023integrated});
 \textbf{B1} is closed-loop planning with rule-based dispatching; \textbf{B2} is our method. The four configurations form a $2\times2$ design along two factors: whether the search counts conflict-induced delay, and whether vehicles are selected by unimpeded time or by trial queries on the reservation table.
 Only a comparison that changes a single factor can attribute a gain to the corresponding mechanism.
 The four configurations share the same upper-level search, the same router, and the same wall-clock budget, and differ only in the two places above; the differences therefore reflect only the structure, not how strong the implementation of each published algorithm is.
@@ -633,11 +633,11 @@ Flexible job shop scheduling with transportation (FJSP\_PT) brings material move
 % [ref_check: key=xin2025review; claim="该综述覆盖至 2023 年的进展,并将求解方法分为精确/启发式/元启发式/群智能四类"; need=quote]
 % [ref_check: key=xin2025review; claim="常数行驶时间矩阵是 FJSP_PT 文献中占主导地位的建模约定"; need=quote]
 
-Recent work keeps this matrix and advances mainly on solution methods. Meng et al.~\cite{meng2025cp} propose a constraint-programming model for the multi-AGV case and a dual-population genetic algorithm assisted by constraint programming, closing 29 open benchmark instances and improving 27 best-known solutions; Qin et al.~\cite{qin2026knowledge} combine a quality--diversity archive with Q-learning and design a local search jointly guided by AGVs and the critical path; Fu et al.~\cite{fu2025integrated} use an improved genetic algorithm to decide production and logistics jointly in a flexible assembly shop.
+Recent work keeps this matrix and advances mainly on solution methods. Meng et al.~\cite{meng2025cp} propose a constraint-programming model for the multi-AGV case and a dual-population genetic algorithm assisted by constraint programming, closing 29 open benchmark instances and improving 27 best-known solutions; Qin et al.~\cite{qin2026knowledge} combine a quality--diversity archive with Q-learning and design a local search jointly guided by AGVs and the critical path; Jafarian-Moghaddam et al.~\cite{jafarian2026integrated} jointly optimize scheduling and internal logistics in a U-shaped flexible flow shop with a mathematical model and a metaheuristic framework.
 In all of these works, however, transport durations are taken from the matrix, so vehicles never delay one another through corridor contention; and although critical-chain reasoning is a mature device in job-shop local search~\cite{otala2021graph,tamssaouet2023neighborhood}, a critical path computed on the matrix can only be traced back to a predecessor operation or a busy machine, not to a specific corridor.
 Xin et al.~\cite{xin2025review} also note that such assumptions ``reduce the complexity of the problem and even change its nature'', and that existing instances ``differ mainly in size and lack a dedicated design for the values of key problem parameters''; they list the ratio of mean transport time to mean processing time, $\bar{T}_t/\bar{T}_p$, as a quantity that is highly likely to affect algorithm performance.
 % [ref_check: key=meng2025cp; claim="关闭 29 个此前开放的基准算例并改进 27 个最优已知解"; need=quote]
-% [ref_check: key=meng2025cp,qin2026knowledge,fu2025integrated; claim="三者的运输时长均取自常数矩阵,车辆之间不产生相互延误"; need=quote]
+% [ref_check: key=meng2025cp,qin2026knowledge,jafarian2026integrated; claim="三者的运输时长均取自常数矩阵,车辆之间不产生相互延误"; need=quote]
 % [ref_check: key=xin2025review; claim="该综述把常数行驶时间矩阵本身列为局限性建模选择而非已成定论"; need=quote]
 % [ref_check: key=xin2025review; claim="该综述把平均运输时间与平均加工时间之比列为极可能影响算法表现的参数,并呼吁扩充测试集"; need=quote]
 
@@ -682,7 +682,7 @@ We also implement two further interfaces, a surcharge on corridor--time slots an
 \toprule
 Work class & Ref. & \begin{tabular}[c]{@{}c@{}}Machine\\heterogeneity\end{tabular} & \begin{tabular}[c]{@{}c@{}}Corridor\\exclusivity\end{tabular} & Transport times used to evaluate schedules & Research focus \\
 \midrule
-FJSP\_PT metaheuristics & \cite{meng2025cp,qin2026knowledge,fu2025integrated}
+FJSP\_PT metaheuristics & \cite{meng2025cp,qin2026knowledge,jafarian2026integrated}
   & yes & no & unimpeded estimate (constant matrix) & solution quality under a constant matrix \\
 Lifelong MAPF & \cite{gao2023mapf,zhang2024guidance}
   & --- & yes & no scheduling (tasks exogenous) & network throughput under continuously arriving tasks \\
@@ -776,7 +776,7 @@ $t+\tau_e$. Nodes have berths of ample capacity, independent of the traversal re
 and are always permitted.
 
 \item \textbf{Out of scope.} Machine and vehicle failures, finite buffers and blocking, battery charging, and dynamic
-job arrivals~\cite{gui2023dynamic,xiong2024dynamic} are left to future work (item~(5) of Section~\ref{sec:future_work}).
+job arrivals~\cite{gui2023dynamic,zhao2026deep} are left to future work (item~(5) of Section~\ref{sec:future_work}).
 \end{enumerate}
 
 Of these, A1, A2, A4, and A5 are standard assumptions in the FJSP\_PT literature~\cite{xin2025review}. The features that define our problem are A3 (machine-dependent processing times on partially flexible robotic arms) and A6 (contention stated as an explicit exclusive-resource constraint rather than a constant travel-time matrix);
@@ -1481,7 +1481,7 @@ We therefore use a four-level ladder in which each level corresponds to a clearl
 \begin{description}[leftmargin=0pt,topsep=3pt,itemsep=3pt]
 \item[B0: open-loop planning + realized execution.]
 The upper level searches by unimpeded shortest-path times (the search ignores conflicts); after the search, the plan is executed by the same conflict-free router.
-This represents the open-loop structure: the scheduling layer produces a plan that ignores transport contention, and a downstream conflict-free router executes it. FJSP\_PT methods that schedule on a constant matrix~\cite{meng2025cp,qin2026knowledge,fu2025integrated} fall into this class when executed on a real road network, as does the framework of Li et al.~\cite{li2026framework}. Dispatching is idle-first, the same as Eq.~\eqref{eq:rule} used by rule-based dispatching in our framework.
+This represents the open-loop structure: the scheduling layer produces a plan that ignores transport contention, and a downstream conflict-free router executes it. FJSP\_PT methods that schedule on a constant matrix~\cite{meng2025cp,qin2026knowledge,jafarian2026integrated} fall into this class when executed on a real road network, as does the framework of Li et al.~\cite{li2026framework}. Dispatching is idle-first, the same as Eq.~\eqref{eq:rule} used by rule-based dispatching in our framework.
 \item[B0+: open-loop planning + reservation-table-aware dispatching.]
 The schedule is likewise fixed by unimpeded travel times; only vehicle selection is changed to a trial query on the reservation table.
 This represents the two-stage structure: the first stage schedules on a \emph{constant travel-time matrix}, and only the second stage optimizes vehicle assignment and handles conflicts on the fixed schedule, with no feedback (e.g.\ Sun et al.~\cite{sun2023integrated}).
@@ -2003,7 +2003,7 @@ A stronger search does not affect the differences among configurations, but may 
 This corresponds to Limitation~(4). The decoder state advances in one direction, so when a perturbation acts only on the sequence after some position, earlier events and reservations are unchanged. Re-solving only the perturbed part amounts to reducing the cost per evaluation of this kind of local search on its own, after which it can be remeasured under the same wall-clock budget.
 
 \textbf{(5) Measure the speed of schedule repair under robotic-arm and vehicle failures.}
-This corresponds to Limitation~(5). Work on the dynamic flexible job shop has already brought machine failures, rush orders, and job arrivals into rescheduling~\cite{gui2023dynamic,xiong2024dynamic,dauzereperes2024fjsp}.
+This corresponds to Limitation~(5). Work on the dynamic flexible job shop has already brought machine failures, rush orders, and job arrivals into rescheduling~\cite{gui2023dynamic,zhao2026deep,dauzereperes2024fjsp}.
 In that case the value of a mechanism also includes the speed of repairing a schedule, not only the time and quality of constructing one. Whether an evaluator that re-solves from scratch or a method that modifies only a local neighbourhood holds the advantage cannot be carried over directly from conclusions in the static setting.
 
 
