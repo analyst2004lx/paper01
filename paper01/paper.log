@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.8.28)  23 OCT 2026 10:01
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.8.28)  23 OCT 2026 17:40
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -2186,17 +2186,13 @@ Underfull \hbox (badness 10000) in paragraph at lines 572--572
 
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/b/n' will be
 (Font)              scaled to size 7.0pt on input line 576.
-[4.4]
+[4.4] [5.5]
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
 (Font)              scaled to size 9.0pt on input line 629.
- [5.5]
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
 (Font)              scaled to size 7.2pt on input line 665.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
 (Font)              scaled to size 5.4pt on input line 665.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
  [6.6]
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/sc' will be
 (Font)              scaled to size 9.0pt on input line 710.
@@ -2204,8 +2200,7 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `inconsolata' (encoding: TU).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
-
-[7.7]
+ [7.7]
 File: fig/fig_framework.pdf Graphic file (type pdf)
 <use fig/fig_framework.pdf>
 
@@ -2289,7 +2284,10 @@ Underfull \vbox (badness 2088) has occurred while \output is active []
 Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [21.21]
-[22.22] (./paper.bbl [23.23])
+[22.22] (./paper.bbl
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [23.23])
 
 Class acmart Warning: \vspace should only be used to provide space above/below 
 surrounding objects on input line 1291.
@@ -2319,11 +2317,11 @@ Package rerunfilecheck Info: File `paper.out' has not changed.
  ) 
 Here is how much of TeX's memory you used:
  46315 strings out of 474772
- 943916 string characters out of 5761268
+ 943922 string characters out of 5761268
  1958842 words of memory out of 5000000
  67573 multiletter control sequences out of 15000+600000
  570806 words of font info for 178 fonts, out of 8000000 for 9000
  1509 hyphenation exceptions out of 8191
  105i,17n,135p,1134b,32981s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on paper.xdv (24 pages, 1008892 bytes).
+Output written on paper.xdv (24 pages, 1012156 bytes).

@@ -1,18 +1,18 @@
 # Fdb version 4
-["bibtex paper_CN"] 1792573380.83978 "paper_CN.aux" "paper_CN.bbl" "paper_CN" 1792573390.03374 0
+["bibtex paper_CN"] 1792748424.94781 "paper_CN.aux" "paper_CN.bbl" "paper_CN" 1792748434.30835 0
   "./ACM-Reference-Format.bst" 1785081366 96784 12e0ced1522ea2bfa9b2fb12855c7e9e ""
-  "./reference-base.bib" 1788769754 51935 dba4a9acf6234c4c73143dc35bd0d8e5 ""
-  "paper_CN.aux" 1792573387 41745 61750f2005b137e547a9dd1dd93890c4 "xelatex"
+  "./reference-base.bib" 1792748019 52167 cd3af13cb86b848ef05860831c3df8f4 ""
+  "paper_CN.aux" 1792748431 41775 dddcb6eef14371eb913c42f563c12851 "xelatex"
   (generated)
   "paper_CN.bbl"
   "paper_CN.blg"
   (rewritten before read)
-["xdvipdfmx"] 1792573388.8864 "paper_CN.xdv" "paper_CN.pdf" "paper_CN" 1792573390.04973 0
-  "paper_CN.xdv" 1792573387 1130800 612e1846d589b7ec371fb71de1b2485d "xelatex"
+["xdvipdfmx"] 1792748433.12933 "paper_CN.xdv" "paper_CN.pdf" "paper_CN" 1792748434.32392 0
+  "paper_CN.xdv" 1792748431 1134076 af7d2b6a34d64be220dbb0387dfa4784 "xelatex"
   (generated)
   "paper_CN.pdf"
   (rewritten before read)
-["xelatex"] 1792573381.35904 "paper_CN.tex" "paper_CN.xdv" "paper_CN" 1792573390.03409 0
+["xelatex"] 1792748425.45884 "paper_CN.tex" "paper_CN.xdv" "paper_CN" 1792748434.30872 0
   "acmart.cls" 1785081366 126055 54cc4edcc7b9cb1bf0a23c528626957c ""
   "c:/Windows/Fonts/msyh.ttc" 1739494707 19704352 1e10e74402e59d54499af795caf0b135 ""
   "c:/texlive/2024/texmf-dist/fonts/map/fontname/texfonts.map" 1724822318 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -249,19 +249,19 @@
   "c:/texlive/2024/texmf-dist/web2c/texmf.cnf" 1724821019 41649 5d6ae549fbbcb850a863f69aa41f3d10 ""
   "c:/texlive/2024/texmf-var/web2c/xetex/xelatex.fmt" 1724825536 10849589 def9a8d332e8fcd5b6e45ef3e4b2b96c ""
   "c:/texlive/2024/texmf.cnf" 1724825350 713 e69b156964470283e0530f5060668171 ""
-  "fig/fig_case_chain_CN.pdf" 1788764018 40923 b6c0406d4418ebed6aedfc63695a939e ""
-  "fig/fig_case_gantt_CN.pdf" 1788763990 54086 66dbfda5a8912b69c5246ca5491139a2 ""
-  "fig/fig_convergence_closedloop_CN.pdf" 1788764000 49752 d2e44594372e03dc93b0e9031f0f32eb ""
-  "fig/fig_framework_CN.pdf" 1786335629 81468 a73c6db6f2af698216f31685e8d7f8c8 ""
-  "fig/fig_motivating_CN.pdf" 1792559861 23916749 fb2690acedb6cc78e2acf1e988c59ddd ""
-  "fig/fig_prediction3_CN.pdf" 1788764003 48005 88cb2a8228221a597c64fb6921cc131f ""
-  "fig/fig_protocol_CN.pdf" 1788764011 44456 1cef1c65e97db9e183eb634ebeefd92f ""
-  "fig/fig_protocols_CN.pdf" 1788763995 44238 147b858d3a7a2af994dc80ca51d4cb75 ""
-  "fig/fig_theta_CN.pdf" 1792567314 51533 a14f26570b6e0e22c005769c69417712 ""
-  "paper_CN.aux" 1792573387 41745 61750f2005b137e547a9dd1dd93890c4 "xelatex"
-  "paper_CN.bbl" 1792573381 17696 60af73960aebe6b253c950cf319c1a2c "bibtex paper_CN"
-  "paper_CN.out" 1792573387 6067 54b366e6d3a7122f6802bf563f1f5f48 "xelatex"
-  "paper_CN.tex" 1792573353 178042 e68cdc6aaf8c389b62e26703715d95f1 ""
+  "fig/fig_case_chain_CN.pdf" 1792573531 44919 5b1415c46a85f2852edf24f102733b2d ""
+  "fig/fig_case_gantt_CN.pdf" 1792573529 63696 3ea93ed00e41d219f38279ca9413731b ""
+  "fig/fig_convergence_closedloop_CN.pdf" 1792573472 54280 abdb25148142825f7048882ea0929920 ""
+  "fig/fig_framework_CN.pdf" 1792573606 90323 a5e1e2ccec38dc525184acafff65ab3d ""
+  "fig/fig_motivating_CN.pdf" 1792741040 23916749 7a5d169a80818b32ad626069c0655504 ""
+  "fig/fig_prediction3_CN.pdf" 1792573471 63500 9211ed45bf5f3507a9e52f96d20ca529 ""
+  "fig/fig_protocol_CN.pdf" 1792573554 47674 b51c6e1e88de7dfeaac7e9a903b1e9f9 ""
+  "fig/fig_protocols_CN.pdf" 1792573475 58155 98cefe97181d6682ee1d94458d697a6d ""
+  "fig/fig_theta_CN.pdf" 1792573608 51017 97abf147c0125fb080f053aa90f9fbdd ""
+  "paper_CN.aux" 1792748431 41775 dddcb6eef14371eb913c42f563c12851 "xelatex"
+  "paper_CN.bbl" 1792748425 17965 07dd6a28a6f149c157b3b5d05e13bafc "bibtex paper_CN"
+  "paper_CN.out" 1792748431 6067 54b366e6d3a7122f6802bf563f1f5f48 "xelatex"
+  "paper_CN.tex" 1792747069 178113 b7a6f93c1621dfcf6b944e77221c38a1 ""
   "tab/tab_bytag.tex" 1788145012 1282 d4a2e7209d10ab4ee917b98d49af8d69 ""
   "tab/tab_external.tex" 1788145043 1737 bcac65603a91dd807cd6e41e1df738ac ""
   "tab/tab_instances.tex" 1788145048 937 14e1a696421670de7f5f20446151e70a ""
