@@ -1,0 +1,14 @@
+\begin{abstract}
+Flexible job shop scheduling with transport usually takes travel times from a constant matrix, assuming that vehicles never interfere.
+When a finite fleet shares a sparse corridor network, travel time becomes the outcome of routing (conflict-free path planning), so one job's corridor occupancy delays other jobs.
+We study shops where transport outlasts processing, congestion concentrates on a few shared corridors, each operation can use one of several robotic arms that are homogeneous in capability but heterogeneous in efficiency, and AGVs travel conflict-free.
+A slower, better-connected arm may then beat a fast arm behind a congested corridor; prior work has not measured this trade-off within the evaluation objective of the search.
+
+We propose a \emph{closed-loop bilevel framework}: the upper level assigns machines and sequences operations, and the lower level plans conflict-free paths by time-window reservation.
+Routing-in-the-loop evaluation takes each candidate's fitness as its makespan after conflict-free routing, so yielding delay enters the search objective instead of a post-hoc check.
+Reservation-table-aware dispatching trial-queries both transport legs on the current reservation table and picks the vehicle with the earliest actual delivery.
+Two speed-ups keep dispatching low-overhead, and we prove that they change neither the selected vehicle nor the final timetable.
+
+On \NCases{} controlled instances (contention intensity \ContentionLo{} to \ContentionHi{}), with \NSeeds{} seeds per instance, an equal wall-clock budget and corrected paired tests, the complete method reduces the realized makespan by \GainEndToEnd{} (\WinEndToEnd{} wins, \LoseEndToEnd{} losses) relative to the literature's open-loop structure, which ignores conflicts in the search and dispatches by unimpeded travel time.
+Most of this comes from the closed loop: with dispatching fixed, counting conflict-induced delay in the search reduces makespan by \GainLoopRule{}, significantly on the vast majority of instances. Reservation-table-aware dispatching is a much smaller effect, significant only when all instances are pooled. The two mechanisms each work on their own and do not amplify each other.
+\end{abstract}

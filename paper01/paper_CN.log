@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.8.28)  29 SEP 2026 17:15
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.8.28)  21 OCT 2026 17:03
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -2179,7 +2179,7 @@ Package caption Info: Begin \AtBeginDocument code.
 Package caption Info: float package is loaded.
 Package caption Info: End \AtBeginDocument code.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 12.0pt on input line 553.
+(Font)              scaled to size 12.0pt on input line 550.
 
 Package fontspec Info: Could not resolve font "Microsoft YaHei Bold/I" (it
 (fontspec)             probably doesn't exist).
@@ -2189,7 +2189,7 @@ Package fontspec Info: Could not resolve font "Microsoft YaHei/I" (it probably
 (fontspec)             doesn't exist).
 
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/n' will be
-(Font)              scaled to size 9.0pt on input line 553.
+(Font)              scaled to size 9.0pt on input line 550.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `LinBiolinum' (encoding: TU).
 (microtype)             For optimal results, create family-specific settings.
@@ -2213,35 +2213,35 @@ Package fontspec Info: Font family 'MicrosoftYaHei(0)' created for font
 (fontspec)             - 'bold italic small caps'  (b/scit) with NFSS spec.: 
 
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/n' will be
-(Font)              scaled to size 12.0pt on input line 553.
+(Font)              scaled to size 12.0pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/b/n' will be
-(Font)              scaled to size 12.0pt on input line 553.
+(Font)              scaled to size 12.0pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 553.
+(Font)              scaled to size 10.95pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 553.
+(Font)              scaled to size 10.95pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(1)/m/n' will be
-(Font)              scaled to size 11.36603pt on input line 553.
+(Font)              scaled to size 11.36603pt on input line 550.
 Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             `LibertinusMath-Regular.otf' (encoding: TU).
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(1)/m/n' will be
-(Font)              scaled to size 8.30396pt on input line 553.
+(Font)              scaled to size 8.30396pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(1)/m/n' will be
-(Font)              scaled to size 6.22797pt on input line 553.
+(Font)              scaled to size 6.22797pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/m/n' will be
-(Font)              scaled to size 11.36703pt on input line 553.
+(Font)              scaled to size 11.36703pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/m/n' will be
-(Font)              scaled to size 8.30469pt on input line 553.
+(Font)              scaled to size 8.30469pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/m/n' will be
-(Font)              scaled to size 6.22852pt on input line 553.
+(Font)              scaled to size 6.22852pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/m/n' will be
-(Font)              scaled to size 11.36485pt on input line 553.
+(Font)              scaled to size 11.36485pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/m/n' will be
-(Font)              scaled to size 8.3031pt on input line 553.
+(Font)              scaled to size 8.3031pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/m/n' will be
-(Font)              scaled to size 6.22733pt on input line 553.
+(Font)              scaled to size 6.22733pt on input line 550.
 (c:/texlive/2024/texmf-dist/tex/latex/microtype/mt-msa.cfg
 File: mt-msa.cfg 2006/02/04 v1.1 microtype config. file: AMS symbols (a) (RS)
 )
@@ -2253,131 +2253,135 @@ Package microtype Info: Loading generic protrusion settings for font family
 (microtype)             For optimal results, create family-specific settings.
 (microtype)             See the microtype manual for details.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(1)/b/n' will be
-(Font)              scaled to size 11.36603pt on input line 553.
+(Font)              scaled to size 11.36603pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(1)/b/n' will be
-(Font)              scaled to size 8.30396pt on input line 553.
+(Font)              scaled to size 8.30396pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(1)/b/n' will be
-(Font)              scaled to size 6.22797pt on input line 553.
+(Font)              scaled to size 6.22797pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/b/n' will be
-(Font)              scaled to size 11.36703pt on input line 553.
+(Font)              scaled to size 11.36703pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/b/n' will be
-(Font)              scaled to size 8.30469pt on input line 553.
+(Font)              scaled to size 8.30469pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/b/n' will be
-(Font)              scaled to size 6.22852pt on input line 553.
+(Font)              scaled to size 6.22852pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/b/n' will be
-(Font)              scaled to size 11.36485pt on input line 553.
+(Font)              scaled to size 11.36485pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/b/n' will be
-(Font)              scaled to size 8.3031pt on input line 553.
+(Font)              scaled to size 8.3031pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/b/n' will be
-(Font)              scaled to size 6.22733pt on input line 553.
+(Font)              scaled to size 6.22733pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(1)/b/n' will be
-(Font)              scaled to size 7.26596pt on input line 553.
+(Font)              scaled to size 7.26596pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/b/n' will be
-(Font)              scaled to size 7.2666pt on input line 553.
+(Font)              scaled to size 7.2666pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/b/n' will be
-(Font)              scaled to size 7.26521pt on input line 553.
+(Font)              scaled to size 7.26521pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 5.0pt on input line 553.
+(Font)              scaled to size 5.0pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 8.0pt on input line 553.
+(Font)              scaled to size 8.0pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
-(Font)              scaled to size 8.0pt on input line 553.
+(Font)              scaled to size 8.0pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/b/n' will be
-(Font)              scaled to size 8.0pt on input line 553.
+(Font)              scaled to size 8.0pt on input line 550.
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/b/n' will be
-(Font)              scaled to size 9.0pt on input line 554.
+(Font)              scaled to size 9.0pt on input line 551.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 6.0pt on input line 567.
+(Font)              scaled to size 6.0pt on input line 565.
  [1.1]
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(1)/m/n' will be
-(Font)              scaled to size 7.47354pt on input line 578.
+(Font)              scaled to size 7.47354pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(1)/m/n' will be
-(Font)              scaled to size 5.60515pt on input line 578.
+(Font)              scaled to size 5.60515pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/m/n' will be
-(Font)              scaled to size 9.34277pt on input line 578.
+(Font)              scaled to size 9.34277pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/m/n' will be
-(Font)              scaled to size 7.47421pt on input line 578.
+(Font)              scaled to size 7.47421pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/m/n' will be
-(Font)              scaled to size 5.60565pt on input line 578.
+(Font)              scaled to size 5.60565pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/m/n' will be
-(Font)              scaled to size 9.34099pt on input line 578.
+(Font)              scaled to size 9.34099pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/m/n' will be
-(Font)              scaled to size 7.47278pt on input line 578.
+(Font)              scaled to size 7.47278pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/m/n' will be
-(Font)              scaled to size 5.60458pt on input line 578.
+(Font)              scaled to size 5.60458pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(1)/b/n' will be
-(Font)              scaled to size 9.34195pt on input line 578.
+(Font)              scaled to size 9.34195pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(1)/b/n' will be
-(Font)              scaled to size 7.47354pt on input line 578.
+(Font)              scaled to size 7.47354pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(1)/b/n' will be
-(Font)              scaled to size 5.60515pt on input line 578.
+(Font)              scaled to size 5.60515pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/b/n' will be
-(Font)              scaled to size 9.34277pt on input line 578.
+(Font)              scaled to size 9.34277pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/b/n' will be
-(Font)              scaled to size 7.47421pt on input line 578.
+(Font)              scaled to size 7.47421pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(2)/b/n' will be
-(Font)              scaled to size 5.60565pt on input line 578.
+(Font)              scaled to size 5.60565pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/b/n' will be
-(Font)              scaled to size 9.34099pt on input line 578.
+(Font)              scaled to size 9.34099pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/b/n' will be
-(Font)              scaled to size 7.47278pt on input line 578.
+(Font)              scaled to size 7.47278pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LibertinusMath-Regular.otf(3)/b/n' will be
-(Font)              scaled to size 5.60458pt on input line 578.
+(Font)              scaled to size 5.60458pt on input line 575.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 9.0pt on input line 583.
+(Font)              scaled to size 9.0pt on input line 580.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 7.2pt on input line 583.
+(Font)              scaled to size 7.2pt on input line 580.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 5.4pt on input line 583.
+(Font)              scaled to size 5.4pt on input line 580.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 7.2pt on input line 585.
+(Font)              scaled to size 7.2pt on input line 582.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 5.4pt on input line 585.
+(Font)              scaled to size 5.4pt on input line 582.
 File: fig/fig_motivating_CN.pdf Graphic file (type pdf)
 <use fig/fig_motivating_CN.pdf>
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/n' will be
-(Font)              scaled to size 8.0pt on input line 611.
+(Font)              scaled to size 8.0pt on input line 608.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 8.0pt on input line 611.
+(Font)              scaled to size 8.0pt on input line 608.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 6.0pt on input line 611.
+(Font)              scaled to size 6.0pt on input line 608.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 5.0pt on input line 611.
+(Font)              scaled to size 5.0pt on input line 608.
  [2.2]
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
-(Font)              scaled to size 9.0pt on input line 634.
+(Font)              scaled to size 9.0pt on input line 632.
+
+[3.3]
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/b/n' will be
-(Font)              scaled to size 9.0pt on input line 649.
-
-Underfull \vbox (badness 1838) has occurred while \output is active []
-
- [3.3]
+(Font)              scaled to size 9.0pt on input line 644.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/b/it' will be
-(Font)              scaled to size 9.0pt on input line 682.
+(Font)              scaled to size 9.0pt on input line 678.
 
 
 LaTeX Font Warning: Font shape `TU/SimSun(0)/b/it' undefined
-(Font)              using `TU/SimSun(0)/b/n' instead on input line 682.
+(Font)              using `TU/SimSun(0)/b/n' instead on input line 678.
 
-
-Underfull \vbox (badness 4048) has occurred while \output is active []
-
- [4.4]
-[5.5]
+[4.4] [5.5]
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 7.0pt on input line 804.
+(Font)              scaled to size 7.0pt on input line 747.
+
+Underfull \hbox (badness 1142) in paragraph at lines 760--761
+[]\TU/SimSun(0)/m/n/7 强 化 学 习 排 产 与 多 车 路 径 的
+ []
+
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/b/n' will be
-(Font)              scaled to size 7.0pt on input line 820.
- [6.6] [7.7]
-Underfull \vbox (badness 10000) has occurred while \output is active []
+(Font)              scaled to size 7.0pt on input line 765.
+
+Underfull \hbox (badness 1142) in paragraph at lines 766--767
+[]\TU/SimSun(0)/b/n/7 走 廊 争 用 下 快 慢 臂 的 改 派 权
+ []
+
+[6.6] [7.7]
+Underfull \vbox (badness 5637) has occurred while \output is active []
 
  [8.8]
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/sc' will be
-(Font)              scaled to size 9.0pt on input line 1001.
+(Font)              scaled to size 9.0pt on input line 944.
 
 
 LaTeX Font Warning: Font shape `TU/SimSun(0)/m/sc' undefined
-(Font)              using `TU/SimSun(0)/m/n' instead on input line 1001.
+(Font)              using `TU/SimSun(0)/m/n' instead on input line 944.
 
 [9.9]
 
@@ -2407,87 +2411,104 @@ Package fontspec Info: Font family 'FangSong(0)' created for font 'FangSong'
 (fontspec)             <->"FangSong/OT:script=hani;language=dflt;"
 (fontspec)             - 'small caps'  (m/sc) with NFSS spec.: 
 
- [10.10]
 File: fig/fig_framework_CN.pdf Graphic file (type pdf)
 <use fig/fig_framework_CN.pdf>
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/it' will be
-(Font)              scaled to size 9.0pt on input line 1117.
+(Font)              scaled to size 9.0pt on input line 1057.
 
 
 LaTeX Font Warning: Font shape `TU/MicrosoftYaHei(0)/m/it' undefined
-(Font)              using `TU/MicrosoftYaHei(0)/m/n' instead on input line 1117
+(Font)              using `TU/MicrosoftYaHei(0)/m/n' instead on input line 1057
 .
 
-[11.11]
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [10.10]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 1149.
+put line 1087.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/sc' will be
-(Font)              scaled to size 8.0pt on input line 1162.
- [12.12] [13.13] [14.14] [15.15] [16.16] [17.17]
-(./tab/tab_instances.tex) [18.18] [19.19]
+(Font)              scaled to size 8.0pt on input line 1100.
+
+[11.11] [12.12] [13.13] [14.14] [15.15]
+Underfull \vbox (badness 2865) has occurred while \output is active []
+
+ [16.16]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [17.17]
+(./tab/tab_instances.tex)
+Underfull \hbox (badness 7168) in paragraph at lines 1497--1497
+[]\TU/SimSun(0)/m/n/7 同 挂 钟 与 同 代
+ []
+
+
+Underfull \hbox (badness 7925) in paragraph at lines 1499--1499
+[]\TU/SimSun(0)/m/n/7 交 叉 核 对、| $[]$、|  消 融
+ []
+
+[18.18] [19.19]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/n' will be
-(Font)              scaled to size 6.0pt on input line 1674.
+(Font)              scaled to size 6.0pt on input line 1602.
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/n' will be
-(Font)              scaled to size 5.0pt on input line 1674.
+(Font)              scaled to size 5.0pt on input line 1602.
  (./tab/tab_main.tex) [20.20]
 File: fig/fig_convergence_closedloop_CN.pdf Graphic file (type pdf)
 <use fig/fig_convergence_closedloop_CN.pdf>
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/it' will be
-(Font)              scaled to size 8.0pt on input line 1709.
+(Font)              scaled to size 8.0pt on input line 1636.
+
+Underfull \vbox (badness 2582) has occurred while \output is active []
+
  [21.21]
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [22.22]
+[22.22]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/b/n' will be
-(Font)              scaled to size 8.0pt on input line 1786.
-
-(./tab/tab_bytag.tex)
+(Font)              scaled to size 8.0pt on input line 1696.
+ (./tab/tab_bytag.tex)
 File: fig/fig_prediction3_CN.pdf Graphic file (type pdf)
 <use fig/fig_prediction3_CN.pdf>
- [23.23] [24.24]
+ [23.23]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [24.24]
 File: fig/fig_theta_CN.pdf Graphic file (type pdf)
 <use fig/fig_theta_CN.pdf>
 
-Underfull \vbox (badness 1558) has occurred while \output is active []
-
- [25.25]
-[26.26]
+[25.25]
 File: fig/fig_protocol_CN.pdf Graphic file (type pdf)
 <use fig/fig_protocol_CN.pdf>
 File: fig/fig_protocols_CN.pdf Graphic file (type pdf)
 <use fig/fig_protocols_CN.pdf>
- (./tab/tab_prune.tex) [27.27]
+ [26.26] (./tab/tab_prune.tex) [27.27] [28.28]
 File: fig/fig_case_gantt_CN.pdf Graphic file (type pdf)
 <use fig/fig_case_gantt_CN.pdf>
 File: fig/fig_case_chain_CN.pdf Graphic file (type pdf)
 <use fig/fig_case_chain_CN.pdf>
- [28.28] [29.29]
+ [29.29] [30.30]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/sc' will be
-(Font)              scaled to size 8.0pt on input line 2070.
- (./tab/tab_external.tex)
-[30.30]
-Underfull \vbox (badness 1668) has occurred while \output is active []
+(Font)              scaled to size 8.0pt on input line 1976.
 
- [31.31]
-Underfull \vbox (badness 5460) has occurred while \output is active []
-
- [32.32]
-[33.33] (./paper_CN.bbl
+(./tab/tab_external.tex) [31.31] [32.32] (./paper_CN.bbl
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
 (Font)              scaled to size 7.0pt on input line 46.
 
-Underfull \vbox (badness 2698) has occurred while \output is active []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
- [34.34])
+ [33.33])
 
 Class acmart Warning: \vspace should only be used to provide space above/below 
-surrounding objects on input line 2188.
+surrounding objects on input line 2091.
 
 
 Class acmart Warning: CCS concepts are mandatory for papers over two pages.
 
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [34.34]
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 2188.
+(Font)              scaled to size 10.95pt on input line 2091.
+
 (c:/texlive/2024/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
 File: se-pdfdoc.def 2019/11/29 v1.12 stringenc: PDFDocEncoding
 )
@@ -2504,15 +2525,15 @@ L3 programming layer <2022/07/14>
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 Package rerunfilecheck Info: File `paper_CN.out' has not changed.
-(rerunfilecheck)             Checksum: C1447E17FB918BF3D9E9F705AF793189;6091.
+(rerunfilecheck)             Checksum: 54B366E6D3A7122F6802BF563F1F5F48;6067.
  ) 
 Here is how much of TeX's memory you used:
- 50261 strings out of 474772
- 1081738 string characters out of 5761268
- 1982842 words of memory out of 5000000
- 71404 multiletter control sequences out of 15000+600000
- 572282 words of font info for 227 fonts, out of 8000000 for 9000
+ 50313 strings out of 474772
+ 1085173 string characters out of 5761268
+ 1981842 words of memory out of 5000000
+ 71460 multiletter control sequences out of 15000+600000
+ 572250 words of font info for 223 fonts, out of 8000000 for 9000
  1509 hyphenation exceptions out of 8191
  105i,17n,135p,1005b,32981s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on paper_CN.xdv (35 pages, 1160760 bytes).
+Output written on paper_CN.xdv (35 pages, 1130800 bytes).

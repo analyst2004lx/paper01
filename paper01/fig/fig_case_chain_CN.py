@@ -47,7 +47,6 @@ def main() -> None:
 
     for x, arm in enumerate(order):
         bottom = 0.0
-        slices = []
         stack = sum(comps[arm].values())
         for k, label, colour in kinds:
             v = comps[arm][k]
@@ -56,9 +55,11 @@ def main() -> None:
             ax.bar(x, v, bottom=bottom, width=0.55, color=colour,
                    edgecolor="white", linewidth=0.6,
                    label=label if x == 0 else None, zorder=3)
-            slices.append((bottom, v, colour))
+            if v >= 0.06 * stack:
+                ax.text(x, bottom + v / 2, "%.0f" % v, ha="center",
+                        va="center", fontsize=6.2, color="white",
+                        fontweight="bold", zorder=4)
             bottom += v
-        src._label_slices(ax, x, slices, stack)
 
     d_corr = comps["B0"]["corridor"] - comps["B2"]["corridor"]
     d_mk = arms["B0"]["makespan"] - arms["B2"]["makespan"]

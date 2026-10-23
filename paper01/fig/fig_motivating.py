@@ -45,10 +45,10 @@ STRINGS = {
     "m3_jobs": "{n:.0f} jobs that can only\nbe processed on M3",
     "m3_yield": "Jobs that can only use M3\ncross the trunk repeatedly\n→ yielding wait",
     "two_assign": (
-        "The job starts at LU, is processed, then returns (J1 only; unimpeded, no other vehicles)\n"
-        "Fast arm M1: LU--$v_1$--$v_2$--M1, one way $1+{tau:.0f}+1={one1:.0f}$, "
+        "The job starts at the L/U point $v_0$, is processed, then returns (J1 only; unimpeded, no other vehicles)\n"
+        "Fast arm M1: $v_0$--$v_1$--$v_2$--M1, one way $1+{tau:.0f}+1={one1:.0f}$, "
         "round trip ${t1:.0f}$, + processing ${p1:.0f}$ $=${s1:.0f}\n"
-        "Slow arm M2: LU--$v_1$--M2, one way $1+2={one2:.0f}$, "
+        "Slow arm M2: $v_0$--$v_1$--M2, one way $1+2={one2:.0f}$, "
         "round trip ${t2:.0f}$, + processing ${p2:.0f}$ $=${s2:.0f}"
     ),
     "assign_ylim_lo": -1.70,
@@ -73,7 +73,7 @@ STRINGS = {
     "reversal_pad": 0.22,
     "reversal_ls": 1.15,
     "bars_note_at": "below_delta",
-    "bars_note": "A bar is the time the last job returns to LU",
+    "bars_note": "A bar is the time the last job returns to $v_0$",
 }
 
 
@@ -116,7 +116,7 @@ def panel_layout(ax, p, S=None) -> None:
     ax.text(0.0, 2.85, S["avoids_trunk"], ha="left", va="center",
             fontsize=8, color=C_SLOW)
 
-    node(ax, *P["v0"], "LU", fc="#dceaf8", ec="#08519c", r=0.36, bold=True)
+    node(ax, *P["v0"], "$v_0$", fc="#dceaf8", ec="#08519c", r=0.36, bold=True)
     node(ax, *P["v1"], "$v_1$")
     node(ax, *P["v2"], "$v_2$")
     node(ax, *P["m1"], "M1", fc="#e8f5e9", ec=C_FAST, r=0.36, bold=True)

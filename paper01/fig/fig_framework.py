@@ -76,7 +76,7 @@ def main() -> None:
     # ---- upper layer: the memetic search -------------------------------
     box(ax, 2, 5, 25, 45, "", fc=C_BOX, ec=C_EDGE, lw=1.0,
         style="round,pad=0.2", zorder=1)
-    ax.text(14.5, 52.6, "Upper layer:  memetic search", ha="center",
+    ax.text(14.5, 52.6, "Upper layer:  memetic algorithm", ha="center",
             va="center", fontsize=7.8, fontweight="bold")
     box(ax, 4.5, 37, 20, 7.5, "Chromosome population\n"
                               "(assignment, sequence)")
@@ -98,8 +98,8 @@ def main() -> None:
     box(ax, 34.5, 40, 25, 5.5, "Pop the next ready operation")
     box(ax, 34.5, 30, 25, 7.5, "Derive its transport task\n"
                                "(pickup, drop-off, ready)")
-    box(ax, 34.5, 18, 25, 9, "Choose the vehicle:\nprobe the table\n"
-                             "for each candidate",
+    box(ax, 34.5, 18, 25, 9, "Choose the vehicle:\ntrial query on the\n"
+                             "table per candidate",
         ec=C_DEC, lw=1.4, weight="bold", color=C_DEC)
     box(ax, 34.5, 8, 25, 7.5, "Commit reservations,\nadvance the clock")
     arrow(ax, (47, 40), (47, 37.5))
@@ -114,8 +114,8 @@ def main() -> None:
             va="center", fontsize=7.8, fontweight="bold")
     box(ax, 72, 35.5, 23, 9.5, "Time-window Dijkstra\n"
                                "on the aisle network\n(earliest arrival)")
-    box(ax, 72, 21, 23, 9.5, "Reservation table\ncorridor occupancies\n"
-                             "with headway")
+    box(ax, 72, 21, 23, 9.5, "Reservation table\ncorridor occupancy\n"
+                             "intervals")
     box(ax, 72, 8, 23, 8, "Trial route, then roll back\n(no trace left)",
         ec=C_DEC, lw=1.0, color=C_DEC)
     arrow(ax, (80, 35.5), (80, 30.5))                 # ask for a feasible entry

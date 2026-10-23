@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""走廊时段加价中文版。数据与 fig_theta.py 相同，输出 fig_theta_CN。"""
+"""走廊时段附加代价中文版。数据与 fig_theta.py 相同，输出 fig_theta_CN。"""
 from __future__ import annotations
 
 import os
@@ -14,7 +14,7 @@ from fig_theta import series  # noqa: E402
 
 S.use_cjk()
 
-TAG_CN = {"low": "低争用", "mid": "中争用", "high": "高争用", "funnel": "漏斗"}
+TAG_CN = {"low": "low", "mid": "mid", "high": "high", "funnel": "funnel"}
 
 
 def main():
@@ -49,7 +49,7 @@ def main():
                 ax2.plot(thetas, cost, ls=":", lw=0.9,
                          color=S.TAG_COLOR.get(tag, "0.3"), alpha=0.55)
         ax.axhline(0, color="0.4", lw=0.8)
-        ax.set_xlabel(r"加价强度 $\theta$")
+        ax.set_xlabel(r"代价系数 $\theta$")
         ax.set_title(title, fontsize=7.6, pad=4)
         if ax2 is not None:
             ax2.set_ylabel("单次评价耗时（虚线，ms）", fontsize=7,
