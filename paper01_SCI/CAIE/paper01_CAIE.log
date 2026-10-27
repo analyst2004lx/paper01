@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.8.28)  23 OCT 2026 17:40
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.8.28)  26 OCT 2026 16:10
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -855,24 +855,24 @@ Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
 (./paper01_CAIE.aux)
 \openout1 = `paper01_CAIE.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 356.
-LaTeX Font Info:    ... okay on input line 356.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 356.
-LaTeX Font Info:    ... okay on input line 356.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 356.
-LaTeX Font Info:    ... okay on input line 356.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 356.
-LaTeX Font Info:    ... okay on input line 356.
-LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 356.
-LaTeX Font Info:    ... okay on input line 356.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 356.
-LaTeX Font Info:    ... okay on input line 356.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 356.
-LaTeX Font Info:    ... okay on input line 356.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 356.
-LaTeX Font Info:    ... okay on input line 356.
-LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 356.
-LaTeX Font Info:    ... okay on input line 356.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 361.
+LaTeX Font Info:    ... okay on input line 361.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 361.
+LaTeX Font Info:    ... okay on input line 361.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 361.
+LaTeX Font Info:    ... okay on input line 361.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 361.
+LaTeX Font Info:    ... okay on input line 361.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 361.
+LaTeX Font Info:    ... okay on input line 361.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 361.
+LaTeX Font Info:    ... okay on input line 361.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 361.
+LaTeX Font Info:    ... okay on input line 361.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 361.
+LaTeX Font Info:    ... okay on input line 361.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 361.
+LaTeX Font Info:    ... okay on input line 361.
 
 (c:/texlive/2024/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
@@ -896,7 +896,7 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
-Package hyperref Info: Link coloring OFF on input line 356.
+Package hyperref Info: Link coloring OFF on input line 361.
 
 (./paper01_CAIE.out) (./paper01_CAIE.out)
 \@outlinefile=\write5
@@ -905,19 +905,19 @@ Package hyperref Info: Link coloring OFF on input line 356.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\<def>-command' on input line 400.
+(hyperref)                removing `\<def>-command' on input line 408.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\cnotenum' on input line 400.
+(hyperref)                removing `\cnotenum' on input line 408.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\<def>-command' on input line 400.
+(hyperref)                removing `\<def>-command' on input line 408.
 
 
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
-(hyperref)                removing `\@corref' on input line 400.
+(hyperref)                removing `\@corref' on input line 408.
 
 [1
 
@@ -932,7 +932,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{page.1}) has
 been already used, duplicate ignored
 <to be read again> 
                    \relax 
-l.400 \end{frontmatter}
+l.408 \end{frontmatter}
                         [1
 
 
@@ -940,73 +940,73 @@ l.400 \end{frontmatter}
 <fig/fig_motivating.pdf, id=228, 827.71233pt x 341.89572pt>
 File: fig/fig_motivating.pdf Graphic file (type pdf)
 <use fig/fig_motivating.pdf>
-Package pdftex.def Info: fig/fig_motivating.pdf  used on input line 425.
+Package pdftex.def Info: fig/fig_motivating.pdf  used on input line 433.
 (pdftex.def)             Requested size: 390.0pt x 161.09792pt.
  [3] [4 <./fig/fig_motivating.pdf>] [5] [6]
 [7] [8] [9] [10] [11] [12] [13] [14] [15] [16]
-<fig/fig_framework.pdf, id=508, 394.95557pt x 192.09367pt>
+<fig/fig_framework.pdf, id=507, 394.95557pt x 192.09367pt>
 File: fig/fig_framework.pdf Graphic file (type pdf)
 <use fig/fig_framework.pdf>
-Package pdftex.def Info: fig/fig_framework.pdf  used on input line 679.
-(pdftex.def)             Requested size: 312.00119pt x 151.75233pt.
+Package pdftex.def Info: fig/fig_framework.pdf  used on input line 687.
+(pdftex.def)             Requested size: 390.0pt x 189.68968pt.
  [17 <./fig/fig_framework.pdf>]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 713.
+put line 721.
 
-[18] [19] [20] [21] [22] [23]
-Underfull \hbox (badness 10000) in paragraph at lines 862--863
+[18] [19] [20] [21] [22] [23] [24]
+Underfull \hbox (badness 10000) in paragraph at lines 870--871
 []|\OT1/cmr/m/n/10 recurse to
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 864--865
+Underfull \hbox (badness 10000) in paragraph at lines 872--873
 []|\OT1/cmr/m/n/10 reassignment
  []
 
-[24] [25] [26] [27] (./tab/tab_instances_EN.tex)
-Underfull \hbox (badness 10000) in paragraph at lines 3--917
+[25] [26] [27] (./tab/tab_instances_EN.tex)
+Underfull \hbox (badness 10000) in paragraph at lines 3--925
 []
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 3--917
+Underfull \hbox (badness 10000) in paragraph at lines 3--925
 
  []
 
-[28] [29] [30] (./tab/tab_main_EN.tex)
-Underfull \hbox (badness 10000) in paragraph at lines 28--1002
+[28] [29] [30] [31] (./tab/tab_main_EN.tex)
+Underfull \hbox (badness 10000) in paragraph at lines 28--1010
 
  []
 
-[31] [32] [33] (./tab/tab_bytag_EN.tex)
-Underfull \hbox (badness 10000) in paragraph at lines 3--1041
+[32] [33] (./tab/tab_bytag_EN.tex)
+Underfull \hbox (badness 10000) in paragraph at lines 3--1049
 
  []
 
-<fig/fig_prediction3.pdf, id=765, 496.82727pt x 169.16081pt>
+<fig/fig_prediction3.pdf, id=766, 496.82727pt x 169.16081pt>
 File: fig/fig_prediction3.pdf Graphic file (type pdf)
 <use fig/fig_prediction3.pdf>
-Package pdftex.def Info: fig/fig_prediction3.pdf  used on input line 1045.
-(pdftex.def)             Requested size: 312.00119pt x 106.23114pt.
-[34 <./fig/fig_prediction3.pdf>] [35] [36] [37] [38]
-<fig/fig_protocol.pdf, id=878, 232.71764pt x 166.52632pt>
+Package pdftex.def Info: fig/fig_prediction3.pdf  used on input line 1053.
+(pdftex.def)             Requested size: 390.0pt x 132.79152pt.
+[34] [35 <./fig/fig_prediction3.pdf>] [36] [37] [38]
+<fig/fig_protocol.pdf, id=879, 232.71764pt x 166.52632pt>
 File: fig/fig_protocol.pdf Graphic file (type pdf)
 <use fig/fig_protocol.pdf>
-Package pdftex.def Info: fig/fig_protocol.pdf  used on input line 1107.
-(pdftex.def)             Requested size: 234.00238pt x 167.45335pt.
+Package pdftex.def Info: fig/fig_protocol.pdf  used on input line 1115.
+(pdftex.def)             Requested size: 272.99881pt x 195.37369pt.
  [39 <./fig/fig_protocol.pdf>] (./tab/tab_prune_EN.tex)
-Underfull \hbox (badness 10000) in paragraph at lines 3--1130
+Underfull \hbox (badness 10000) in paragraph at lines 3--1138
 
  []
 
 [40]
-<fig/fig_case.pdf, id=952, 491.57538pt x 443.13997pt>
+<fig/fig_case.pdf, id=953, 491.57538pt x 443.13997pt>
 File: fig/fig_case.pdf Graphic file (type pdf)
 <use fig/fig_case.pdf>
-Package pdftex.def Info: fig/fig_case.pdf  used on input line 1141.
+Package pdftex.def Info: fig/fig_case.pdf  used on input line 1149.
 (pdftex.def)             Requested size: 390.0pt x 351.57784pt.
- [41 <./fig/fig_case.pdf>] (./tab/tab_external_EN.tex) [42] [43]
-Underfull \hbox (badness 3108) in paragraph at lines 1183--1184
+ [41] [42 <./fig/fig_case.pdf>] (./tab/tab_external_EN.tex) [43]
+Underfull \hbox (badness 3108) in paragraph at lines 1191--1192
 []\OT1/cmr/bx/n/12 Reservation-table-aware dis-patch-ing with output-preserving
 
  []
@@ -1023,16 +1023,16 @@ LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
  ***********
 Package rerunfilecheck Info: File `paper01_CAIE.out' has not changed.
-(rerunfilecheck)             Checksum: DABA6C589CBA93E9CD80896C73F50950;8380.
+(rerunfilecheck)             Checksum: BA14E9A3DA6653590E8FCAE2D434E011;8645.
  ) 
 Here is how much of TeX's memory you used:
- 26047 strings out of 474115
- 499965 string characters out of 5747696
- 1954190 words of memory out of 5000000
- 47743 multiletter control sequences out of 15000+600000
+ 26049 strings out of 474115
+ 499993 string characters out of 5747696
+ 1951190 words of memory out of 5000000
+ 47745 multiletter control sequences out of 15000+600000
  574624 words of font info for 93 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 84i,19n,93p,1141b,693s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,19n,93p,1126b,693s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/tex
 live/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2024
 /texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><c:/texlive/2024/texmf-d
@@ -1056,10 +1056,10 @@ ic/amsfonts/cm/cmti12.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfon
 ts/cm/cmti7.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt
 10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt12.pfb><c
 :/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfrm1200.pfb>
-Output written on paper01_CAIE.pdf (51 pages, 1646064 bytes).
+Output written on paper01_CAIE.pdf (51 pages, 1647112 bytes).
 PDF statistics:
- 1295 PDF objects out of 1440 (max. 8388607)
- 932 compressed objects within 10 object streams
+ 1296 PDF objects out of 1440 (max. 8388607)
+ 935 compressed objects within 10 object streams
  172 named destinations out of 1000 (max. 500000)
  430 words of extra memory for PDF output out of 10000 (max. 10000000)
 

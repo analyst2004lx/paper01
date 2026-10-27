@@ -1,4 +1,4 @@
-﻿import io, os, re, shutil
+import io, os, re, shutil
 SRC = r"c:\Users\Administrator\Desktop\AI_Folder\paper01"
 DST = os.path.dirname(os.path.abspath(__file__))
 t = io.open(os.path.join(SRC, "paper.tex"), encoding="utf-8").read()
@@ -33,9 +33,9 @@ def sub1(s, old, new):
     return s.replace(old, new)
 
 # column specs sized for the elsarticle text block
-body = sub1(body, r"\begin{tabular}{@{}p{2.5cm}cccp{2.9cm}p{3.1cm}@{}}",
+body = sub1(body, r"\begin{tabular}{@{}p{2.3cm}cccp{2.7cm}cp{2.9cm}@{}}",
             r"\begin{tabular}{@{}>{\raggedright\arraybackslash}p{2.3cm}>{\raggedright\arraybackslash}p{2.7cm}cc"
-            r">{\raggedright\arraybackslash}p{2.8cm}>{\raggedright\arraybackslash}p{2.8cm}@{}}")
+            r">{\raggedright\arraybackslash}p{2.6cm}c>{\raggedright\arraybackslash}p{2.6cm}@{}}")
 body = sub1(body, "\\begin{tabular}{@{}lcc@{}}\n\\toprule\n & Rule-based dispatching & Reservation-table-aware dispatching \\\\",
             "\\begin{tabular}{@{}>{\\raggedright\\arraybackslash}p{6.4cm}>{\\centering\\arraybackslash}p{2.6cm}"
             ">{\\centering\\arraybackslash}p{3.2cm}@{}}\n\\toprule\n & Rule-based dispatching & Reservation-table-aware dispatching \\\\")
@@ -144,9 +144,12 @@ doc = r"""%% Computers & Industrial Engineering submission (elsarticle, author-y
 """ + abstract + r"""
 \end{abstract}
 
+% elsarticle prints author names on the highlights page even under doubleblind
+\ifdoubleblind\else
 \begin{highlights}
 """ + "\n".join("\\item " + h for h in highlights) + r"""
 \end{highlights}
+\fi
 
 \begin{keyword}
 """ + " \\sep ".join(keywords) + r"""
@@ -163,9 +166,8 @@ doc = r"""%% Computers & Industrial Engineering submission (elsarticle, author-y
 \end{document}
 """
 io.open(os.path.join(DST, "paper01_CAIE.tex"), "w", encoding="utf-8", newline="\n").write(doc)
-io.open(os.path.join(DST, "paper01_CAIE_anonymized.tex"), "w", encoding="utf-8", newline="\n").write(
-    "%% Anonymized manuscript for double-anonymized review: same source, authors hidden.\n"
-    "\\PassOptionsToClass{doubleblind}{elsarticle}\n\\input{paper01_CAIE}\n")
+import subprocess, sys
+subprocess.check_call([sys.executable, os.path.join(DST, "_anonymize.py")])
 io.open(os.path.join(DST, "highlights.txt"), "w", encoding="utf-8", newline="\n").write(
     "\n".join("- " + h for h in highlights) + "\n")
 

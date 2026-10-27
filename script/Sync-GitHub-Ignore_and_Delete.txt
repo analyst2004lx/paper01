@@ -48,6 +48,17 @@ paper01/_preview_cn-05.png
 paper01/pdflatex6124.fls
 paper01/pdflatex18228.fls
 paper01/paper-20260602.tex
+paper01/_cz
+paper01/_thumb
+paper01/_build.txt
+paper01/_chk.txt
+paper01/_cmp.py
+paper01/_cmp.txt
+paper01/_m2.png
+paper01/_mont.py
+paper01/_montage.png
+paper01/_prev_case.png
+paper01/_titlecheck.pdf
 paper01/fig/fig_ablation.pdf
 paper01/fig/fig_ablation.png
 paper01/fig/fig_ablation.py

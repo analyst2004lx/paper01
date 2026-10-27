@@ -1,0 +1,5 @@
+- Schedules are scored by their makespan after conflict-free AGV routing
+- Dispatching trial-queries the reservation table for the earliest delivery
+- Two speed-ups provably leave the chosen vehicle and the timetable unchanged
+- Controlled instance families vary corridor contention intensity
+- The closed loop is the main effect; dispatching adds a much smaller one
