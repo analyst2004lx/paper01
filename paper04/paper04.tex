@@ -271,7 +271,7 @@
 %% ``operation-precedence graph'' (CONFLICT-4); the word ``cascading'' was dropped---it
 %% occurred only in the title, while the body, contributions and conclusion all say ``invalidation''.
 %% =====================================================================
-\title[Occupancy Invalidation the Operation-Precedence Graph Cannot Capture]{Spatiotemporal Reservation Closure: Capturing Corridor-Occupancy Invalidation Beyond the Operation-Precedence Graph in Flexible Job Shops}
+\title[Bounded Rescheduling via Spatiotemporal Reservation Closure]{Bounded Rescheduling for Flexible Job Shops via Spatiotemporal Reservation Closure}
 
 \author{Qi Yu}
 \email{230240012@seu.edu.cn}
@@ -318,7 +318,7 @@ The gap lies not in detection but in the fact that the operation-precedence grap
 We define the rescheduling scope on corridor occupancies and propose the spatiotemporal reservation closure (\STRC), whose result is called the reservation impact set.
 Starting from the reservations that overlap the disturbance window, \STRC{} takes the transitive closure along four kinds of edges: yielding on the same corridor, and the next occupancy of the same vehicle, job, and machine.
 Occupancies inside the set may be rewritten; those outside it keep the original plan. Once the edges are fixed, membership in the set is uniquely determined and independent of the rerouting algorithm.
-Recovery reroutes the original vehicles inside the set and, if the schedule remains infeasible, enlarges the rewritable scope in a prescribed order.
+Bounded rescheduling then repairs only inside the set: it reroutes the original vehicles and, if the schedule remains infeasible, enlarges the rewritable scope in a prescribed order.
 
 On \NPairs\ instance--seed pairs, the scope on the operation-precedence graph is empty under corridor blockage on \PassMiss\ pairs, while the original schedule is infeasible on all of them;
 with the rerouting procedure unchanged and only the scope object replaced, the feasibility rate rises from \FeasRone\ to \FeasRtwo.
@@ -328,7 +328,7 @@ Compared with warm-started global rescheduling, bounded repair is two to three o
 The contribution lies in the scope object; rerouting inside the set and enlarging the scope after failure follow existing practice.
 \end{abstract}
 
-\keywords{flexible job shop scheduling, conflict-free AGV routing, spatiotemporal reservation table, spatiotemporal reservation closure, corridor blockage}
+\keywords{flexible job shop scheduling, bounded rescheduling, conflict-free AGV routing, spatiotemporal reservation table, spatiotemporal reservation closure, corridor blockage}
 
 %% CCS. For an ACM submission the CCSXML block must be regenerated with the official tool.
 \ccsdesc[500]{Theory of computation~Scheduling algorithms}
@@ -664,14 +664,14 @@ independently of any repair algorithm.
 \subsection{The recovery problem}
 \label{sec:recovery_problem}
 
-\begin{problem}[Bounded repair with the scope delineated on the reservation table]
+\begin{problem}[Bounded rescheduling with the scope delineated on the reservation table]
 \label{prob:recovery}
 Given \(\mathcal{S}^0\), \(\mathcal{D}\), and \(t_{\mathrm{now}}\), find \(\mathcal{S}'\) such that
 (i)~\(\mathcal{S}'\) is conflict-free under \(\mathcal{D}\); (ii)~occupancies outside the rewrite scope keep their corridors, intervals, and vehicles as in \(\mathcal{S}^0\) as far as possible;
 (iii)~the runtime is subject to a budget. The secondary objective is the makespan \(C_{\max}(\mathcal{S}')\).
 \end{problem}
 
-We first delineate the rewritable set \(U\subseteq R\) and then reroute only the transports in \(U\). We take \(U=\mathrm{Cl}(\mathrm{Src})\);
+Bounded rescheduling first delineates the rewritable set \(U\subseteq R\) and then reroutes only the transports in \(U\); we call the second step \emph{bounded repair} (Section~\ref{sec:repair}). We take \(U=\mathrm{Cl}(\mathrm{Src})\);
 the baseline instead maps \(T_{\mathrm{impact}}\) to all occupancies whose task label lies in it and whose \(t^e>t_{\mathrm{now}}\), which is empty under Class B by Proposition~\ref{prop:miss}.
 The two are denoted R2 and R1 in the experiments.
 

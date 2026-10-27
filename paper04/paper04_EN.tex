@@ -271,7 +271,7 @@
 %% ``operation-precedence graph'' (CONFLICT-4); the word ``cascading'' was dropped---it
 %% occurred only in the title, while the body, contributions and conclusion all say ``invalidation''.
 %% =====================================================================
-\title[Occupancy Invalidation the Operation-Precedence Graph Cannot Capture]{Spatiotemporal Reservation Closure: Capturing Corridor-Occupancy Invalidation Beyond the Operation-Precedence Graph in Flexible Job Shops}
+\title[Bounded Rescheduling via Spatiotemporal Reservation Closure]{Bounded Rescheduling for Flexible Job Shops via Spatiotemporal Reservation Closure}
 
 \author{Qi Yu}
 \email{230240012@seu.edu.cn}
@@ -317,7 +317,7 @@ We define the rescheduling scope on corridor occupancies and their dependencies 
 Starting from the corridor reservations whose occupancy intervals overlap the disturbance window, \STRC{} takes the transitive closure along four kinds of edges: yielding on the same corridor, and the next occupancy of the same vehicle, of the same job, and of the same machine.
 Occupancies inside the set may be rewritten; those outside it keep the original plan.
 Once the dependency edges are fixed, membership of an occupancy in the set is uniquely determined and does not depend on how the rerouting algorithm is implemented.
-Recovery proceeds in two levels: the original vehicles are first rerouted inside the set, and if the schedule remains infeasible, the rewritable scope is enlarged in a prescribed order.
+Bounded rescheduling then repairs only inside the set, in two levels: the original vehicles are first rerouted, and if the schedule remains infeasible, the rewritable scope is enlarged in a prescribed order.
 
 Experiments cover \NInst\ instances \(\times\) \NSeeds\ random seeds, i.e., \NPairs\ pairs.
 Under corridor blockage, the scope delineated on the operation-precedence graph is empty on \PassMiss\ pairs, while the original schedule is infeasible on all of them.
@@ -331,7 +331,7 @@ A secondary effect comes from the impact set being smaller than the set of all u
 Rerouting inside the set, keeping the plan outside it, and enlarging the scope after failure follow existing practice; the contribution of this paper lies in the scope object.
 \end{abstract}
 
-\keywords{flexible job shop scheduling, conflict-free AGV routing, spatiotemporal reservation table, spatiotemporal reservation closure, corridor blockage}
+\keywords{flexible job shop scheduling, bounded rescheduling, conflict-free AGV routing, spatiotemporal reservation table, spatiotemporal reservation closure, corridor blockage}
 
 %% CCS. For an ACM submission the CCSXML block must be regenerated with the official tool; \ccsdesc is
 %% given here to silence acmart's ``no CCS concepts'' warning for manuscripts longer than two pages.
@@ -924,7 +924,7 @@ The counterexample does not depend on any repair algorithm; Section~\ref{sec:exp
 \subsection{The recovery problem}
 \label{sec:recovery_problem}
 
-\begin{problem}[Bounded repair with the scope delineated on the reservation table]
+\begin{problem}[Bounded rescheduling with the scope delineated on the reservation table]
 \label{prob:recovery}
 Given a feasible schedule \(\mathcal{S}^0\), a disturbance \(\mathcal{D}\), and a time \(t_{\mathrm{now}}\),
 find \(\mathcal{S}'\) such that
@@ -934,8 +934,8 @@ find \(\mathcal{S}'\) such that
 The secondary objective is the makespan \(C_{\max}(\mathcal{S}')\).
 \end{problem}
 
-The solution proceeds in two steps: first delineate the set of rewritable occupancies \(U\subseteq R\);
-then reroute only the transports in \(U\), keeping occupancies outside the set as planned.
+Bounded rescheduling proceeds in two steps: first delineate the set of rewritable occupancies \(U\subseteq R\);
+then reroute only the transports in \(U\), keeping occupancies outside the set as planned; we call the second step \emph{bounded repair} (Section~\ref{sec:repair}).
 We obtain \(U\) as \(\mathrm{Cl}(\mathrm{Src})\); the baselines instead derive a reservation subset from the affected set on the operation-precedence graph.
 
 %% =====================================================================
