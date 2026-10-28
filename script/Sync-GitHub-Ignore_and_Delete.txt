@@ -35,6 +35,7 @@ paper04_old/paper04.tex
 </Ignore>
 
 <Rename>
+paper04_SCI：paper04_old
 </Rename>
 
 <Delete>
