@@ -29,13 +29,12 @@ paper02/database/ft_trier_iot_log/Cleaned_Event_Log.zip
 A multi-agent system for FJSP with setup and transportation times.pdf
 综述_A Review of Flexible Job Shop Scheduling Problems Considering Transportation Vehicles.pdf
 9001_27001
-paper04_SCI/paper04.tex
+paper04_old/paper04.tex
 项目管理
 
 </Ignore>
 
 <Rename>
-paper04_old :paper04_SCI
 </Rename>
 
 <Delete>
