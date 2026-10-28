@@ -1066,9 +1066,26 @@ try {
     $errorCount = 0
     $conflictPaths = New-Object 'System.Collections.Generic.List[string]'
 
+    # The Ignore/Rename list is not a normal synced document. Comparing it here
+    # checks it out or marks a conflict, then the later commit touches it again
+    # even when the text is unchanged. Leave it for the single content check
+    # before merge/push.
+    $script:ListFileRelGit = $null
+    try {
+        $listFullEarly = [System.IO.Path]::GetFullPath($Config.IgnoreDeleteListFile)
+        $rootFullEarly = [System.IO.Path]::GetFullPath($Config.LocalFolder).TrimEnd('\')
+        if ($listFullEarly.StartsWith($rootFullEarly + '\', [StringComparison]::OrdinalIgnoreCase)) {
+            $script:ListFileRelGit = $listFullEarly.Substring($rootFullEarly.Length).TrimStart('\').Replace('\', '/')
+        }
+    } catch {}
+
     foreach ($relRaw in $all) {
         try {
             $rel = ConvertFrom-GitQuotedPath $relRaw
+            if ($script:ListFileRelGit -and
+                [string]::Equals($rel, $script:ListFileRelGit, [StringComparison]::OrdinalIgnoreCase)) {
+                continue
+            }
             if (Test-IgnoredPath $rel) { continue }
             if (-not (Test-SafeRelativePath -RelativePath ($rel -replace '/', '\'))) {
                 Write-Log ('Skip unsafe path: {0}' -f $rel) -Level WARN
@@ -1264,33 +1281,31 @@ try {
             Write-Log 'Skip push: local history still unrelated to remote.' -Level ERROR
             $pushOk = $false
         } else {
-            # The Ignore/Rename list is edited on purpose (Rename rewrites an Ignore
-            # entry, or the list is edited by hand). A content conflict skips it, so
-            # it stays uncommitted and merge then refuses to overwrite it.
-            # Commit that file on its own before counting ahead/behind.
-            $listRelGit = $null
-            try {
-                $listFull = [System.IO.Path]::GetFullPath($Config.IgnoreDeleteListFile)
-                $rootFull = [System.IO.Path]::GetFullPath($Config.LocalFolder).TrimEnd('\')
-                $rootPrefix = $rootFull + '\'
-                if ($listFull.StartsWith($rootPrefix, [StringComparison]::OrdinalIgnoreCase)) {
-                    $listRelGit = $listFull.Substring($rootFull.Length).TrimStart('\').Replace('\', '/')
-                }
-            } catch {}
+            # Commit the list only when its text differs. A timestamp or
+            # CRLF-only touch must not create another commit.
+            $listRelGit = $script:ListFileRelGit
             if ($listRelGit) {
-                $listStatus = Invoke-Git -GitArgs @('status', '--porcelain', '--', $listRelGit) -AllowFail
-                if ($listStatus.ExitCode -eq 0 -and -not [string]::IsNullOrWhiteSpace($listStatus.Output)) {
-                    Write-Log ('Ignore/Rename list has uncommitted edits; committing before merge/push: {0}' -f $listRelGit) -Level WARN
+                $listDiff = Invoke-Git -GitArgs @('diff', '--quiet', '--ignore-cr-at-eol', 'HEAD', '--', $listRelGit) -AllowFail
+                if ($listDiff.ExitCode -eq 0) {
+                    [void](Invoke-Git -GitArgs @('update-index', '--refresh', '--', $listRelGit) -AllowFail)
+                } else {
+                    Write-Log ('Ignore/Rename list text changed; committing before merge/push: {0}' -f $listRelGit) -Level WARN
                     $listAdd = Invoke-Git -GitArgs @('add', '-f', '--', $listRelGit) -AllowFail
                     if ($listAdd.ExitCode -ne 0) {
                         Write-Log ('Could not stage list file: {0}' -f $listAdd.Output) -Level WARN
                     } else {
-                        $listMsg = '{0} list {1:yyyy-MM-dd HH:mm:ss}' -f $Config.CommitPrefix, (Get-Date)
-                        $listCommit = Invoke-Git -GitArgs @('commit', '-m', $listMsg, '--', $listRelGit) -AllowFail -WithCommitIdentity
-                        if ($listCommit.ExitCode -ne 0) {
-                            Write-Log ('List commit failed: {0}' -f $listCommit.Output) -Level WARN
+                        $listCached = Invoke-Git -GitArgs @('diff', '--cached', '--quiet', '--ignore-cr-at-eol', '--', $listRelGit) -AllowFail
+                        if ($listCached.ExitCode -eq 0) {
+                            [void](Invoke-Git -GitArgs @('reset', '-q', 'HEAD', '--', $listRelGit) -AllowFail)
+                            Write-Log 'Ignore/Rename list matched HEAD after line-ending normalize; not committed.'
                         } else {
-                            Write-Log ('committed list: {0}' -f $listMsg)
+                            $listMsg = '{0} list {1:yyyy-MM-dd HH:mm:ss}' -f $Config.CommitPrefix, (Get-Date)
+                            $listCommit = Invoke-Git -GitArgs @('commit', '-m', $listMsg, '--', $listRelGit) -AllowFail -WithCommitIdentity
+                            if ($listCommit.ExitCode -ne 0) {
+                                Write-Log ('List commit failed: {0}' -f $listCommit.Output) -Level WARN
+                            } else {
+                                Write-Log ('committed list: {0}' -f $listMsg)
+                            }
                         }
                     }
                 }

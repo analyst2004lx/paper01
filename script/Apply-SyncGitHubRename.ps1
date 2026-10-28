@@ -358,11 +358,14 @@ function Invoke-SyncGitHubRename {
         return @($paths)
     }
 
-    function Test-RnRelated {
-        param([string]$A, [string]$B)
-        if ([string]::Equals($A, $B, [StringComparison]::OrdinalIgnoreCase)) { return $true }
-        if ($A.StartsWith($B + '/', [StringComparison]::OrdinalIgnoreCase)) { return $true }
-        if ($B.StartsWith($A + '/', [StringComparison]::OrdinalIgnoreCase)) { return $true }
+    function Test-RnOldIgnored {
+        # Conflict only when Ignore still names the old path.
+        # An entry that already uses the new path (paper04_SCI or paper04_SCI/paper04.tex)
+        # has been updated and is not a conflict.
+        param([string]$Old, [string]$IgnoreEntry)
+        if ([string]::Equals($IgnoreEntry, $Old, [StringComparison]::OrdinalIgnoreCase)) { return $true }
+        if ($IgnoreEntry.StartsWith($Old + '/', [StringComparison]::OrdinalIgnoreCase)) { return $true }
+        if ($Old.StartsWith($IgnoreEntry + '/', [StringComparison]::OrdinalIgnoreCase)) { return $true }
         return $false
     }
 
@@ -435,7 +438,7 @@ function Invoke-SyncGitHubRename {
 
         $hits = New-Object 'System.Collections.Generic.List[string]'
         foreach ($ig in $ignorePaths) {
-            if ((Test-RnRelated $pair.Old $ig) -or (Test-RnRelated $pair.New $ig)) {
+            if (Test-RnOldIgnored -Old $pair.Old -IgnoreEntry $ig) {
                 [void]$hits.Add($ig)
             }
         }
@@ -453,8 +456,8 @@ function Invoke-SyncGitHubRename {
         [void]$actions.Add($pair)
     }
 
-    $fileChanged = ($drop.Count -gt 0 -or $ignoreRewrites.Count -gt 0)
-    if ($fileChanged) {
+    $fileChanged = $false
+    if ($drop.Count -gt 0 -or $ignoreRewrites.Count -gt 0) {
         $inIgnore = $false
         $inRename = $false
         $out = New-Object 'System.Collections.Generic.List[string]'
@@ -464,7 +467,7 @@ function Invoke-SyncGitHubRename {
             if ($line -match '^\s*</Ignore>\s*$') { $inIgnore = $false; [void]$out.Add($line); continue }
             if ($line -match '^\s*<Rename>\s*$') { $inRename = $true; [void]$out.Add($line); continue }
             if ($line -match '^\s*</Rename>\s*$') { $inRename = $false; [void]$out.Add($line); continue }
-            if ($inRename -and $drop.Contains($i)) { continue }
+            if ($inRename -and $drop.Contains($i)) { $fileChanged = $true; continue }
             if ($inIgnore) {
                 $t = $line.Trim()
                 $g = $null
@@ -474,8 +477,12 @@ function Invoke-SyncGitHubRename {
                         if ([string]::Equals($g, $rw.Old, [StringComparison]::OrdinalIgnoreCase) -or
                             $g.StartsWith($rw.Old + '/', [StringComparison]::OrdinalIgnoreCase)) {
                             $suffix = $g.Substring($rw.Old.Length)
-                            $line = $rw.New + $suffix
-                            Write-RnLog ("Ignore entry renamed: {0} -> {1}" -f $g, $line)
+                            $updated = $rw.New + $suffix
+                            if (-not [string]::Equals($line.Trim(), $updated, [StringComparison]::OrdinalIgnoreCase)) {
+                                $line = $updated
+                                $fileChanged = $true
+                                Write-RnLog ("Ignore entry renamed: {0} -> {1}" -f $g, $line)
+                            }
                             break
                         }
                         if ($g.StartsWith($rw.New + '/', [StringComparison]::OrdinalIgnoreCase) -or
@@ -492,7 +499,11 @@ function Invoke-SyncGitHubRename {
             [void]$out.Add($line)
         }
         $newText = $out -join $nl
-        Write-RnListText -Path $ListFile -Text $newText -Bom $loaded.Bom
+        # Rewriting an unchanged list still updates the file timestamp and can
+        # make the next sync commit the same text again.
+        if ($fileChanged -and ($newText -cne $loaded.Text)) {
+            Write-RnListText -Path $ListFile -Text $newText -Bom $loaded.Bom
+        }
     }
 
     $nRename = 0
