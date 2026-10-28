@@ -71,6 +71,19 @@ plt.rcParams.update({
     "savefig.pad_inches": 0.02,
 })
 
+
+def use_cjk() -> None:
+    """Switch to a font that has CJK glyphs, for the *_CN figures.
+
+    matplotlib < 3.6 has no per-glyph fallback, so the CJK font must come first;
+    SimSun ships as a .ttc collection, which the PDF backend cannot embed.
+    """
+    plt.rcParams.update({
+        "font.family": "sans-serif",
+        "font.sans-serif": ["SimHei", "Microsoft YaHei", "DejaVu Sans"],
+        "axes.unicode_minus": False,
+    })
+
 # Order of the progressive ablation chain; every figure uses it so that the
 # reading order of the arms never changes between figures.
 # 顺序按每次评价的成本从低到高:论文的核心观察是质量大体随成本递减,
@@ -86,7 +99,7 @@ ARM_LABEL = {
     "nofeedback": "+ exact\ndispatch",
     "nostagger": "+ both, no\nstaggering",
     "closed": "+ both\n(full loop)",
-    "priced": "+ pricing\n(negative)",
+    "priced": "+ surcharge\n(negative)",
 }
 
 # Short labels for axes where the multi-line version does not fit.
@@ -98,7 +111,7 @@ ARM_SHORT = {
     "nofeedback": "+ dispatch",
     "nostagger": "+ no stagger",
     "closed": "+ full loop",
-    "priced": "+ pricing",
+    "priced": "+ surcharge",
 }
 
 ARM_COLOR = {

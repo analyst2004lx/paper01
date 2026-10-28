@@ -23,7 +23,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 DATA = os.path.join(ROOT, "clbs", "output", "motivating.json")
 
 plt.rcParams.update({
-    "font.sans-serif": ["Microsoft YaHei", "SimHei", "DejaVu Sans"],
+    "font.sans-serif": ["DejaVu Sans"],
     "axes.unicode_minus": False,
     "figure.dpi": 200,
     "pdf.fonttype": 42,
@@ -45,10 +45,10 @@ STRINGS = {
     "m3_jobs": "{n:.0f} jobs that can only\nbe processed on M3",
     "m3_yield": "Jobs that can only use M3\ncross the trunk repeatedly\n→ yielding wait",
     "two_assign": (
-        "The job starts at LU, is processed, then returns (J1 only; unimpeded, no other vehicles)\n"
-        "Fast arm M1: LU--$v_1$--$v_2$--M1, one way $1+{tau:.0f}+1={one1:.0f}$, "
+        "The job starts at the load/unload point $v_0$, is processed, then returns (J1 only; unimpeded, no other vehicles)\n"
+        "Fast arm M1: $v_0$--$v_1$--$v_2$--M1, one way $1+{tau:.0f}+1={one1:.0f}$, "
         "round trip ${t1:.0f}$, + processing ${p1:.0f}$ $=${s1:.0f}\n"
-        "Slow arm M2: LU--$v_1$--M2, one way $1+2={one2:.0f}$, "
+        "Slow arm M2: $v_0$--$v_1$--M2, one way $1+2={one2:.0f}$, "
         "round trip ${t2:.0f}$, + processing ${p2:.0f}$ $=${s2:.0f}"
     ),
     "assign_ylim_lo": -1.70,
@@ -73,7 +73,7 @@ STRINGS = {
     "reversal_pad": 0.22,
     "reversal_ls": 1.15,
     "bars_note_at": "below_delta",
-    "bars_note": "A bar is the time the last job returns to LU",
+    "bars_note": "A bar is the time the last job returns to $v_0$",
 }
 
 
@@ -116,7 +116,7 @@ def panel_layout(ax, p, S=None) -> None:
     ax.text(0.0, 2.85, S["avoids_trunk"], ha="left", va="center",
             fontsize=8, color=C_SLOW)
 
-    node(ax, *P["v0"], "LU", fc="#dceaf8", ec="#08519c", r=0.36, bold=True)
+    node(ax, *P["v0"], "$v_0$", fc="#dceaf8", ec="#08519c", r=0.36, bold=True)
     node(ax, *P["v1"], "$v_1$")
     node(ax, *P["v2"], "$v_2$")
     node(ax, *P["m1"], "M1", fc="#e8f5e9", ec=C_FAST, r=0.36, bold=True)
@@ -206,15 +206,16 @@ def panel_reversal(ax, d, S=None) -> None:
         delta_mult = 1.12 if n_rev > 1 else 1.15
     delta_x = S.get("delta_x", (xs[0] + xs[1]) / 2)
     delta_y_axes = S.get("delta_y_axes")
+    sep = S.get("delta_sep", ": ")
     if delta_y_axes is not None:
         ax.text(0.50, delta_y_axes,
-                f"$C$(M1)$-$$C$(M2)：{d['M1']['ideal'] - d['M2']['ideal']:+.0f}"
+                f"$C$(M1)$-$$C$(M2){sep}{d['M1']['ideal'] - d['M2']['ideal']:+.0f}"
                 f"   →   {d['M1']['routed'] - d['M2']['routed']:+.0f}",
                 transform=ax.transAxes, ha="center", va="center",
                 fontsize=9, color="#444444")
     else:
         ax.text(delta_x, top * delta_mult,
-                f"$C$(M1)$-$$C$(M2)：{d['M1']['ideal'] - d['M2']['ideal']:+.0f}"
+                f"$C$(M1)$-$$C$(M2){sep}{d['M1']['ideal'] - d['M2']['ideal']:+.0f}"
                 f"   →   {d['M1']['routed'] - d['M2']['routed']:+.0f}",
                 ha="center", va="center", fontsize=9, color="#444444")
 

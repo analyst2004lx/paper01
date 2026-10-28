@@ -62,8 +62,9 @@ $Config = @{
         'Thumbs.db'
         '.DS_Store'
     )
-    # Optional list file: <Ignore>...</Ignore> skip sync; <Delete>...</Delete> remove from GitHub.
-    # If a path is in both, Ignore wins. Missing paths are skipped.
+    # Optional list file: <Ignore> skip; <Delete> remove from GitHub; <Rename> old:new.
+    # If a path is in both Ignore and Delete, Ignore wins. Missing paths are skipped.
+    # Rename is applied by Apply-SyncGitHubRename.ps1 (called below).
     IgnoreDeleteListFile = (Join-Path $PSScriptRoot 'Sync-GitHub-Ignore_and_Delete.txt')
     GitPath       = ''
     # GitHub fetch: idle timeout (no pack growth) vs absolute cap.
@@ -964,6 +965,19 @@ try {
 
     $remoteFilesAll = @($remoteHashMap.Keys)
     Write-Log ('Remote file count (raw): {0}' -f $remoteFilesAll.Count)
+
+    # <Rename> lives in its own script so Ignore/Delete below stay unchanged.
+    # It must run here: after the remote tree is known, and before this script
+    # would otherwise pull the old path back and push the new path as a new file.
+    $renameScript = Join-Path $PSScriptRoot 'Apply-SyncGitHubRename.ps1'
+    if (Test-Path -LiteralPath $renameScript -PathType Leaf) {
+        . $renameScript
+        Invoke-SyncGitHubRename -LocalFolder $Config.LocalFolder -ListFile $Config.IgnoreDeleteListFile -RemoteRef $remoteRef -RemoteHashMap $remoteHashMap -GitExe $script:GitExe
+        $remoteFilesAll = @($remoteHashMap.Keys)
+        $listInfo = Read-IgnoreDeleteList -ListFile $Config.IgnoreDeleteListFile
+        $script:ListIgnorePaths = @($listInfo.Ignore)
+        $script:ListDeletePaths = @($listInfo.Delete)
+    }
 
     # Apply <Delete> list: remove matching paths from GitHub index (Ignore wins).
     # Missing remote paths are skipped. Use --cached so a still-present local copy is kept.

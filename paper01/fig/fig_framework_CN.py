@@ -16,11 +16,10 @@ from matplotlib.patches import FancyArrowPatch, FancyBboxPatch  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-plt.rcParams.update({
-    "font.sans-serif": ["Microsoft YaHei", "SimHei", "DejaVu Sans"],
-    "axes.unicode_minus": False,
-    "figure.dpi": 200,
-})
+from _style import use_cjk  # noqa: E402
+
+use_cjk()
+plt.rcParams["figure.dpi"] = 200
 
 C_EVAL = "#08519c"
 C_DEC = "#d95f02"
@@ -60,7 +59,7 @@ def main() -> None:
 
     box(ax, 2, 5, 25, 45, "", fc=C_BOX, ec=C_EDGE, lw=1.0,
         style="round,pad=0.2", zorder=1)
-    ax.text(14.5, 52.6, "上层：模因搜索", ha="center",
+    ax.text(14.5, 52.6, "上层：文化基因算法", ha="center",
             va="center", fontsize=9.5, fontweight="bold")
     box(ax, 4.5, 37, 20, 7.5, "染色体种群\n（机器指派、工序排序）", fs=8.2)
     box(ax, 4.5, 27, 20, 7, "交叉、变异\n与局部搜索", fs=8.2)
@@ -77,7 +76,7 @@ def main() -> None:
             fontsize=9.5, fontweight="bold")
     box(ax, 34.5, 40, 25, 5.5, "弹出下一道就绪工序", fs=8.2)
     box(ax, 34.5, 30, 25, 7.5, "生成运输任务\n（取货、送货、就绪时刻）", fs=8.2)
-    box(ax, 34.5, 18, 25, 9, "选择车辆：\n对候选车试探预约表",
+    box(ax, 34.5, 18, 25, 9, "选择车辆：\n对候选车试算预约表",
         ec=C_DEC, lw=1.4, weight="bold", color=C_DEC, fs=8.2)
     box(ax, 34.5, 8, 25, 7.5, "提交走廊预约\n推进仿真时钟", fs=8.2)
     arrow(ax, (47, 40), (47, 37.5))
@@ -90,8 +89,8 @@ def main() -> None:
     ax.text(83.5, 52.6, "下层：无冲突路由", ha="center",
             va="center", fontsize=9.5, fontweight="bold")
     box(ax, 72, 35.5, 23, 9.5, "时间窗 Dijkstra\n走廊网络上\n最早到达搜索", fs=8.0)
-    box(ax, 72, 21, 23, 9.5, "预约表\n走廊占用与车头时距", fs=8.0)
-    box(ax, 72, 8, 23, 8, "试探路由后回滚\n（不留占用痕迹）",
+    box(ax, 72, 21, 23, 9.5, "预约表\n走廊占用区间", fs=8.0)
+    box(ax, 72, 8, 23, 8, "试算后回滚\n（不写入预约表）",
         ec=C_DEC, lw=1.0, color=C_DEC, fs=8.0)
     arrow(ax, (80, 35.5), (80, 30.5))
     arrow(ax, (88, 30.5), (88, 35.5))
