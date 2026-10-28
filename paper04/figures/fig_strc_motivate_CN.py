@@ -1,5 +1,5 @@
-# -*- coding: utf-8 -*-
-"""动机图中文版：走廊阻断下工序依赖图为空 vs 预约影响集。原 fig_strc_motivate.* 保留。"""
+﻿# -*- coding: utf-8 -*-
+"""动机图中文版：同一排程、同一走廊阻断下，AOR 只看机器层得空范围，STRC 看走廊层得预约影响集。"""
 from __future__ import annotations
 
 import os
@@ -7,97 +7,58 @@ import os
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch, Rectangle
+import matplotlib.pyplot as plt  # noqa: E402
+
+from _cjk_mpl import setup_cjk  # noqa: E402
+from _motivate_draw import HEIGHT_RATIOS, draw_aor, draw_notes, draw_strc  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "fig_strc_motivate_CN")
 
-from _cjk_mpl import setup_cjk
-
 setup_cjk()
 plt.rcParams.update({"figure.dpi": 200})
 
-
-def _box(ax, xy, w, h, text, fc, ec="#333333", fs=8, bold=False):
-    x, y = xy
-    ax.add_patch(FancyBboxPatch(
-        (x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.04",
-        facecolor=fc, edgecolor=ec, linewidth=1.1))
-    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center",
-            fontsize=fs, fontweight=("bold" if bold else "normal"),
-            color="#1a1a1a")
+LABELS = {
+    "title_aor": "(a) AOR：按工序依赖图划界",
+    "title_strc": "(b) STRC：按预约影响集划界",
+    "machine_layer": "机器层",
+    "corridor_layer": "走廊层",
+    "machine": "机器",
+    "corridor": "走廊",
+    "block": "阻断",
+    "check": "√",
+    "conflict": "车辆 $k_1$ 在走廊 $e^\\star$ 上的占用与阻断时段重叠，\n实际已冲突（AOR 不检查走廊层）",
+    "aor_seed": "各工序均可执行 → 起点工序集为空",
+    "aor_verdict": "重调度范围为空，判定无需重调度；但原排程实际已不可行",
+    "seed": "起点",
+    "impact_set": "预约影响集",
+    "keep": "保持原计划",
+    "done": "已完成，不可改写",
+    "tag_yield": "让行",
+    "tag_vehicle": "同车",
+    "tag_machine": "同机",
+    "lg_yield": "让行边：同一走廊上，前车的占用 → 紧随其后的他车占用\n（前车延误，后车须等前车驶离）",
+    "lg_vehicle": "同车边：同一车辆的上一条占用 → 下一条占用",
+    "lg_job_machine": "同工件 / 同机边：一道工序的运输占用 →\n同一工件或同一机器上下一道工序的运输占用",
+    "lg_block": "走廊 $e^\\star$ 的阻断时段（禁止通行）",
+    "lg_seed": "起点占用（与阻断时段重叠）",
+    "lg_in": "影响集内的占用（允许改路）",
+    "lg_out": "影响集外的占用（保持原计划）",
+    "lg_done": "决策时刻前已完成的占用（不可改写）",
+    "notes": "符号：$O_{ji}$ 为工件 $j$ 的第 $i$ 道工序；M1、M2 为机器；$k_1$、$k_2$、$k_3$ 为车辆"
+             "（$k_1$ 运送工件 1，$k_2$ 运送工件 2，$k_3$ 运送其他工件）；\n"
+             "$e^\\star$、$e_2$、$e_3$ 为走廊；走廊层每个色块是一辆车对一条走廊的一次占用，"
+             "细点线连到该次运输送达的工序。",
+}
 
 
 def main() -> None:
-    fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.55))
-
-    ax = axes[0]
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 10)
-    ax.axis("off")
-    ax.set_title("走廊阻断下的工序依赖图", fontsize=10, pad=10)
-
-    ops = [
-        (1.2, 7.2, "J1-1"), (4.2, 7.2, "J1-2"), (7.2, 7.2, "J1-3"),
-        (1.2, 4.0, "J2-1"), (4.2, 4.0, "J2-2"), (7.2, 4.0, "J2-3"),
-    ]
-    for x, y, lab in ops:
-        _box(ax, (x, y), 1.8, 1.1, lab, "#e8eef5")
-    for (x1, y1, _), (x2, y2, _) in zip(ops, ops[1:]):
-        if y1 == y2:
-            ax.annotate("", xy=(x2, y2 + 0.55), xytext=(x1 + 1.8, y1 + 0.55),
-                        arrowprops=dict(arrowstyle="->", color="#555555", lw=1.0))
-    ax.text(5, 2.3, r"$T_{\mathrm{direct}}=\varnothing$",
-            ha="center", fontsize=11, fontweight="bold", color="#8b1e1e")
-    ax.text(5, 1.2, "按工序依赖图：判定无需重调度",
-            ha="center", fontsize=9, color="#8b1e1e")
-    _box(ax, (2.2, 8.55), 5.6, 0.95, "走廊阻断（无作为起点的工序）",
-         "#f7e6e6", ec="#8b1e1e", fs=8)
-
-    ax = axes[1]
-    ax.set_xlim(0, 10)
-    ax.set_ylim(0, 10)
-    ax.axis("off")
-    ax.set_title("预约表上的影响集（STRC）", fontsize=10, pad=10)
-
-    ax.plot([1.6, 9.4], [2.0, 2.0], color="#444444", lw=1.0)
-    ax.text(9.5, 2.0, "t", va="center", fontsize=8)
-    ax.add_patch(Rectangle((3.9, 6.2), 2.2, 1.1, facecolor="#e8a0a0",
-                            edgecolor="#8b1e1e", hatch="////", alpha=0.85))
-    ax.text(5.0, 6.75, "阻断", ha="center", va="center", fontsize=7.5,
-            color="#5a1010", fontweight="bold")
-
-    bars = [
-        (1.6, 6.35, 2.0, 0.8, "r1 起点", "#c45c26"),
-        (6.3, 6.35, 2.0, 0.8, "r2", "#1f4e79"),
-        (2.9, 4.65, 2.4, 0.8, "r3 等待", "#1f4e79"),
-        (5.6, 4.65, 2.2, 0.8, "r4", "#5a7a9a"),
-        (3.4, 2.95, 2.6, 0.8, "r5 工件/车", "#5a7a9a"),
-    ]
-    for x, y, w, h, lab, c in bars:
-        ax.add_patch(FancyBboxPatch(
-            (x, y), w, h, boxstyle="round,pad=0.01,rounding_size=0.03",
-            facecolor=c, edgecolor="#222222", alpha=0.9))
-        ax.text(x + w / 2, y + h / 2, lab, ha="center", va="center",
-                fontsize=7.5, color="white", fontweight="bold")
-
-    ax.annotate("", xy=(4.0, 5.45), xytext=(3.2, 6.35),
-                arrowprops=dict(arrowstyle="->", color="#c45c26", lw=1.3))
-    ax.annotate("", xy=(4.6, 3.75), xytext=(4.0, 4.65),
-                arrowprops=dict(arrowstyle="->", color="#c45c26", lw=1.3))
-    ax.text(8.55, 7.55, "预约影响集\nCl(S)", ha="center", fontsize=8.5,
-            color="#1f4e79", fontweight="bold",
-            bbox=dict(boxstyle="round,pad=0.22", fc="#e8eef5", ec="#1f4e79"))
-
-    ax.text(5, 0.7, "须在预约影响集上修复",
-            ha="center", fontsize=9, color="#1f4e79", fontweight="bold")
-
-    for y, lab in ((6.75, r"走廊 $e^\star$"), (5.05, r"走廊 $e_2$"),
-                   (3.35, r"走廊 $e_3$")):
-        ax.text(0.08, y, lab, fontsize=7.0, va="center", color="#444444")
-
-    fig.tight_layout()
+    fig, axes = plt.subplots(2, 1, figsize=(7.2, 7.7),
+                             gridspec_kw={"height_ratios": HEIGHT_RATIOS})
+    draw_aor(axes[0], LABELS)
+    draw_strc(axes[1], LABELS)
+    fig.tight_layout(h_pad=1.0, rect=(0, 0.05, 1, 1))
+    draw_notes(fig, LABELS)
     fig.savefig(OUT + ".png", dpi=200, bbox_inches="tight")
     fig.savefig(OUT + ".pdf", bbox_inches="tight")
     print("wrote", OUT)
