@@ -7,6 +7,21 @@
 # Delete block: remove from GitHub (git rm --cached) when present on remote.
 # If a path appears in BOTH, Ignore wins (do not delete).
 # If a listed path does not exist on GitHub, skip it.
+#
+# Rename block: one "old : new" pair per line. Separator is ":" or "："
+# with optional spaces. Old and new may be a file or a folder, with or
+# without a parent path (\paper01\a.txt or paper01/a.txt).
+# Same content hash: rename only. Different hash: rename, and the bytes
+# at the new path replace the old path.
+# A folder has no single hash. Files inside are paired by relative path:
+#   both sides, same hash -> rename that file
+#   both sides, different hash -> rename, new path's bytes win
+#   only under the old folder -> carry it into the new folder
+#   only under the new folder -> leave it for the normal sync
+# If the path is also in <Ignore>, the sync asks:
+#   Conflict in Rename and Ignore, Rename first?
+# Y or y: rename, and rewrite that Ignore entry to the new name.
+# Any other answer: skip, and delete that line from <Rename>.
 
 <Ignore>
 paper02/database/ft_trier_iot_log/DQI_Event_Log.zip
@@ -14,9 +29,14 @@ paper02/database/ft_trier_iot_log/Cleaned_Event_Log.zip
 A multi-agent system for FJSP with setup and transportation times.pdf
 综述_A Review of Flexible Job Shop Scheduling Problems Considering Transportation Vehicles.pdf
 9001_27001
+paper04_SCI/paper04.tex
 项目管理
 
 </Ignore>
+
+<Rename>
+paper04_old :paper04_SCI
+</Rename>
 
 <Delete>
 # Entire obsolete
