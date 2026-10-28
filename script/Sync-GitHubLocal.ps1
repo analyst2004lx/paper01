@@ -1264,6 +1264,38 @@ try {
             Write-Log 'Skip push: local history still unrelated to remote.' -Level ERROR
             $pushOk = $false
         } else {
+            # The Ignore/Rename list is edited on purpose (Rename rewrites an Ignore
+            # entry, or the list is edited by hand). A content conflict skips it, so
+            # it stays uncommitted and merge then refuses to overwrite it.
+            # Commit that file on its own before counting ahead/behind.
+            $listRelGit = $null
+            try {
+                $listFull = [System.IO.Path]::GetFullPath($Config.IgnoreDeleteListFile)
+                $rootFull = [System.IO.Path]::GetFullPath($Config.LocalFolder).TrimEnd('\')
+                $rootPrefix = $rootFull + '\'
+                if ($listFull.StartsWith($rootPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+                    $listRelGit = $listFull.Substring($rootFull.Length).TrimStart('\').Replace('\', '/')
+                }
+            } catch {}
+            if ($listRelGit) {
+                $listStatus = Invoke-Git -GitArgs @('status', '--porcelain', '--', $listRelGit) -AllowFail
+                if ($listStatus.ExitCode -eq 0 -and -not [string]::IsNullOrWhiteSpace($listStatus.Output)) {
+                    Write-Log ('Ignore/Rename list has uncommitted edits; committing before merge/push: {0}' -f $listRelGit) -Level WARN
+                    $listAdd = Invoke-Git -GitArgs @('add', '-f', '--', $listRelGit) -AllowFail
+                    if ($listAdd.ExitCode -ne 0) {
+                        Write-Log ('Could not stage list file: {0}' -f $listAdd.Output) -Level WARN
+                    } else {
+                        $listMsg = '{0} list {1:yyyy-MM-dd HH:mm:ss}' -f $Config.CommitPrefix, (Get-Date)
+                        $listCommit = Invoke-Git -GitArgs @('commit', '-m', $listMsg, '--', $listRelGit) -AllowFail -WithCommitIdentity
+                        if ($listCommit.ExitCode -ne 0) {
+                            Write-Log ('List commit failed: {0}' -f $listCommit.Output) -Level WARN
+                        } else {
+                            Write-Log ('committed list: {0}' -f $listMsg)
+                        }
+                    }
+                }
+            }
+
             $ahead = Invoke-Git -GitArgs @('rev-list', '--count', ('{0}..HEAD' -f $remoteRef)) -AllowFail
             $behind = Invoke-Git -GitArgs @('rev-list', '--count', ('HEAD..{0}' -f $remoteRef)) -AllowFail
             $aheadN = 0
@@ -1275,9 +1307,11 @@ try {
                 Write-Log ('Remote ahead by {0} commit(s); merging {1} before push...' -f $behindN, $remoteRef) -Level WARN
 
                 # Dirty tracked files block merge ("would be overwritten"). Stash them first.
+                # git status porcelain uses a leading space for unstaged edits (" M path").
+                # Invoke-Git trims that space, so do not require the second column to be a letter.
                 $dirty = Invoke-Git -GitArgs @('status', '--porcelain', '-uno') -AllowFail
                 $didStash = $false
-                if ($dirty.ExitCode -eq 0 -and $dirty.Output -match '(?m)^.[MADRCU]') {
+                if ($dirty.ExitCode -eq 0 -and -not [string]::IsNullOrWhiteSpace($dirty.Output)) {
                     $stashMsg = 'auto-sync pre-merge stash {0:yyyy-MM-dd HH:mm:ss}' -f (Get-Date)
                     Write-Log 'Working tree has uncommitted tracked changes; stashing before merge...' -Level WARN
                     $stash = Invoke-Git -GitArgs @('stash', 'push', '-u', '-m', $stashMsg) -AllowFail
