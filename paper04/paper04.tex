@@ -309,23 +309,26 @@
 %% Abstract
 %% =====================================================================
 \begin{abstract}
-In flexible job shop scheduling that captures processing order with operation precedence and records corridor occupancies with time-window reservations,
-the rescheduling scope after a disturbance is still delineated by identifying the affected operations and their successors.
-When a corridor becomes impassable or slower during some time window, however, no operation becomes unexecutable:
-this approach returns an empty scope although the corridor occupancies inside the disturbed interval are already invalid, the original schedule is infeasible, and the resulting waits propagate to downstream vehicles through yielding relations.
-The gap lies not in detection but in the fact that the operation-precedence graph contains no yielding relations among corridor occupancies.
+In flexible job shop scheduling that captures processing order with an operation-precedence graph and records the corridor occupancies of vehicles in a time-window reservation table,
+the rescheduling scope after a disturbance is still delineated by affected-operation rescheduling (AOR): operations that can no longer be executed as planned are identified, and their successors on the operation-precedence graph are added.
+Corridor blockage or slowdown acts only on corridors; machines and operations remain available, so AOR finds no affected operation and returns an empty scope, concluding that no rescheduling is needed.
+Yet the planned occupancies inside the disturbed interval are already invalid and the original schedule is infeasible;
+moreover, a corridor admits one vehicle at a time, so a vehicle planned to traverse it later must wait for the preceding one (a yielding relation), and a delay passes from vehicle to vehicle.
+The problem is not detection (the blockage is known) but that the operation-precedence graph used by AOR contains only operations and their precedences, with neither corridor occupancies nor the yielding relations among them.
 
-We define the rescheduling scope on corridor occupancies and propose the spatiotemporal reservation closure (\STRC), whose result is called the reservation impact set.
-Starting from the reservations that overlap the disturbance window, \STRC{} takes the transitive closure along four kinds of edges: yielding on the same corridor, and the next occupancy of the same vehicle, job, and machine.
-Occupancies inside the set may be rewritten; those outside it keep the original plan. Once the edges are fixed, membership in the set is uniquely determined and independent of the rerouting algorithm.
-Bounded rescheduling then repairs only inside the set: it reroutes the original vehicles and, if the schedule remains infeasible, enlarges the rewritable scope in a prescribed order.
+We instead delineate the rescheduling scope at the level of corridor occupancies and propose the spatiotemporal reservation closure (\STRC), whose output set of occupancies is called the reservation impact set.
+Starting from the planned occupancies whose intervals overlap the disturbance window, \STRC{} keeps adding successor occupancies along four dependency relations among occupancies---yielding on the same corridor, and the next occupancy of the same vehicle, of the same job, and on the same machine---until none can be added (the transitive closure).
+Each occupancy is determined by its corridor (path), interval, and vehicle: occupancies inside the set may have their path and interval replanned (and, under vehicle failure, their vehicle replaced), while those outside keep all three.
+Once the four relations are fixed, membership in the set depends only on reachability from the seeds and is independent of the rerouting algorithm.
+Bounded repair first replans conflict-free paths for the occupancies inside the set with the original vehicles; if the schedule remains infeasible, it successively adds the subsequent occupancies of the same job, of the same vehicle, and finally all unfinished occupancies to the rewritable scope.
 
-On \NPairs\ instance--seed pairs, the scope on the operation-precedence graph is empty under corridor blockage on \PassMiss\ pairs, while the original schedule is infeasible on all of them;
-with the rerouting procedure unchanged and only the scope object replaced, the feasibility rate rises from \FeasRone\ to \FeasRtwo.
-The impact set is closed under outgoing edges on \PassClosed\ pairs, and every occupancy outside it is unchanged on \PassInvar\ pairs.
-Rewriting all unfinished occupancies instead leaves runtime and makespan almost unchanged but raises the rewrite fraction from \ResFracCheapRtwo\ to \ResFracAllFuture\ (R2 fewer/equal/more rewrites in \RAStabWTL\ cells; Wilcoxon \(p=\RAStabP\)).
-Compared with warm-started global rescheduling, bounded repair is two to three orders of magnitude faster but has a worse makespan at every budget level.
-The contribution lies in the scope object; rerouting inside the set and enlarging the scope after failure follow existing practice.
+On \NPairs\ instance--seed pairs (\NInst\ instances \(\times\) \NSeeds\ random seeds that determine disturbance injection and search), the scope delineated by AOR under corridor blockage is empty on all pairs, although the original schedule is in fact infeasible on every one of them;
+with the rerouting procedure unchanged and only the scope object replaced, the number of pairs repaired to a feasible schedule rises from \FeasRone\ to \FeasRtwo.
+On all pairs the impact set is closed (no dependency edge leads from inside to outside), and every occupancy outside it keeps its original corridor, interval, and vehicle after repair.
+Rewriting all unfinished occupancies instead leaves runtime and makespan almost unchanged but raises the fraction of rewritten occupancies from \ResFracCheapRtwo\ to \ResFracAllFuture\ (scoping by the impact set rewrites fewer/equally many/more on \RAStabWTL\ pairs; Wilcoxon \(p=\RAStabP\)).
+Compared with warm-started global rescheduling that re-searches assignment and order within a time limit, bounded repair is two to three orders of magnitude faster, but its makespan is never better under any tested time limit and cannot overtake under longer limits.
+Feasibility is thus restored by the scope object; the reduction in rewrites is limited because the impact set already covers about \ClosureAliveFrac\ of all unfinished occupancies.
+Rerouting inside the set and enlarging the scope after failure follow existing practice; the contribution lies in delineating the rescheduling scope on corridor occupancies instead of operations.
 \end{abstract}
 
 \keywords{flexible job shop scheduling, bounded rescheduling, conflict-free AGV routing, spatiotemporal reservation table, spatiotemporal reservation closure, corridor blockage}
@@ -342,23 +345,26 @@ The contribution lies in the scope object; rerouting inside the set and enlargin
 \label{sec:introduction}
 %% =====================================================================
 
-Flexible job shop scheduling with transportation has long assumed that the time to move a job between two machines is a constant read from a matrix indexed by location pairs,
-which implicitly holds that vehicles never compete for the same corridor segment.
-Once a finite fleet shares a sparse corridor network and reserves contested segments with time windows, travel time becomes the outcome of two decisions: the path each vehicle takes and the order in which vehicles occupy each segment.
-One vehicle's yielding then delays another vehicle's arrival and, in turn, downstream operations and their transport occupancies.
-Studies that build such schedules before execution have shown that corridor contention changes which machine is preferable, so candidate schedules must be evaluated with time-window routing on a reservation table~\cite{vanos2026exact,li2026framework,sun2023integrated}.
-These works answer how to build a conflict-free schedule when information is complete. Once the shop has executed up to time \(t_{\mathrm{now}}\) and a disturbance occurs,
-the questions become different: which corridor occupancies are invalidated, which must be rewritten to restore feasibility, and whether recovery can be completed within milliseconds without restarting a population-based search.
+Flexible job shop scheduling with transportation usually takes transport times as constants indexed by location pairs~\cite{xin2025review,meng2025cp,qin2026knowledge}, assuming no corridor contention among vehicles.
+When a finite fleet shares a sparse corridor network this no longer holds~\cite{kim2026congestion}, so existing work decides machine assignment jointly with conflict-free paths before execution~\cite{vanos2026exact,sun2023integrated,lyu2019approach,li2026framework},
+and a schedule then also contains a time-window reservation table recording which vehicle occupies which corridor during which interval.
+A disturbance may make operations unexecutable (e.g., machine or vehicle failure) or invalidate only some corridor occupancies without changing any operation (e.g., a corridor blocked or slowed down for some period).
+These works answer how to build a conflict-free schedule when information is complete. Once the shop has executed up to time \(t_{\mathrm{now}}\) and a disturbance occurs, the questions become:
+which corridor occupancies are invalidated; which must be rewritten so that the schedule again satisfies corridor exclusivity and the closure constraints and can continue to be executed;
+and whether such a schedule can be obtained within milliseconds of computation time without restarting a population-based search.
 
 \textbf{The gap.}
 In dynamic scheduling of flexible job shops with transportation, the rescheduling scope is usually delineated on the operation-precedence graph:
-operations that can no longer be executed as planned serve as seeds, and their job successors and machine successors are added, possibly up to \(\theta\) steps.
-Two dynamic scheduling studies with AGV transport delineate the scope in this way~\cite{zhang2023energy,tang2026dynamic}, a practice that traces back to affected-operation rescheduling (AOR)~\cite{abumaizar1997rescheduling,subramaniam2003maor}.
+operations that can no longer be executed as planned serve as seeds, the operations following them in the same job and on the same machine are added, possibly only up to \(\theta\) steps (a manually set upper bound on the expansion depth),
+and only the operations in this scope are rescheduled.
+Existing dynamic scheduling studies with AGV transport delineate the scope in this way~\cite{zhang2023energy,tang2026dynamic}, a practice that traces back to affected-operation rescheduling (AOR)~\cite{abumaizar1997rescheduling,subramaniam2003maor}.
 This is reasonable when the disturbance is an operation event, such as a machine failure.
-When the schedule records corridor occupancies with time windows, however, a \emph{corridor blockage} closes a corridor during \([t_a,t_b)\) without modifying any machine assignment or processing order.
-No operation is directly affected, so the scope is empty and the method concludes that no rescheduling is needed.
-Yet the planned occupancies that overlap the blockage interval are no longer feasible, and a vehicle that waits or detours blocks subsequent vehicles through yielding relations, so the invalidation propagates across the reservation table.
-By definition, the operation-precedence graph contains no yielding relations among corridor occupancies and therefore cannot express this propagation;
+When the schedule records corridor occupancies with time windows, however, a \emph{corridor blockage} closes a corridor during \([t_a,t_b)\) without modifying any machine assignment or processing order; machines and operations remain available.
+The seed set of AOR (operations that can no longer be executed as planned) is therefore empty, so the scope is empty and the method concludes that no rescheduling is needed.
+Yet the planned occupancies that overlap the blockage interval are no longer feasible.
+Moreover, a corridor admits one vehicle at a time, so a vehicle planned to traverse it later must wait for the preceding one to leave (a yielding relation); a vehicle delayed by waiting or detouring therefore delays its follower, which delays its own follower, and the invalidation propagates across the reservation table.
+The blockage itself is known, so the problem is not detection: the operation-precedence graph used by AOR has operations as vertices and job and machine precedences as edges,
+and by definition contains neither corridor occupancies nor their yielding relations, so it cannot express this invalidation or its propagation;
 the gap arises only in settings that record corridor occupancies with time windows.
 We accordingly distinguish \textbf{Class A} disturbances, which make some operations unexecutable (robotic-arm failure, processing-time deviation, rush orders, vehicle failure),
 from \textbf{Class B} disturbances, which act only on the reservation table (corridor blockage, corridor slowdown); Class B is the counterexample to operation-level scoping (Section~\ref{sec:disturbance_classes}).
@@ -367,17 +373,18 @@ Figure~\ref{fig:motivate} illustrates the gap.
 \begin{figure}[t]
 \centering
 \includegraphics[width=\linewidth]{figures/fig_strc_motivate}
-\caption{Motivating example. Left: a corridor blockage makes no operation unexecutable, so the operation-precedence graph contains no seed operation.
-Right: the corridor occupancies that overlap the blockage interval become seeds and grow into a reservation impact set along yielding and succession relations.}
-\Description{Two panels side by side. The left panel is the operation-precedence graph: the corridor blockage makes no operation node unexecutable,
-so the seed operation set is empty. The right panel is the corridor reservation table at the same time: occupancies overlapping the blockage interval become seeds,
-and they connect outward along yield edges and succession edges into a propagation region.}
+\caption{Motivating example: the same schedule under the same blockage on corridor \(e^{\star}\) (hatched), with machine layer above and corridor layer below.
+(a)~AOR inspects only the machine layer: every operation is executable, so the scope is empty, although vehicle \(k_1\)'s occupancy already conflicts with the blockage.
+(b)~The proposed method inspects the corridor layer: vehicle \(k_1\)'s overlapping occupancy is the seed, and yield, same-vehicle, and same-machine edges add subsequent occupancies to the reservation impact set (dashed box); occupancies outside it keep the original plan.}
+\Description{Two panels stacked vertically, showing the same schedule with a machine layer above and a corridor layer below. In the upper panel the corridor layer is faded, every operation is ticked,
+and a red cross marks vehicle k1's occupancy overlapping the blockage on corridor e-star; the scope is empty. In the lower panel the machine layer is faded; vehicle k1's occupancy on e-star is the seed,
+and arrows along yield, same-vehicle, and same-machine edges collect four occupancies into a dashed box labeled as the reservation impact set, while vehicle k3's occupancies stay outside.}
 \label{fig:motivate}
 \end{figure}
 
-\textbf{Stance.} The reservation impact set is \emph{a measurement, not a decision}.
+\textbf{Stance.} The reservation impact set answers only \emph{which occupancies are already invalid}, not \emph{how the schedule should be changed}.
 We do not use yielding relations to steer the search toward better assignments or paths, which would be schedule improvement whose gains are easily offset when another constraint becomes the bottleneck.
-We use them only to delineate which occupancies are already invalid; once the edges are fixed, the result is unique.
+We use the dependencies only to decide invalidity: an occupancy reachable from the seeds belongs to the impact set, one that is not does not; once the edges are fixed, the set is unique.
 The impact set is not necessarily the minimal set needed to restore feasibility, because the minimal set depends on the permitted repair actions (Remark~\ref{rem:minimality}).
 Its role also differs from that of global rescheduling: it answers whether feasibility can be restored \emph{quickly} while confining rewrites to the set, not whether a better makespan can be found.
 Confining rewrites matters because every rewritten occupancy is a route or time window that must be reissued to a vehicle already executing the plan; keeping the rest unchanged is a form of schedule stability~\cite{vieira2003rescheduling}.
@@ -388,12 +395,13 @@ Confining rewrites matters because every rewritten occupancy is a route or time 
 Under corridor blockage and slowdown, operation-level scoping returns an empty scope although the original schedule is infeasible (\(\PassMiss\), Section~\ref{sec:e1});
 the root cause is that the operation-precedence graph has no yielding relations among occupancies (Proposition~\ref{prop:miss}).
 \item \textbf{The reservation impact set as the rescheduling scope.}
-\STRC{} delineates the scope by closure over yielding and same-vehicle, same-job, and same-machine succession. Membership is uniquely determined, no dependency edge leaves the set (\(\PassClosed\)),
-and under Class A disturbances the set contains every occupancy already included by the operation-precedence graph (Section~\ref{sec:e6}).
+\STRC{} delineates the scope by closure over yielding and same-vehicle, same-job, and same-machine succession. Membership is uniquely determined and no dependency edge leaves the set.
+The set is nonempty under all four disturbance types and, under Class A disturbances, contains every occupancy already included by the operation-precedence graph (Section~\ref{sec:e6}).
+With the same rerouting, it rewrites fewer occupancies than rewriting all unfinished ones (fewer/equal/more on \RAStabWTL\ pairs; Section~\ref{sec:cheap}).
 \item \textbf{A matching local recovery with the sources of each result separated.}
-Under the same network, router, and checker, replacing only the scope object raises feasibility from \(\FeasRone\) to \(\FeasRtwo\) (Section~\ref{sec:e3}).
-Bounded repair responds within milliseconds but has a worse makespan than global rescheduling, with no crossover as the budget grows (Section~\ref{sec:e5});
-against rewriting all unfinished occupancies, only the reduction in rewrites can be attributed to the impact set (Section~\ref{sec:cheap}).
+Under the same network, router, and checker, scoping on the operation-precedence graph yields an executable schedule on \(\FeasRone\) corridor-blockage pairs, scoping on the impact set on \(\FeasRtwo\) (Section~\ref{sec:e3}).
+Bounded repair takes milliseconds, but its makespan is no better than that of global rescheduling under every tested time limit, and relaxing the limit does not reverse this order (Section~\ref{sec:e5});
+against rewriting all unfinished occupancies, runtime and makespan are almost identical, so the millisecond runtime comes from single-pass rerouting, not from the impact set (Section~\ref{sec:cheap}).
 \end{enumerate}
 Integrated scheduling before execution uses the reservation table to build a conflict-free plan; this paper uses the same table at execution time to locate the invalidated scope.
 

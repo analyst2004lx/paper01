@@ -62,8 +62,9 @@ $Config = @{
         'Thumbs.db'
         '.DS_Store'
     )
-    # Optional list file: <Ignore>...</Ignore> skip sync; <Delete>...</Delete> remove from GitHub.
-    # If a path is in both, Ignore wins. Missing paths are skipped.
+    # Optional list file: <Ignore> skip; <Delete> remove from GitHub; <Rename> old:new.
+    # If a path is in both Ignore and Delete, Ignore wins. Missing paths are skipped.
+    # Rename is applied by Apply-SyncGitHubRename.ps1 (called below).
     IgnoreDeleteListFile = (Join-Path $PSScriptRoot 'Sync-GitHub-Ignore_and_Delete.txt')
     GitPath       = ''
     # GitHub fetch: idle timeout (no pack growth) vs absolute cap.
@@ -965,6 +966,19 @@ try {
     $remoteFilesAll = @($remoteHashMap.Keys)
     Write-Log ('Remote file count (raw): {0}' -f $remoteFilesAll.Count)
 
+    # <Rename> lives in its own script so Ignore/Delete below stay unchanged.
+    # It must run here: after the remote tree is known, and before this script
+    # would otherwise pull the old path back and push the new path as a new file.
+    $renameScript = Join-Path $PSScriptRoot 'Apply-SyncGitHubRename.ps1'
+    if (Test-Path -LiteralPath $renameScript -PathType Leaf) {
+        . $renameScript
+        Invoke-SyncGitHubRename -LocalFolder $Config.LocalFolder -ListFile $Config.IgnoreDeleteListFile -RemoteRef $remoteRef -RemoteHashMap $remoteHashMap -GitExe $script:GitExe
+        $remoteFilesAll = @($remoteHashMap.Keys)
+        $listInfo = Read-IgnoreDeleteList -ListFile $Config.IgnoreDeleteListFile
+        $script:ListIgnorePaths = @($listInfo.Ignore)
+        $script:ListDeletePaths = @($listInfo.Delete)
+    }
+
     # Apply <Delete> list: remove matching paths from GitHub index (Ignore wins).
     # Missing remote paths are skipped. Use --cached so a still-present local copy is kept.
     $deleteRmCount = 0
@@ -1052,9 +1066,26 @@ try {
     $errorCount = 0
     $conflictPaths = New-Object 'System.Collections.Generic.List[string]'
 
+    # The Ignore/Rename list is not a normal synced document. Comparing it here
+    # checks it out or marks a conflict, then the later commit touches it again
+    # even when the text is unchanged. Leave it for the single content check
+    # before merge/push.
+    $script:ListFileRelGit = $null
+    try {
+        $listFullEarly = [System.IO.Path]::GetFullPath($Config.IgnoreDeleteListFile)
+        $rootFullEarly = [System.IO.Path]::GetFullPath($Config.LocalFolder).TrimEnd('\')
+        if ($listFullEarly.StartsWith($rootFullEarly + '\', [StringComparison]::OrdinalIgnoreCase)) {
+            $script:ListFileRelGit = $listFullEarly.Substring($rootFullEarly.Length).TrimStart('\').Replace('\', '/')
+        }
+    } catch {}
+
     foreach ($relRaw in $all) {
         try {
             $rel = ConvertFrom-GitQuotedPath $relRaw
+            if ($script:ListFileRelGit -and
+                [string]::Equals($rel, $script:ListFileRelGit, [StringComparison]::OrdinalIgnoreCase)) {
+                continue
+            }
             if (Test-IgnoredPath $rel) { continue }
             if (-not (Test-SafeRelativePath -RelativePath ($rel -replace '/', '\'))) {
                 Write-Log ('Skip unsafe path: {0}' -f $rel) -Level WARN
@@ -1250,6 +1281,36 @@ try {
             Write-Log 'Skip push: local history still unrelated to remote.' -Level ERROR
             $pushOk = $false
         } else {
+            # Commit the list only when its text differs. A timestamp or
+            # CRLF-only touch must not create another commit.
+            $listRelGit = $script:ListFileRelGit
+            if ($listRelGit) {
+                $listDiff = Invoke-Git -GitArgs @('diff', '--quiet', '--ignore-cr-at-eol', 'HEAD', '--', $listRelGit) -AllowFail
+                if ($listDiff.ExitCode -eq 0) {
+                    [void](Invoke-Git -GitArgs @('update-index', '--refresh', '--', $listRelGit) -AllowFail)
+                } else {
+                    Write-Log ('Ignore/Rename list text changed; committing before merge/push: {0}' -f $listRelGit) -Level WARN
+                    $listAdd = Invoke-Git -GitArgs @('add', '-f', '--', $listRelGit) -AllowFail
+                    if ($listAdd.ExitCode -ne 0) {
+                        Write-Log ('Could not stage list file: {0}' -f $listAdd.Output) -Level WARN
+                    } else {
+                        $listCached = Invoke-Git -GitArgs @('diff', '--cached', '--quiet', '--ignore-cr-at-eol', '--', $listRelGit) -AllowFail
+                        if ($listCached.ExitCode -eq 0) {
+                            [void](Invoke-Git -GitArgs @('reset', '-q', 'HEAD', '--', $listRelGit) -AllowFail)
+                            Write-Log 'Ignore/Rename list matched HEAD after line-ending normalize; not committed.'
+                        } else {
+                            $listMsg = '{0} list {1:yyyy-MM-dd HH:mm:ss}' -f $Config.CommitPrefix, (Get-Date)
+                            $listCommit = Invoke-Git -GitArgs @('commit', '-m', $listMsg, '--', $listRelGit) -AllowFail -WithCommitIdentity
+                            if ($listCommit.ExitCode -ne 0) {
+                                Write-Log ('List commit failed: {0}' -f $listCommit.Output) -Level WARN
+                            } else {
+                                Write-Log ('committed list: {0}' -f $listMsg)
+                            }
+                        }
+                    }
+                }
+            }
+
             $ahead = Invoke-Git -GitArgs @('rev-list', '--count', ('{0}..HEAD' -f $remoteRef)) -AllowFail
             $behind = Invoke-Git -GitArgs @('rev-list', '--count', ('HEAD..{0}' -f $remoteRef)) -AllowFail
             $aheadN = 0
@@ -1261,9 +1322,11 @@ try {
                 Write-Log ('Remote ahead by {0} commit(s); merging {1} before push...' -f $behindN, $remoteRef) -Level WARN
 
                 # Dirty tracked files block merge ("would be overwritten"). Stash them first.
+                # git status porcelain uses a leading space for unstaged edits (" M path").
+                # Invoke-Git trims that space, so do not require the second column to be a letter.
                 $dirty = Invoke-Git -GitArgs @('status', '--porcelain', '-uno') -AllowFail
                 $didStash = $false
-                if ($dirty.ExitCode -eq 0 -and $dirty.Output -match '(?m)^.[MADRCU]') {
+                if ($dirty.ExitCode -eq 0 -and -not [string]::IsNullOrWhiteSpace($dirty.Output)) {
                     $stashMsg = 'auto-sync pre-merge stash {0:yyyy-MM-dd HH:mm:ss}' -f (Get-Date)
                     Write-Log 'Working tree has uncommitted tracked changes; stashing before merge...' -Level WARN
                     $stash = Invoke-Git -GitArgs @('stash', 'push', '-u', '-m', $stashMsg) -AllowFail

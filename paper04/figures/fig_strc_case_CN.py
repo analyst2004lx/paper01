@@ -47,7 +47,7 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
                 color=colors[in_cl], edgecolor="#222222", linewidth=0.6,
                 alpha=0.92, zorder=2)
         if dur >= 3.5:
-            ax.text(rec.start + dur / 2, y, f"J{rec.job}-{rec.i}",
+            ax.text(rec.start + dur / 2, y, f"$O_{{{rec.job}{rec.i}}}$",
                     ha="center", va="center", fontsize=6.5,
                     color="white" if in_cl else "#222222", zorder=3)
 
