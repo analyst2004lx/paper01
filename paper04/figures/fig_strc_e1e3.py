@@ -16,15 +16,15 @@ EXP = os.path.abspath(os.path.join(
     HERE, "..", "..", "STRC", "experiments", "expanded"))
 OUT = os.path.join(HERE, "fig_strc_e1e3")
 
-ORDER = ("example_3x3x2", "congested_8x4x4", "S8x4x4_high",
-         "S8x4x4_funnel", "S8x4x4_mid")
+ORDER = ("example_3x3x2", "congested_8x4x4", "S8x4x4_funnel",
+         "S8x4x4_high", "S8x4x4_mid")
 
 LABEL = {
-    "example_3x3x2": "3x3x2",
+    "example_3x3x2": "small",
     "congested_8x4x4": "congested",
-    "S8x4x4_high": "S8 high",
-    "S8x4x4_funnel": "S8 funnel",
-    "S8x4x4_mid": "S8 mid",
+    "S8x4x4_high": "high",
+    "S8x4x4_funnel": "funnel",
+    "S8x4x4_mid": "mid",
 }
 
 

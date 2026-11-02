@@ -1,0 +1,1228 @@
+%% paper04 --- standalone paper (English version)
+%% Template: ACM acmart manuscript.  Translated from paper04_CN.tex.
+%% Build: pdfLaTeX or XeLaTeX (no CJK package is needed).
+%%
+\documentclass[manuscript,screen,review]{acmart}
+
+\usepackage{algorithm}
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+\usepackage{pifont}
+\usepackage{makecell}
+\providecommand{\checkmark}{\ding{51}}
+\newcommand{\cmark}{\ding{51}}
+\newcommand{\xmark}{\ding{55}}
+\usepackage{threeparttable}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc,shapes,shadows}
+\usepackage{xcolor}
+\usepackage{amsmath}
+\usepackage{bm}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\usepackage{multirow}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\setlength{\headheight}{20.48303pt}
+
+%% Mechanism acronym: the subject is the closure, not a ``repair framework''.
+\providecommand{\STRC}{\textsc{STRC}}
+%% B13 removed \TBD: zero uses; open items are marked in plain text as <TBD: ...> so that the self-check can find them.
+
+%% =====================================================================
+%% Single source of the main-result numbers.
+%%
+%% All are printed by STRC/tools/paper_numbers.py from STRC/experiments/expanded/*.csv;
+%% the data are produced by `py -m tools.expand_batch` (default 5 instances x 10 seeds).
+%% The text always uses macros, never literals; change numbers only here, then rerun
+%% both commands above to cross-check.
+%%
+%% !! 2026-08-16: enlarged from 3x5=15 pairs to 5x10=50 pairs. Every /15 result of the old draft is void.
+%%
+%% !! 2026-08-16 (second pass): E2b changed from 24/50 to 50/50. This is not a change of
+%% !! instances but the fix of a mismatch between implementation and definition. The release
+%% !! set is a set of *reservations*, whereas replay_reroute used to decide rerouting per
+%% !! *operation* (if either leg entered the closure, the whole operation was replanned).
+%% !! Hence, when only the loaded leg entered the closure, the empty leg of the same operation
+%% !! was also rewritten although its task was not in the release set, and was counted as
+%% !! drift outside the set. All 84 drifting reservations on the 26 failing cells were such
+%% !! same-operation empty legs; 71 of them (85%) had already been executed before t_now,
+%% !! so rewriting them also violated Assumption A2. After switching to per-leg decisions the
+%% !! drift is zero. Only then is premise (iii) of prop:outside actually satisfied; the earlier
+%% !! 24/50 measured an implementation defect, not the physical coverage of the edge set.
+%% =====================================================================
+\newcommand{\NInst}{5}
+\newcommand{\NSeeds}{10}
+\newcommand{\NPairs}{50}
+%% E1/E3: both are full marks; written as \NPairs/\NPairs so that no hand-copied value is left stale
+\newcommand{\PassMiss}{\NPairs/\NPairs}      % T_impact=0, seed set nonempty, original schedule infeasible
+\newcommand{\FeasRone}{0/\NPairs}            % pairs on which R1 restores feasibility
+\newcommand{\FeasRtwo}{\NPairs/\NPairs}      % pairs on which R2 restores feasibility
+\newcommand{\PassClosed}{\NPairs/\NPairs}    % E2a structural closure (zero leakage)
+\newcommand{\PassInvar}{\NPairs/\NPairs}     % E2b fields outside the set unchanged entry by entry
+%% Per-instance extremes of Cl/|R| in the E1 main batch, taken from the body of tab:e1 (0.59/0.57/0.59/0.57/0.56).
+%% This interval used to be written with a different value in three places of the text
+%% (0.56--0.59 / 0.54--0.57 / 0.54--0.58), i.e. CONFLICT-3; it is now produced by this macro only.
+%% Do **not** mix it with the following quantities that share values but not sources:
+%%   \ScaleCloHi (0.56) comes from the k=4 cell of the scale sweep tab:scale, a different batch;
+%%   \PubEoneFracLo/Hi come from the external-layout batch, a separate ledger.
+\newcommand{\EoneCloLo}{0.56}
+\newcommand{\EoneCloHi}{0.59}
+%% Runtime (E3 batch, single-pass rerouting, no scope escalation)
+\newcommand{\MsRepairMed}{3.2}
+\newcommand{\MsRepairMax}{12.8}
+%% Stability: under the A2 constraint the rewrite fractions of the two arms on E5 fall in the same range;
+%% the main comparison is therefore E7's R2 vs RA.
+\newcommand{\ResFracRtwo}{50\%--66\%}
+%% E5 batch: R0+ uses fixed-prefix decoding. After downgraded downstream operations switch to
+%% same-vehicle continuation routing, all 18 budget points have zero violations.
+%% Source: expanded/e5_cross_curve.csv, `py -m tools.expand_batch --only-e5`.
+\newcommand{\RzeroPastLo}{0}
+%% ---------------------------------------------------------------------
+%% E5, two batches read together. pub_batch imports _run_e5 from expand_batch directly;
+%% t_now_frac=0.35, budgets {0.2,1,2}s, pop=40, hot=True are identical item by item, so the
+%% batches can be pooled; they differ only in the layout source (in-house / transcribed
+%% from external sources), which is the point of pooling.
+%% Source: expanded/e5_cross_curve.csv + pub_layouts/e5_cross_curve.csv;
+%% recomputation script tools/_p17_e5_stats.py.
+\newcommand{\EfiveInst}{4}          % congested_8x4x4, example_3x3x2, LyuL2_4m, LyuL6_8m
+\newcommand{\EfiveCells}{12}        % independent instance--seed pairs
+\newcommand{\EfivePts}{36}          % total budget points = 12 pairs x 3 levels
+\newcommand{\EfiveWLT}{35/1/0}      % per budget point, R0+ win/tie/loss
+\newcommand{\EfiveWinMin}{11}       % pairs on which R0+ is strictly better at the smallest budget
+\newcommand{\EfiveTieMin}{1}        % ditto, ties (LyuL6_8m, seed 2024)
+%% ---------------------------------------------------------------------
+%% Dispersion convention (P17). Every mean table/figure is paired with an interquartile
+%% range so that the mean is not read alone.
+%% Source: same script as above; E1 is expanded/e1_miss.csv, 10 seeds per instance.
+\newcommand{\EoneFracIqrLo}{0.024}  % minimum per-instance IQR of Cl/|R|
+\newcommand{\EoneFracIqrHi}{0.049}  % ditto, maximum
+\newcommand{\EoneFracMed}{0.571}    % pooled median over 50 pairs
+%% The measured pooled IQR, 0.0372, equals the Hodges--Lehmann estimate 0.037 of Section 5 in value
+%% but \emph{not} in source; to keep two unrelated quantities from merging into one result in the
+%% text, no macro is defined and the caption does not report it. The per-instance IQR range and
+%% the pooled range suffice to describe the dispersion.
+\newcommand{\EoneFracMin}{0.500}    % lower end of the pooled range over 50 pairs
+\newcommand{\EoneFracMax}{0.655}    % ditto, upper end
+%% phi sweep (tab:scale / fig:scale): runtime range and per-level IQR of Cmax
+\newcommand{\ScaleMsMin}{2.2}       % lower end of strc_wall_ms over the whole sweep
+\newcommand{\ScaleMsMax}{23.8}      % ditto, upper end
+\newcommand{\ScaleCmaxIqrLo}{8}     % smallest per-level IQR of R0+ Cmax
+\newcommand{\ScaleCmaxIqrHi}{76}    % ditto, largest
+%% Speed-up range of the scale sweep (per-cell extremes across two instances)
+\newcommand{\SpeedLo}{87}
+\newcommand{\SpeedHi}{3051}
+%% E6: cells of Class A on which the closure is strictly larger than the release set of the
+%% operation-precedence graph (on the others the two are equal; this is not a containment failure)
+\newcommand{\StrictlyLarger}{87/100}
+%% E6: share of the closure in the live reservations after t_now (corridor blockage). The number is
+%% large; it is the empirical basis of the remark that no minimality is claimed. Do not embellish it.
+\newcommand{\ClosureAliveFrac}{92\%}
+%% =====================================================================
+%% External-layout batch (STRC/experiments/pub_layouts/). **Separate ledger**, not merged into the
+%% \NPairs pairs above---mixing it into the main batch would change the convention of every
+%% /\NPairs result. The two batches use identical instance parameters and differ only in the
+%% layout source. Numbers from: py -m tools.pub_batch, then py -m tools.paper_numbers.
+%% Edge weights are the uniform values filled in by us, so these numbers must **not** be compared
+%% with the reference values of Lyu or van Os.
+%% =====================================================================
+\newcommand{\NPubInst}{5}
+\newcommand{\NPubPairs}{50}
+\newcommand{\PubPassMiss}{\NPubPairs/\NPubPairs}
+\newcommand{\PubFeasRone}{0/\NPubPairs}
+\newcommand{\PubFeasRtwo}{\NPubPairs/\NPubPairs}
+\newcommand{\PubPassClosed}{\NPubPairs/\NPubPairs}
+\newcommand{\PubPassInvar}{\NPubPairs/\NPubPairs}
+\newcommand{\PubEoneFracLo}{0.438}
+\newcommand{\PubEoneFracHi}{0.547}
+%% E4 same-parameter comparison. **Be especially careful with the convention here; it was once written wrongly.**
+%% The \NPubInst external instances lie on only \NPubNets distinct networks (4x4 minus one edge: LyuL2/L3;
+%% 5x5 minus two edges: LyuL4/L5/L6); they differ in the number and placement of machines. Hence:
+%%   the two endpoints of the range \PubCloSpread (\PubCloHi = LyuL2 with 4 machines, \PubCloLo = LyuL3
+%%   with 5 machines) **share the same network**, so it measures machine placement, **not** network geometry.
+%%   Do not write ``the closure share varies markedly with the layout''---the data do not support it.
+%% Correct usage: changing the placement on one network already gives \PubCloSpread, while the LU minimum
+%% cut and the funnel share stay constant throughout (both networks put the load/unload station at a grid
+%% corner, which has exactly two outgoing edges under 4-neighborhood), so the static cut is cleanly refuted.
+%% Do not write this as ``public layouts always place it at a corner'': the Liu family bundled with the
+%% toolset places it at the midpoint of a grid edge (out-degree 3) and was excluded only because it allows
+%% diagonal moves. The accurate statement is that the indicator takes only a few discrete values fixed by placement.
+\newcommand{\NPubNets}{2}
+\newcommand{\PubCloLo}{0.305}
+\newcommand{\PubCloHi}{0.512}
+\newcommand{\PubCloSpread}{0.207}
+\newcommand{\PubCloSpreadBig}{0.075}
+\newcommand{\SelfCloLo}{0.446}
+\newcommand{\SelfCloHi}{0.497}
+\newcommand{\SelfCloSpread}{0.051}
+\newcommand{\PubEfiveNoCross}{17/18}
+%% =====================================================================
+%% Cheap baseline arms (E7) and the instance-size sweep (E8). Both batches share the arm definitions:
+%%   RS  global right shift. Paths, assignment and sequence unchanged; everything unfinished is pushed
+%%       past the blockage window. Same freezing criterion as R2 (t_end <= t_now is immovable), so it is
+%%       admissible under A2.
+%%   RD  re-decoding of the original chromosome. Machine assignment and processing order are kept; it uses
+%%       the same fixed-prefix decoding as R0+. After downgraded downstream operations switch to
+%%       same-vehicle continuation routing, its A2 violations are \RedecodeBad.
+%%   RA  no boundary: release every reservation after t_now and run exactly the same rerouting replay as R2.
+%%       It shares the engine and the freezing criterion with R2; the only difference is that the release
+%%       set is the trivial upper bound, so the whole R2--RA difference is attributable to the closure itself.
+%% Sources: STRC/experiments/cheap_baselines.csv (py -m tools.cheap_baselines)
+%%          STRC/experiments/scale_curve.csv     (py -m tools.scale_curve)
+%% Protocol identical to E1--E3 (single-window blockage on a busy corridor, t_now=0.35 Cmax, no scope
+%% escalation for R2), so tab:cheap can be read together with tab:e3; but **not** with tab:e5---that
+%% batch has only two instances.
+%% =====================================================================
+\newcommand{\MsShift}{1.42}          % median RS runtime/ms (\NPairs pairs)
+\newcommand{\MsRedecode}{4.16}       % median RD runtime/ms (ditto)
+\newcommand{\MsAllFuture}{2.76}      % median RA runtime/ms (ditto)
+\newcommand{\MsCheapRtwo}{2.74}      % median R2 runtime in the same batch, for a like-for-like four-arm comparison
+\newcommand{\RedecodeRatio}{1.5}     % MsRedecode / MsCheapRtwo
+\newcommand{\ShiftBad}{0/\NPairs}    % pairs on which RS rewrites finished reservations
+\newcommand{\RedecodeBad}{0/\NPairs}
+\newcommand{\WinVsShift}{27/16/7}    % R2 vs RS on Cmax, win/tie/loss
+\newcommand{\WinVsRedecode}{14/14/22}
+\newcommand{\WinVsAllFuture}{4/46/0}
+\newcommand{\ResFracCheapRtwo}{0.540}
+\newcommand{\ResFracShift}{0.627}
+\newcommand{\ResFracRedecode}{0.618}
+\newcommand{\ResFracAllFuture}{0.604}
+%% Per-cell stability of R2 against RA (rewrite fraction; all \NPairs cells where both arms are feasible).
+\newcommand{\RAStabWTL}{31/18/1}     % R2 more stable/tie/less stable
+\newcommand{\RAStabP}{8.8\times10^{-7}}  % Wilcoxon signed-rank, two-sided
+\newcommand{\RAStabMean}{0.064}      % mean reduction of the rewrite fraction
+%% The next two are the same result after removing the 6 cells where the two methods coincide
+%% (R2's release set = all unfinished occupancies), computed directly from cheap_baselines.csv by
+%% STRC/tools/audit_checks.py; the removal enlarges the reduction.
+\newcommand{\RAStabWTLNet}{31/12/1} % R2 more stable/tie/less stable after removing coincident pairs (n=44)
+\newcommand{\RAStabMeanNet}{0.073}  % ditto, mean reduction
+\newcommand{\RAStabMed}{0.029}       % ditto, median reduction
+\newcommand{\RACmaxRatio}{0.999}     % mean Cmax ratio R2/RA
+\newcommand{\RACmaxLo}{0.970}        % ditto, minimum (the pair most favorable to R2)
+\newcommand{\ClosureShareLo}{0.80}   % closure / all future reservations: minimum
+\newcommand{\ClosureShareMean}{0.92} % ditto, mean (same source as \ClosureAliveFrac)
+%% Instance-size ladder: 2k jobs, k machines, k vehicles, k=4..10; congestion level, H, F, Tt/Tp and the
+%% two cut sets use the same convention, only the size changes (generator clbs/tools/gen_instances.py;
+%% calibration in its docstring).
+\newcommand{\ScaleKs}{7}
+\newcommand{\ScalePairs}{70}
+\newcommand{\ScaleJobsHi}{20}
+\newcommand{\ScaleMachHi}{10}
+\newcommand{\ScaleCloLo}{0.48}       % closure share of the whole table: k=10
+\newcommand{\ScaleCloHi}{0.56}       % ditto, k=4
+%% The next three and the two above are the same data under two denominators, computed directly (not
+%% back-derived) by tools/audit_checks.py from the n_res / n_live / closure columns of scale_curve.csv.
+%% The attainable upper bound of Cl/|R| is |R^o|/|R|, so the question ``does the share approach 1?''
+%% must be answered with Cl/|R^o|.
+\newcommand{\ScaleAliveShare}{0.61}  % mean |R^o|/|R|, mean over the seven levels 0.611
+\newcommand{\ScaleCloAliveLo}{0.78}  % closure share of unfinished occupancies, lowest level mean: 0.782 at k=10
+\newcommand{\ScaleCloAliveHi}{0.91}  % ditto, highest: 0.905 at k=4
+\newcommand{\ScaleMsHi}{10.4}        % median R2 runtime: k=10
+\newcommand{\ScaleRatioLo}{1.5}      % RD/R2 runtime ratio: k=4
+\newcommand{\ScaleRatioHi}{3.3}      % ditto, k=10
+\newcommand{\ScaleFeasFirst}{69/\ScalePairs}   % pairs feasible in the first round (no scope escalation)
+\newcommand{\ScaleFeasAll}{\ScalePairs/\ScalePairs}
+%% E7 post-hoc rule: release share vs reduction in instability. The threshold was selected on this
+%% cheap_baselines.csv sample and is not an extrapolated theorem.
+%% Source: py -m tools.paper_numbers (worth_section) / fig_strc_worth.py
+\newcommand{\WorthThresh}{0.93}
+\newcommand{\WorthLowN}{27}
+\newcommand{\WorthLowMean}{0.094}
+\newcommand{\WorthHighN}{23}
+\newcommand{\WorthHighMean}{0.029}
+\newcommand{\WorthVanish}{0.97}
+%% Edge-set difference probe. Source: STRC/experiments/edge_probe.csv (py -m tools.edge_probe --full)
+\newcommand{\ProbeLeakPairs}{0/50}
+\newcommand{\ProbeLeaks}{0}
+\newcommand{\ProbeOutsidePairs}{44}  % 影响集外仍有占用的对数 / pairs with occupancies outside Cl
+%% E6 repair dimension (single-pass rerouting, no scope escalation). Source: R2_feasible column of expanded/e6_types.csv
+\newcommand{\FeasESixBlock}{\NPairs/\NPairs}
+\newcommand{\FeasSlow}{\NPairs/\NPairs}
+\newcommand{\FeasESixAgv}{\NPairs/\NPairs}
+\newcommand{\FeasESixRa}{\NPairs/\NPairs}
+%% Non-uniform edge weights, E1/E3. Source: STRC/experiments/weight_sweep.csv (py -m tools.weight_sweep)
+\newcommand{\WeightLogRtwo}{\NPairs/\NPairs}
+\newcommand{\WeightLuRtwo}{\NPairs/\NPairs}
+\newcommand{\WeightSplitRtwo}{49/\NPairs}
+
+\usepackage{amsthm}
+\newtheorem{assumption}{Assumption}
+\newtheorem{definition}{Definition}
+\newtheorem{problem}{Problem}
+\newtheorem{remark}{Remark}
+\newtheorem{prop}{Proposition}
+\newtheorem{lem}{Lemma}
+
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+\setcopyright{acmlicensed}
+\copyrightyear{2026}
+\acmYear{2026}
+\acmDOI{XXXXXXX.XXXXXXX}
+
+%%\acmSubmissionID{123-A56-BU3}
+
+\begin{document}
+
+%% =====================================================================
+%% Title: the standalone paper uses the hook ``cannot capture''; the thesis chapter uses
+%% ``bounded repair on the closure''. B11 naming: title and body both say
+%% ``operation-precedence graph'' (CONFLICT-4); the word ``cascading'' was dropped---it
+%% occurred only in the title, while the body, contributions and conclusion all say ``invalidation''.
+%% =====================================================================
+\title[Bounded Rescheduling via Spatiotemporal Reservation Closure]{Bounded Rescheduling for Flexible Job Shops via Spatiotemporal Reservation Closure}
+
+\author{Qi Yu}
+\email{230240012@seu.edu.cn}
+\orcid{0009-0008-7843-6345}
+\affiliation{%
+	\department{School of Cyber Science and Engineering}
+	\department{Key Laboratory of Computer Network and Information Integration}
+	\institution{Southeast University}
+	\city{Nanjing}
+	\state{Jiangsu}
+	\country{PR China}
+}
+
+\author{Wei Li}
+\orcid{0009-0001-0949-329X}
+\email{xchlw@seu.edu.cn}
+\authornote{corresponding author}
+\affiliation{%
+	\department{School of Computer Science and Engineering}
+	\department{Key Laboratory of Computer Network and Information Integration}
+	\institution{Southeast University}
+	\city{Nanjing}
+	\state{Jiangsu}
+	\country{PR China}
+}
+
+\renewcommand{\shortauthors}{Yu and Li}
+
+%% =====================================================================
+%% Abstract
+%% Skeleton: background gap -> claim (the scope belongs on the reservation graph) -> the object STRC ->
+%%       how it is used (bounded repair) -> division of labor with global rescheduling (response time)
+%%       -> experimental hook (the contribution is not ``yet another repair algorithm'')
+%% =====================================================================
+%% Abstract
+%% =====================================================================
+\begin{abstract}
+In flexible job shop scheduling that captures processing order with an operation-precedence graph and records the corridor occupancies of vehicles in a time-window reservation table,
+the rescheduling scope after a disturbance is still delineated by affected-operation rescheduling (AOR): operations that can no longer be executed as planned are identified, and their successors on the operation-precedence graph are added.
+Corridor blockage or slowdown acts only on corridors; machines and operations remain available, so AOR finds no affected operation and returns an empty scope, concluding that no rescheduling is needed.
+Yet the planned occupancies inside the disturbed interval are already invalid and the original schedule is infeasible;
+moreover, a corridor admits one vehicle at a time, so a vehicle planned to traverse it later must wait for the preceding one (a yielding relation), and a delay passes from vehicle to vehicle.
+The problem is not detection (the blockage is known) but that the operation-precedence graph used by AOR contains only operations and their precedences, with neither corridor occupancies nor the yielding relations among them.
+
+We instead delineate the rescheduling scope at the level of corridor occupancies and propose the spatiotemporal reservation closure (\STRC), whose output set of occupancies is called the reservation impact set.
+Starting from the planned occupancies whose intervals overlap the disturbance window, \STRC{} keeps adding successor occupancies along four dependency relations among occupancies---yielding on the same corridor, and the next occupancy of the same vehicle, of the same job, and on the same machine---until none can be added (the transitive closure).
+Each occupancy is determined by its corridor (path), interval, and vehicle: occupancies inside the set may have their path and interval replanned (and, under vehicle failure, their vehicle replaced), while those outside keep all three.
+Once the four relations are fixed, membership in the set depends only on reachability from the seeds and is independent of the rerouting algorithm.
+Bounded repair first replans conflict-free paths for the occupancies inside the set with the original vehicles; if the schedule remains infeasible, it successively adds the subsequent occupancies of the same job, of the same vehicle, and finally all unfinished occupancies to the rewritable scope.
+
+On \NPairs\ instance--seed pairs (\NInst\ instances \(\times\) \NSeeds\ random seeds that determine disturbance injection and search), the scope delineated by AOR under corridor blockage is empty on all pairs, although the original schedule is in fact infeasible on every one of them;
+with the rerouting procedure unchanged and only the scope object replaced, the number of pairs repaired to a feasible schedule rises from \FeasRone\ to \FeasRtwo.
+On all pairs the impact set is closed (no dependency edge leads from inside to outside), and every occupancy outside it keeps its original corridor, interval, and vehicle after repair.
+Rewriting all unfinished occupancies instead leaves runtime and makespan almost unchanged but raises the fraction of rewritten occupancies from \ResFracCheapRtwo\ to \ResFracAllFuture\ (scoping by the impact set rewrites fewer/equally many/more on \RAStabWTL\ pairs; Wilcoxon \(p=\RAStabP\)).
+Compared with warm-started global rescheduling that re-searches assignment and order within a time limit, bounded repair is two to three orders of magnitude faster, but its makespan is never better under any tested time limit and cannot overtake under longer limits.
+Feasibility is thus restored by the scope object; the reduction in rewrites is limited because the impact set already covers about \ClosureAliveFrac\ of all unfinished occupancies.
+Rerouting inside the set and enlarging the scope after failure follow existing practice; the contribution lies in delineating the rescheduling scope on corridor occupancies instead of operations.
+\end{abstract}
+
+\keywords{flexible job shop scheduling, bounded rescheduling, conflict-free AGV routing, spatiotemporal reservation table, spatiotemporal reservation closure, corridor blockage}
+
+%% CCS. For an ACM submission the CCSXML block must be regenerated with the official tool.
+\ccsdesc[500]{Theory of computation~Scheduling algorithms}
+\ccsdesc[300]{Applied computing~Industry and manufacturing}
+\ccsdesc[300]{Computing methodologies~Planning and scheduling}
+
+\maketitle
+
+%% =====================================================================
+\section{Introduction}
+\label{sec:introduction}
+%% =====================================================================
+
+Flexible job shop scheduling with transportation usually takes transport times as constants indexed by location pairs~\cite{xin2025review,meng2025cp,qin2026knowledge}, assuming no corridor contention among vehicles.
+When a finite fleet shares a sparse corridor network this no longer holds~\cite{kim2026congestion}, so existing work decides machine assignment jointly with conflict-free paths before execution~\cite{vanos2026exact,sun2023integrated,lyu2019approach,li2026framework},
+and a schedule then also contains a time-window reservation table recording which vehicle occupies which corridor during which interval.
+A disturbance may make operations unexecutable (e.g., machine or vehicle failure) or invalidate only some corridor occupancies without changing any operation (e.g., a corridor blocked or slowed down for some period).
+These works answer how to build a conflict-free schedule when information is complete. Once the shop has executed up to time \(t_{\mathrm{now}}\) and a disturbance occurs, the questions become:
+which corridor occupancies are invalidated; which must be rewritten so that the schedule again satisfies corridor exclusivity and the closure constraints and can continue to be executed;
+and whether such a schedule can be obtained within milliseconds of computation time without restarting a population-based search.
+
+\textbf{The gap.}
+In dynamic scheduling of flexible job shops with transportation, the rescheduling scope is usually delineated on the operation-precedence graph:
+operations that can no longer be executed as planned serve as seeds, the operations following them in the same job and on the same machine are added, possibly only up to \(\theta\) steps (a manually set upper bound on the expansion depth),
+and only the operations in this scope are rescheduled.
+Existing dynamic scheduling studies with AGV transport delineate the scope in this way~\cite{zhang2023energy,tang2026dynamic}, a practice represented by affected-operation rescheduling (AOR) and its modification MAOR~\cite{subramaniam2003maor}.
+This is reasonable when the disturbance is an operation event, such as a machine failure.
+When the schedule records corridor occupancies with time windows, however, a \emph{corridor blockage} closes a corridor during \([t_a,t_b)\) without modifying any machine assignment or processing order; machines and operations remain available.
+The seed set of AOR (operations that can no longer be executed as planned) is therefore empty, so the scope is empty and the method concludes that no rescheduling is needed.
+Yet the planned occupancies that overlap the blockage interval are no longer feasible.
+Moreover, a corridor admits one vehicle at a time, so a vehicle planned to traverse it later must wait for the preceding one to leave (a yielding relation); a vehicle delayed by waiting or detouring therefore delays its follower, which delays its own follower, and the invalidation propagates across the reservation table.
+The blockage itself is known, so the problem is not detection: the operation-precedence graph used by AOR has operations as vertices and job and machine precedences as edges,
+and by definition contains neither corridor occupancies nor their yielding relations, so it cannot express this invalidation or its propagation;
+the gap arises only in settings that record corridor occupancies with time windows.
+We accordingly distinguish \textbf{Class A} disturbances, which make some operations unexecutable (robotic-arm failure, processing-time deviation, rush orders, vehicle failure),
+from \textbf{Class B} disturbances, which act only on the reservation table (corridor blockage, corridor slowdown); Class B is the counterexample to operation-level scoping (Section~\ref{sec:disturbance_classes}).
+Figure~\ref{fig:motivate} illustrates the gap.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_strc_motivate}
+\caption{Motivating example: the same schedule under the same blockage on corridor \(e^{\star}\) (hatched), with machine layer above and corridor layer below.
+(a)~AOR inspects only the machine layer: every operation is executable, so the scope is empty, although vehicle \(k_1\)'s occupancy already conflicts with the blockage.
+(b)~The proposed method inspects the corridor layer: vehicle \(k_1\)'s overlapping occupancy is the seed, and yield, same-vehicle, and same-machine edges add subsequent occupancies to the reservation impact set (dashed box); occupancies outside it keep the original plan.}
+\Description{Two panels stacked vertically, showing the same schedule with a machine layer above and a corridor layer below. In the upper panel the corridor layer is faded, every operation is ticked,
+and a red cross marks vehicle k1's occupancy overlapping the blockage on corridor e-star; the scope is empty. In the lower panel the machine layer is faded; vehicle k1's occupancy on e-star is the seed,
+and arrows along yield, same-vehicle, and same-machine edges collect four occupancies into a dashed box labeled as the reservation impact set, while vehicle k3's occupancies stay outside.}
+\label{fig:motivate}
+\end{figure}
+
+\textbf{Stance.} The reservation impact set answers only \emph{which occupancies are already invalid}, not \emph{how the schedule should be changed}.
+We do not use yielding relations to steer the search toward better assignments or paths, which would be schedule improvement whose gains are easily offset when another constraint becomes the bottleneck.
+We use the dependencies only to decide invalidity: an occupancy reachable from the seeds belongs to the impact set, one that is not does not; once the edges are fixed, the set is unique.
+The impact set is not necessarily the minimal set needed to restore feasibility, because the minimal set depends on the permitted repair actions (Remark~\ref{rem:minimality}).
+Its role also differs from that of global rescheduling: it answers whether feasibility can be restored \emph{quickly} while confining rewrites to the set, not whether a better makespan can be found.
+Confining rewrites matters because every rewritten occupancy is a route or time window that must be reissued to a vehicle already executing the plan; keeping the rest unchanged is a form of schedule stability~\cite{vieira2003rescheduling}.
+
+\textbf{Contributions.}
+\begin{enumerate}[label=\textbf{C\arabic*.},leftmargin=2.2em,itemsep=0.3em]
+\item \textbf{A class of invalidation the operation-precedence graph cannot capture.}
+Under corridor blockage and slowdown, operation-level scoping returns an empty scope although the original schedule is infeasible (\(\PassMiss\), Section~\ref{sec:e1});
+the root cause is that the operation-precedence graph has no yielding relations among occupancies (Proposition~\ref{prop:miss}).
+\item \textbf{The reservation impact set as the rescheduling scope.}
+\STRC{} delineates the scope by closure over yielding and same-vehicle, same-job, and same-machine succession. Membership is uniquely determined and no dependency edge leaves the set.
+The set is nonempty under all four disturbance types and, under Class A disturbances, contains every occupancy already included by the operation-precedence graph (Section~\ref{sec:e6}).
+With the same rerouting, it rewrites fewer occupancies than rewriting all unfinished ones (fewer/equal/more on \RAStabWTL\ pairs; Section~\ref{sec:cheap}).
+\item \textbf{A matching local recovery with the sources of each result separated.}
+Under the same network, router, and checker, scoping on the operation-precedence graph yields an executable schedule on \(\FeasRone\) corridor-blockage pairs, scoping on the impact set on \(\FeasRtwo\) (Section~\ref{sec:e3}).
+Bounded repair takes milliseconds, but its makespan is no better than that of global rescheduling under every tested time limit, and relaxing the limit does not reverse this order (Section~\ref{sec:e5});
+against rewriting all unfinished occupancies, runtime and makespan are almost identical, so the millisecond runtime comes from single-pass rerouting, not from the impact set (Section~\ref{sec:cheap}).
+\end{enumerate}
+Integrated scheduling before execution uses the reservation table to build a conflict-free plan; this paper uses the same table at execution time to locate the invalidated scope.
+
+Section~\ref{sec:related_work} reviews related work; Section~\ref{sec:problem} states the setting and the recovery problem; Section~\ref{sec:strc} defines \STRC{} and its properties;
+Section~\ref{sec:repair} describes bounded repair; Section~\ref{sec:experiments} reports the experiments; Section~\ref{sec:conclusion} concludes.
+
+%% =====================================================================
+\section{Related work}
+\label{sec:related_work}
+%% =====================================================================
+
+A basic question in dynamic scheduling is how to delineate the rescheduling scope: which operations, corridor occupancies, or vehicles must be replanned after a disturbance, while everything outside the scope keeps the original plan.
+We review four classes of objects on which the scope has been delineated and compare them with this paper in Table~\ref{tab:position}.
+
+\subsection{Local rescheduling in job shops}
+\label{sec:rw_aor}
+
+For operation-level events, delineating the scope by the affected operations is still common in dynamic scheduling with AGVs.
+Zhang et al.~\cite{zhang2023energy} reschedule the operations not yet processed after a machine breakdown;
+Tang et al.~\cite{tang2026dynamic} classify disrupted operations and delivery tasks as retained, continued, or reconstructed, and compare full rescheduling, partial rescheduling, and right shift.
+AOR and MAOR~\cite{subramaniam2003maor} reschedule only the operations directly or indirectly affected.
+Delineating the scope along the time axis and enlarging it after failure have also been studied, including match-up, which reschedules only up to a point where the original schedule can be resumed~\cite{qiao2012single,salido2017rescheduling},
+and Local Rescheduling with incrementally enlarged time windows~\cite{kuster2007local}; right shift instead postpones the entire unfinished part.
+Rolling-horizon methods solve overlapping shorter-horizon subproblems in sequence~\cite{li2025learning}, and decomposition methods split the job set along its precedence structure~\cite{margot2003decompositions}; see~\cite{vieira2003rescheduling,ouelhadj2009survey} for surveys.
+Delineating a scope and rescheduling locally within it is thus a fairly general practice, but these works start the delineation from disturbed operations;
+when a disturbance only makes a corridor impassable, there is no such operation, so the scope is necessarily empty although the schedule is infeasible.
+
+\subsection{Occupancy order on exclusive resources}
+\label{sec:rw_ag}
+
+The alternative graph of Mascis and Pacciarelli~\cite{mascis2002alternative} generalizes the disjunctive graph: vertices are occupations of block sections,
+fixed arcs encode route precedence, and paired alternative arcs encode which train passes first; D'Ariano et al.~\cite{dariano2007branch} use it for real-time train rescheduling.
+An alternative arc captures the order in which two trains pass the same block section, the same kind of occupancy order as our yielding relation.
+In the alternative graph this order is a decision variable, chosen so that no positive cycle arises and the objective is optimized;
+railways treat block sections as machines, so an unavailable section appears directly on the graph and the mismatch studied here does not arise.
+We instead use the already fixed order only to determine which occupancies must be replanned after the disturbance.
+
+\subsection{Local replanning in conflict-free multi-vehicle routing}
+\label{sec:rw_mapf}
+
+In multi-agent path finding (MAPF), replanning only the affected agents is standard.
+\v{S}vancara et al.~\cite{svancara2019online} compare Replan All, Replan Single, and Replan Affected, determining the affected agents by independence detection;
+Malka et al.~\cite{malka2024online} replan only the agents affected by observed map changes; lifelong MAPF treats spatiotemporal occupancy as a first-class constraint~\cite{zhang2024guidance}.
+MAPF, however, has no job--operation--machine assignment, so operation-level scoping cannot miss a blockage there,
+and its affected set is the output of a detection algorithm that varies with the implementation, whereas the reservation impact set is fixed once the edges are given (Section~\ref{sec:containment}).
+
+\subsection{Flexible job shop scheduling with transportation}
+\label{sec:rw_position}
+
+Much recent work still takes travel times as a constant matrix~\cite{xin2025review,meng2025cp,qin2026knowledge} or as load-dependent times with an aggregate congestion delay~\cite{jafarian2026integrated}; neither records corridor occupancies, so a corridor blockage has no counterpart.
+Congestion-aware dispatching selects vehicles by proxies such as local density~\cite{kim2026congestion}.
+Van Os and Basten~\cite{vanos2026exact} formalize flexible job shop scheduling with conflict-free transportation and solve most benchmark instances to optimality;
+two-stage schemes first fix production and then resolve vehicle conflicts~\cite{sun2023integrated}; a learning-based scheduling layer can be coupled with a conflict-resolving routing layer~\cite{li2026framework}.
+These works build a conflict-free schedule \emph{before} execution and do not handle execution-time disturbances (e.g., Sun et al.~\cite{sun2023integrated} assume that AGVs are always available),
+whereas the dynamic scheduling works with AGVs in Section~\ref{sec:rw_aor} do not model corridor contention (e.g., Zhang et al.~\cite{zhang2023energy} ignore AGV collisions).
+In flexible job shop scheduling with transportation, a reservation table and execution-time disturbances have thus not yet appeared together;
+when both are present, the only directly applicable practice is operation-level scoping, which yields an empty scope for a corridor blockage (\PassMiss, Section~\ref{sec:e1}).
+
+\label{sec:rw_claim}
+\begin{table*}[t]
+\centering
+\caption{Comparison of related work and this paper in problem setting and rescheduling scope.
+\cmark: present; \xmark: absent; ---: not applicable (no local rescheduling scope is delineated).
+``Occupancy time windows'' means that the model explicitly records the intervals during which each vehicle (train) occupies a segment (block section, spatiotemporal cell).
+``Scope on'' is the object that may be rewritten inside the scope;
+``Propagation channels'' are the channels tracked during delineation, named by the shared resource through which invalidation passes;
+``No misses'' means that, under a disturbance acting only on corridors (e.g., a blockage or slowdown), all invalidated occupancies fall inside the scope;
+``Repair-independent'' means that the scope is uniquely determined by a given rule and does not vary with the implementation or stopping condition of the repair or detection algorithm.}
+\label{tab:position}
+\footnotesize
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{0.18\linewidth}cc>{\raggedright\arraybackslash}p{0.12\linewidth}>{\raggedright\arraybackslash}p{0.13\linewidth}>{\raggedright\arraybackslash}p{0.12\linewidth}cc@{}}
+\toprule
+& \multicolumn{3}{c}{\textbf{Problem setting}} & \multicolumn{4}{c}{\textbf{Rescheduling scope}} \\
+\cmidrule(lr){2-4}\cmidrule(l){5-8}
+\textbf{Representative work} &
+\makecell{\textbf{Operation \&}\\\textbf{machine}\\\textbf{assignment}} &
+\makecell{\textbf{Occupancy}\\\textbf{time}\\\textbf{windows}} &
+\textbf{Execution-time disturbances} &
+\textbf{Scope on} &
+\textbf{Propagation channels} &
+\makecell{\textbf{No}\\\textbf{misses}} &
+\makecell{\textbf{Repair-}\\\textbf{independent}} \\
+\midrule
+AOR~\cite{subramaniam2003maor} &
+\cmark & \xmark & Operation events & Affected operations & Job, machine & \xmark & \cmark \\
+Match-up~\cite{qiao2012single,salido2017rescheduling}, LRS~\cite{kuster2007local} &
+\cmark & \xmark & Operation events & Time window & Window enlarged stepwise & \xmark & \xmark \\
+Dynamic scheduling with AGVs~\cite{zhang2023energy,tang2026dynamic} &
+\cmark & \xmark & Equipment failures, rush orders & Operations and transport tasks & By disturbance category & \xmark & \cmark \\
+Real-time railway rescheduling~\cite{mascis2002alternative,dariano2007branch} &
+\xmark & \cmark & Train delays & All trains & --- (global rescheduling) & \cmark & --- \\
+Online MAPF~\cite{svancara2019online,malka2024online} &
+\xmark & \cmark & New tasks, map changes & Affected vehicles & Inter-vehicle path conflicts & \cmark & \xmark \\
+Constant or aggregate transport time~\cite{meng2025cp,qin2026knowledge,jafarian2026integrated} &
+\cmark & \xmark & None (before execution) & --- & --- & --- & --- \\
+Integrated conflict-free scheduling~\cite{vanos2026exact,sun2023integrated,li2026framework} &
+\cmark & \cmark & None (before execution) & --- & --- & --- & --- \\
+\midrule
+\textbf{This paper} &
+\cmark & \cmark & \textbf{Operation events and corridor disturbances} & \textbf{Corridor occupancies (assignment and sequence unchanged)} & \textbf{Corridor, vehicle, job, machine} & \cmark & \cmark \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+As Table~\ref{tab:position} shows, none of the listed works combines operation and machine assignment, occupancy time windows, and execution-time disturbances.
+Our scope puts ``no misses'' first: every invalidated occupancy must be included, while occupancies unreachable along the propagation channels keep their original plan;
+the set is not meant to be minimal, since a minimal set depends on the repair actions (Remark~\ref{rem:minimality}).
+The channels must match those along which invalidation actually propagates: AOR follows only jobs and machines and thus obtains an empty scope under a blockage,
+while relations that do not propagate invalidation would only enlarge the scope.
+Our four channels---corridor (yielding), vehicle, job, and machine---correspond to the shared resources that constrain occupancy timing;
+inside the scope, routes and intervals (and, under a vehicle failure, vehicles) may change, while machine assignment and processing sequence stay fixed.
+
+%% =====================================================================
+\section{The corridor-reservation setting and the execution-time recovery problem}
+\label{sec:problem}
+%% =====================================================================
+
+\subsection{System setting and notation}
+\label{sec:system_brief}
+
+The problem belongs to flexible job shop scheduling with conflict-free transportation constraints, so we build on the formulation of van Os and Basten~\cite{vanos2026exact}; the two differ in what is reserved (Section~\ref{sec:reservation}).
+The pre-disturbance schedule \(\mathcal{S}^0\) is a given input; delineation depends only on \(\mathcal{S}^0\) itself (assignment, sequence, and reservation table), not on how it was obtained, so \(\mathcal{S}^0\) may come from any scheduling method.
+
+\subsubsection{Shop floor and four groups of decisions}
+\label{sec:shop}
+
+The shop routing graph \(G=(V,E)\) is strongly connected. Each machine \(m\) processes through a robotic arm at node \(\mathrm{loc}(m)\), so a robotic-arm failure means a failure of that machine;
+\(v_0\in V\) is the load/unload station. There are \(n\) jobs, a machine set \(M\), and a homogeneous fleet of unit-load vehicles \(K=\{1,\ldots,N_A\}\).
+Job \(j\) has a fixed chain \(O_{j1}\to\cdots\to O_{jn_j}\); operation \(O_{ji}\) has candidate machines \(\Omega_{ji}\subseteq M\) and processing time \(t^P_{jim}\) on machine \(m\).
+A schedule fixes (i)~the machine assignment \(x\); (ii)~the processing sequence \(\pi\) on each machine; (iii)~the vehicle assignment \(y\) of each transport; and (iv)~a conflict-free path for each vehicle move.
+We write \(\mathcal{S}=(x,\pi,y,R)\), where the reservation table \(R\) records group (iv).
+Transports are not fixed parameters but are determined by the machine assignment: a transport is needed only when two consecutive operations of a job are assigned to machines at different nodes.
+Each transport is split into an \emph{empty leg}, in which the vehicle travels unloaded from its current position to the machine of the preceding operation to pick up the job, and a \emph{loaded leg}, in which it carries the job to the machine of the succeeding operation; each leg has its own task label \(u\).
+Loading and unloading times are zero. Rewritability, keeping, and rerouting are all decided per transport leg, not per transport or operation.
+
+\subsubsection{Corridor reservation and conflict freedom}
+\label{sec:reservation}
+
+Each corridor \(e\in E\) is an exclusive resource with traversal time \(\tau_e\), treated as a single lane: a vehicle in either direction occupies the whole corridor, so neither head-on encounters nor overtaking can occur,
+as with the narrow aisles and zone control common in AGV shops (a two-lane corridor can be modeled as two corridors).
+Occupancies are half-open intervals, so a following vehicle may enter exactly when the preceding one leaves; vehicles wait only at nodes, which have ample parking capacity, and never inside a corridor.
+A reservation record \(r=(e,\,[t^s,t^e),\,k,\,u)\in R\) means that vehicle \(k\) occupies \(e\) during \([t^s,t^e)\) for leg \(u\), and distinct occupancies of the same corridor must be disjoint.
+Paths use only time slots not yet occupied in \(R\), so the table stays conflict-free without a posterior check.
+Time-window routing is the basic module shared by our method and all baselines: given origin, destination, earliest departure, and the current reservation table \(R\), it returns a path whose occupancies overlap no existing one.
+We implement it as time-window Dijkstra~\cite{sun2023integrated} and change only \emph{which} legs are handed to it.
+Van Os et al.\ reserve nodes~\cite{vanos2026exact} and Lyu et al.\ add node capacities~\cite{lyu2019approach}; we reserve only corridors (network edges), so our results are not directly comparable with their reported values (Section~\ref{sec:limitations}).
+
+\subsubsection{Operation-precedence graph and reservation dependency graph}
+\label{sec:two_graphs}
+
+The operation-precedence graph \(G_T=(T_T,E_T)\) has operations as vertices and two kinds of directed edges: job precedence, from \(O_{ji}\) to \(O_{j,i+1}\), and same-machine precedence, from an operation to the one processed immediately after it on the same machine; it contains no occupancies and hence no yielding relations.
+The reservation dependency graph \(G_R=(R,E_R)\) has corridor occupancies as vertices; an edge \(r\to r'\) means that invalidating \(r\) may force \(r'\) to be rerouted.
+Its yield and same-vehicle edges link consecutive occupancies of the same corridor and of the same vehicle, and its same-job and same-machine edges carry the precedences of \(G_T\) over to the \emph{transport occupancies} of operations, i.e., the occupancies of the legs that move the job for that operation (Definition~\ref{def:dep}).
+The vertex sets are disjoint; hence a disturbance that changes only when corridors are passable yields no seed on \(G_T\), whereas on \(G_R\) every planned occupancy overlapping the disturbed interval---exactly what makes the schedule infeasible---is a seed
+(Figure~\ref{fig:graphs}; notation in Table~\ref{tab:notation}).
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_strc_graphs}
+\caption{The two graphs have disjoint vertex sets. (a)~Operation-precedence graph \(G_T\): a corridor blockage finds no seed operation.
+(b)~Reservation dependency graph \(G_R\): starting from the seed occupancy overlapping the blockage, subsequent occupancies are included along yielding, same-vehicle, same-job, and same-machine edges; the same-job and same-machine edges carry the precedences of (a) over to transport occupancies.}
+\Description{Two panels side by side. The left panel is the operation-precedence graph, with job-successor and same-machine-successor edges connecting operation boxes;
+a dashed box at the top marks the corridor blockage, which does not fall on any box.
+The right panel is the reservation dependency graph, with five circular vertices representing corridor occupancies and arrows in four colors labeled
+yielding, same vehicle, same job, and same machine.}
+\label{fig:graphs}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Frequently used notation}
+\label{tab:notation}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+\textbf{Symbol} & \textbf{Meaning} \\
+\midrule
+\(G=(V,E)\), \(\tau_e\) & Corridor network; traversal time of corridor \(e\) \\
+\(x,\pi,y\) & Machine assignment, processing sequence, vehicle assignment \\
+\(R\), \(r=(e,[t^s,t^e),k,u)\) & Reservation table; a half-open occupancy (vehicle \(k\), leg label \(u\))\\
+\(G_T\) / \(G_R\) & Operation-precedence graph / reservation dependency graph \\
+\(\mathcal{S}^0,\mathcal{S}'\) & Schedule before the disturbance, schedule after recovery \\
+\(\mathcal{D},\,t_{\mathrm{now}}\) & Disturbance event; decision time \\
+\(T_{\mathrm{direct}},\,T_{\mathrm{impact}}\) & Directly disturbed operations / \(\theta\)-step scope on \(G_T\) \\
+\(\mathrm{Src}(\mathcal{D})\), \(U\), \(R^{\circ}\) & Seed occupancies; rewritable set; unfinished occupancies \\
+\(\mathrm{Cl}(\cdot)\) & Reservation impact set (obtained by \STRC)\\
+\(\varphi\) & Fraction of disturbed future operations (magnitude sweep)\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Execution-time assumptions}
+\label{sec:assumptions}
+
+A1--A4 are shared by all compared methods, so that differences can be attributed to the scope rather than the model; A5 constrains only our method, while the global-rescheduling baseline may also change the machine assignment and processing sequence.
+\begin{enumerate}[label=\textbf{A\arabic*.},leftmargin=*,topsep=2pt,itemsep=1pt]
+\item \textbf{Feasible initial schedule.} \(\mathcal{S}^0\) passes the conflict-freedom check before the disturbance.
+\item \textbf{No backtracking on finished occupancies.} Occupancies with \(t^e\le t_{\mathrm{now}}\) are not rewritable.
+\item \textbf{Single, fully observed disturbance.} Successive disturbances, estimation errors in disturbance information, and repeated rescheduling as new information arrives are out of scope.
+\item \textbf{Exclusive corridors, ample buffers, homogeneous unit-load fleet.} A blockage is injected into the routing layer as an interval during which the corridor may not be entered (the \emph{blockage window}); finite buffers, charging, acceleration, and loading durations are not modeled.
+\item \textbf{Permitted recovery actions.} For Class B, \(x\) and \(\pi\) are kept and only rerouting is performed, with scope escalation upon failure.
+Class A additionally allows reassigning a failed vehicle's tasks to another vehicle, or a failed machine's unfinished operations to other feasible machines. \(\pi\) is never changed and the search is not restarted;
+the global-rescheduling baseline may change \(x\) and \(\pi\) (Section~\ref{sec:vs_r0}).
+\end{enumerate}
+
+\subsection{A dichotomy of disturbances}
+\label{sec:disturbance_classes}
+
+\begin{definition}[Class A/B disturbances]
+\label{def:ab}
+A disturbance is of \textbf{Class A} if it directly invalidates the assignment or \emph{executability} of some operations (robotic-arm failure, processing-time deviation, rush-order insertion, vehicle failure).
+It is of \textbf{Class B} if it only makes some corridor time windows unavailable without making any operation inexecutable (corridor blockage, corridor slowdown).
+\end{definition}
+
+\begin{remark}[Why vehicle failure is Class A]
+\label{rem:agv_class}
+A vehicle failure changes no machine assignment, but the operations the vehicle transports cannot start as planned. Through the mapping ``vehicle\(\to\)operations it transports'',
+\(G_T\) still contains seed operations. This holds only if the method records which operations each vehicle transports; otherwise vehicle failure also yields an empty scope. The baseline in Section~\ref{sec:e6} records this correspondence.
+\end{remark}
+
+\begin{definition}[Scopes on the operation-precedence graph and seed occupancies]
+\label{def:task_impact}
+\label{def:seeds}
+\(T_{\mathrm{direct}}(\mathcal{D})\) is the set of operations that cannot be executed as planned; for Class B, \(T_{\mathrm{direct}}=\varnothing\) by convention.
+\(T_{\mathrm{impact}}(\mathcal{D},\theta)\) collects the operations reached from \(T_{\mathrm{direct}}\) on \(G_T\) within at most \(\theta\) steps along job and same-machine successor edges (including \(T_{\mathrm{direct}}\)).
+The seed set \(\mathrm{Src}(\mathcal{D})\subseteq R\) contains only occupancies not yet finished at \(t_{\mathrm{now}}\) (\(r.t^e>t_{\mathrm{now}}\)) and is given by disturbance type:
+(a)~\textbf{corridor blockage/slowdown} \(\mathcal{D}=(e,[t_a,t_b))\): \(\{\,r:\ r.e=e,\ [r.t^s,r.t^e)\cap[t_a,t_b)\neq\varnothing\,\}\) (for multiple windows, the union);
+blockage and slowdown share this rule and differ only in rerouting: a blocked corridor is impassable, while a slowed one stays passable with the traversal time inside the interval lengthened;
+(b)~\textbf{vehicle failure} \(\mathcal{D}=(k)\): \(\{\,r:\ r.k=k\,\}\);
+(c)~\textbf{robotic-arm failure} \(\mathcal{D}=(m,F)\): for each job, all unfinished occupancies from its smallest operation index in \(F\) onward, because the inbound transport may have finished, and taking only the operation itself would make the impact set cover fewer operations than the affected set on \(G_T\).
+\end{definition}
+
+\begin{prop}[The operation-precedence graph yields an empty scope for Class B]
+\label{prop:miss}
+Let \(\mathcal{D}\) be a corridor blockage. Then \(T_{\mathrm{impact}}(\mathcal{D},\theta)=\varnothing\) for every finite \(\theta\ge 0\).
+If, in addition, \(\mathrm{Src}(\mathcal{D})\neq\varnothing\), then \(\mathcal{S}^0\) is infeasible under \(\mathcal{D}\).
+\end{prop}
+
+\begin{proof}
+Since the blockage window is finite and buffers are ample (A4), vehicles can wait at nodes until the blockage ends, so no operation becomes inexecutable and \(\mathcal{D}\) is of Class B;
+hence \(T_{\mathrm{direct}}=\varnothing\) and the \(\theta\)-step expansion is empty. If \(r\in\mathrm{Src}(\mathcal{D})\) exists, \(r\) overlaps the blockage window on the same exclusive corridor,
+which violates conflict freedom (A4); hence \(\mathcal{S}^0\) is infeasible.
+\end{proof}
+
+The first part follows from the convention; the nontrivial part is the second. Hence ``an empty scope on \(G_T\) \(\Rightarrow\) no rescheduling needed'' fails when corridors are reserved by time windows,
+independently of any repair algorithm; Section~\ref{sec:e1} verifies this on \(\PassMiss\) pairs.
+
+\subsection{The recovery problem}
+\label{sec:recovery_problem}
+
+\begin{problem}[Bounded rescheduling with the scope delineated on the reservation table]
+\label{prob:recovery}
+Given \(\mathcal{S}^0\), \(\mathcal{D}\), and \(t_{\mathrm{now}}\), find \(\mathcal{S}'\) such that
+(i)~\(\mathcal{S}'\) is conflict-free under \(\mathcal{D}\); (ii)~occupancies outside the rewrite scope keep their corridors, intervals, and vehicles as in \(\mathcal{S}^0\) as far as possible;
+(iii)~the runtime is subject to a budget. The secondary objective is the makespan \(C_{\max}(\mathcal{S}')\).
+\end{problem}
+
+Bounded rescheduling first delineates the rewritable set \(U\subseteq R\) and then reroutes only the transports in \(U\); we call the second step \emph{bounded repair} (Section~\ref{sec:repair}). We take \(U=\mathrm{Cl}(\mathrm{Src})\);
+the baseline instead takes the transport occupancies of the operations in \(T_{\mathrm{impact}}\) that are unfinished at \(t_{\mathrm{now}}\), which is empty under Class B by Proposition~\ref{prop:miss}.
+The two are denoted R2 and R1 in the experiments.
+
+%% =====================================================================
+\section{The spatiotemporal reservation closure}
+\label{sec:strc}
+%% =====================================================================
+
+This section determines \(U\): we build a dependency graph over occupancies and take all occupancies reachable from the seeds \(\mathrm{Src}(\mathcal{D})\) along its edges.
+
+\subsection{Reservation dependency edges}
+\label{sec:closure_def}
+
+\begin{definition}[Reservation dependency graph]
+\label{def:dep}
+The vertices are the occupancies in \(R\); an edge \(r\to r'\) means that once \(r\) is rewritten, \(r'\) may have to be rewritten as well. There are four kinds of edges:
+(1)~\textbf{yield edges} between occupancies of the same corridor by different vehicles whose intervals overlap \emph{or abut} (\(r.t^e=r'.t^s\)), from the earlier entry time \(t^s\) to the later one---meeting end to start is legal, but if the former is delayed the latter must give way;
+(2)~\textbf{same-vehicle successors}, adjacent in time, from the earlier to the later;
+(3)~\textbf{same-job successors}, from the transport occupancies of operation \(i\) to those of operation \(i+1\);
+(4)~\textbf{same-machine successors}, from the transport occupancies of an operation to those of the operation processed next on the same machine.
+This yields \(G_R=(R,E_R)\). The edge set is a modeling choice that may over-include or miss dependencies (Remark~\ref{rem:minimality}).
+\end{definition}
+
+\begin{definition}[Reservation impact set and \STRC{}]
+\label{def:strc}
+Given seeds \(S\subseteq R\) and \(t_{\mathrm{now}}\), let \(R^{\circ}=\{\,r\in R:\ r.t^e>t_{\mathrm{now}}\,\}\) be the unfinished occupancies and \(G_R^\circ\) the subgraph that keeps only them and the edges among them.
+The reservation impact set is
+\[
+\mathrm{Cl}(S)=\bigl\{\,v\in R^{\circ}:\ \exists\,s\in S\cap R^{\circ}\ \text{such that}\ s\!\to^*\!v\ \text{in}\ G_R^\circ\,\bigr\},
+\]
+i.e., all unfinished occupancies reachable from the unfinished seeds, seeds included; computing it is called the spatiotemporal reservation closure (\STRC).
+With adjacency lists, one breadth-first search computes \(\mathrm{Cl}(S)\) in \(O(|R^{\circ}|+|E_R^{\circ}|)\) time.
+\end{definition}
+
+\subsection{Closure}
+\label{sec:containment}
+
+\begin{prop}[Structural closure]
+\label{prop:struct}
+For any \(S\subseteq R\), \(G_R^\circ\) contains no edge \(u\to v\) with \(u\in\mathrm{Cl}(S)\) and \(v\in R^{\circ}\setminus\mathrm{Cl}(S)\).
+\end{prop}
+
+\begin{proof}
+If such an edge existed, then \(s\to^* u\to v\) for some unfinished seed \(s\), so \(v\in\mathrm{Cl}(S)\), a contradiction.
+\end{proof}
+
+Closure is thus a corollary of the definition once the edge set is fixed; its physical completeness depends on the choice of edges.
+
+\begin{remark}[The reservation impact set and the minimal rewritable set]
+\label{rem:minimality}
+Closure neither guarantees that the impact set suffices to restore feasibility nor that it is small; we relate it to the minimal rewritable set in three points.
+First, a \emph{minimal} rewritable set is defined only relative to a repair capability (rerouting only, or also reassignment), whereas \(\mathrm{Cl}\) is determined by \(G_R\) alone and is not meant to coincide with any of them.
+Second, the edges over-include: a yield edge is created for any overlap without checking whether the later vehicle could detour, and same-vehicle edges may pull in chain tails the delay never reaches.
+In the opposite direction, the known omission---abutting intervals---has been folded into the yield edges; a difference probe (on the \(\NPairs\) pairs of E3, each impact-set occupancy is delayed alone by one time unit, and a leak is counted whenever it newly overlaps an occupancy outside the set on the same corridor) finds \ProbeLeaks\ leaks (\ProbeLeakPairs\ pairs; in \ProbeOutsidePairs\ of them the set leaves occupancies outside), which tests this omission but does not prove completeness.
+Third, empirically the impact set covers about \ClosureAliveFrac\ of the unfinished occupancies (Section~\ref{sec:e6}), less than one tenth below the maximal choice of rewriting all of them.
+The savings of bounded repair therefore come mainly from \emph{not rewriting finished occupancies} and \emph{not restarting the search}; ``bounded'' does not mean ``small''.
+Section~\ref{sec:cheap} nevertheless shows that this small difference in set size lowers the rewrite fraction significantly.
+The impact-set share does not rise with instance size (Section~\ref{sec:instscale}), and static network indicators fail to predict it (Section~\ref{sec:e4}).
+\end{remark}
+
+%% =====================================================================
+\section{Bounded repair on the reservation impact set}
+\label{sec:repair}
+%% =====================================================================
+
+Figure~\ref{fig:framework} outlines the procedure: delineate \(U\) by the reservation impact set, replan only the occupancies inside it while keeping the rest as planned, and escalate \(U\) if the result is still infeasible.
+All methods share the same corridor network, time-window routing, and conflict-free check.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_strc_framework}
+\caption{Bounded repair scoped on the reservation impact set.
+Top row: the impact set is obtained from the seeds and vehicles are rerouted; middle row: the rewritable scope is escalated after failure;
+bottom row: the baseline scoping on the operation-precedence graph, the warm-started global rescheduling baseline, and the output metrics.
+Three further millisecond baselines (RS, RD, RA) are not drawn (Section~\ref{sec:cheap}).}
+\Description{A three-row flowchart. Top row: after a disturbance arrives, the reservation impact set is obtained from the seeds; occupancies inside the set are rewritable,
+those outside are kept as planned, and the original vehicles are rerouted. Middle row: when rerouting fails, the rewritable set is escalated in the order job suffix, same-vehicle suffix,
+all unfinished occupancies, and the rerouting is retried. Bottom row: two baselines,
+one scoping by the affected set on the operation-precedence graph and one performing a warm-started global search; the three paths feed the same set of output metrics.}
+\label{fig:framework}
+\end{figure}
+
+\subsection{Single-pass rerouting}
+\label{sec:level1}
+
+Given \(U\), single-pass rerouting keeps the vehicle and machine assignments and reschedules the transports in \(U\) one by one in the original processing order (Algorithm~\ref{alg:replay}).
+It works per occupancy: the part of a trip traversed before \(t_{\mathrm{now}}\) is finished and pre-committed unchanged, and planning starts from the vehicle's node at that time.
+By complexity, delineation needs one breadth-first search, whereas the replay calls the time-window router once per leg in \(U\), which dominates the runtime. No population-based search is launched.
+Section~\ref{sec:e3} fixes this procedure and replaces only the source of \(U\), so that differences in feasibility can be attributed to the scope object.
+
+\begin{algorithm}[t]
+\caption{Single-pass rerouting \(\textsc{ReplayReroute}\)}
+\label{alg:replay}
+\begin{algorithmic}[1]
+\Require schedule \(\mathcal{S}^0=(x,\pi,y,R)\), disturbance \(\mathcal{D}\), rewritable set \(U\), time \(t_{\mathrm{now}}\)
+\Ensure schedule \(\mathcal{S}'\) or failure
+\State write \(\mathcal{D}\) into the routing layer \Comment{blockage: blockage window; slowdown: traversal time inside the window lengthened}
+\State \(R'\gets\varnothing\)
+\For{each occupancy not in \(U\) (including all finished occupancies)}
+  \State pre-commit its original fields \((e,[t^s,t^e),k)\) to \(R'\); \textbf{if} it conflicts with a blockage window \textbf{then return} failure
+\EndFor
+\For{each \(r\in U\), in the original processing order}
+  \State route from the vehicle's node at \(t_{\mathrm{now}}\) on the current \(R'\) and commit the new occupancies
+  \State update the machine idle time and job ready time concerned according to \(\pi\)
+\EndFor
+\State \textbf{if} independent check passes (no conflicts, fields outside \(U\) unchanged) \textbf{then return} \(\mathcal{S}'=(x,\pi,y,R')\) \textbf{else return} failure
+\end{algorithmic}
+\end{algorithm}
+
+\begin{prop}[A sufficient condition for unchanged fields outside the set]
+\label{prop:outside}
+Let \(U=\mathrm{Cl}(S)\), and let single-pass rerouting (Algorithm~\ref{alg:replay}) satisfy:
+(i)~the blockage windows are written into the routing layer; (ii)~for every \(r\in R^{\circ}\setminus U\), its fields \((e,[t^s,t^e),k)\) are pre-committed to the new table and the pre-commit succeeds;
+(iii)~the time-window router replans only the occupancies in \(U\); (iv)~the final schedule passes the conflict-free check.
+Then the corridor, interval, and vehicle of every \(r\in R^{\circ}\setminus U\) in the recovered table agree with \(\mathcal{S}^0\).
+The proposition holds per occupancy, not per whole transport.
+\end{prop}
+
+\begin{proof}
+By (ii), occupancies outside the set enter the new table with their original fields before the replay; by (iii), the replay neither deletes nor rewrites them; the check in (iv) only rules out conflicts and alters no committed field.
+\end{proof}
+
+Premises (i)--(iv) are execution conditions that can be checked against Algorithm~\ref{alg:replay}; beyond them, the proposition relies on A1, A2, and A4.
+A failed pre-commit indicates an incomplete seed set. If scope escalation enlarges \(U\), the proposition holds only for the occupancies finally left outside.
+Premise (iii) fails if rerouting is decided at a unit coarser than an occupancy, so the implementation must decide it per occupancy, and for a leg spanning \(t_{\mathrm{now}}\) must keep the segments already traversed (otherwise finished occupancies are rewritten, which a check of the fields outside \(U\) cannot detect).
+
+\subsection{Scope escalation after failure}
+\label{sec:scope_escalation}
+
+Escalating the scope has precedents: Local Rescheduling~\cite{kuster2007local} relaxes the time window step by step, and AOR adds successor operations (Section~\ref{sec:rw_aor}); we escalate along reservation dependencies, called \emph{scope escalation}. E3 disables this step (Section~\ref{sec:e1}).
+If, with all occupancies outside \(U\) fixed, those in \(U\) find no feasible path and interval (e.g., a transport cannot arrive when its operation requires), the replay fails; we then enlarge \(U\) and retry:
+(i)~add the unfinished occupancies in the same-job suffixes of operations in \(U\); (ii)~add those in the same-vehicle suffixes of the vehicles involved; (iii)~set \(U\leftarrow R^{\circ}\), the rewritable set of RA.
+Each round remains a deterministic single pass (Algorithm~\ref{alg:strc_repair}).
+
+\begin{algorithm}[t]
+\caption{Bounded repair on the reservation impact set (single-pass rerouting + scope escalation)}
+\label{alg:strc_repair}
+\begin{algorithmic}[1]
+\Require schedule \(\mathcal{S}^0\), disturbance \(\mathcal{D}\), time \(t_{\mathrm{now}}\)
+\Ensure schedule \(\mathcal{S}'\) or failure
+\State \(U \gets \mathrm{Cl}(\mathrm{Src}(\mathcal{D}))\)
+\For{round \(=0,1,2,3\)}
+  \State \(\mathcal{S}' \gets \textsc{ReplayReroute}(\mathcal{S}^0,\mathcal{D},U,t_{\mathrm{now}})\); \textbf{if} \(\mathcal{S}'\) is feasible \textbf{then return} \(\mathcal{S}'\)
+  \State update \(U\) by the scope-escalation rule \Comment{job suffix / same vehicle / all unfinished}
+\EndFor
+\State \Return failure
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Baselines}
+\label{sec:vs_r0}
+
+The global rescheduling baseline R0+ is a genetic algorithm that encodes \((x,\pi)\) as a chromosome, is warm-started with \(\mathcal{S}^0\) as one individual of the initial population, and searches under the same blockage windows within a wall-clock budget.
+One \emph{decoding} routes all transports from scratch on the table with the blockage windows written in; finished occupancies are pre-committed, and only operations not yet started are scheduled from \(t_{\mathrm{now}}\).
+Because R0+ can reassign and resequence, it is more likely to shorten \(C_{\max}\), but its runtime is set by the budget.
+Bounded repair is therefore not expected to win on makespan; its strength is runtime. To test whether scoping on the impact set matters \emph{within} a millisecond runtime,
+Section~\ref{sec:cheap} adds three millisecond baselines (RS, RD, RA), of which RA differs from our method only in which occupancies are rewritable.
+
+%% =====================================================================
+\section{Experiments}
+\label{sec:experiments}
+%% =====================================================================
+
+\subsection{Experimental setup}
+\label{sec:protocol}
+
+\textbf{Instances.}
+The main batch has five instances (jobs \(\times\) machines \(\times\) AGVs): a small hand-crafted \(3\times3\times2\) instance, a congested hand-crafted \(8\times4\times4\) instance, and three generated \(8\times4\times4\) spine layouts, funnel, high, and mid.
+In a spine layout, a main corridor runs through the machine area, machines hang on two hubs via branches, and the load/unload station sits at one end with one or two parallel exits~\cite{suh2022spine}, so all transports share the same exit and middle section; the congested instance also has this layout.
+The three spine layouts differ only in the number of parallel lanes (funnel: one exit and one middle lane; high: two exits; mid: two exits and two middle lanes), i.e., in capacity, not in distance.
+We use ten run seeds fixed before the experiments (\(42,7,2024,99,123,13,1,777,31415,8\); E5 uses the first three), giving \(\NInst\times\NSeeds=\NPairs\) instance--seed pairs.
+All per-pair comparisons and paired tests use the instance--seed pair as the unit: in the same pair, all methods read the same initial schedule, blockage, and decision time.
+The initial schedule is obtained by replaying the time-window router in processing order and passes the independent check.
+
+\textbf{Second batch with published layouts.}
+To test whether the conclusions depend on the layouts we constructed, a second batch of \NPubInst\ instances (\NPubPairs\ pairs) transcribes the grid size, the nodes of the station and machines, and the adjacent node pairs without a corridor from Appendix~A of Lyu et al.~\cite{lyu2019approach},
+checked by script against the encoding shipped with the van Os toolkit. All other parameters are matched to the main batch, so the two batches differ only in the layouts.
+Its six layouts (layouts 1--6, with \(3\) to \(8\) machines) are used except layout 1, which cannot give every operation two candidate machines at \(f=0.6\). The five remaining layouts lie on only \NPubNets\ distinct networks
+(layouts 2--3: a \(4\times4\) grid of \(16\) nodes with \(23\) of its \(24\) corridors present; layouts 4--6: a \(5\times5\) grid with \(38\) of \(40\)), so along network shape there are \NPubNets\ independent samples.
+Lyu et al.\ give per-edge durations only for one example, so we use equal weights; following the single load/unload station common in joint machine--AGV scheduling~\cite{fontes2023hybrid}, the loading and unloading stations are merged into one, which leaves the network unchanged; and their job data are not used,
+because in public instance families transport takes only a few percent of processing time and corridor contention would be unobservable.
+We therefore borrow only their networks and do not compare with the values they report.
+
+\textbf{Disturbances.}
+All experiments use \(t_{\mathrm{now}}=0.35\,C_{\max}(\mathcal{S}^0)\), fixed in advance: about \(40\%\) of the occupancies have then finished and \(60\%\) remain (no sensitivity analysis on this value). E1--E3, E5, and E7 block the corridor with the most unfinished occupancies at \(t_{\mathrm{now}}\), in one continuous window covering all of them (a \emph{busy-corridor blockage}); E6 adds three further types; E4 blocks a corridor in the load/unload minimum cut.
+The magnitude sweep sorts operations with unfinished occupancies by their earliest such occupancy, takes the first fraction \(\varphi\), and blocks each of their unfinished occupancies on its own corridor and interval, without merging blockages, so that no unselected occupancy is covered.
+
+\textbf{Metrics.}
+An occupancy counts as \emph{rewritten} if its corridor, interval, or vehicle after repair differs from \(\mathcal{S}^0\); the \emph{rewrite fraction} is the share of rewritten occupancies in the whole table \(R\).
+It differs from the \emph{rewritable share} \(|U|/|R^{\circ}|\), which counts the occupancies a method is allowed to change.
+Makespan \emph{degradation} is \((C_{\max}(\mathcal{S}')-C_{\max}(\mathcal{S}^0))/C_{\max}(\mathcal{S}^0)\).
+A \emph{finished-occupancy violation} is a rewritten occupancy with \(t^e\le t_{\mathrm{now}}\), which A2 forbids.
+
+\begin{table}[t]
+\centering
+\caption{Compared methods. All share the network, time-window router, initial schedule, and independent checker, and none rewrites finished occupancies.}
+\label{tab:baselines}
+\small
+\begin{tabular}{@{}lp{0.42\linewidth}p{0.18\linewidth}l@{}}
+\toprule
+Method & Rewritable scope & Recomputation & Termination \\
+\midrule
+R2 (\STRC) & Reservation impact set \(\mathrm{Cl}(\mathrm{Src})\) & Single-pass rerouting & Single pass \\
+R1 & Affected set on \(G_T\) (\(\theta=2\)) mapped to occupancies & Single-pass rerouting & Single pass \\
+RA & All unfinished occupancies \(R^{\circ}\) & Single-pass rerouting & Single pass \\
+RS & None delineated; all unfinished occupancies shifted & Uniform right shift & Single pass \\
+RD & None delineated & One fixed-prefix decoding & Single pass \\
+R0+ & None delineated & Warm-started GA (population \(40\)) & Wall-clock budget \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Methods and conventions.}
+Table~\ref{tab:baselines} lists the methods in increasing order of their difference from R2. In R1, \(\theta\) is the maximum number of forward hops along the job precedence; it matters only for Class A, since a Class B disturbance hits no operation and the scope is empty for any \(\theta\) (Proposition~\ref{prop:miss}). R1 transplants AOR scoping~\cite{subramaniam2003maor} into our reservation setting: the \(\theta\)-hop truncation and the mapping from operations to reservations are ours,
+since the original setting has no reservation table; its results reflect the rule in this setting, not the original method in its own.
+R1/R2 differ only in the scope \emph{object}, RA/R2 only in \emph{whether} the scope is restricted, and RD/R0+ only in how long they search.
+Only R0+ terminates on a budget; all others are deterministic single passes and can be compared with one another directly.
+Scope escalation is disabled in E1--E3, E5, and E7, so that a fallback to all unfinished occupancies cannot mask the difference between scope objects; its end point is RA, measured separately.
+It is enabled only in the magnitude sweep and in E8.
+The main batch establishes the phenomena under full control of the instance parameters; the second batch only tests whether they depend on our layouts, and is pooled with the main batch only in E5.
+
+\textbf{Implementation and statistics.}
+All code is pure Python (standard library only), run single-threaded on an Intel Xeon W-1270 with 64\,GB RAM under Windows~10; runtime conclusions are stated as ratios or orders of magnitude.
+The paper contains two inferential tests, both in Section~\ref{sec:cheap}: R2 versus RA on rewrite fraction (primary) and R2 versus RD on makespan, each a two-sided Wilcoxon signed-rank test paired by instance--seed pair;
+Holm correction does not change either conclusion. The primary test is accompanied by a Hodges--Lehmann estimate with a bootstrap \(95\%\) CI (\(10^4\) resamples).
+All other counts, means, and medians are descriptive.
+
+\subsection{E1--E3: empty scope, containment, and boundary ablation}
+\label{sec:e1}
+\label{sec:e2}
+\label{sec:e3}
+
+Table~\ref{tab:e1} summarizes the per-instance statistics. Over the \(\NPairs\) pairs:
+(E1) the three conditions of Proposition~\ref{prop:miss}---\(T_{\mathrm{impact}}=\varnothing\), a nonempty seed set, and an infeasible original schedule---hold together in \(\PassMiss\) pairs;
+the first follows from the Class B convention, and the substantive result is that the original schedule is infeasible every time, so ``empty scope, hence no rescheduling'' never holds.
+(E2a) The impact set is closed under outgoing edges in \(\PassClosed\) pairs, confirming that the implementation matches Proposition~\ref{prop:struct}.
+(E2b) After single-pass rerouting, the corridor, interval, and vehicle of every occupancy outside the set are unchanged in \(\PassInvar\) pairs, i.e., the premises of Proposition~\ref{prop:outside} are met in our experiments; a separate check of all finished occupancies finds none rewritten.
+(E3) With single-pass rerouting fixed and escalation disabled, R1 is feasible in \(\FeasRone\) pairs and R2 in \(\FeasRtwo\).
+The two arms share the rerouting procedure, initial schedule, decision time, and blockage; \textbf{the only difference is which occupancies are rewritable}.
+R1's rewritable set is empty, so the replay leaves the schedule unchanged and it still occupies the blocked corridor: R1 fails because it decides that no rescheduling is needed, not because of repair quality.
+The median runtime of single-pass rerouting is \(\MsRepairMed\)\,ms (maximum \(\MsRepairMax\)\,ms).
+
+\begin{table}[t]
+\centering
+\caption{E1--E3 per instance (means over \(\NSeeds\) seeds). \(|R|\): occupancies in the whole table; \(\mathrm{Cl}/|R|\): share of the reservation impact set.
+On every instance, all checks of E1, E2a, E2b and R2 feasibility pass in \(10/10\) pairs and R1 is feasible in \(0/10\); totals are given in the text.
+funnel: one exit and one middle lane; high: two exits; mid: two exits and two middle lanes.}
+\label{tab:e1}
+\small
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+Instance & Mean \(|R|\) & Mean \(|\mathrm{Src}|\) & Mean \(|\mathrm{Cl}|\) & \(\mathrm{Cl}/|R|\) & R2 ms \\
+\midrule
+Small      & \(28.6\)  & \(5.6\)  & \(16.9\) & \(0.59\) & \(0.66\) \\
+Congested  & \(85.0\)  & \(15.0\) & \(48.4\) & \(0.57\) & \(2.84\) \\
+funnel  & \(149.1\) & \(15.5\) & \(85.4\) & \(0.57\) & \(5.09\) \\
+high    & \(150.5\) & \(15.5\) & \(88.3\) & \(0.59\) & \(3.40\) \\
+mid     & \(147.6\) & \(15.0\) & \(82.8\) & \(0.56\) & \(3.96\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\(|\mathrm{Cl}|\) grows with the instance, while \(\mathrm{Cl}/|R|\) stays within \EoneCloLo--\EoneCloHi\ (pooled median \EoneFracMed, per-instance IQR \EoneFracIqrLo--\EoneFracIqrHi)
+and does not distinguish the three spine layouts; between-instance variation is of the same order as between-seed variation.
+We rerun E1 and E3 under three non-uniform edge weightings (independent lognormal factors with geometric mean \(1\); corridors slower with distance from the station, up to \(1.8\times\); each corridor randomly halved or doubled):
+E1 is unchanged and R1 remains infeasible everywhere, while R2 is feasible in all pairs under the first two and in \WeightSplitRtwo\ under the third, so neither result depends on equal edge weights.
+
+\subsection{Case Gantt chart}
+\label{sec:case}
+
+Figure~\ref{fig:case} shows one example: the \(3\times3\times2\) small instance (chosen so that every operation is visible), run seed \(42\), a busy-corridor blockage, and otherwise the E3 setup: \(T_{\mathrm{impact}}=\varnothing\), whereas \(|\mathrm{Src}|=6\) and \(|\mathrm{Cl}|=18\).
+After single-pass rerouting, the operations whose transports lie in the impact set are rearranged, the others stay in place, and the schedule regains feasibility in under a millisecond (\(C_{\max}:57\to 86\)).
+The figure illustrates the form of the local change and is not used to compare makespans.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_strc_case}
+\caption{Case Gantt chart (\(3\times3\times2\) small instance, run seed \(42\), busy-corridor blockage). (a)~Original schedule; blue operations have transports in \(\mathrm{Cl}\), gray ones are kept; the dashed line marks \(t_{\mathrm{now}}\) and the band the blockage window.
+(b)~After single-pass rerouting.}
+\Description{Two machine Gantt charts stacked vertically. (a) The original schedule before the blockage; bars are colored blue or gray according to whether their transport occupancies fall in
+the reservation impact set, a vertical red dashed line marks the decision time, and a light red vertical band marks the blockage window.
+(b) The repaired schedule; the blue bars are rearranged on the timeline, the gray bars stay in place, and the makespan increases from 57 to 86.}
+\label{fig:case}
+\end{figure}
+
+\subsection{E4: can network-structure indicators predict the impact-set size? (exploratory)}
+\label{sec:e4}
+
+We test whether three indicators computed from the network alone predict the impact-set share, blocking one corridor in the LU cut: the \emph{LU cut} (minimum number of corridors disconnecting the load/unload station from all machines),
+the \emph{funnel share} (share of the mean station-to-machine shortest-path time spent on corridors that every such path uses), and corridors per node (\emph{static network indicators}). Results are in Table~\ref{tab:e4pub}.
+Our three spine layouts span only \SelfCloLo--\SelfCloHi\ and also differ little in geometry, so ``the indicators are too coarse'' cannot be told apart from ``the layouts are too similar''.
+On the layouts of Lyu et al., changing only the machines on the same \(4\times4\) grid (layout 2 to 3) changes the median share by \PubCloSpread, and three machine configurations on the same \(5\times5\) grid span \PubCloSpreadBig, whereas our three different networks span only \SelfCloSpread.
+Meanwhile the LU cut is always \(2\) and the funnel share always \(0\) on the external batch (a station at a grid corner has two corridors, and the shortest paths to the machines share none), and corridors per node takes only two values.
+Because our side varies only the network, this does not show that machine configuration matters more than geometry, but that dimension cannot be ignored.
+\textbf{A constant indicator cannot explain a varying quantity: the static network indicators do not determine the impact-set size}; Section~\ref{sec:future} points to schedule-dependent candidates.
+
+\begin{table}[t]
+\centering
+\caption{E4: static network indicators and impact-set share (one LU-cut corridor blocked, ten seeds per layout; median \(\mathrm{Cl}/|R|\)). All instances share every generation parameter except network and machines.
+``Range'': maximum minus minimum share within a group (groups of \(2\), \(3\), and \(3\) layouts, so only a rough comparison).}
+\label{tab:e4pub}
+\small
+\begin{tabular}{@{}llcccccc@{}}
+\toprule
+Source and grid & Layout & Machines & Nodes/corridors & LU cut & Funnel & \(\mathrm{Cl}/|R|\) & Range \\
+\midrule
+Lyu et al., \(4\times4\) & Layout 2 & \(4\) & \(16/23\) & \(2\) & \(0\) & \(0.512\) & \\
+Lyu et al., \(4\times4\) & Layout 3 & \(5\) & \(16/23\) & \(2\) & \(0\) & \(0.305\) & \(\PubCloSpread\) \\
+\cmidrule{1-8}
+Lyu et al., \(5\times5\) & Layout 4 & \(6\) & \(25/38\) & \(2\) & \(0\) & \(0.385\) & \\
+Lyu et al., \(5\times5\) & Layout 5 & \(7\) & \(25/38\) & \(2\) & \(0\) & \(0.422\) & \\
+Lyu et al., \(5\times5\) & Layout 6 & \(8\) & \(25/38\) & \(2\) & \(0\) & \(0.460\) & \(\PubCloSpreadBig\) \\
+\midrule
+Ours & funnel & \(4\) & \(9/8\) & \(1\) & \(0.286\) & \(0.491\) & \\
+Ours & high & \(4\) & \(10/10\) & \(2\) & \(0.286\) & \(0.497\) & \\
+Ours & mid & \(4\) & \(11/12\) & \(2\) & \(0.286\) & \(0.446\) & \(\SelfCloSpread\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{E5: trade-off against global rescheduling}
+\label{sec:e5}
+
+We test whether a \emph{crossover} exists, i.e., whether R0+ overtakes bounded repair in \(C_{\max}\) only once the budget is relaxed. R2 is a single deterministic computation run once per pair, so its \(C_{\max}\) is the same at every budget;
+with the seed fixed, a larger budget lets R0+ run the same trajectory for more generations, so its best-so-far \(C_{\max}\) is non-increasing.
+Hence, once the order is settled at the \emph{smallest} budget, no larger budget can reverse it. At \(0.2\)\,s, R0+ is strictly better in \(\EfiveWinMin\) of the \(\EfiveCells\) pairs, ties in \(\EfiveTieMin\), and is worse in none;
+over all \(\EfivePts\) budget points the win/tie/loss is \(\EfiveWLT\) (both batches pooled; Table~\ref{tab:e5} and Figure~\ref{fig:e5} show the half on our layouts).
+No reversal at larger budgets follows from monotonicity for any instance; that R0+ is no worse at the smallest budget is only observed on these \(\EfiveCells\) pairs.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_strc_e5}
+\caption{E5: budget sweep of R0+ (which does not rewrite finished occupancies) versus bounded repair (congested instance, mean over \(3\) random seeds).
+Left: runtime versus \(C_{\max}\). Right: occupancy rewrite fraction.}
+\Description{Two side-by-side plots. The left plot has runtime on a logarithmic horizontal axis and makespan on the vertical axis:
+warm-started global rescheduling that does not rewrite finished occupancies decreases slightly with the budget, while bounded repair is a single point at the upper left;
+the two do not intersect, and global rescheduling is slightly lower at every budget point. The right plot shows the occupancy rewrite fraction,
+about 0.6 for both methods.}
+\label{fig:e5}
+\end{figure}
+
+Below \(0.2\)\,s the order may reverse and was not tested: one decoding takes about \(\MsRedecode\)\,ms, so evaluating an initial population of \(40\) already takes about \(0.17\)\,s, whereas R2 needs only milliseconds.
+Neither R0+ nor R2 rewrites finished occupancies (\(\RzeroPastLo\) at every budget point), so the makespan gap comes from global reassignment and resequencing.
+Bounded repair is two to three orders of magnitude faster, and both rewrite fractions are about \(0.6\). As Section~\ref{sec:cheap} shows, this speed comes from single-pass rerouting, not from the impact set.
+
+\begin{table}[t]
+\centering
+\caption{E5: warm-started global rescheduling R0+ versus bounded repair R2 (our layouts, mean over seeds \(\{42,7,2024\}\)). R2 runs once per pair and does not depend on the budget, so its values are identical in the three budget rows.}
+\label{tab:e5}
+\small
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Instance & Budget/s & R0+ \(C_{\max}\) & R2 \(C_{\max}\) & Rewrite fraction R0+ / R2 \\
+\midrule
+\multirow{3}{*}{Congested}
+ & \(0.2\) & \(288.0\) & \(299.0\) & \(0.58\) / \(0.57\) \\
+ & \(1.0\) & \(280.7\) & \(299.0\) & \(0.61\) / \(0.57\) \\
+ & \(2.0\) & \(280.0\) & \(299.0\) & \(0.61\) / \(0.57\) \\
+\addlinespace[2pt]
+Small & \(0.2\)--\(2.0\) & \(78.3\)  & \(88.7\)  & \(0.60\) / \(0.60\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{E6: disturbance types crossed with scope objects}
+\label{sec:e6}
+
+On the same \(\NPairs\) pairs we test whether the conclusions of E1--E3 hold under corridor slowdown (traversal time doubled during the slowdown window), vehicle failure, and robotic-arm failure; the results are shown in Table~\ref{tab:e6}.
+\textbf{First}, the A/B dichotomy holds without exception: scoping on \(G_T\) is empty for both Class B types and nonempty for both Class A types in every pair.
+Blockage and slowdown share the seed rule and hence give identical impact sets, so there are \(150\) independent scoping measurements, not \(200\).
+\textbf{Second}, over all \(100\) Class A measurements \(U_{R1}\subseteq\mathrm{Cl}\), strictly in \(\StrictlyLarger\) pairs: switching to the reservation impact set never misses an occupancy already included by \(G_T\).
+For robotic-arm failure this holds by construction (the seed rule takes the whole job suffix, while R1 truncates at \(\theta=2\)); for vehicle failure it is an empirical result.
+The price is more rewritable occupancies on average: from \(31.1\) (scoping on \(G_T\)) to \(60.6\) (impact set) under vehicle failure, and from \(42.8\) to \(65.9\) under robotic-arm failure.
+\textbf{Third}, all four types are repaired in every pair without escalation, Class A by vehicle swapping or machine reassignment.
+\textbf{Fourth}, under blockage the impact set contains about \ClosureAliveFrac\ of the unfinished occupancies, leaving out fewer than \(10\%\); the \(\mathrm{Cl}/|R|\) of \EoneCloLo--\EoneCloHi\ in Table~\ref{tab:e1} has all occupancies as denominator, about two fifths of which are finished before \(t_{\mathrm{now}}\).
+These results extend the conclusions on C1 and C2 from corridor blockage to four disturbance types.
+
+\begin{table}[t]
+\centering
+\caption{E6: disturbance type \(\times\) scope object (\(\NPairs\) pairs per type). \(|R^{\circ}|\): unfinished occupancies. ``R1 empty'': pairs where scoping on \(G_T\) deems no rescheduling necessary.
+The last column uses no scope escalation.}
+\label{tab:e6}
+\small
+\begin{tabular}{@{}llccccc@{}}
+\toprule
+Disturbance & Class & R1 empty & Mean \(|U_{R1}|\) & Mean \(|\mathrm{Cl}|\) & \(\mathrm{Cl}/|R^{\circ}|\) & R2 feasible \\
+\midrule
+Corridor blockage   & B & \(50/50\) & \(0.0\)  & \(64.4\) & \(0.92\) & \FeasESixBlock \\
+Corridor slowdown   & B & \(50/50\) & \(0.0\)  & \(64.4\) & \(0.92\) & \FeasSlow \\
+Vehicle failure     & A & \(0/50\)  & \(31.1\) & \(60.6\) & \(0.85\) & \FeasESixAgv \\
+Robotic-arm failure & A & \(0/50\)  & \(42.8\) & \(65.9\) & \(0.94\) & \FeasESixRa \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{E7: comparisons within the millisecond range}
+\label{sec:cheap}
+
+E5 leaves open how much of the speed advantage is due to the impact set and how much merely to a slow baseline. We therefore compare R2 with three millisecond baselines (Table~\ref{tab:baselines}).
+\textbf{RS} postpones all unfinished occupancies by the smallest delay that clears the blocked corridor; because the shift is uniform, all ``\(\ge\)'' constraints remain satisfied without rerouting.
+\textbf{RD} keeps the chromosome and runs one fixed-prefix decoding, the fastest global recomputation in our implementation.
+\textbf{RA} makes all unfinished occupancies rewritable and runs the \emph{identical} replay as R2; it is the only baseline that isolates the effect of the impact set.
+
+\begin{table}[t]
+\centering
+\caption{E7: methods within the millisecond range (\(\NPairs\) pairs, same setup as E3, all methods feasible in every pair).
+``Violations'': pairs with rewritten finished occupancies; ``Rewritable'': share of unfinished occupancies included in the rewrite; last column: \(C_{\max}\) win/tie/loss against R2.}
+\label{tab:cheap}
+\small
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+Method & Violations & ms (median) & \makecell{Mean\\degradation} & \makecell{Rewrite\\fraction} & Rewritable & \makecell{W/T/L\\vs.\ R2} \\
+\midrule
+RS right shift & \ShiftBad     & \MsShift    & \(58.8\%\) & \ResFracShift    & ---   & \(7/16/27\) \\
+RD re-decoding & \RedecodeBad  & \MsRedecode & \(49.1\%\) & \ResFracRedecode & ---   & \(22/14/14\) \\
+RA all unfinished & \ShiftBad  & \MsAllFuture & \(49.9\%\) & \ResFracAllFuture & \(1.00\) & \(0/46/4\) \\
+R2 bounded repair & \ShiftBad  & \MsCheapRtwo & \(49.8\%\) & \ResFracCheapRtwo & \ClosureShareMean & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+RS needs \MsShift\,ms, about half of R2, and is the only feasible method faster than R2 (R1 is faster still, but feasible in only \FeasRone\ pairs);
+it degrades the makespan by \(58.8\%\) versus \(49.8\%\) (R2 win/tie/loss \WinVsShift) and rewrites more (\ResFracShift\ vs.\ \ResFracCheapRtwo).
+Making the shift selective would first require determining which occupancies are affected---precisely the scope delineated here. \textbf{The right shift is fast because it gives up selectivity.}
+
+RD takes \MsRedecode\,ms, \RedecodeRatio\ times R2, and any decoding-based search needs at least one decoding per candidate.
+On makespan, R2 and RD are indistinguishable (\WinVsRedecode; mean paired difference \(+0.006\), CI \([-0.007,\,0.019]\); Wilcoxon \(p=0.12\)), while RD rewrites more (\ResFracRedecode).
+\textbf{Even the fastest global recomputation is slower, so the speed gap in E5 is not an artifact of a slow baseline.}
+
+On average the impact set excludes only \(1-\ClosureShareMean\) of the unfinished occupancies (\ClosureShareLo--\(1.00\) per pair; in \(6\) pairs the two sets coincide).
+This small difference lowers the rewrite fraction from \ResFracAllFuture\ to \ResFracCheapRtwo\ (mean reduction \RAStabMean, median \RAStabMed, per pair \RAStabWTL\ for R2 fewer/equal/more rewrites, \(p=\RAStabP\); Hodges--Lehmann estimate \(0.037\), CI \([0.018,\,0.074]\); CI of the mean \([0.039,\,0.093]\);
+excluding the \(6\) pairs with identical results, \RAStabWTLNet\ with mean \RAStabMeanNet), while runtimes (\MsCheapRtwo\ vs.\ \MsAllFuture\,ms) and makespans (mean ratio \RACmaxRatio; R2 never worse) are nearly identical.
+\textbf{Whether scoping reduces rewriting can be answered only by R2 versus RA: R2 rewrites less.}
+The reduction grows as the impact set excludes more: \(0.010\) on the congested instance (rewritable share \(0.94\)) versus \(0.118\) on the mid layout (\(0.91\)).
+Figure~\ref{fig:worth} condenses this into a post hoc rule: the \WorthHighN\ pairs with \(\mathrm{Cl}/|R^{\circ}|\ge\WorthThresh\) have a mean reduction of \WorthHighMean, and the \WorthLowN\ pairs below it \WorthLowMean;
+above \(\WorthVanish\) the reduction is zero (necessarily so in the \(6\) pairs with share \(1.00\), where R2 and RA coincide; empirically in the rest). The threshold is in-sample and not meant for extrapolation.
+Taken together, equal runtime shows that the millisecond response comes from single-pass rerouting, not from the impact set; equal makespan shows that the impact set is not an optimization device;
+and the lower rewrite fraction is exactly the property guaranteed by Proposition~\ref{prop:outside}.
+\textbf{The benefit of the impact set lies in rewrite volume, not in speed or makespan}: at equal runtime and makespan, the share of rewritten occupancies is \ResFracAllFuture\ for RA and \ResFracCheapRtwo\ for R2, about \(6\) percentage points apart; RA rewrites about \(12\%\) more occupancies.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\linewidth]{figures/fig_strc_worth}
+\caption{E7 post hoc rule: rewritable share \(\mathrm{Cl}/|R^{\circ}|\) versus the reduction in rewrite fraction of R2 relative to RA (\(\NPairs\) pairs). The dashed line marks the in-sample threshold \(\WorthThresh\).}
+\Description{Scatter plot. The horizontal axis is the share of unfinished occupancies covered by the reservation impact set, and the vertical axis is the additional share of occupancies rewritten without impact-set scoping relative to with it.
+The five instances are distinguished by color, and a vertical dashed line is drawn at \WorthThresh. The points run roughly from upper left to lower right.}
+\label{fig:worth}
+\end{figure}
+
+\subsection{Sweep over disturbance magnitude}
+\label{sec:scale}
+
+We test whether bounded repair stays feasible and fast as the disturbance grows: on the congested and the small instance (\(\NSeeds\) seeds each), the share \(\varphi\) of disturbed operations after \(t_{\mathrm{now}}\) takes \(0.10\), \(0.25\), \(0.50\), \(0.75\), and \(1.00\);
+unlike in E3 and E5, escalation is enabled, and R0+ has a \(2\)\,s budget.
+Table~\ref{tab:scale} shows that bounded repair is feasible in every pair at every level (also on the small instance); its level means stay at \(8.4\)--\(11.1\)\,ms (\ScaleMsMin--\ScaleMsMax\,ms per pair; about \(1\)\,ms on the small instance) with no upward trend, including \(10.7\)\,ms at \(\varphi=1\).
+R0+ attains the better \(C_{\max}\) at every level, as in E5, but uses its full \(2\)\,s budget, about two orders of magnitude more time.
+\textbf{Within the tested range, bounded repair remains feasible and its runtime stays on the order of ten milliseconds, without growing with the disturbance magnitude.}
+
+\begin{table}[t]
+\centering
+\caption{Magnitude sweep (congested instance, means over \(\NSeeds\) seeds; escalation enabled; R0+ budget \(2\)\,s).}
+\label{tab:scale}
+\small
+\begin{tabular}{@{}rccc@{}}
+\toprule
+\(\varphi\) & Bounded repair feasible & Bounded repair ms & R0+ \(C_{\max}\) \\
+\midrule
+\(0.10\) & \(100\%\) & \(9.1\)  & \(103.5\) \\
+\(0.25\) & \(100\%\) & \(11.1\) & \(107.0\) \\
+\(0.50\) & \(100\%\) & \(8.6\)  & \(111.8\) \\
+\(0.75\) & \(100\%\) & \(8.4\)  & \(125.8\) \\
+\(1.00\) & \(100\%\) & \(10.7\) & \(148.1\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{E8: extrapolation to larger instances}
+\label{sec:instscale}
+
+We test whether the impact-set share approaches \(1\) as the instance grows, which would make ``bounded'' meaningless.
+We use \(2k\) jobs, \(k\) machines, and \(k\) vehicles for \(k=4,\dots,10\) (\(\ScaleKs\) levels \(\times\) \(\NSeeds\) seeds \(=\ScalePairs\) pairs), with congestion, heterogeneity, flexibility, time ratio, and station cuts calibrated to fixed targets, so that only size changes; every level is generated from instance seed \(42\) at one congestion level.
+
+\begin{table}[t]
+\centering
+\caption{E8: instance-size sweep (\(\ScaleKs\) levels \(\times\) \(\NSeeds\) seeds). ``Impact set'': \(\mathrm{Cl}/|R|\), whose attainable upper bound is \(|R^{\circ}|/|R|\approx\ScaleAliveShare\).
+Runtimes are medians; ``RD/R2'' is the ratio of the two median columns; the last column is the \(C_{\max}\) win/tie/loss of R2 against RS.}
+\label{tab:instscale}
+\small
+\begin{tabular}{@{}lrccccc@{}}
+\toprule
+Size & \(|R|\) & Impact set & R2\,ms & RD\,ms & RD/R2 & R2 vs.\ RS \\
+\midrule
+\(8\times4\times4\)    & \(148\) & \(0.561\) & \(2.9\)  & \(4.4\)  & \(1.5\times\) & \(7/1/2\) \\
+\(10\times5\times5\)   & \(172\) & \(0.485\) & \(3.2\)  & \(6.1\)  & \(1.9\times\) & \(9/0/1\) \\
+\(12\times6\times6\)   & \(230\) & \(0.481\) & \(4.5\)  & \(10.7\) & \(2.4\times\) & \(7/1/2\) \\
+\(14\times7\times7\)   & \(281\) & \(0.492\) & \(6.1\)  & \(14.5\) & \(2.4\times\) & \(8/0/2\) \\
+\(16\times8\times8\)   & \(291\) & \(0.534\) & \(6.4\)  & \(16.4\) & \(2.6\times\) & \(10/0/0\) \\
+\(18\times9\times9\)   & \(356\) & \(0.535\) & \(8.2\)  & \(26.4\) & \(3.2\times\) & \(10/0/0\) \\
+\(20\times10\times10\) & \(402\) & \(0.476\) & \(10.4\) & \(34.2\) & \(3.3\times\) & \(10/0/0\) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:instscale} shows that \(\mathrm{Cl}/|R|\) fluctuates between \ScaleCloLo\ and \ScaleCloHi\ without trend; since unfinished occupancies make up only about \ScaleAliveShare\ of the table, this share cannot approach \(1\),
+and relative to the unfinished occupancies it lies in \ScaleCloAliveLo--\ScaleCloAliveHi\ (\(0.91\) at the smallest size, \(0.78\) at the largest), the same order as the \ClosureAliveFrac\ of the main batch.
+As \(|R|\) grows \(2.7\)-fold, the median runtime of R2 grows from \(2.9\) to \ScaleMsHi\,ms; the first round of rerouting (without escalation) is feasible in \ScaleFeasFirst\ pairs,
+and the remaining pair succeeds in escalation round \(3\) (\(12.0\)\,ms), giving \ScaleFeasAll.
+The RD/R2 ratio rises from \ScaleRatioLo\(\times\) to \ScaleRatioHi\(\times\), not monotonically but by far more than any within-level IQR (at most \(0.74\)). Against RS, R2 wins \(7\)--\(10\) of \(10\) pairs per level, with no trend.
+\textbf{Across the seven levels, the impact-set share does not rise with size, R2 stays on the order of ten milliseconds, and its runtime advantage over global recomputation widens};
+the impact set is nevertheless not small, and seven levels do not support an asymptotic claim.
+
+\subsection{Reproduction on the external-layout batch}
+\label{sec:pubrepro}
+
+We test whether E1, E2, E3, and E5 depend on our layouts by rerunning them on layouts 2--6 of Lyu et al.\ (\(\NPubPairs\) pairs; E5 on layouts 2 and 6 with seeds \(\{42,7,2024\}\) and budgets \(\{0.2,1,2\}\)\,s, \(18\) budget points).
+The scope on \(G_T\) is empty in \PubPassMiss, closure holds in \PubPassClosed, fields outside the set are unchanged in \PubPassInvar, and single-pass rerouting is feasible in \PubFeasRone\ pairs when scoping on \(G_T\) and in \PubFeasRtwo\ when scoping on the impact set.
+The per-layout median share lies in \PubEoneFracLo--\PubEoneFracHi\ (main batch: pooled median \EoneFracMed).
+R0+ attains the better \(C_{\max}\) at \(17\) of the \(18\) budget points and ties at the remaining one, with no crossover.
+\textbf{Hence the object-level conclusions of C1 and C2 do not depend on our layouts.}
+
+%% =====================================================================
+\section{Conclusion}
+\label{sec:conclusion}
+%% =====================================================================
+
+When a flexible job shop records corridor occupancies with time windows, the operation-precedence graph contains no yielding relations between occupancies and cannot capture disturbances that invalidate only occupancies:
+under corridor blockage, operation-level scoping is empty although the original schedule is infeasible (all \(\NPairs\) pairs, C1).
+Delineating the scope on the reservation dependency graph makes the occupancies to be rewritten uniquely determined by the given relations rather than by a heuristic radius (closure and outside invariance in all \(\NPairs\) pairs, C2),
+and with the same rerouting and only the scope object changed, feasibility goes from \(\FeasRone\) to \(\FeasRtwo\) (C3).
+Rewriting all unfinished occupancies instead leaves runtime and makespan almost unchanged but raises the rewrite fraction from \ResFracCheapRtwo\ to \ResFracAllFuture.
+Hence the millisecond response comes from single-pass rerouting, and \textbf{the benefit attributable to the impact set is that occupancies outside it are kept as planned} (Proposition~\ref{prop:outside});
+this benefit shrinks as the impact set approaches the set of all unfinished occupancies.
+Yielding relations, rerouting inside the set, and scope escalation are taken from existing practice.
+
+\subsection{Limitations and future work}
+\label{sec:limitations}
+\label{sec:future}
+
+We list four limitations in order of their impact, each followed by the corresponding direction.
+
+\begin{enumerate}[leftmargin=1.6em,itemsep=0.3em]
+\item \textbf{Makespan.} Warm-started global rescheduling is no worse than bounded repair on \(C_{\max}\) at every tested budget, with no crossover (Section~\ref{sec:e5}).
+Since neither method rewrites finished occupancies, narrowing the gap would require limited reassignment or resequencing, which drifts toward global rescheduling; this limitation concerns the net benefit, not the object-level conclusions.
+
+\item \textbf{Guarantee and size of the impact set.} Proposition~\ref{prop:outside} is only a sufficient condition, and the edge set has not been verified exhaustively. The impact set is not the minimal set needed to restore feasibility: it covers about \ClosureAliveFrac\ of the unfinished occupancies, so the reduction in rewriting is limited.
+The probe finds \ProbeLeaks\ leaks for the known abutting omission; other disturbance forms (shortened occupancies, longer delays) should be probed next.
+A minimal rewritable set defined for a fixed repair capability would quantify the gap.
+Static network indicators cannot predict the impact-set size (Section~\ref{sec:e4}); the next candidates are schedule-dependent, e.g., the number of overlapping occupancies on the disturbed corridor near \(t_{\mathrm{now}}\). This limitation does not affect the conclusion of C1.
+
+\item \textbf{Scope of the implementation.} Class B is handled by rerouting only, Class A adds vehicle swapping and reassignment without resequencing, and only a single disturbance is handled (A3).
+Size has been extended to \(\ScaleJobsHi\) jobs and \(\ScaleMachHi\) machines, but E8 has only seven levels, too few to infer the trend at larger sizes.
+The next step is to relax A3 and examine whether the impact set grows cumulatively under continual disturbances.
+
+\item \textbf{External reference points.} No public benchmark can be substituted in: the public instance families~\cite{homayouni2021production,fontes2023hybrid} publish machine-to-machine travel-time matrices; none of their \(11\) layouts can be reconstructed as a corridor graph consistent with the matrix,
+so \(R\), \(G_R\), \(\mathrm{Cl}(\cdot)\), and Class B disturbances cannot be defined on them. Our second batch takes only the layouts from Lyu et al.~\cite{lyu2019approach}; travel times and job data are still set by us, so the reference values of Lyu et al.\ or van Os~\cite{vanos2026exact} cannot be reproduced.
+An instance family publishing both a network and per-leg travel times is still needed; our edge-weight sweep in E3 tests only robustness and cannot replace it.
+Hence only the networks come from the literature and external validity is limited; relative comparisons within the same implementation are unaffected.
+\end{enumerate}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{reference-base}
+
+\end{document}

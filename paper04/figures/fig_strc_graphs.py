@@ -111,11 +111,11 @@ def main() -> None:
     ax.text(6.25, 5.85, "same machine", fontsize=7, color=c_mach, fontweight="bold")
 
     ax.text(5.0, 2.15,
-            "seed occupancies non-empty; successors collected along four edge kinds",
-            ha="center", fontsize=8.6, fontweight="bold", color="#1f4e79")
+            "seed r1 overlaps the blockage; successors are collected along four edge kinds",
+            ha="center", fontsize=8.0, fontweight="bold", color="#1f4e79")
     ax.text(5.0, 1.35,
-            "the impact set is the transitive closure on this graph, not an operation neighbourhood",
-            ha="center", fontsize=7.4, color="#555555")
+            "same-job and same-machine edges carry the precedences of (a) over to transport occupancies",
+            ha="center", fontsize=7.0, color="#555555")
 
     handles = [
         Line2D([0], [0], color=c_yield, lw=1.6,
