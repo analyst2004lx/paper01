@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2024.8.28)  26 OCT 2026 16:10
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.11.5)  5 NOV 2026 13:56
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -912,19 +912,19 @@ Overfull \hbox (2.61108pt too wide) has occurred while \output is active
 
 
 {c:/texlive/2024/texmf-var/fonts/map/pdftex/updmap/pdftex.map}] [2]
-<fig/fig_motivating.pdf, id=217, 827.71233pt x 341.89572pt>
+<fig/fig_motivating.pdf, id=217, 848.25157pt x 343.38567pt>
 File: fig/fig_motivating.pdf Graphic file (type pdf)
 <use fig/fig_motivating.pdf>
 Package pdftex.def Info: fig/fig_motivating.pdf  used on input line 409.
-(pdftex.def)             Requested size: 390.0pt x 161.09792pt.
+(pdftex.def)             Requested size: 390.0pt x 157.88072pt.
  [3 <./fig/fig_motivating.pdf>] [4] [5] [6] [7] [8] [9] [10] [11] [12] [13] [14
 ] [15]
 [16]
-<fig/fig_framework.pdf, id=495, 394.95557pt x 192.09367pt>
+<fig/fig_framework.pdf, id=488, 394.95557pt x 253.30635pt>
 File: fig/fig_framework.pdf Graphic file (type pdf)
 <use fig/fig_framework.pdf>
 Package pdftex.def Info: fig/fig_framework.pdf  used on input line 663.
-(pdftex.def)             Requested size: 390.0pt x 189.68968pt.
+(pdftex.def)             Requested size: 390.0pt x 250.13629pt.
  [17 <./fig/fig_framework.pdf>]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
 put line 697.
@@ -958,13 +958,13 @@ Underfull \hbox (badness 10000) in paragraph at lines 3--1025
 
  []
 
-<fig/fig_prediction3.pdf, id=755, 496.82727pt x 169.16081pt>
+<fig/fig_prediction3.pdf, id=784, 497.73866pt x 169.28564pt>
 File: fig/fig_prediction3.pdf Graphic file (type pdf)
 <use fig/fig_prediction3.pdf>
 Package pdftex.def Info: fig/fig_prediction3.pdf  used on input line 1029.
-(pdftex.def)             Requested size: 390.0pt x 132.79152pt.
+(pdftex.def)             Requested size: 390.0pt x 132.64671pt.
 [34] [35 <./fig/fig_prediction3.pdf>] [36] [37] [38]
-<fig/fig_protocol.pdf, id=868, 232.71764pt x 166.52632pt>
+<fig/fig_protocol.pdf, id=896, 232.71764pt x 166.52632pt>
 File: fig/fig_protocol.pdf Graphic file (type pdf)
 <use fig/fig_protocol.pdf>
 Package pdftex.def Info: fig/fig_protocol.pdf  used on input line 1091.
@@ -975,24 +975,24 @@ Underfull \hbox (badness 10000) in paragraph at lines 3--1114
  []
 
 [40]
-<fig/fig_case.pdf, id=942, 491.57538pt x 443.13997pt>
+<fig/fig_case.pdf, id=968, 493.97221pt x 446.49985pt>
 File: fig/fig_case.pdf Graphic file (type pdf)
 <use fig/fig_case.pdf>
 Package pdftex.def Info: fig/fig_case.pdf  used on input line 1125.
-(pdftex.def)             Requested size: 390.0pt x 351.57784pt.
- [41] [42 <./fig/fig_case.pdf>] (./tab/tab_external_EN.tex) [43]
+(pdftex.def)             Requested size: 390.0pt x 352.5198pt.
+ [41] [42 <./fig/fig_case.pdf>] (./tab/tab_external_EN.tex) [43] [44]
 Underfull \hbox (badness 3108) in paragraph at lines 1167--1168
 []\OT1/cmr/bx/n/12 Reservation-table-aware dis-patch-ing with output-preserving
 
  []
 
-[44] [45] (./paper01_CAIE_anonymized.bbl [46] [47]
+[45] [46] (./paper01_CAIE_anonymized.bbl [47]
 Underfull \hbox (badness 1231) in paragraph at lines 116--124
 []\OT1/cmr/m/n/12 Lim, C.H., Moon, S.K., 2023.  A two-phase it-er-a-tive math-e
 -mat-i-cal
  []
 
-[48] [49]) [50] (./paper01_CAIE_anonymized.aux)
+[48] [49] [50]) [51] (./paper01_CAIE_anonymized.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
 L3 programming layer <2024-02-20>
@@ -1002,13 +1002,13 @@ Package rerunfilecheck Info: File `paper01_CAIE_anonymized.out' has not changed
 (rerunfilecheck)             Checksum: BA14E9A3DA6653590E8FCAE2D434E011;8645.
  ) 
 Here is how much of TeX's memory you used:
- 26027 strings out of 474115
- 500003 string characters out of 5747696
+ 26028 strings out of 474116
+ 500010 string characters out of 5747717
  1953190 words of memory out of 5000000
- 47729 multiletter control sequences out of 15000+600000
+ 47728 multiletter control sequences out of 15000+600000
  573938 words of font info for 91 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 84i,19n,93p,1137b,637s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 84i,19n,93p,1137b,641s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/tex
 live/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2024
 /texmf-dist/fonts/type1/public/amsfonts/cm/cmcsc10.pfb><c:/texlive/2024/texmf-d
@@ -1031,10 +1031,10 @@ ype1/public/amsfonts/cm/cmti10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/publ
 ic/amsfonts/cm/cmti12.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfon
 ts/cm/cmtt10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmt
 t12.pfb>
-Output written on paper01_CAIE_anonymized.pdf (50 pages, 1625481 bytes).
+Output written on paper01_CAIE_anonymized.pdf (51 pages, 608464 bytes).
 PDF statistics:
- 1276 PDF objects out of 1440 (max. 8388607)
- 920 compressed objects within 10 object streams
- 169 named destinations out of 1000 (max. 500000)
+ 1317 PDF objects out of 1440 (max. 8388607)
+ 921 compressed objects within 10 object streams
+ 170 named destinations out of 1000 (max. 500000)
  430 words of extra memory for PDF output out of 10000 (max. 10000000)
 
