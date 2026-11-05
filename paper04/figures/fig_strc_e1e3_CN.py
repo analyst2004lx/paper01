@@ -20,15 +20,15 @@ from _cjk_mpl import setup_cjk
 
 setup_cjk()
 
-ORDER = ("example_3x3x2", "congested_8x4x4", "S8x4x4_high",
-         "S8x4x4_funnel", "S8x4x4_mid")
+ORDER = ("example_3x3x2", "congested_8x4x4", "S8x4x4_funnel",
+         "S8x4x4_high", "S8x4x4_mid")
 
 LABEL = {
-    "example_3x3x2": "3x3x2",
-    "congested_8x4x4": "congested",
-    "S8x4x4_high": "S8 high",
-    "S8x4x4_funnel": "S8 funnel",
-    "S8x4x4_mid": "S8 mid",
+    "example_3x3x2": "小例",
+    "congested_8x4x4": "拥堵例",
+    "S8x4x4_high": "high",
+    "S8x4x4_funnel": "funnel",
+    "S8x4x4_mid": "mid",
 }
 
 

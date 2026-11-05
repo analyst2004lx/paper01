@@ -110,10 +110,10 @@ def main() -> None:
     ax.text(5.85, 7.85, "同工件", fontsize=7, color=c_job, fontweight="bold")
     ax.text(6.55, 5.85, "同机", fontsize=7, color=c_mach, fontweight="bold")
 
-    ax.text(5.0, 2.15, r"起点占用非空，沿四类边纳入后续占用",
-            ha="center", fontsize=9.5, fontweight="bold", color="#1f4e79")
-    ax.text(5.0, 1.35, "预约影响集由这张图上的传递闭包给出，不是工序邻域",
-            ha="center", fontsize=8, color="#555555")
+    ax.text(5.0, 2.15, r"起点 r1 是与阻断时段重叠的走廊占用，沿四类边纳入后续占用",
+            ha="center", fontsize=8.5, fontweight="bold", color="#1f4e79")
+    ax.text(5.0, 1.35, "同工件、同机两类边由 (a) 的工件先后、同机先后对应到运输占用得到",
+            ha="center", fontsize=7.5, color="#555555")
 
     handles = [
         Line2D([0], [0], color=c_yield, lw=1.6, label="让行（同走廊、异车）"),

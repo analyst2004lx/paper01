@@ -57,7 +57,7 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
 
     cid, t0, t1 = block
     ax.axvspan(t0, t1, color="#e8a0a0", alpha=0.35, zorder=0)
-    ax.text((t0 + t1) / 2, -0.95, f"阻断于 {cid}",
+    ax.text((t0 + t1) / 2, -0.95, f"被阻断走廊 {cid.replace('|', '–')}",
             ha="center", va="top", fontsize=6.5, color="#8b1e1e")
 
     ax.set_yticks(list(ymap.values()))
@@ -73,7 +73,7 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
         ax.legend(handles=[
             Patch(facecolor="#1f4e79", edgecolor="#222222", label="影响集内工序（改路）"),
             Patch(facecolor="#b0b8c0", edgecolor="#222222", label="影响集外工序（保持原计划）"),
-            Patch(facecolor="#e8a0a0", alpha=0.5, label="走廊阻断窗口"),
+            Patch(facecolor="#e8a0a0", alpha=0.5, label="走廊阻断时段"),
         ], loc="lower right", fontsize=6.5, frameon=False)
 
 
@@ -107,19 +107,19 @@ def main() -> None:
         axes[0], bundle.result, closed_ops,
         t_now=t_now, block=block,
         title=(f"(a) 修复前  $C_{{\\max}}={bundle.makespan:.0f}$  "
-               f"|Seeds|={len(seeds)}  |Cl|={closure.size}"),
+               f"起点占用 {len(seeds)} 条  预约影响集 {closure.size} 条"),
         show_legend=True,
     )
     _draw_panel(
         axes[1], rep.result, closed_ops,
         t_now=t_now, block=block,
-        title=(f"(b) STRC 第 1 级修复后  $C_{{\\max}}={rep.makespan:.0f}$  "
-               f"耗时={rep.wall_ms:.1f} ms"),
+        title=(f"(b) 在预约影响集内单遍改路后  $C_{{\\max}}={rep.makespan:.0f}$  "
+               f"耗时 {rep.wall_ms:.1f} ms"),
         show_legend=False,
     )
     axes[0].text(
         0.01, 0.90,
-        r"$T_{\mathrm{impact}}=\varnothing$（工序依赖图）；修复用预约影响集",
+        "按工序依赖图划界：受影响工序为空",
         transform=axes[0].transAxes, ha="left", va="top", fontsize=7,
         color="#1f4e79",
         bbox=dict(boxstyle="round,pad=0.2", fc="#e8eef5", ec="#1f4e79", lw=0.7),

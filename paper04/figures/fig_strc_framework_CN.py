@@ -54,14 +54,14 @@ def main() -> None:
                             edgecolor=C_MEAS, lw=1.2, alpha=0.55, zorder=0))
     ax.text(5.8, 7.3, "划定范围（预约影响集）", ha="center", fontsize=9,
             color=C_MEAS, fontweight="bold")
-    box(ax, 3.5, 5.5, 2.1, 1.5, "起点占用\n与阻断窗重叠", fc="#dce6f1",
+    box(ax, 3.5, 5.5, 2.1, 1.5, "起点占用\n与阻断时段重叠", fc="#dce6f1",
         ec=C_MEAS, fs=8, tc=C_MEAS)
     box(ax, 6.0, 5.5, 2.1, 1.5, "影响集\n$U=\\mathrm{Cl}(S)$", fc="#dce6f1",
         ec=C_MEAS, fs=8.5, bold=True, tc=C_MEAS)
 
     ax.add_patch(Rectangle((8.7, 5.2), 5.0, 2.4, facecolor="#e9f5ee",
                             edgecolor=C_REP, lw=1.2, alpha=0.55, zorder=0))
-    ax.text(11.2, 7.3, "有界修复（第 1 级改路）", ha="center", fontsize=9,
+    ax.text(11.2, 7.3, "有界修复（单遍改路）", ha="center", fontsize=9,
             color=C_REP, fontweight="bold")
     box(ax, 8.9, 5.5, 2.2, 1.5, "集外保持原计划\n集内 $U$ 改路",
         fc="#d8efe3", ec=C_REP, fs=7.5, tc=C_REP)

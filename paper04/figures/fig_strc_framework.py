@@ -58,7 +58,7 @@ def main() -> None:
     # Repair strip
     ax.add_patch(Rectangle((8.7, 5.3), 5.0, 2.2, facecolor="#e9f5ee",
                             edgecolor=C_REP, lw=1.2, alpha=0.55, zorder=0))
-    ax.text(11.2, 7.2, "Bounded repair (level-1 rerouting)", ha="center", fontsize=8,
+    ax.text(11.2, 7.2, "Bounded repair (single-pass rerouting)", ha="center", fontsize=8,
             color=C_REP, fontweight="bold")
     box(ax, 8.9, 5.6, 2.2, 1.4, "Keep rest as planned\nReroute inside $U$",
         fc="#d8efe3", ec=C_REP, fs=7.2, tc=C_REP)
@@ -80,7 +80,7 @@ def main() -> None:
 
     # Controls
     box(ax, 0.3, 1.0, 4.0, 1.6,
-        "Baseline R1\nsame level-1 rerouting\n$U\\leftarrow$ affected set on $G_T$",
+        "Baseline R1\nsame single-pass rerouting\n$U\\leftarrow$ affected set on $G_T$",
         fc="#fdeee6", ec=C_CTRL, fs=7.2, tc="#7a3b10")
     box(ax, 4.8, 1.0, 4.0, 1.6,
         "Baseline R0+\nwarm-started global rescheduling\nwall-clock budget",

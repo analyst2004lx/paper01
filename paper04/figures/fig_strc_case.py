@@ -2,7 +2,7 @@
 
 放位意图(正文 §6 案例小节):
   在 E1/E3 统计之后,用一例把「任务图空、闭包非空、闭包内改/外侧尽量冻」落到时间轴。
-  上图=扰动前原排程(标闭包工序);下图=STRC 第 1 级修复后。
+  上图=扰动前原排程(标闭包工序);下图=STRC 单遍改路后。
 
 用法:
   py paper04/figures/fig_strc_case.py
@@ -63,7 +63,7 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
     # block window as translucent band
     cid, t0, t1 = block
     ax.axvspan(t0, t1, color="#e8a0a0", alpha=0.35, zorder=0)
-    ax.text((t0 + t1) / 2, -0.95, f"blockage on {cid}",
+    ax.text((t0 + t1) / 2, -0.95, f"blocked corridor {cid.replace('|', '–')}",
             ha="center", va="top", fontsize=6.5, color="#8b1e1e")
 
     ax.set_yticks(list(ymap.values()))
@@ -77,8 +77,8 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
     ax.spines["right"].set_visible(False)
     if show_legend:
         ax.legend(handles=[
-            Patch(facecolor="#1f4e79", edgecolor="#222222", label="op in Cl (rerouted)"),
-            Patch(facecolor="#b0b8c0", edgecolor="#222222", label="op outside Cl (kept as planned)"),
+            Patch(facecolor="#1f4e79", edgecolor="#222222", label="operation in impact set (rerouted)"),
+            Patch(facecolor="#b0b8c0", edgecolor="#222222", label="operation outside impact set (kept as planned)"),
             Patch(facecolor="#e8a0a0", alpha=0.5, label="blockage window"),
         ], loc="lower right", fontsize=6.5, frameon=False)
 
@@ -113,21 +113,21 @@ def main() -> None:
         axes[0], bundle.result, closed_ops,
         t_now=t_now, block=block,
         title=(f"(a) Before repair  $C_{{\\max}}={bundle.makespan:.0f}$  "
-               f"|Seeds|={len(seeds)}  |Cl|={closure.size}"),
+               f"{len(seeds)} seed occupancies, impact set of {closure.size}"),
         show_legend=True,
     )
     _draw_panel(
         axes[1], rep.result, closed_ops,
         t_now=t_now, block=block,
-        title=(f"(b) After level-1 rerouting  $C_{{\\max}}={rep.makespan:.0f}$  "
-               f"wall={rep.wall_ms:.1f} ms"),
+        title=(f"(b) After single-pass rerouting within the impact set  $C_{{\\max}}={rep.makespan:.0f}$  "
+               f"runtime {rep.wall_ms:.1f} ms"),
         show_legend=False,
     )
     # annotate T_impact empty
     axes[0].text(
-        0.01, 0.90,
-        r"$T_{\mathrm{impact}}=\varnothing$ (operation-precedence graph); repair uses Cl",
-        transform=axes[0].transAxes, ha="left", va="top", fontsize=7,
+        0.99, 0.97,
+        "Scope on the operation-precedence graph: empty",
+        transform=axes[0].transAxes, ha="right", va="top", fontsize=7,
         color="#1f4e79",
         bbox=dict(boxstyle="round,pad=0.2", fc="#e8eef5", ec="#1f4e79", lw=0.7),
     )
