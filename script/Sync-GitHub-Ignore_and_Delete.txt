@@ -195,6 +195,8 @@ paper03\Latex\paper03.fls
 paper03\Latex\paper03.log
 paper03\Latex\paper03.out
 paper03\Latex\paper03.synctex.gz
+paper04\xelatex25536.fls
+paper04\xelatex30096.fls
 paper04\Untitled
 paper04\paper-ledger.md
 paper04\paper04.aux
@@ -206,6 +208,7 @@ paper04\paper04.fls
 paper04\paper04.log
 paper04\paper04.out
 paper04\paper04.synctex.gz
+paper04\paper04.tex.before_fullpass
 paper04\paper04_CN.aux
 paper04\paper04_CN.bbl
 paper04\paper04_CN.blg
@@ -215,6 +218,7 @@ paper04\paper04_CN.log
 paper04\paper04_CN.out
 paper04\paper04_CN.synctex.gz
 paper04\paper04_CN.xdv
+paper04\paper04_CN.tex.before_fullpass
 paper04\paper04_CN_AI-Modify-26-09-17.aux
 paper04\paper04_CN_AI-Modify-26-09-17.bbl
 paper04\paper04_CN_AI-Modify-26-09-17.blg
@@ -233,6 +237,7 @@ paper04\paper04_EN.log
 paper04\paper04_EN.out
 paper04\paper04_EN.synctex.gz
 paper04\paper04_EN.xdv
+paper04\paper04_EN.tex.before_fullpass
 paper04\comment.cut
 paper04\__pycache__
 paper04\_en_parts
