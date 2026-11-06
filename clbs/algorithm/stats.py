@@ -8,6 +8,12 @@
 纯标准库实现(本机无法安装 scipy,见规格 13.6 第 2 项)。Wilcoxon 在 |d| 无并列、
 样本量不大时用**精确零分布**(按秩和的子集计数做动态规划,非枚举),否则退化为
 带并列校正的正态近似,方法名随结果一并返回,不隐藏近似。
+
+Experimental statistics: dispersion summaries, the paired Wilcoxon signed-rank test, and Spearman rank correlation (spec 8.2, protocol 2).
+
+Protocol 2 of spec 8.2 requires "report the mean and standard deviation and run a paired test". This module computes them. Pairing is required because the same seed shares the initial population and the random stream across two arms. Between-seed variance (a single arm's range can reach 11 on a congested instance) is far larger than the between-arm gap (1–3), so an unpaired test has no resolving power at that variance (spec 13.2, conclusion 3).
+
+Pure standard-library implementation (scipy cannot be installed on this machine; see spec 13.6, item 2). When there are no ties in |d| and the sample is not large, Wilcoxon uses the exact null distribution (dynamic programming over subset counts of the rank sum, not enumeration). Otherwise it falls back to a normal approximation with a tie correction. The method name is returned with the result; the approximation is not hidden.
 """
 from __future__ import annotations
 
@@ -16,16 +22,21 @@ from typing import Dict, List, Optional, Sequence
 
 EPS = 1e-9
 EXACT_MAX_N = 25          # 精确零分布的样本量上限(DP 规模 ~ n^3,足够快)
+# Sample-size cap for the exact null distribution (DP size ~ n^3, fast enough).
 
 
 # ---------------- 描述统计 ----------------
+# Descriptive statistics
 
 def mean(xs: Sequence[float]) -> float:
     return sum(xs) / len(xs)
 
 
 def sample_sd(xs: Sequence[float]) -> float:
-    """样本标准差(n−1 分母);n < 2 时为 0。"""
+    """样本标准差(n−1 分母);n < 2 时为 0。
+
+    Sample standard deviation (n−1 denominator); 0 when n < 2.
+    """
     if len(xs) < 2:
         return 0.0
     mu = mean(xs)
@@ -40,7 +51,10 @@ def median(xs: Sequence[float]) -> float:
 
 
 def describe(xs: Sequence[float]) -> Dict[str, float]:
-    """一组重复实验的完整读数。**离散度必须与均值一并报告**(协议 2)。"""
+    """一组重复实验的完整读数。**离散度必须与均值一并报告**(协议 2)。
+
+    A full readout of one set of repeated runs. Dispersion must be reported together with the mean (protocol 2).
+    """
     if not xs:
         return {"n": 0}
     return {
@@ -55,9 +69,13 @@ def describe(xs: Sequence[float]) -> Dict[str, float]:
 
 
 # ---------------- 秩与 Spearman ----------------
+# Ranks and Spearman
 
 def ranks(vals: Sequence[float]) -> List[float]:
-    """升序秩,并列取平均秩(秩从 1 起)。"""
+    """升序秩,并列取平均秩(秩从 1 起)。
+
+    Ascending ranks; ties take the average rank (ranks start at 1).
+    """
     order = sorted(range(len(vals)), key=lambda i: vals[i])
     rk = [0.0] * len(vals)
     i = 0
@@ -73,7 +91,10 @@ def ranks(vals: Sequence[float]) -> List[float]:
 
 
 def spearman(xs: Sequence[float], ys: Sequence[float]) -> Optional[float]:
-    """Spearman 秩相关;样本 < 3 或任一侧无变异时返回 None。"""
+    """Spearman 秩相关;样本 < 3 或任一侧无变异时返回 None。
+
+    Spearman rank correlation; None when the sample size is under 3 or either side has no variation.
+    """
     if len(xs) != len(ys):
         raise ValueError("两组样本长度不等")
     if len(xs) < 3:
@@ -90,9 +111,13 @@ def spearman(xs: Sequence[float], ys: Sequence[float]) -> Optional[float]:
 
 
 # ---------------- Wilcoxon 符号秩检验 ----------------
+# Wilcoxon signed-rank test
 
 def _normal_sf(z: float) -> float:
-    """标准正态上尾概率。"""
+    """标准正态上尾概率。
+
+    Upper-tail probability of the standard normal.
+    """
     return 0.5 * math.erfc(z / math.sqrt(2.0))
 
 
@@ -101,6 +126,10 @@ def _exact_two_sided_p(rank_vals: Sequence[float], w_min: float) -> float:
 
     零假设下每个差值的符号独立等概率,故 W+ 的分布 = 从秩集合中任取子集的和的分布。
     秩可能是半整数(并列平均秩),故整体乘 2 化为整数索引。
+
+    Exact two-sided p-value: enumerating all 2^n sign assignments is equivalent to counting subsets of the rank sum, done by DP.
+
+    Under the null each difference's sign is independent and equally likely, so the distribution of W+ is the distribution of the sum of an arbitrary subset of the ranks. Ranks may be half-integers (average ranks of ties), so everything is multiplied by 2 to obtain an integer index.
     """
     scaled = [int(round(r * 2)) for r in rank_vals]
     total = sum(scaled)
@@ -121,6 +150,10 @@ def wilcoxon_signed_rank(xs: Sequence[float], ys: Sequence[float]) -> Dict[str, 
 
     返回字段中 `n_eff` 是**去掉零差值后**的有效对数——它常远小于 n:makespan 取整
     后两档在多数种子上完全打平,这本身就是"分辨不出差异"的直接证据,故必须报告。
+
+    Paired Wilcoxon signed-rank test (two-sided).
+
+    In the returned fields, `n_eff` is the number of effective pairs after zero differences are dropped. It is often far smaller than n: after makespan is rounded, the two arms tie on most seeds. That itself is direct evidence that the difference cannot be resolved, so it must be reported.
     """
     if len(xs) != len(ys):
         raise ValueError("配对检验要求两组样本一一对应")
@@ -145,6 +178,7 @@ def wilcoxon_signed_rank(xs: Sequence[float], ys: Sequence[float]) -> Dict[str, 
     else:
         mu = n * (n + 1) / 4.0
         # 并列校正项:同 |d| 组大小 t 贡献 (t^3 - t)/2
+        # Tie-correction term: a tied-|d| group of size t contributes (t^3 - t)/2.
         groups: Dict[float, int] = {}
         for d in diffs:
             k = round(abs(d), 9)
@@ -155,6 +189,7 @@ def wilcoxon_signed_rank(xs: Sequence[float], ys: Sequence[float]) -> Dict[str, 
             p, method = 1.0, "degenerate"
         else:
             z = (abs(w_plus - mu) - 0.5) / math.sqrt(var)   # 连续性校正
+            # Continuity correction.
             p = min(1.0, 2.0 * _normal_sf(max(0.0, z)))
             method = "normal"
     out.update({"w_plus": round(w_plus, 2), "w_minus": round(w_minus, 2),
@@ -164,7 +199,10 @@ def wilcoxon_signed_rank(xs: Sequence[float], ys: Sequence[float]) -> Dict[str, 
 
 
 def stars(p: Optional[float]) -> str:
-    """显著性标记;仅作阅读辅助,结论仍以 p 值与效应量为准。"""
+    """显著性标记;仅作阅读辅助,结论仍以 p 值与效应量为准。
+
+    Significance marks; only a reading aid. The conclusion still rests on the p-value and the effect size.
+    """
     if p is None:
         return "  "
     if p < 0.01:
@@ -186,6 +224,9 @@ def stars(p: Optional[float]) -> str:
 # (FDR),适用于"这一族里大致有多少格兑现"这种筛选式断言。本文的逐格叙述属于
 # 前者,故正文以 Holm 为准,BH 仅作为更宽松的一档一并给出,以免读者误以为
 # 校正方式是挑出来的。
+# Why a correction is required: reading a sign cell by cell is 10 tests on one instance family, and the probability of "at least one cell significant" under the global null is far above the nominal 5% (10 independent tests is already 40%). This paper's narrative discipline is "what may be claimed is decided by per-cell significance". If that discipline rests on uncorrected p-values, it fails exactly where it matters most. Every per-cell test is therefore corrected by family, and the definition of the family (which 10 tests count as one family) is reported with the result.
+#
+# Both corrections are provided, for different uses. Holm controls the probability of at least one type-I error inside the family (FWER), which fits a per-cell claim of the form "did this cell deliver". BH controls the expected false-discovery proportion among those declared significant (FDR), which fits a screening claim of the form "about how many cells in this family delivered". The per-cell narrative of this paper is the former, so the main text uses Holm. BH is reported alongside as a looser tier, so a reader does not think the correction was picked after the fact.
 
 
 def holm(pvals: Sequence[float]) -> List[float]:
@@ -194,6 +235,10 @@ def holm(pvals: Sequence[float]) -> List[float]:
     校正后 p 值按定义是单调的:排序后第 k 小者乘以 (m-k+1),再对前缀取累计最大值。
     不取累计最大值会得到非单调的序列,于是可能出现"更小的原始 p 反而校正后更大",
     那不是 Holm。
+
+    Holm--Bonferroni step-down correction. Returns adjusted p-values in the input order.
+
+    Adjusted p-values are monotone by definition: the k-th smallest, after sorting, is multiplied by (m-k+1), then a running maximum is taken over the prefix. Skipping the running maximum yields a non-monotone sequence, in which a smaller raw p can come out larger after adjustment. That is not Holm.
     """
     m = len(pvals)
     if m == 0:
@@ -208,7 +253,10 @@ def holm(pvals: Sequence[float]) -> List[float]:
 
 
 def benjamini_hochberg(pvals: Sequence[float]) -> List[float]:
-    """Benjamini--Hochberg 校正(控制 FDR),返回与输入同序的校正后 p 值。"""
+    """Benjamini--Hochberg 校正(控制 FDR),返回与输入同序的校正后 p 值。
+
+    Benjamini--Hochberg correction (controls FDR). Returns adjusted p-values in the input order.
+    """
     m = len(pvals)
     if m == 0:
         return []
@@ -217,35 +265,47 @@ def benjamini_hochberg(pvals: Sequence[float]) -> List[float]:
     run = 1.0
     for k, i in enumerate(order):
         rank = m - k                      # 该 p 值升序时的位次
+        # Rank of this p-value when sorted ascending.
         run = min(run, m * pvals[i] / rank)
         adj[i] = min(1.0, run)
     return adj
 
 
 # ---------------- 效应量:Hodges--Lehmann 点估计与分布无关置信区间 ----------------
+# Effect size: Hodges--Lehmann point estimate and a distribution-free confidence interval.
 #
 # 为什么要它:p 值只说"方向可与零区分",不说"差多少、精度如何"。本文报告的点估计
 # 是逐对相对增益的均值,它与 Wilcoxon 检验并不同源——检验用的是秩。Hodges--Lehmann
 # 伪中位数正是 Wilcoxon 符号秩检验所对应的那个点估计,且它的置信区间可以由同一个
 # 零分布直接读出,故"点估计 / 区间 / p 值"三者同源。区间是分布无关的,不假设正态。
+# Why it is needed: a p-value only says "the direction is distinguishable from zero". It does not say "by how much, and how precisely". The point estimate reported in this paper is the mean of pairwise relative gains, and it does not come from the same source as the Wilcoxon test — the test uses ranks. The Hodges--Lehmann pseudomedian is exactly the point estimate that corresponds to the Wilcoxon signed-rank test, and its confidence interval can be read directly from the same null distribution, so the point estimate, the interval, and the p-value share one source. The interval is distribution-free and does not assume normality.
 
 
 def walsh_averages(xs: Sequence[float]) -> List[float]:
-    """全部 Walsh 平均 $(x_i+x_j)/2,\\ i\\le j$,升序。共 n(n+1)/2 个。"""
+    """全部 Walsh 平均 $(x_i+x_j)/2,\\ i\\le j$,升序。共 n(n+1)/2 个。
+
+    All Walsh averages $(x_i+x_j)/2,\\ i\\le j$, in ascending order. There are n(n+1)/2 of them.
+    """
     n = len(xs)
     return sorted((xs[i] + xs[j]) / 2.0
                   for i in range(n) for j in range(i, n))
 
 
 def hodges_lehmann(xs: Sequence[float]) -> Optional[float]:
-    """伪中位数:全部 Walsh 平均的中位数。"""
+    """伪中位数:全部 Walsh 平均的中位数。
+
+    Pseudomedian: the median of all Walsh averages.
+    """
     if not xs:
         return None
     return median(walsh_averages(xs))
 
 
 def _signed_rank_counts(n: int) -> List[int]:
-    """无并列时 $W^+$ 的零分布计数(下标 = $W^+$ 取值),用子集和 DP 得到。"""
+    """无并列时 $W^+$ 的零分布计数(下标 = $W^+$ 取值),用子集和 DP 得到。
+
+    Null-distribution counts of $W^+$ when there are no ties (the index is the value of $W^+$), from a subset-sum DP.
+    """
     total = n * (n + 1) // 2
     counts = [0] * (total + 1)
     counts[0] = 1
@@ -257,7 +317,10 @@ def _signed_rank_counts(n: int) -> List[int]:
 
 
 def _normal_ppf(p: float) -> float:
-    """标准正态上尾分位点:返回满足 P(Z>z)=p 的 z。二分求解,精度足够且无依赖。"""
+    """标准正态上尾分位点:返回满足 P(Z>z)=p 的 z。二分求解,精度足够且无依赖。
+
+    Upper-tail quantile of the standard normal: return z such that P(Z>z)=p. Solved by bisection; accurate enough and dependency-free.
+    """
     lo, hi = -40.0, 40.0
     for _ in range(200):
         mid = (lo + hi) / 2.0
@@ -279,6 +342,12 @@ def hodges_lehmann_ci(xs: Sequence[float],
     注意与检验的口径差别:检验按惯例剔除零差值(见 `wilcoxon_signed_rank` 的
     `n_eff`),而单样本 HL 的区间按惯例用**全部** n 个观测,零差值同样参与 Walsh
     平均。两者因此可能在临界处不完全一致,故此处把 n 一并返回供对账。
+
+    Distribution-free confidence interval for the pseudomedian (Hollander--Wolfe convention).
+
+    Take $c$ as the largest integer satisfying $P(W^+\\le c)\\le\\alpha/2$. The interval endpoints are the $(c+1)$-th and the $(M-c)$-th Walsh averages in ascending order, with $M=n(n+1)/2$. When $n\\le$ EXACT_MAX_N, $c$ comes from the exact null distribution; otherwise a normal approximation with continuity correction is used. The method name is returned with the result; the approximation is not hidden.
+
+    Note the difference in convention from the test: the test drops zero differences by convention (see `n_eff` in `wilcoxon_signed_rank`), whereas the one-sample HL interval uses all n observations by convention, and zero differences take part in the Walsh averages. The two can therefore disagree slightly at the boundary, so n is returned here for reconciliation.
     """
     n = len(xs)
     if n < 2:

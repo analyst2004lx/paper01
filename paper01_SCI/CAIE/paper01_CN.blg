@@ -1,0 +1,59 @@
+This is BibTeX, Version 0.99d (TeX Live 2024)
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: paper01_CN.aux
+The style file: ACM-Reference-Format.bst
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 6000 items from 3000.
+Database file #1: reference-base.bib
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Reallocated wiz_functions (elt_size=4) to 9000 items from 6000.
+Reallocated glb_str_ptr (elt_size=4) to 20 items from 10.
+Reallocated global_strs (elt_size=200001) to 20 items from 10.
+Reallocated glb_str_end (elt_size=4) to 20 items from 10.
+Reallocated singl_function (elt_size=4) to 100 items from 50.
+Warning--empty publisher in zhang2024guidance
+Warning--empty address in zhang2024guidance
+Warning--page numbers missing in both pages and numpages fields in zhang2024guidance
+You've used 26 entries,
+            6273 wiz_defined-function locations,
+            1774 strings with 25593 characters,
+and the built_in function-call counts, 32793 in all, are:
+= -- 5203
+> -- 1013
+< -- 0
++ -- 366
+- -- 347
+* -- 2315
+:= -- 2926
+add.period$ -- 129
+call.type$ -- 26
+change.case$ -- 201
+chr.to.int$ -- 25
+cite$ -- 29
+duplicate$ -- 2618
+empty$ -- 1800
+format.name$ -- 450
+if$ -- 8614
+int.to.chr$ -- 3
+int.to.str$ -- 1
+missing$ -- 105
+newline$ -- 272
+num.names$ -- 181
+pop$ -- 894
+preamble$ -- 1
+purify$ -- 407
+quote$ -- 0
+skip$ -- 969
+stack$ -- 0
+substring$ -- 2412
+swap$ -- 345
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 427
+warning$ -- 3
+while$ -- 155
+width$ -- 0
+write$ -- 556
+(There were 3 warnings)

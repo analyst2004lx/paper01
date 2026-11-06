@@ -54,14 +54,14 @@ def main():
                         marker="o" if tag == "high" else "s", ms=4,
                         elinewidth=0.8, capsize=2,
                         color=S.TAG_COLOR.get(tag, "0.3"),
-                        label="%s congestion" % tag)
+                        label=tag)
             if ax2 is not None:
                 cost = [sub[sub["theta"] == t]["ms_per_eval"].mean()
                         for t in thetas]
                 ax2.plot(thetas, cost, ls=":", lw=0.9,
                          color=S.TAG_COLOR.get(tag, "0.3"), alpha=0.55)
         ax.axhline(0, color="0.4", lw=0.8)
-        ax.set_xlabel(r"pricing strength $\theta$")
+        ax.set_xlabel(r"surcharge coefficient $\theta$")
         ax.set_title(title, fontsize=7.6, pad=4)
         if ax2 is not None:
             ax2.set_ylabel("ms per evaluation (dotted)", fontsize=7,
@@ -74,7 +74,7 @@ def main():
     n_wall = wall.groupby("theta").size().min()
     n_gen = gen.groupby("theta").size().min()
     fig.text(0.0, -0.03,
-             "positive is worse.  %d runs per point on the left, %d on the "
+             "Positive is worse.  %d runs per point on the left, %d on the "
              "right; two instances, mean $\\pm$ s.e." % (n_wall, n_gen),
              fontsize=S.FS_FOOT, color="0.35")
     fig.subplots_adjust(bottom=0.28, wspace=0.32)

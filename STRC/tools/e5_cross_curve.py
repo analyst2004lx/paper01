@@ -13,6 +13,22 @@
     py -m tools.e5_cross_curve
     py -m tools.e5_cross_curve --instance ../clbs/input/congested_8x4x4.json
     py -m tools.e5_cross_curve --budgets 0.05,0.2,1,5 --seeds 42,7
+
+E5 budget–quality–stability tradeoff: R0/R0+ re-solve versus R2 closure repair.
+
+Level-1 R2 (reroute only) is usually weaker than warm-start GA on Cmax, but it wins on two other axes:
+  - wall-clock: milliseconds versus a budget in seconds
+  - reservation disturbance: only the closure moves, while R0 often rewrites every future reservation
+
+E5 therefore reports three curves, not a single Cmax crossing:
+  1) Cmax(budget) — at a wide budget, R0 is expected to be better
+  2) reservation_changed — R2 is expected to stay smaller
+  3) joint gate: R2 is feasible and more stable; at a high budget, R0's Cmax is no worse than R2 (they complement each other)
+
+Usage:
+    py -m tools.e5_cross_curve
+    py -m tools.e5_cross_curve --instance ../clbs/input/congested_8x4x4.json
+    py -m tools.e5_cross_curve --budgets 0.05,0.2,1,5 --seeds 42,7
 """
 from __future__ import annotations
 
@@ -63,7 +79,10 @@ def main() -> int:
     )
 
     def past_delta(bundle, rep, t_now: float):
-        """该臂改写了多少条 t_now 之前已执行完的预约(按 A2 应为 0)。"""
+        """该臂改写了多少条 t_now 之前已执行完的预约(按 A2 应为 0)。
+
+How many reservations that had already finished before t_now this arm rewrote (0 under A2).
+"""
         if not rep.feasible or rep.result is None:
             return None, None
         return reservation_delta_before(
@@ -142,8 +161,10 @@ def main() -> int:
                 "t_now": round(t_now, 4),
                 "baseline_mode": args.baseline_mode,
                 "budget_sec": b,
-                # 挂钟是否守住预算。GA 至少要跑完一代才检查终止条件,故小预算下
-                # 这一列会是 False,而 R0_wall_ms 就是该臂的响应时间下界。
+# 挂钟是否守住预算。GA 至少要跑完一代才检查终止条件,故小预算下
+# 这一列会是 False,而 R0_wall_ms 就是该臂的响应时间下界。
+# Whether wall-clock honored the budget. The GA checks termination only after a generation finishes, so under a small budget
+# this column is False, and R0_wall_ms is that arm's response-time floor.
                 "budget_honored": rep0.wall_ms <= b * 1000.0 * 1.05,
                 "R0_stopped_by": rep0.meta.get("stopped_by"),
                 "arm_r0": arm_r0,
@@ -186,6 +207,7 @@ def main() -> int:
     stab_r2 = all(r["stability_winner"] == "R2" for r in rows
                   if r["R0_feasible"] and r["R2_feasible"])
     # 高预算上 R0 应在 Cmax 上不全面落败(体现重解的质量潜力)
+# At a high budget, R0 should not lose across the board on Cmax (that is the quality potential of re-solving)
     bmax = max(budgets)
     high = [r for r in rows if r["budget_sec"] == bmax]
     r0_quality = any(r["makespan_winner"] == arm_r0 for r in high)

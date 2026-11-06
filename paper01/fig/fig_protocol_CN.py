@@ -2,8 +2,11 @@
 """评价开销–次数中文版。数据与 fig_protocol.py 相同，输出 fig_protocol_CN。"""
 from __future__ import annotations
 
+import math
 import os
 import sys
+
+from matplotlib.ticker import FuncFormatter
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -82,6 +85,12 @@ def main() -> None:
 
     ax.set_xscale("log")
     ax.set_yscale("log")
+    # The default log labels go through \mathdefault, i.e. the CJK font, which has no U+2212.
+    pow10 = FuncFormatter(lambda v, _: r"$10^{%d}$" % round(math.log10(v))
+                          if v > 0 and abs(math.log10(v) - round(math.log10(v))) < 1e-9
+                          else "")
+    ax.xaxis.set_major_formatter(pow10)
+    ax.yaxis.set_major_formatter(pow10)
     ax.set_xlabel("单次评价开销（ms）")
     ax.set_ylabel("完成的评价次数")
     ax.legend(loc="upper right", fontsize=FS_LEG)

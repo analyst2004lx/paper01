@@ -33,6 +33,54 @@ $k(a)$ 依赖调度器把哪台物理设备派给了链上的哪一步：复用�
 于是"安全感知任务分配"有了可优化的目标函数——在不违反工艺约束的前提下让链上
 相邻步骤落在不同设备上，即可抬高 $\\min_a k(a)$。`assignment_gain` 量化实际派工
 与"链内不复用设备"理想派工之间的差距，那是这项设计可获得的收益上限。
+
+Collusion bound: how many devices must be compromised together for a lie to stay undiscovered forever.
+
+## Formalization
+
+Device $d_a$ falsely claims, on activity $a$, "delivered to position $p$." For
+the lie not to be refuted, the next consumer of $p$ must endorse it; that
+endorser did not receive the part either, so its later delivery statement is
+also false and must be endorsed by **its** next consumer. Recursively:
+
+> **Proposition (collusion closure).** Lie $a$ is never refuted if and only if
+> the compromised set is **forward-closed** under the "next counterpart"
+> relation, until the part leaves the corroborable chain (warehoused, the case
+> ends, or the activity has no counterpart in the model).
+
+So the collusion bound is not a minimum vertex cut. It is the size of a
+**forward reachable closure**. The earlier README wording "minimum vertex cut"
+is the wrong object, even though the intuition is close (what must be bought
+is a set that separates the lie from an honest observer). The object is the
+closure, and the formalization must say so.
+
+## Three conventions that must stay distinct
+
+1. **Count device instances, not hops.** A device that repeats on the chain
+   needs to be compromised only once. On this line `vgr`/`wt` repeatedly
+   carry parts, so the device count can be far smaller than the chain length —
+   a fact against the defender, which must be reported as is. Hop count must
+   not be passed off as device count to inflate the bound.
+
+2. **When the receiver is the same device, the chain extends for free.**
+   `SELF_ONLY` (in-place multi-step machining) adds no new witness, so the
+   attacker needs no extra compromise to push the lie one hop. That turns the
+   7.45% same-device gap in `coverage.py` from "a coverage number" into a
+   **concrete safety cost**.
+
+3. **The system's guarantee is $\\min_a k(a)$, not the mean.** The attacker
+   picks the weakest point. Mean and median only describe the shape of the
+   distribution; a safety claim must cite the minimum and the low quantile.
+
+## Interface to the scheduling constraint (supplement 1)
+
+$k(a)$ depends on which physical device the scheduler assigned to which step
+of the chain: reusing one device lowers $k$. "Safety-aware task assignment"
+then has an objective — put adjacent steps on different devices without
+violating process constraints, and $\\min_a k(a)$ rises. `assignment_gain`
+quantifies the gap between the actual dispatch and an ideal dispatch that
+does not reuse a device inside a chain. That gap is the upper bound on what
+this design can gain.
 """
 from __future__ import annotations
 
@@ -44,6 +92,7 @@ from .coverage import NO_MODEL, NO_REALIZED, OK, SELF_ONLY, Corroboration
 from .taskgraph import TaskGraph, device_class
 
 #: 链的终止原因。前两者是结构性的（工件离开可互证范围），第三个是保守截断。
+#: Why a chain stops. The first two are structural (the part leaves the corroborable range); the third is a conservative cut.
 END_NO_MODEL = "no_model_witness"
 END_NO_REALIZED = "no_realized_witness"
 END_CYCLE = "revisited"
@@ -51,19 +100,26 @@ END_CYCLE = "revisited"
 
 @dataclass
 class Chain:
-    """从一个谎言出发的串谋闭包。"""
+    """从一个谎言出发的串谋闭包。
+
+    The collusion closure starting from one lie.
+    """
     origin: Corroboration
-    #: 链上依次经过的活动（含起点）。
+    #: 链上依次经过的活动（含起点）。 / Activities along the chain, in order, including the origin.
     hops: list = field(default_factory=list)
-    #: 必须被劫持的设备实例集合。
+    #: 必须被劫持的设备实例集合。 / Device instances that must be compromised.
     devices: set[str] = field(default_factory=set)
     #: 其中因接手方同为原设备而**免费**延长的跳数。
+    #: Hops that extend **for free** because the receiver is the same device.
     free_hops: int = 0
     reason: str = END_NO_REALIZED
 
     @property
     def k(self) -> int:
-        """串谋界：需要同时被劫持的设备数。"""
+        """串谋界：需要同时被劫持的设备数。
+
+        Collusion bound: how many devices must be compromised at once.
+        """
         return len(self.devices)
 
     @property
@@ -80,6 +136,18 @@ class Chain:
 
         用 `n_hops` 当理想值会虚报收益：实测 $k_{\\min}$ 会被说成从 1 抬到 2，
         而那 23 条 $k=1$ 的链全是相邻同设备接手，排产根本改不动。
+
+        Upper bound on $k$ reachable by re-dispatch: the number of **maximal
+        consecutive same-device runs** in the device sequence.
+
+        Adjacent reuse (in-place multi-step machining, the part still clamped)
+        merges into one run — swapping machines means unloading and re-clamping,
+        which the scheduler cannot change. Non-adjacent reuse (the same device
+        returns several steps later) counts as separate runs; those can be swapped.
+
+        Using `n_hops` as the ideal overstates the gain: measured $k_{\\min}$
+        would be said to rise from 1 to 2, but all 23 chains with $k=1$ are
+        adjacent same-device handovers that scheduling cannot move.
         """
         runs, prev = 0, None
         for a in self.hops:
@@ -90,7 +158,10 @@ class Chain:
 
 
 def _index(records: list[Corroboration]) -> dict[int, Corroboration]:
-    """活动 -> 其互证记录。链的推进要从见证活动跳到该活动自己的记录。"""
+    """活动 -> 其互证记录。链的推进要从见证活动跳到该活动自己的记录。
+
+    Activity -> its corroboration record. Advancing the chain jumps from the witness activity to that activity's own record.
+    """
     return {id(r.act): r for r in records}
 
 
@@ -100,6 +171,15 @@ def walk(records: list[Corroboration]) -> list[Chain]:
     只对**模型上存在对手方**的声明求闭包：无对手方的声明本来就没有互证可言，
     它的 $k=1$（只需劫持自己）不是"容易串谋"，而是覆盖率缺口，两件事混在一个
     分布里会把界压低而不自知。这类活动由按需主动互证处理，另行报告。
+
+    Collusion closure of every delivery statement.
+
+    Closures are computed only for statements that **have a counterpart in the
+    model**: a statement with no counterpart has no corroboration, and its
+    $k=1$ (only itself must be compromised) is a coverage gap, not "easy
+    collusion." Mixing the two in one distribution lowers the bound without
+    noticing. Those activities are handled by on-demand active corroboration
+    and reported separately.
     """
     by_act = _index(records)
     out: list[Chain] = []
@@ -120,6 +200,7 @@ def walk(records: list[Corroboration]) -> list[Chain]:
                 cur = nxt
             elif cur.status == SELF_ONLY and cur.witness is not None:
                 # 接手方是同一台设备：不需要额外劫持，链免费延长
+                # The receiver is the same device: no extra compromise; the chain extends for free.
                 nxt = by_act.get(id(cur.witness))
                 if nxt is None or id(nxt.act) in seen:
                     ch.reason = END_NO_REALIZED
@@ -151,6 +232,22 @@ def in_scope(chains: list[Chain]) -> list[Chain]:
     真实瞄准的活动，其谎言仍要在下游被截住，$k$ 是有意义的界；排除它等于替机制
     挑掉最不利的样本。这条口径与 `coverage.py` 的覆盖率分母**故意不同**：覆盖率
     问"这一跳有没有独立证据"，串谋界问"永久藏住要买通几台设备"，后者天然跨跳。
+
+    Scope of the collusion bound: chains whose origin **has a downstream receiver at runtime**.
+
+    Only `NO_REALIZED` is excluded (nobody in this case picked up from that
+    position; 183 measured chains): those chains have length 1 and $k=1$, but
+    that is **no downstream at runtime**, a coverage gap, not "one device is
+    enough to collude." They go to on-demand active corroboration. Mixing them
+    in would push $k_{\\min}$ from 2 down to 1.
+
+    **`SELF_ONLY` must stay in scope**, even though that hop has no independent
+    witness. It is an activity an attacker can actually aim at; the lie still
+    has to be stopped downstream, and $k$ is a meaningful bound. Dropping it
+    would discard the samples most adverse to the mechanism. This denominator
+    **deliberately differs** from coverage in `coverage.py`: coverage asks
+    "does this hop have independent evidence"; the collusion bound asks "how
+    many devices must be bought to hide the lie forever", which spans hops.
     """
     return [c for c in chains if c.origin.status != NO_REALIZED]
 
@@ -164,6 +261,19 @@ def summarize(chains: list[Chain]) -> dict:
     $k$ 的分布会把界压低而不自知，是本模块最容易出的口径错误，故分开报。
 
     安全论断只能引用 `k_min` 与低分位：攻击者挑最薄弱处下手，均值无意义。
+
+    Distribution of the collusion bound.
+
+    **The denominator must contain only statements that were actually
+    corroborated at runtime.** A chain whose origin is `NO_REALIZED` has
+    length 1 and $k=1$, but that is **no counterpart at runtime**, a coverage
+    gap (`coverage.py` measured 5.98%), handled by on-demand active
+    corroboration. Mixing them into the distribution of $k$ lowers the bound
+    without noticing — the easiest convention error in this module — so they
+    are reported separately.
+
+    A safety claim may cite only `k_min` and the low quantile: the attacker
+    picks the weakest point, and the mean is meaningless.
     """
     real = in_scope(chains)
     gap = [c for c in chains if c.origin.status == NO_REALIZED]
@@ -186,9 +296,11 @@ def summarize(chains: list[Chain]) -> dict:
         "hops_median": median(hops) if hops else None,
         "hops_max": max(hops) if hops else None,
         #: k=1 的成因分解:全部应归于同设备接手(免费跳),否则是别的问题
+        #: Breakdown of k=1: all of it should be same-device handovers (free hops); otherwise something else is wrong.
         "n_k1": len(k1),
         "n_k1_free_hop": sum(1 for c in k1 if c.free_hops),
         #: 链长 > 设备数的比例,即"同一台设备在链上重复出现"的普遍程度
+        #: Fraction of chains longer than the device count, i.e. how often one device repeats on a chain.
         "frac_device_reuse": (sum(1 for c in real if c.n_hops > c.k)
                               / len(real) if real else 0.0),
         "n_free_hop_chains": sum(1 for c in real if c.free_hops),
@@ -212,6 +324,23 @@ def structural_bound(graph: TaskGraph) -> dict:
     **闭包必须逐工作流算，不能把 16 个模型的邻接混起来。** 混起来会把不同工艺
     路线上的见证关系串成一条更长的链，把界虚高——一个 case 只走一条工艺路线，
     攻击者要买通的也只是那条路线上的设备。
+
+    Model-level collusion bound: walk the same closure on the corroboration hypergraph by **device class**.
+
+    The split from the measured version must be stated: the measured version
+    is "how many machines the attacker must buy under this dispatch", and it
+    changes with assignment; the model-level version is "how many independent
+    witness layers this process itself provides", a property of the process
+    model that does not change with scheduling, so it can be a design-time metric.
+
+    They are not substitutes, and the numbers should not be expected to match:
+    the model-level version merges by class and counts `vgr_1`/`vgr_2` as one
+    vertex, so it is a **conservative lower bound**.
+
+    **The closure must be computed per workflow; the adjacency of the 16 models
+    must not be mixed.** Mixing them strings witness relations from different
+    process routes into a longer chain and inflates the bound — a case follows
+    one route, and the attacker only has to buy the devices on that route.
     """
     per_wf_succ: dict[str, dict[tuple[str, str], set[tuple[str, str]]]] = \
         defaultdict(lambda: defaultdict(set))
@@ -264,6 +393,25 @@ def assignment_gain(records: list[Corroboration]) -> dict:
     必须用可达理想报收益。用链长会虚报：$k_{\\min}$ 会被说成从 1 抬到 2，而那
     23 条 $k=1$ 的链全是相邻同设备接手，排产根本改不动。差值仍是**上限**而非
     实测收益——真实调度还要服从产能与交付期约束。
+
+    Upper bound on the gain of safety-aware task assignment (the quantitative basis of supplement 1).
+
+    Compare the collusion bound under three dispatches:
+
+      - **Actual dispatch**: the device assignment that really occurred in the log.
+      - **Reachable ideal** (`k_achievable`): remove only **non-adjacent** reuse.
+        Adjacent reuse is in-place multi-step machining; the part is still
+        clamped, and swapping machines means unloading and re-clamping, which
+        scheduling cannot change.
+      - **Unconstrained ideal** (chain length): assume every step is a different
+        device. It is unreachable and only shows how far the upper bound sits
+        from the reachable value.
+
+    Gain must be reported against the reachable ideal. Chain length overstates
+    it: $k_{\\min}$ would be said to rise from 1 to 2, but all 23 chains with
+    $k=1$ are adjacent same-device handovers that scheduling cannot move. The
+    difference is still an **upper bound**, not a measured gain — a real
+    schedule also obeys capacity and due-date constraints.
     """
     chains = in_scope(walk(records))
     actual = [c.k for c in chains]
@@ -289,6 +437,9 @@ def assignment_gain(records: list[Corroboration]) -> dict:
         "frac_improvable": len(improvable) / n,
         #: 增益幅度分布,以及可改善的链原本的 k。后者说明增益集中在何处:
         #: 若集中在高 k 段,则改派工只是"让本来就安全的更安全",对保证无用。
+        #: Distribution of the gain, and the original k of improvable chains.
+        #: The latter shows where the gain sits: if it sits on high k, re-dispatch
+        #: only makes already-safe chains safer and does not help the guarantee.
         "gain_hist": _hist([c.k_achievable - c.k for c in chains]),
         "improvable_k_hist": _hist([c.k for c in improvable]),
         "n_improvable_at_k_le_2": sum(1 for c in improvable if c.k <= 2),
@@ -309,6 +460,23 @@ def same_class_reuse(records: list[Corroboration]) -> dict:
 
     只统计"不相邻复用"作为可改善量。这也解释了为何同设备免费跳（`SELF_ONLY`）
     不能靠改派工消除，只能靠按需主动互证（增补二）补上：它是工艺决定的。
+
+    Why devices are reused on a chain: which reuses the scheduler **can actually swap**.
+
+    Both necessary conditions must be checked; checking only one overstates the gain:
+
+      1. The device class has **more than one instance** in the log (on this
+         line, 6 classes have 2 machines each, so all of them do).
+      2. The two appearances are **not adjacent**. Adjacent reuse is in-place
+         multi-step machining (`/mm/mill` then deburr on the same `mm_1`); the
+         part is still clamped, and swapping machines means unloading and
+         re-clamping, which is physically not something the scheduler can change
+         — that class must be deducted from the gain.
+
+    Only "non-adjacent reuse" is counted as improvable. This also explains why
+    a same-device free hop (`SELF_ONLY`) cannot be removed by re-dispatch and
+    can only be filled by on-demand active corroboration (supplement 2): the
+    process decides it.
     """
     instances: dict[str, set[str]] = defaultdict(set)
     for r in records:

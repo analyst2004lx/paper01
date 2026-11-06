@@ -37,6 +37,11 @@
   "tests/test_all.py::test_t38_structural_score_must_be_probability_not_randomised_pit",
   "tests/test_all.py::test_t39_comparison_harness_must_calibrate_exactly_once",
   "tests/test_all.py::test_t3_model_coverage",
+  "tests/test_all.py::test_t40_a8_is_legal_nonmodal_and_rushed",
+  "tests/test_all.py::test_t41_judge_detail_archives_delays_and_benign_gaps",
+  "tests/test_all.py::test_t42_plant_stream_obeys_hard_layer",
+  "tests/test_all.py::test_t43_transfer_a_to_c_inflates_timing_fpr",
+  "tests/test_all.py::test_t43_transfer_breaks_timing_alpha",
   "tests/test_all.py::test_t4_additive_aft_equals_saturated",
   "tests/test_all.py::test_t5_route_covariate_reduces_sigma",
   "tests/test_all.py::test_t6_coldstart_beats_extrapolation",
@@ -44,6 +49,5 @@
   "tests/test_all.py::test_t6c_manual_station_is_marked_uninformative",
   "tests/test_all.py::test_t7_device_level_chain_is_vacuous",
   "tests/test_all.py::test_t8_case_level_chain_support",
-  "tests/test_all.py::test_t9_randomised_conformal_calibrated",
-  "tests/test_all.py::test_t40_a8_is_legal_nonmodal_and_rushed"
+  "tests/test_all.py::test_t9_randomised_conformal_calibrated"
 ]

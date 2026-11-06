@@ -16,6 +16,21 @@ PISTIS（IEEE TPDS 2021）在 50% 丢包下报告毫秒级有界投递。那是*
 某个 $p$。
 
 用法(在 paper03/tessera/ 下):  py -m tools.loss_sweep
+
+Loss-rate sweep: accountable silence still yields a feasible design under the extreme loss PISTIS reports.
+
+PISTIS (IEEE TPDS 2021) reports millisecond bounded delivery at 50% loss. That is a real-time claim about **communication-layer** events, not the same problem as task-state falsification, so it is not a numeric baseline. A reviewer will still ask: does your heartbeat still stand under loss that bad?
+
+This tool answers exactly that — sweep $p \\in [10^{-3}, 0.5]$ and, for each loss rate, report:
+
+  1. the minimum $r$ that meets the false-alarm budget under the independent and burst conventions;
+  2. the cheapest-bandwidth $(T_{hb}, r, B)$ under the motion-hazard budget;
+  3. the bandwidth ratio against 5 Hz PBFT;
+  4. when the design becomes infeasible (the budget admits no solution).
+
+Honest boundary: loss rate and burst correlation are **simulation parameters** (the Trier log has no communication layer), not measurements of this line. The sweep gives the sensitivity of the feasible region to $p$; it does not claim that the factory wireless is some particular $p$.
+
+Usage (from paper03/tessera/):  py -m tools.loss_sweep
 """
 from __future__ import annotations
 
@@ -28,6 +43,7 @@ from algorithm import budget, silence
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 #: 默认扫参点。0.5 是 PISTIS 报告的地标，必须保留。
+#: Default sweep points. 0.5 is the landmark PISTIS reports and must be kept.
 DEFAULT_GRID = (1e-3, 5e-3, 1e-2, 2e-2, 5e-2, 1e-1, 2e-1, 5e-1)
 
 
@@ -36,6 +52,7 @@ def row(p: float, *, n: int, far: float, burst_rho: float,
     kw = dict(p_loss=p, n_devices=n, far_target_per_hour=far)
     d = budget.cheapest(safety, burst_rho=burst_rho, **kw)
     # 固定 T_hb=0.2 s 时所需 r，用来单独展示"突发把 r 抬高多少"
+    # r required at a fixed T_hb=0.2 s, to show on its own how much a burst raises r.
     r_indep = silence.min_misses(p, 0.2, n, far, burst_rho=0.0)
     r_burst = silence.min_misses(p, 0.2, n, far, burst_rho=burst_rho)
     pbft = silence.pbft_bandwidth_bps(n, 5.0)
@@ -115,7 +132,7 @@ def main() -> int:
         print("      PISTIS 地标 p=50% 下突发口径无可行解——"
               "须调 FHI、换网络或降设备数。")
 
-    # 带宽随 p 的增长
+    # 带宽随 p 的增长 / bandwidth growth with p
     b0 = next((r["bandwidth_bps"] for r in burst_rows
                if abs(r["p_loss"] - 1e-2) < 1e-12 and r["feasible"]), None)
     b50 = p50["bandwidth_bps"] if p50 and p50["feasible"] else None

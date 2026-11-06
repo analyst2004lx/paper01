@@ -1,4 +1,7 @@
-"""R0 / R0+:在走廊阻断下用 clbs GA 重解(与 R2 共享下层路由)。"""
+"""R0 / R0+:在走廊阻断下用 clbs GA 重解(与 R2 共享下层路由)。
+
+R0 / R0+: re-solve with the clbs GA under corridor blockage (sharing the lower-layer router with R2).
+"""
 from __future__ import annotations
 
 import time
@@ -45,8 +48,17 @@ def resolve_r0(
     seed: int = 42,
     hot: bool = False,
     pop: int = 40,
+    **kwargs,
 ) -> RepairResult:
-    """R0 冷启动 / R0+ 热启动:同挂钟预算下在阻断后的网络上跑闭环 GA。"""
+    """R0 冷启动 / R0+ 热启动:同挂钟预算下在阻断后的网络上跑闭环 GA。
+
+    默认 respect_a2=True:解码走固定前缀,已完成占用不回溯。旧的从 t=0 重放
+    仅在显式 respect_a2=False 时保留,供对照审计。
+
+    R0 cold start / R0+ warm start: run the closed-loop GA on the blocked network under the same wall-clock budget.
+
+    Default respect_a2=True: decoding uses a fixed prefix, and finished occupations are not revised. The old replay from t=0 is kept only when respect_a2=False is set explicitly, for a comparative audit.
+    """
     t0 = time.perf_counter()
     cfg = GAConfig(
         pop=pop,
@@ -58,28 +70,39 @@ def resolve_r0(
         time_budget_sec=float(budget_sec),
     )
     seed_chrom = {"ma": dict(bundle.ma), "os": list(bundle.os_seq)}
+    respect_a2 = bool(kwargs.get("respect_a2", True))
 
-    # 热启动:把原方案放进初始种群第 0 位
+    # 热启动:把原方案放进初始种群第 0 位 / Warm start: place the original plan at index 0 of the initial population
     orig_init = clbs_ga.init_population
+    orig_decode = clbs_ga.decode
 
     def hot_init(inst_, cfg_, rng):
         pop_list = orig_init(inst_, cfg_, rng)
         pop_list[0] = clbs_ga.clone(seed_chrom)
         return pop_list
 
+    def a2_decode(inst_, net_, ma_, os_, **dkw):
+        from algorithm.prefix_decode import decode_from_now
+        return decode_from_now(inst_, net_, ma_, os_, bundle, dist, **dkw)
+
     try:
         if hot:
             clbs_ga.init_population = hot_init
-        with corridor_block_active(dist):
+        if respect_a2:
+            clbs_ga.decode = a2_decode
             out = run_ga(inst, net, cfg, conflict_free=True, use_ls=False)
+        else:
+            with corridor_block_active(dist):
+                out = run_ga(inst, net, cfg, conflict_free=True, use_ls=False)
     finally:
         clbs_ga.init_population = orig_init
+        clbs_ga.decode = orig_decode
 
     result = out["best_result"]
     errs = validate(inst, result.to_timetable())
     errs.extend(_check_block_free(result, dist))
     wall_ms = (time.perf_counter() - t0) * 1000
-    # 挂钟可能略超预算(代末检查);如实记录
+    # 挂钟可能略超预算(代末检查);如实记录 / Wall-clock may slightly exceed the budget (checked at generation end); record it as is
     ok = not errs
     dev = evaluate_deviation(bundle.result, result) if ok else None
     return RepairResult(
@@ -101,5 +124,6 @@ def resolve_r0(
             "stopped_by": out.get("stopped_by"),
             "runtime_sec": out.get("runtime_sec"),
             "raw_makespan": result.makespan,
+            "respect_a2": respect_a2,
         },
     )

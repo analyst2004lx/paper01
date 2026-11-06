@@ -1,0 +1,1011 @@
+% !TEX program = xelatex
+% !BIB program = bibtex
+%% 
+%% IMPORTANT NOTICE:
+%% 
+%% For the copyright see the source file.
+%% 
+%% Any modified versions of this file must be renamed
+%% with new filenames distinct from sample-manuscript.tex.
+%% 
+%% For distribution of the original source see the terms
+%% for copying and modification in the file samples.dtx.
+%% 
+%% This generated file may be distributed as long as the
+%% original source files, as listed above, are part of the
+%% same distribution. (The sources need not necessarily be
+%% in the same archive or directory.)
+%%
+%%
+%% Commands for TeXCount
+%TC:macro \cite [option:text,text]
+%TC:macro \citep [option:text,text]
+%TC:macro \citet [option:text,text]
+%TC:envir table 0 1
+%TC:envir table* 0 1
+%TC:envir tabular [ignore] word
+%TC:envir displaymath 0 word
+%TC:envir math 0 word
+%TC:envir comment 0 0
+%%
+%% The first command in your LaTeX source must be the \documentclass
+%% command.
+%%
+%% For submission and review of your manuscript please change the
+%% command to \documentclass[manuscript, screen, review]{acmart}.
+%%
+%% When submitting camera ready or to TAPS, please change the command
+%% to \documentclass[sigconf]{acmart} or whichever template is required
+%% for your publication.
+%%
+%%
+\documentclass[manuscript,screen,review]{acmart}
+
+
+\usepackage{algorithm}
+% Use algorithmicx + algpseudocode: provides \Require, \Ensure, \State, and \Comment
+\usepackage{algorithmicx}
+\usepackage{algpseudocode}
+% Provide compatibility shims for uppercase macros used in the document
+% Some authors use \REQUIRE/\ENSURE/\UPON/\ENDUPON (uppercase) — map them to algpseudocode
+\providecommand{\REQUIRE}[1]{\Require{#1}}
+\providecommand{\ENSURE}[1]{\Ensure{#1}}
+% \UPON{<cond>} will render as a bold 'Upon <cond>' state line inside algorithmic blocks
+\providecommand{\UPON}[1]{\State\textbf{Upon}~#1}
+\providecommand{\ENDUPON}{}
+% Provide uppercase aliases commonly used in algorithm blocks
+\providecommand{\STATE}{\State}
+\providecommand{\COMMENT}[1]{\Comment{#1}}
+% Map common uppercase algorithmic keywords to algorithmicx/algpseudocode commands
+\providecommand{\IF}{\If}
+\providecommand{\ELSE}{\Else}
+\providecommand{\ELSIF}{\ElsIf}
+\providecommand{\ENDIF}{\EndIf}
+\providecommand{\FOR}{\For}
+\providecommand{\ENDFOR}{\EndFor}
+\providecommand{\WHILE}{\While}
+\providecommand{\ENDWHILE}{\EndWhile}
+\providecommand{\RETURN}{\State\textbf{return}~}
+% color support for \textcolor used inside algorithms
+\usepackage{xcolor}
+% Math packages required for \text and bold symbols inside math
+\usepackage{amsmath}
+\usepackage{bm}
+% Define common math operators used in the document
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\usepackage{multirow}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+% Enable list customization (leftmargin, itemsep, etc.) used in the document
+\usepackage{enumitem}
+% Ensure header height is sufficient for fancyhdr
+\setlength{\headheight}{20.48303pt}
+% theorem environments used in the document
+% acmart/amsart already provides amsthm; do not load amsthm again
+\newtheorem{assumption}{Assumption}
+\newtheorem{problem}{Problem}
+\renewcommand{\proofname}{Proof}
+\AtEndPreamble{%
+  \let\proposition\relax
+  \let\endproposition\relax
+  \newtheorem{proposition}[theorem]{Proposition}%
+}
+
+%%
+%% \BibTeX command to typeset BibTeX logo in the docs
+\AtBeginDocument{%
+  \providecommand\BibTeX{{%
+    Bib\TeX}}}
+
+%% Rights management information.  This information is sent to you
+%% when you complete the rights form.  These commands have SAMPLE
+%% values in them; it is your responsibility as an author to replace
+%% the commands and values with those provided to you when you
+%% complete the rights form.
+\setcopyright{acmlicensed}
+\copyrightyear{2026}
+\acmYear{2026}
+\acmDOI{XXXXXXX.XXXXXXX}
+
+%% These commands are for a PROCEEDINGS abstract or paper.
+%%  \acmConference[Conference acronym 'XX]{Make sure to enter the correct
+%% 	conference title from your rights confirmation email}{June 03--05,
+%% 	2018}{Woodstock, NY}
+
+%%
+%%  Uncomment \acmBooktitle if the title of the proceedings is different
+%%  from ``Proceedings of ...''!
+%%
+%%\acmBooktitle{Woodstock '18: ACM Symposium on Neural Gaze Detection,
+%%  June 03--05, 2018, Woodstock, NY}
+%%\acmISBN{978-1-4503-XXXX-X/2018/06}
+
+
+%%
+%% Submission ID.
+%% Use this when submitting an article to a sponsored event. You'll
+%% receive a unique submission ID from the organizers
+%% of the event, and this ID should be used as the parameter to this command.
+%%\acmSubmissionID{123-A56-BU3}
+
+%%
+%% For managing citations, it is recommended to use bibliography
+%% files in BibTeX format.
+%%
+%% You can then either use BibTeX with the ACM-Reference-Format style,
+%% or BibLaTeX with the acmnumeric or acmauthoryear sytles, that include
+%% support for advanced citation of software artefact from the
+%% biblatex-software package, also separately available on CTAN.
+%%
+%% Look at the sample-*-biblatex.tex files for templates showcasing
+%% the biblatex styles.
+%%
+
+%%
+%% The majority of ACM publications use numbered citations and
+%% references.  The command \citestyle{authoryear} switches to the
+%% "author year" style.
+%%
+%% If you are preparing content for an event
+%% sponsored by ACM SIGGRAPH, you must use the "author year" style of
+%% citations and references.
+%% Uncommenting
+%% the next command will enable that style.
+%%\citestyle{acmauthoryear}
+
+
+%%
+%% end of the preamble, start of the body of the document source.
+\begin{document}
+
+%%
+%% The "title" command has an optional parameter,
+%% allowing the author to define a "short title" to be used in page headers.
+\title[Injection Detection on Industrial Event Streams]{Reference-Model Hard Constraints and Semi-Markov Timing Channels for Detecting Injection Attacks on Industrial Discrete-Event Streams}
+
+%%
+%% The "author" command and its associated commands are used to define
+%% the authors and their affiliations.
+%% Of note is the shared affiliation of the first two authors, and the
+%% "authornote" and "authornotemark" commands
+%% used to denote shared contribution to the research.
+\author{Qi Yu}
+%%\authornote{.}
+%%\authornotemark[1]
+\email{230240012@seu.edu.cn}
+%%\orcid{1234-5678-9012}
+\affiliation{%
+	\institution{School of Cyber Science and Engineering, Southeast University}
+	\city{Nanjing}
+	\state{Jiangsu}
+	\country{PR China}
+}
+
+
+\author{Wei Li}
+%%\orcid{1234-5678-9012}
+\email{xchlw@seu.edu.cn}
+\authornote{corresponding author}
+%%\authornotemark[1]
+\affiliation{%
+	\institution{School of Computer Science and Engineering, Southeast University}
+	\city{Nanjing}
+	\state{Jiangsu}
+	\country{PR China}
+}
+
+
+%%
+%% By default, the full list of authors will be used in the page
+%% headers. Often, this list is too long, and will overlap
+%% other information printed in the page headers. This command allows
+%% the author to define a more concise list
+%% of authors' names for this purpose.
+%%\renewcommand{\shortauthors}{Qi et al.}
+
+%%
+%% The abstract is a short summary of the work to be presented in the
+%% article.
+\begin{abstract}
+In cyber-physical production systems, field devices report their operation as discrete activity events that carry a lifecycle (assignment, start, completion). By injecting or replaying such events on the uplink, an attacker can decouple the log from the physical process. Detectors that threshold only the predicted probability of labels have a structural blind spot here: under a zero-false-alarm constraint they can flag only transitions that the process reference model already forbids, and against forgeries that leave labels intact and merely compress sojourn times, their net detection is zero.
+We build a detector with three parallel paths. A hard-constraint layer vetoes infeasible events outright using a feasibility mask derived from the reference model; a semi-Markov timing channel produces residuals from grouped log-normal sojourn times; and a structural channel measures whether an activity transition within a process instance is rare. The two statistical channels are calibrated by conformal prediction and accumulate evidence message by message through cumulative-sum (CUSUM) tests, with the false-alarm budget split evenly across the three paths. On the theoretical side, we characterize the blind spot of the label-only detector family in a proposition and derive the critical relative advance $\rho^*(\alpha,\sigma)$, the fraction by which a sojourn must be shortened for a single forgery to be detected with probability one half.
+We synthesize six attack classes under a reproducible protocol on a real production log from the Fischertechnik Trier smart factory. With a false-alarm budget $\alpha=0.01$, a delay budget of $10$ messages, and the chance-alarm floor subtracted, our net detection is $0.95$ for physically infeasible injection and $0.87$ for gradual drift, where the label-only ablation scores $0$. For early-completion replay at a $20\%$ injection rate it is $0.18$, higher than the timed-automaton baseline (significant in a paired test) and not significantly different from the baseline that combines timed automata with a Bayesian network.
+On state mimicry and message suppression, our method falls below the label-only ablation. The conclusions rest on a single public log and synthetic injections; when thresholds are instead calibrated on the calibration fold, every method exceeds its nominal false-alarm rate.
+\end{abstract}
+
+\begin{CCSXML}
+<ccs2012>
+   <concept>
+       <concept_id>10002978.10003006.10003013</concept_id>
+       <concept_desc>Security and privacy~Intrusion detection systems</concept_desc>
+       <concept_significance>500</concept_significance>
+       </concept>
+   <concept>
+       <concept_id>10010520.10010521</concept_id>
+       <concept_desc>Computer systems organization~Embedded and cyber-physical systems</concept_desc>
+       <concept_significance>300</concept_significance>
+       </concept>
+</ccs2012>
+\end{CCSXML}
+
+\ccsdesc[500]{Security and privacy~Intrusion detection systems}
+\ccsdesc[300]{Computer systems organization~Embedded and cyber-physical systems}
+
+\begin{keywords}
+injection attack detection, discrete event logs, semi-Markov processes, feasibility mask,
+conformal prediction, sequential testing, cyber-physical production systems
+\end{keywords}
+
+\maketitle
+
+
+%=============================================================================
+\section{Introduction}
+\label{sec:intro}
+
+\subsection{Background and Motivation}
+\label{sec:intro_bg}
+
+In a cyber-physical production system (CPPS), field devices report their operation as discrete activity events: each event carries a device, an operation (or state label), a timestamp, and a process instance~\cite{monostori2016cpps,seiger2022factory}. For example, after the scheduling system assigns a transport device to ``move to a given station'', the log records the assignment, the start of execution, and the completion in turn, so every activity has a lifecycle from assignment to completion. An attacker need not rewrite a continuous control law or compromise device firmware: \textbf{injecting or replaying these events} on the uplink suffices to decouple the trajectory recorded in the log from the physical process. Detection research on industrial cyber-physical systems concentrates on physical process variables, perimeter protection, and network traffic~\cite{kayan2022icps}; lifecycle activity events are rarely treated as an injection target in their own right. We detect whether these events have been injected or replayed; how the scheduler dispatches work on the basis of them is outside the scope of the evaluation.
+
+A typical attack replays a ``completed'' event before the activity has actually finished. The record is entirely legitimate at the label level, yet it rewrites the sojourn time and the context of the events that follow. A detector that only compares predicted and observed labels cannot recognize such an injection: its decision depends only on the (predecessor, label) pair and is identical whether the record is benign or forged (Proposition~\ref{prop:ta}).
+
+The same event stream, however, carries three kinds of structure that a detector can exploit, each matched to a different type of injection. The first is \emph{feasibility}: the process specifies which device may execute which operation, and from which predecessor operation that operation may be reached. These constraints are given by the reference process model and cannot be learned from operational logs, because a log records only the combinations that have occurred and cannot distinguish ``never observed'' from ``not allowed''. The second is \emph{duration}: activities consume physical time, and an event whose label sequence is legal but whose timing is wrong is indistinguishable from a normal event under a label-only model; only the sojourn time can expose it. The third is \emph{workflow structure}: the transition frequencies between activities within a process instance, which change when activities are inserted or deleted. In addition, the causal pairing between a completion event and an assignment recorded in the log can serve as an extra check in the hard-constraint layer.
+
+\subsection{Gap in Existing Work}
+\label{sec:intro_gap}
+
+Existing detectors do not exploit these structures, and the reason lies in their methodological premises. To keep the state space tractable, timed automata for production lines~\cite{maier2011timed} decompose the system into components that are modelled independently, so cross-component feasibility constraints cannot be expressed. TABOR~\cite{lin2018tabor} combines timed automata with Bayesian networks, but confines dependencies to a single stage and does not use assignment (command) data. The deterministic counting timed automaton DCTA~\cite{barsha2024dcta} constrains communication-protocol sessions in smart-grid {SCADA} and is unrelated to the production process. Work on resilience against injection and replay at the continuous control layer~\cite{elsisi2023agv,mo2009replay} deals with continuous state estimates such as position and velocity rather than discrete activity events. Section~\ref{sec:related} gives a detailed comparison.
+
+\subsection{Our Approach}
+\label{sec:intro_method}
+
+We exploit the three kinds of structure with three parallel paths. A hard-constraint layer vetoes infeasible events outright with a feasibility mask derived from the reference model, and additionally checks assignment--completion pairing. A timing channel groups activities by (device, operation) and produces standardized residuals from log-normal sojourn times. A structural channel uses the workflow transition probabilities within a process instance to measure how rare an activity is. The two statistical channels are calibrated by conformal prediction and accumulate evidence message by message through {CUSUM} tests.
+
+Timing models are not new in themselves: timed automata have been applied to timing anomaly detection on production lines and in {SCADA}~\cite{maier2011timed,lin2018timing}, and modelling sojourn times with hidden semi-Markov models is established practice~\cite{tan2008hsmm}. Our work differs from these in two respects. First, the clock guard of a timed automaton is a binary interval decision, so a small early report that stays inside the interval is simply accepted; a distributional sojourn model instead turns such same-direction deviations into evidence that can be accumulated. Second, data-driven models flag activity combinations absent from the training data as anomalous and thus mistake new product variants for attacks, whereas reference-model feasibility rejects only combinations that the process does not allow.
+
+\subsection{Main Results}
+\label{sec:intro_results}
+
+The experiments use a false-alarm budget $\alpha=0.01$ and a delay budget of $10$ messages (an injection counts as detected if an alarm is raised within $10$ messages after it), and the reported net detection rates have the chance-alarm floor---the detections produced by random false alarms within the window---subtracted. The six attack classes are naive replay ({A1}), physically infeasible injection ({A2}), early-completion replay ({A3}), state mimicry ({A4}), gradual drift ({A5}), and message suppression ({A6}), defined in Section~\ref{sec:coverage}. The main results are as follows. {A2} is covered by the device capability sets prescribed by the reference model, with a net detection of $0.95$. On {A5} our method reaches $0.87$, while the label-only ablation, which drops the time dimension, scores $0.00$. On {A3} (at a $20\%$ injection rate) our method reaches $0.18{\pm}0.01$, higher than the $0.10$ of {BUTLA} (paired test, {Holm} $p=0.031$); its difference from the {TABOR}-style baseline is not significant after correction ($p=0.096$), and the advantage disappears at injection rates of $10\%$ and below. On {A4}/{A6} our method falls below the label-only ablation (see Section~\ref{sec:limitations} for the reasons). When thresholds are calibrated on the calibration fold instead, every method exceeds its nominal false-alarm rate (ours: $0.030$). The single-message power curve predicted by the per-operation mixture model of the critical relative advance agrees with the measurements, with a mean absolute deviation of about $0.03$. Details are given in Section~\ref{sec:experiments}.
+
+\subsection{Contributions}
+\label{sec:intro_contrib}
+
+Our contributions are as follows.
+\begin{enumerate}
+\item \textbf{We formalize injection detection on discrete activity events with a lifecycle.}
+The detection target is the lifecycle activity event (assignment, start, completion)---neither the continuous control layer nor a single process variable nor a network packet session. We give the system model, the threat model, and reproducible injection rules for six attack classes (Table~\ref{tab:inject}); detection focuses on injections that are infeasible under the reference model and on injections whose labels are legal but whose sojourn times are misaligned.
+\item \textbf{We build a hard-constraint layer from the reference-model feasibility mask.}
+The device-capability check covers every message and is never violated on the cleaned normal data ($0.003$ on the raw log with execution errors); none of the $20/508$ benign new combinations in the temporal test fold is rejected. This constraint cannot be learned from operational logs.
+\item \textbf{We detect label-legal duration forgeries with distributional sojourn times and sequential accumulation.}
+Sojourn times are modelled per (device, operation) group; the timing and structural channels are calibrated by conformal prediction and accumulated by {CUSUM} tests. Unlike an interval guard, this accumulates same-direction early reports that stay inside the normal interval (see Section~\ref{sec:md} for the conditions).
+\item \textbf{We state the impossibility result for the label-only detector family as a numbered proposition and derive the critical relative advance $\rho^*(\alpha,\sigma)$.}
+For label-consistent injections, a detector that thresholds only predicted probabilities adds nothing beyond the feasibility mask. $\rho^*$ is the point at which the single-message detection probability reaches one half; it depends only on the timing variability and the false-alarm budget, and it instantiates the fundamental limits of stealthy attacks~\cite{liu2022limits} for discrete events without a system matrix.
+\end{enumerate}
+
+Sections~\ref{sec:related}--\ref{sec:conclusion} present related work, the problem statement, the detection method, the theoretical analysis, the experiments, and the conclusions, in that order.
+
+% ============================================================
+%  Section 2: Related work
+% ============================================================
+\section{Related Work}
+\label{sec:related}
+
+The work closest to ours models industrial processes as timed automata or semi-Markov processes and detects anomalies through timing constraints.
+
+\subsection{Timed Automata and Semi-Markov Models}
+\label{sec:rw_timed}
+
+Maier et al.~\cite{maier2011timed} learn timed automata on production lines with the Bottom-Up Timing Learning Algorithm ({BUTLA}). They first derive the component topology and parallel structure from {PROFINET} adjacency, and then learn a separate behaviour model for each component; at detection time a single automaton checks whether a symbol is legal, whether its duration falls inside the clock guard, and whether the transition is too rare. The method assumes sequential execution within a component, and components are split to avoid an explosion of the joint state space; consequently it neither checks cross-component consistency nor involves assignment--completion pairing. Its clock guard is a binary interval decision, so a small early report inside the guard is accepted. Maier et al.\ also note that the tolerance of their probabilistic check must be set manually and that, because a perfectly correct model cannot be learned, normal behaviour is sometimes misclassified as erroneous---avoiding this would require infinitely many test samples. In our method the user specifies the false-alarm budget~$\alpha$ instead, and thresholds are calibrated on benign data (Section~\ref{sec:boundary} reports the deviation under temporal deployment).
+
+Lin et al.~\cite{lin2018timing} apply timing-based anomaly detection to {SCADA} networks; they likewise attach time windows to discrete events, but their object is message timing rather than process feasibility. Tan and Xi~\cite{tan2008hsmm} replace the hidden Markov model with a hidden semi-Markov model precisely because the exponential sojourn assumption is unrealistic; the model is now an established tool in anomaly detection. Sojourn-time modelling as such is therefore not a contribution of this paper.
+
+TABOR~\cite{lin2018tabor} combines timed automata with Bayesian networks for one-class classification on the {SWaT} water-treatment testbed, with an emphasis on interpretability and anomaly localization. Its combination resembles our ``timing plus dependency'' design, but each Bayesian-network submodel is confined to a single stage: the original paper states explicitly that it learns the dependence of sensors on actuators within the same stage. The work also declares that it focuses on the physical process and does not use network traffic, so it contains no assignment--completion pairing. The official {SWaT} attack scenarios already include cross-stage attacks~\cite{goh2016swat,lin2018tabor}, yet TABOR has no cross-stage component and can cover such attacks only through the union of independent per-stage detections.
+
+In summary, we differ from these works in two respects. The first is duration: we obtain distributional sojourn times from a semi-Markov kernel rather than binary clock-guard intervals, so same-direction early reports inside the normal interval can still be accumulated sequentially. The second is feasibility: Maier et al.\ give up cross-component coupling to keep learning tractable and TABOR confines dependencies to stages, whereas we implement the feasibility mask derived from the reference model as a hard constraint.
+
+\subsection{Packet-Level State Machines}
+\label{sec:rw_packet}
+
+Goldenberg and Wool~\cite{goldenberg2013modbus} characterize {Modbus}/{TCP} sessions with deterministic finite automata. DCTA~\cite{barsha2024dcta} goes further and models {IEC-104} communication in smart-grid {SCADA} as a deterministic counting timed automaton, dividing anomalies into single-packet, packet-sequence, and timing anomalies. This division resembles our hard-constraint layer, structural channel, and timing channel on the surface, but the two operate at different levels: DCTA constrains packet attributes, event timing, and protocol counters, its modelling unit is the session between a master station and a remote terminal unit, and it involves neither the production process nor activity semantics.
+
+\subsection{Continuous Control and Cyber-Physical Security}
+\label{sec:rw_agv}
+
+Attack defences for automated guided vehicles and formation control deal with continuous state estimates such as position and velocity, for example robust Kalman localization against false data injection and denial of service~\cite{elsisi2023agv}. Cyber-physical security research since Mo and Sinopoli~\cite{mo2009replay} studies replay, watermarking, and detection delay on linear systems. Neither line of work targets discrete activity events or uses the feasibility mask given by a process reference model.
+
+\subsection{Sequential Testing, Conformal Prediction, and Stealthy-Attack Limits}
+\label{sec:rw_tools}
+
+{CUSUM} and quickest change detection are widely used to detect false data injection in power grids~\cite{li2015quickest}, and the asymptotic optimality of their detection delay goes back to {Lorden} and {Lai}~\cite{lorden1971procedures,lai1998information}. Active watermarking and detection-delay bounds now form a complete theoretical toolkit~\cite{naha2023watermark}. The fundamental limits of stealthy attacks on continuous linear systems have been established systematically~\cite{liu2022limits}.
+
+Conformal prediction provides distribution-free false-alarm control~\cite{shafer2008conformal,angelopoulos2023conformal}, but the guarantee relies on exchangeability, and coverage degrades under temporal drift~\cite{barber2023exchangeability}. Conformal martingales can test online whether exchangeability is violated~\cite{vovk2003testing} and have been applied to change-point detection~\cite{volkhonskiy2017inductive}; we do not use them. Conformal anomaly detection for industrial cyber-physical systems has been studied specifically, including sliding calibration with temporal quantile adjustment~\cite{yuan2026conformal} and conditional false-alarm control in thermal-power maintenance~\cite{kundacina2025conformal}. We use all of these tools but do not claim them as contributions; the critical relative advance $\rho^*(\alpha,\sigma)$ introduced later is merely an instance of the fundamental limits of stealthy attacks in the discrete-event setting, distinguished by depending only on timing variability rather than on a system matrix.
+
+\subsection{Conformance Checking in Process Mining}
+\label{sec:rw_pm}
+
+Process mining uses event logs for conformance checking and performance analysis against a reference model~\cite{aalst2012replay,adriansyah2011conformance}, and the time perspective can enter the alignment cost~\cite{rino2024timed}. This line of work usually computes fitness offline over complete traces; it has no attacker model and offers no user-specified false-alarm budget~$\alpha$. If conformance were used directly as a detector, with the rule ``alarm on any feasibility violation'', its decisions would coincide with those of our hard-constraint layer: it would cover physically infeasible injection but detect nothing of duration attacks that leave labels unchanged. The hard-constraint column of Table~\ref{tab:coverage} gives the single-message results of this conformance proxy. We use the same kind of reference model (the {BPMN} released with the dataset), but the problem we address is online, event-by-event injection detection.
+
+Sequence anomaly detection on system logs usually trains a next-log-key predictor and flags an anomaly when the actual key is not among the top few predicted candidates~\cite{du2017deeplog,meng2019loganomaly,landauer2023deep}; anomaly detection on event logs in process mining relies mainly on autoencoders~\cite{nolle2018analyzing} or next-event prediction~\cite{nolle2022binet}.
+A next-event predictor without time features decides only on (history, label) and therefore belongs to the label-only detector family: replacing the predecessor $i$ in Proposition~\ref{prop:ta} by a finite history leaves the proof unchanged. Learned models with time features are not bound by the proposition; we do not include them as baselines (Section~\ref{sec:limitations}).
+
+\subsection{Positioning}
+\label{sec:rw_position}
+
+Table~\ref{tab:rw_comparison} compares related work at four levels. Our work sits at level~(iv): online event-injection detection with a reference model. The key difference from level~(i) is that its component-decomposition assumption rules out cross-component feasibility; the key difference from level~(ii) is that its dependencies are confined to stages. Component decomposition and stage confinement prevent physically infeasible injection ({A2}) from being rejected by cross-component feasibility, and the binary decision of a clock guard prevents label-legal duration attacks ({A3}/{A5}) from being detected by accumulation.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.25}
+\caption{Related work by level. Existing work neither rejects physically infeasible injections through reference-model feasibility nor accumulates duration deviations that stay inside the guard.}
+\label{tab:rw_comparison}
+\centering
+\small
+\begin{tabular}{L{2.4cm}L{2.6cm}L{2.2cm}L{2.4cm}L{2.2cm}}
+\toprule
+Level & Representative & Duration & Feasibility & Assignment pairing \\
+\midrule
+(i)~Decomposed production line
+  & Maier/{BUTLA}~\cite{maier2011timed}
+  & Clock guard
+  & No cross-component check
+  & No \\
+(ii)~Single physical process
+  & {TABOR}~\cite{lin2018tabor}
+  & Clock guard
+  & Within-stage dependency only
+  & No \\
+(iii)~Packet session
+  & {DCTA}~\cite{barsha2024dcta}, {Modbus} {DFA}~\cite{goldenberg2013modbus}
+  & Event timing, counters
+  & No process constraint
+  & No \\
+(iv)~Online event injection (ours)
+  & Semi-Markov + reference model
+  & Distributional sojourn
+  & Feasibility mask in hard-constraint layer
+  & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+%  Section 3: Problem statement and threat model
+% ============================================================
+\section{Problem Statement and Threat Model}
+\label{sec:problem}
+
+\subsection{System Model: The Assignment--Event Loop}
+\label{sec:sys}
+
+A cyber-physical production system consists of a supervisory execution system $\mathcal{C}$ and a set of heterogeneous field devices $\mathcal{D}=\{d_1,\dots,d_M\}$ connected by an industrial network. Devices receive downlink assignments and report discrete activity events. Our object of study is the integrity of this event stream, not continuous control laws or autonomous coordination among devices.
+
+Each event is written $m_t=(d_t,o_t,t)$, where $d_t\in\mathcal{D}$ is the device, $o_t$ the operation or state label, and $t$ the timestamp; the event also carries a process-instance identifier (hereafter the \emph{case}), which we omit when no confusion arises. Each event is transmitted over the uplink as one message, and we use ``event'' and ``message'' interchangeably. The binary reachability check maintains predecessors per (device, case), and the structural channel maintains predecessors per case; the feasibility mask constrains reachability only within a single workflow instance and never across case boundaries.
+
+Two reporting semantics must be handled separately. Under \emph{event-driven} reporting, an event is sent when the state changes, and the sojourn time is directly observable. Under \emph{periodic polling}, the state is sampled at a fixed period and the same state is reported repeatedly, so only the interval containing the sojourn time is observed (interval censoring). The production log in our main experiments is event-driven; the method keeps a branch for polling, but it is not evaluated. Figure~\ref{fig:system} shows the loop structure and where the three detection paths sit.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.92\linewidth]{figures/fig_system.pdf}
+\caption{The assignment/event loop. The detector reads only the assignment events in the same log and the reference-model feasibility mask, and decides online on each uplink event.}
+\label{fig:system}
+\Description{The supervisory system and field devices form a loop with assignments going down and events going up; the detector reads only assignment events and applies hard-constraint, timing, and structural decisions to uplink events.}
+\end{figure}
+
+\subsection{Assignment Pairing and the Feasibility Mask}
+\label{sec:ledger}
+
+The same event log also records the downlink assignments, whose set we denote by $\mathcal{L}$. A completion event should be the response to some assignment: if a completion event has no preceding assignment on the corresponding (device, case), it is a causal gap that can be decided in a single step. Once a smart factory integrates process management bidirectionally with the shop-floor event stream, this pairing can be read directly from the log~\cite{seiger2022factory}. Assignment--completion pairing is a causal check, not a duration test: the queueing delay between assignment and start is driven mainly by device contention and should not enter the timing channel. The check is retained as an implementation detail of the hard-constraint layer and is not evaluated separately (Section~\ref{sec:hard}).
+
+Feasibility is derived from the reference process model released with the production line ({BPMN} in our case) and denoted by the mask $\mathbf F$, which contains two kinds of hard constraint. A \emph{unary capability set} specifies whether device $d$ may execute operation $o$; it does not depend on the predecessor and therefore covers every message. \emph{Binary reachability} specifies whether, on the same case and the same device, operation $o$ may follow the confirmed predecessor operation $o'$. Neither can be learned from operational logs: a log records only the combinations that have occurred and cannot distinguish ``never observed'' from ``not allowed''. The same reference model also yields cross-device constraints such as material-token conservation (as a workpiece moves between stations, every pick should correspond to an earlier place), but without workpiece-level identities such constraints suffer residual benign violations, and we do not include them in the detector (see Section~\ref{sec:limitations}).
+
+\subsection{Modelling Assumptions and Threat Model}
+\label{sec:assumptions}
+
+We make two modelling assumptions. First, the detector reads only uplink events and the assignments in the same log; how the supervisory system dispatches work on their basis is not evaluated. Second, the reference model is consistent with the cleaned normal log, on which the hard-constraint layer has zero violations; the raw log with execution errors does not satisfy this assumption (Table~\ref{tab:shift}).
+
+Attacker capabilities follow the {Dolev--Yao} model~\cite{dolev1983yao}: the attacker acts on the uplink event channel, can eavesdrop on, replay, inject, drop, or delay messages, and may know the state-machine structure and even the transition frequencies. The attacker may know the structure and parameters of the detector (including the $\sigma$ of each group) but cannot observe its online state (such as the {CUSUM} statistics and reset times). The attacker cannot compromise the supervisory system or device firmware, cannot change the pace of the physical process, and cannot rewrite assignment events already written to the log or the reference model. The attacker's goal is to decouple the event record from the physical process. Coordinated forgery across multiple devices, which requires aligning several event streams and assignments at once, is outside our scope.
+
+\subsection{Attack Classes}
+\label{sec:coverage}
+
+Table~\ref{tab:inject} lists the six injection classes and their reproducible rules. {A1}, naive replay, is the basic replay reference. {A2}, physically infeasible injection, rewrites the operation label so that the event violates the reference model. {A3}, early-completion replay, and {A5}, gradual drift, leave labels unchanged and only compress sojourn times: the former samples activities sporadically, the latter acts on a run of consecutive activities. {A4}, state mimicry, assumes the attacker knows the transition model and inserts the most likely next step. {A6}, message suppression, deletes an entire activity that has not yet started. The primary targets are {A2} and {A3}/{A5}; {A1} serves as the replay reference, and {A4}/{A6} delimit the boundary of the detection capability.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.12}
+\caption{Reproducible rules for the six injection classes. Default injection rate $20\%$, default $\rho=0.30$ for {A3}/{A5}, three injection seeds; the case is never altered. {A4} requires a structural model, without which it degenerates into repeating the current operation and underestimates the attacker. By default the evaluation does not shift the subsequent events of the same instance forward.}
+\label{tab:inject}
+\centering
+\small
+\begin{tabular}{lL{2.6cm}L{6.6cm}}
+\toprule
+ID & Class & Rule \\
+\midrule
+{A1} & Naive replay & Resend a historical activity of the same device after the current completion time; the historical duration is kept and the label is duplicated. \\
+{A2} & Physically infeasible injection & Rewrite the operation name in place to a label outside the device's capability set (or to another operation if none exists); subsequent benign events are checked for binary reachability with the forged operation as predecessor (hereafter the cascaded check). \\
+{A3} & Early-completion replay & Move the completion time earlier in place so that the sojourn time becomes $(1-\rho)\tau$; by default, subsequent events of the same instance are not shifted. \\
+{A4} & State mimicry & With the model known, insert the most probable next step after the current completion; the device is one that has executed this operation in the log, and the duration is the median of that group. \\
+{A5} & Gradual drift & Take a run of consecutive activities in time order and compress each sojourn by the same $\rho$ (in contrast to the sporadic sampling of {A3}). \\
+{A6} & Message suppression & Delete an entire activity that has not yet started; the label is placed on the next event of the same instance (the observable consequence appears downstream). \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Detection Problem}
+\label{sec:detproblem}
+
+\begin{problem}[Discrete-event injection detection]
+\label{prob:detect}
+Given a historical log of normal operation only, a reference process model, and a user-specified false-alarm budget $\alpha$, raise alarms on the online event stream message by message, with the goal that the per-message alarm rate on a purely benign stream does not exceed $\alpha$. Under exchangeability this goal is guaranteed by conformal calibration; the measured deviation under temporal deployment is reported in Section~\ref{sec:boundary}. The primary targets are {A2} and {A3}/{A5}; results on {A1}/{A4}/{A6} are reported as well. The detector must not use attack labels to tune thresholds. The security goal is \emph{to detect a forgery, or to force its relative advance to stay small}: once the relative advance of a single forgery exceeds $\rho^*(\alpha,\sigma)$, the single-message test detects it with probability greater than one half (Section~\ref{sec:bound}).
+\end{problem}
+
+We use three evaluation metrics: the net detection rate within the delay budget at a common $\alpha$ (detection rate minus the chance-alarm floor, see Section~\ref{sec:setup}); the detection delay in messages (box plots, covering only injections detected within the budget); and the sequential false-alarm rate and alarm intervals on a purely benign stream ($\mathrm{ARL}_0$ is not estimated from them when alarms are too few). The computational constraint is $O(1)$ per message.
+
+% ============================================================
+%  Section 4: Method
+% ============================================================
+\section{Detection Method}
+\label{sec:framework}
+
+\subsection{Overall Architecture}
+\label{sec:arch}
+
+The production configuration consists of three parallel paths---the hard-constraint layer, the structural channel, and the timing channel---and an alarm is raised when any of them fires. The offline phase uses only normal logs and the reference model: $\mathbf F$ is derived from the {BPMN}; transition probabilities and sojourn times are estimated per device and operation; the two statistical channels are calibrated by conformal prediction on a held-out calibration fold; and a {CUSUM} threshold $h_i$ is calibrated for each path on the benign stream so that the path's average run length to false alarm is $\mathrm{ARL}_{0,i}=1/\alpha_i$, where $\alpha_i$ is the budget assigned to the path (see the next paragraph). The online phase performs a constant number of table lookups and logarithms per message, as shown in Figure~\ref{fig:arch} and Algorithm~\ref{alg:detect}.
+
+The false-alarm budget is split evenly across the three paths, $\alpha_i=\alpha/3$: the single-message threshold is $\alpha/3$, and the {CUSUM} threshold corresponds to $\mathrm{ARL}_{0,i}=3/\alpha$ ($300$ at $\alpha=0.01$). Once the three paths are combined by logical OR, the overall single-message false-alarm rate is at most $\alpha$ (the {Bonferroni} bound), and the overall sequential alarm rate is at most the sum over the paths, so the overall $\mathrm{ARL}_0$ is roughly no less than $1/\alpha$. The hard-constraint layer never fires on normal data and in practice consumes none of its share, so both bounds are conservative. The price of parallel decisions is the split: every method divides the same budget evenly across its sub-detectors. The label-only ablation has a single path and keeps all of $\alpha$, {BUTLA} and {HSMM} have two paths each, and the {TABOR}-style baseline has three; on an attack where only one path carries signal, each of our paths has only one third of the budget available to the label-only ablation. Section~\ref{sec:e1} reports the measured effect of this price.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.98\linewidth]{figures/fig_arch.pdf}
+\caption{Offline fitting and online three-path parallel decisions. The hard-constraint layer precedes the statistical channels so that infeasible samples do not contaminate calibration.}
+\label{fig:arch}
+\Description{In the offline phase, transitions and duration kernels are estimated from the log and BPMN and thresholds are calibrated; in the online phase each message passes the hard-constraint veto, timing and structural scoring, and CUSUM accumulation.}
+\end{figure}
+
+The hard-constraint layer must come first: its decisions produce no false alarms and are interpretable, and placing it first keeps infeasible samples out of the subsequent calibration. The structural and timing channels run side by side rather than in series, so that both ``wrong label'' and ``right label at the wrong time'' are covered. The sequential test comes last, so both statistical channels must output continuous scores rather than Boolean decisions.
+
+\begin{algorithm}[!t]
+\caption{Online detection of discrete-event injection}
+\label{alg:detect}
+\begin{algorithmic}[1]
+\Require event $m=(d,o,t)$; assignments $\mathcal{L}$; mask $\mathbf{F}$; kernels $(\tilde P,\mu,\sigma)$; conformal calibrators; thresholds $h$
+\Ensure alarm or accept
+\If{the unary capability, binary reachability, or assignment--completion check fails}
+    \State \textbf{return} alarm (hard-constraint reason)
+\EndIf
+\State compute the timing residual $z$ and the structural score $\tilde P_{o'\to o}$
+\State convert each score to a conformal $p$-value $p$ with the frozen conformal calibrator
+\State update $S\leftarrow\max(0,\,S-\log p-c)$ for each of the two channels
+\If{$S\ge h$ on either channel}
+    \State reset that channel; \textbf{return} alarm
+\EndIf
+\If{no alarm within the quarantine window}
+    \State gated update of $(\mu,\sigma)$ and anchor the state
+\EndIf
+\State \textbf{return} accept
+\end{algorithmic}
+\end{algorithm}
+
+Figure~\ref{fig:alarm} traces two real cases message by message. {A2} is vetoed immediately by the unary capability set with a readable alarm reason; the labels of {A3} are entirely legal, and its negative residuals, which lie inside the interval guard, cross the threshold after {CUSUM} accumulation.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.98\linewidth]{figures/fig_alarm.pdf}
+\caption{Message-by-message trace of the hard-constraint veto on {A2} and of timing-evidence accumulation on {A3}. Shaded columns are injected messages; crosses mark hard-constraint alarms.}
+\label{fig:alarm}
+\Description{Two rows of message-by-message traces: in the upper row A2 is vetoed by the hard-constraint layer at the injection; in the lower row the timing residuals of A3 are negative and the CUSUM statistic then crosses the threshold.}
+\end{figure}
+
+\subsection{Hard-Constraint Layer}
+\label{sec:hard}
+
+For a message $(d,o,t)$, the hard-constraint layer performs three checks in order; any failure raises an alarm immediately, together with its reason.
+\begin{enumerate}[leftmargin=1.4em,itemsep=2pt]
+\item Unary: whether $(d,o)$ belongs to the capability set of the reference model.
+\item Binary: if the same $(d,\mathrm{case})$ has a confirmed predecessor $o'$, whether $\mathbf F$ allows $(o'\to o)$.
+\item Causal: whether the completion event has a preceding assignment event.
+\end{enumerate}
+The mask is derived automatically from the {BPMN} released with the dataset: unary capability sets come from the device types (or resource roles) bound to the nodes, and binary reachability is obtained by unfolding the sequence flows and gateways within each workflow, so no transition table has to be written by hand. The unary check covers every message and is never violated on normal data. The value of the reference model is most evident under a temporal split: $20/508$ ($3.9\%$) of the benign activities in the test fold are (device, operation) combinations absent from the training fold, far more than $\alpha=0.01$, so a rule of ``unseen in training means anomalous'' would generate a large number of false alarms, whereas the reference model rejects none of them. The third, causal, check is an implementation detail: none of the six injection classes breaks assignment--completion pairing, so we neither evaluate it separately nor count it as a contribution.
+
+\subsection{Structural Channel}
+\label{sec:struct}
+
+The structural channel judges whether the current activity is common in the case-level workflow sequence. The chain is kept per case rather than per (device, case): the devices in this log are service endpoints that are invoked, so most per-device event chains have length~$1$ and their transition probabilities carry little discriminative information. The channel state is the operation name rather than the (device, operation) pair: ``the wrong device executing the right operation'' is already covered by the unary capability set, and the statistical channel should not additionally assign very small probabilities to unseen combinations, because under a temporal split benign data itself produces new combinations (Section~\ref{sec:e2} reports the measured cost of using (device, operation) instead). Transition probabilities are the posterior predictive $\tilde P$ of a symmetric {Dirichlet} prior with concentration $0.5$ ({Jeffreys}-type), which avoids spurious zeros caused by small samples while preserving the true zeros enforced by $\mathbf F$.
+
+The score fed to the conformal calibrator is the predicted probability $\tilde P_{o'\to o}$ itself, for reasons given in Section~\ref{sec:conformal}. The first activity of a case has no predecessor, so the structural channel abstains and its score is treated as least anomalous. The channel is relatively sensitive to attacks that change the number of events, such as {A4}/{A6}.
+
+\subsection{Semi-Markov Timing Channel}
+\label{sec:timing}
+
+The semi-Markov kernel is written $Q_{o'o}(\tau)=P_{o'o}F_{o'o}(\tau)$. Sojourn times are grouped by (device, operation) and modelled as $\log\tau\sim\mathcal{N}(\mu,\sigma^2)$. The difference from a timed automaton is that $F_{o'o}$ is a probability distribution rather than an interval guard (Section~\ref{sec:md}). The location parameter $\mu$ is decomposed additively by travel route (source and destination storage positions): routes with at least $8$ observations in a group get their own effect, and the rest are pooled into the group's common intercept; unseen routes fall back to the planned duration plus the group's systematic offset. Groups that are absent from the training fold or have fewer than $2$ observations, as well as the abstaining groups described below, contribute no timing evidence, and their scores are treated as least anomalous; $56$ of the $508$ activities in the test fold ($11.0\%$) fall into this category.
+
+Four kinds of observation correspond to four branches.
+\begin{itemize}[leftmargin=1.4em,itemsep=2pt]
+\item \textbf{State transition.} The standardized residual $z=(\log\tau-\mu)/\sigma$, tested on the left side only (a sojourn that is too short indicates early reporting). Early reporting corresponds to a directional alternative; the main value of the one-sided test lies in threshold stability rather than in a multiplied power.
+\item \textbf{Same-state heartbeat.} The right-censored survival term $-\log\bigl(1-F(\tau)\bigr)$, which alarms only when the sojourn is too long.
+\item \textbf{Timeout without message.} The same survival function, triggered by a timeout watchdog when the sojourn exceeds the $99.9\%$ quantile of the group's log-normal model. This branch covers ``the activity started but its completion event was suppressed'', but not ``the activity never started at all''; the latter requires a model of inter-activity gaps, which we do not provide.
+\item \textbf{Periodic polling.} The interval-censored term $\log\bigl[F(\tau+\Delta)-F(\tau)\bigr]$, which keeps quantization error out of the likelihood. The main experiments use an event-driven log, so this branch is not evaluated.
+\end{itemize}
+The nonconformity score of the timing channel is $-z$ (larger means more anomalous) rather than a parametric $p$-value, for reasons given in Section~\ref{sec:conformal}. The $\sigma$ of manual stations can approach~$2$; for manual stations and for groups with $\sigma\ge1$ (where $\rho^*>90\%$ at $\alpha=0.01$), the timing channel abstains. Overall detectability is governed by the most variable operation.
+
+\subsection{Conformal Calibration and Sequential Accumulation}
+\label{sec:conformal}
+
+Both statistical channels apply split conformal prediction~\cite{shafer2008conformal,angelopoulos2023conformal} on held-out normal samples: for each new message, the rank of its nonconformity score among the calibration scores gives a conformal $p$-value $p_t$. When calibration and deployment data are exchangeable, $p_t$ is uniformly distributed on a benign stream, and deciding by $p_t\le\alpha/3$ guarantees a per-channel false-alarm rate of at most $\alpha/3$. The guarantee requires no Gaussian or Markov assumption, but it does require exchangeability~\cite{barber2023exchangeability}. In deployment data can only be split in time order, where exchangeability does not hold automatically; we therefore report the empirical false-alarm rate under a temporal split separately (Section~\ref{sec:boundary}). The lowest single-message false-alarm level attainable with a finite calibration set is about $1/(n+1)$, where $n$ is the number of calibration samples; we do not set the single-message $\alpha$ below $10^{-2}$ and leave lower false-alarm budgets to the $\mathrm{ARL}_0$ of {CUSUM}.
+
+The nonconformity scores must preserve a monotone order in the tail, so both channels take raw scores as input, not parametric or randomized $p$-values. The timing channel takes $-z$: once a parametric $p$-value is truncated at $10^{-12}$, benign mismatches and obvious early reports are compressed onto the same value and the tail order is lost. The structural channel takes $\tilde P$: a randomized probability integral transform would spread the many ties produced by {Dirichlet} smoothing over a uniform interval, giving a never-seen transition roughly an even chance of a $p$-value above $\alpha$. The conformal $p$-value has its own randomization term, so ties are broken exactly once, at this step. Section~\ref{sec:e2} reports the measured effect of both choices.
+
+Each channel runs a one-sided {CUSUM}~\cite{li2015quickest} on its conformal $p$-values:
+\begin{equation}
+  S_t=\max\bigl(0,\,S_{t-1}-\log p_t-c\bigr),
+  \label{eq:cusum}
+\end{equation}
+where $-\log p_t$ is the evidence contributed by message $t$; anomalies such as early reporting make $p_t$ small and the evidence large. On a benign stream $p_t$ is uniform and $-\log p_t$ is exponential with mean~$1$, so the reference value $c$ must exceed~$1$ for the statistic not to grow without bound on benign data; we use $c=1.5$. An alarm is raised when $S_t$ crosses the threshold $h$, which is calibrated per path on the benign stream so that $\mathrm{ARL}_{0,i}=1/\alpha_i$ ($3/\alpha$ with three paths). The statistic must be reset after an alarm; otherwise it stays above the threshold and every subsequent message raises an alarm. Every baseline that outputs continuous scores uses the same accumulation rule, so that gains are not misattributed to {CUSUM} itself.
+
+\subsection{Gated Update and Complexity}
+\label{sec:online}
+
+The predecessor state of each chain advances message by message. The duration model slowly updates the $(\mu,\sigma)$ of the corresponding group by an exponential moving average with forgetting factor $0.95$; the $\tilde P$ of the structural channel is not updated online. Updates must be gated: a message may enter the baseline only if it passes every path and does not fall within the quarantine window (the $20$ messages after the most recent alarm); otherwise an attacker could drag the duration baseline towards the forged value through sustained small early reports. Section~\ref{sec:gate} reports the measured effect of gating. The main-table and ablation experiments disable online updates and use frozen models; the gating and latency experiments follow the same decision protocol (three paths, $\alpha/3$ per path, one {CUSUM} per path) with only gated updates enabled.
+
+The computational cost per message is $O(1)$: a constant number of table lookups, logarithms, and hard-constraint checks, independent of the numbers of states and devices on the hot path. Multiple devices can be processed in parallel chain by chain. Section~\ref{sec:e8} gives the constant factors.
+
+% ============================================================
+%  Section 5: Theoretical analysis
+% ============================================================
+\section{Theoretical Analysis}
+\label{sec:theory}
+
+\subsection{Impossibility of Label-Only Detection for Label-Consistent Injections}
+\label{sec:ta}
+
+Consider a class of detectors that use labels only, hereafter the \emph{label-only detector family}: from the predecessor $i$ it obtains a predictive distribution $\hat{\mathbf p}$, encodes the observation as a one-hot vector $\mathbf e_j$, and compares $\delta(i,j)=\|\mathbf e_j-\hat{\mathbf p}\|_2$, or any quantity strictly decreasing in $p_j$, with an adaptive threshold. Assume that the predictive distribution satisfies $p_j=0$ if and only if the transition $i\to j$ is forbidden by the feasibility mask $\mathbf F$; that is, the predictor uses a smoothed estimate and produces no spurious zeros from insufficient samples (the {Dirichlet} posterior predictive of Section~\ref{sec:struct} satisfies this condition). Expanding
+\begin{equation}
+  \delta(i,j)^2=1-2p_j+\|\hat{\mathbf p}\|^2
+\end{equation}
+shows that $\|\hat{\mathbf p}\|^2$ is constant over all $j$ for a given predecessor $i$, so $\delta$ is merely a monotone transform of $p_j$ and its geometric form adds no information.
+
+Hence $\delta$ is a deterministic function of $(i,j)$, regardless of whether the message is benign or injected. Let $q_{ij}$ denote the true frequency with which $j$ follows predecessor $i$ in the benign stream, and $\mathrm{FPR}_i$ the false-alarm rate on benign messages that follow predecessor $i$.
+
+\begin{proposition}[Impossibility for the label-only detector family]
+\label{prop:ta}
+Suppose that the detector decides on an observation $j$ following predecessor $i$ based only on $(i,j)$, that its decision is a monotone function of $p_j$, and that $q_{ij}=0$ if and only if $i\to j$ is forbidden by $\mathbf F$. Then:
+(i) under a zero-false-alarm constraint, the transitions that can be flagged are exactly those forbidden by $\mathbf F$, so for label-consistent injections the family adds nothing beyond the mask;
+(ii) for injections that leave labels unchanged, the single-message decision on every message equals that on its benign counterpart; if the injection also preserves the message order, the sequential decisions are identical as well, and the net detection is zero regardless of $\alpha$.
+\end{proposition}
+
+\begin{proof}
+(i) If some $j$ with $q_{ij}>0$ is flagged, every benign occurrence of $j$ raises an alarm, so $\mathrm{FPR}_i\ge q_{ij}>0$, contradicting the zero-false-alarm constraint; hence only transitions with $q_{ij}=0$, that is, those forbidden by $\mathbf F$, can be flagged. (ii) When labels are unchanged, the pair $(i,j)$ of every message is unchanged and so is its decision; when the order is also unchanged, the score sequence coincides with the benign one message by message, the alarm positions are the same, and any detection comes from chance alarms only.
+\end{proof}
+
+The attacker's optimal evasive choice is $\arg\min_j\delta_j=\arg\max_j p_j$, that is, the next step that is most common in the log and thus closest to normal behaviour once forged.
+
+The result does not depend on the particular threshold coefficient: every detector whose decision is a univariate function of the predicted probability belongs to this family. Proposition~\ref{prop:ta}(ii) predicts that the first-order Markov ablation has zero net detection on the pure timing attacks {A3}/{A5}; Section~\ref{sec:e1} measures $-0.01$ and $0.00$ after subtracting the chance-alarm floor, in agreement with the prediction.
+
+\subsection{Distributional Durations versus Clock Guards}
+\label{sec:md}
+
+A timed automaton assigns a clock guard $[\ell,u]$ to a transition $(o',o)$: a sojourn time $\tau\in[\ell,u]$ is accepted and any other value is rejected~\cite{maier2011timed,lin2018tabor}. If an attacker shortens a normal sojourn $\tau$ to $(1-\rho)\tau$ and $(1-\rho)\tau$ still lies in $[\ell,u]$, the single-step decision is ``normal''. Because the guard is a binary decision, repeated sojourns that are slightly fast in the same direction are not accumulated.
+
+The semi-Markov channel outputs the continuous residual $z=(\log\tau-\mu)/\sigma$. Early reporting yields $\mathbb{E}[z]=\log(1-\rho)/\sigma<0$, so the corresponding conformal $p$-values are systematically small and the mean of the evidence $-\log p_t$ increases. On a benign stream $\mathbb{E}[-\log p_t]=1<c$; only when the shift is large enough that $\mathbb{E}[-\log p_t]>c$ does the {CUSUM} statistic drift upwards and cross $h$, even if no single observation crosses the single-message threshold on its own. For small shifts the statistic has no positive drift and crosses the threshold only by chance fluctuation, which matches the low detection at small $\rho$ in Table~\ref{tab:e4}. The difference therefore lies not in whether sojourn times are modelled but in the \emph{form of the evidence}: an interval guard maps early reports inside the interval to zero, whereas a distributional residual maps them to additive increments. Figure~\ref{fig:guard} illustrates this: all observations fall inside the guard, the binary channel stays silent, and {CUSUM} still crosses the threshold. {A3} is the typical case of this difference: its labels are entirely legal and a timed automaton accepts it, yet a sequential semi-Markov test can still detect it.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/fig_guard_cusum.pdf}
+\caption{Clock guard versus distributional residual (illustration, not an evaluation trace). The grey band is the interval guard; every same-direction early report is accepted, yet {CUSUM} accumulates and crosses $h$.}
+\label{fig:guard}
+\Description{Three illustrative rows: all sojourn times fall inside the grey guard band, the clock guard accepts every one, and the CUSUM statistic then crosses the threshold.}
+\end{figure}
+
+\subsection{Critical Relative Advance}
+\label{sec:bound}
+
+This subsection gives the critical fraction by which a forged sojourn can be shortened under a single-message test. Consider a left-sided single-message test that raises an alarm when the residual falls below the threshold $-z_{1-\alpha}$. When the attacker shortens the sojourn to $(1-\rho)\tau$, the whole residual distribution shifts to the left; when the shift places the residual mean exactly on the threshold, a single forged message is detected with probability $1/2$. An attacker who wants each forgery to evade the test with probability greater than one half therefore cannot exceed this critical relative advance, which we denote by $\rho^*$. It is not a strict upper bound on evasion: forgeries with $\rho<\rho^*$ are still detected, with probability below one half, and sequential accumulation raises detection further.
+
+\begin{proposition}[Critical relative advance]
+\label{prop:rho}
+Let normal sojourns satisfy $\log\tau\sim\mathcal{N}(\mu,\sigma^2)$, and consider a left-sided test of level $\alpha$ with threshold $-z_{1-\alpha}$. The attack shortens the observed duration to $(1-\rho)\tau$. The relative advance at which the post-attack residual mean lies exactly on the threshold is
+\begin{equation}
+  \rho^*(\alpha,\sigma)=1-e^{-\sigma z_{1-\alpha}}.
+  \label{eq:rho}
+\end{equation}
+If the test acts on the mean of $k$ independent forged residuals, whose standard deviation shrinks as $1/\sqrt{k}$, then
+\begin{equation}
+  \rho^*_k(\alpha,\sigma)\approx 1-e^{-\sigma z_{1-\alpha}/\sqrt{k}}.
+  \label{eq:rhok}
+\end{equation}
+\end{proposition}
+
+\begin{proof}
+The log-domain shift is $\Delta=\log(1-\rho)$, which moves the standardized mean by $\Delta/\sigma$. Setting $\Delta/\sigma=-z_{1-\alpha}$ gives $\rho=1-e^{-\sigma z_{1-\alpha}}$. Averaging $k$ independent residuals replaces $\sigma$ by $\sigma/\sqrt{k}$, which yields Eq.~\eqref{eq:rhok}.
+\end{proof}
+
+Eq.~\eqref{eq:rho} involves only the timing variability and the false-alarm budget, not a system matrix. It instantiates the fundamental limits of stealthy attacks~\cite{liu2022limits} in the discrete-event setting: the form of the result is not new; what is new is that the instantiated quantity is the relative advance rather than the energy of a continuous state deviation. Eq.~\eqref{eq:rhok} gives the tightening under repeated injection; our experiments validate single injections only, and we do not present the $\sqrt{k}$ shrinkage as a validated result.
+
+The one-half point above refers to a \emph{single} Gaussian distribution. The $\sigma$ of the operations on a production line are highly heterogeneous, and low-variability groups are detected at relative advances far below the global $\rho^*$; consequently the overall detection curve after mixing over operations (hereafter the mixture power curve) can lie clearly above $1/2$ already for $\rho<\rho^*$. Section~\ref{sec:e4} validates how well this mixture curve agrees with the measurements. Figure~\ref{fig:sigma} shows $\rho^*$ as a function of $\sigma$: the global $\sigma=0.236$ corresponds to $42.2\%$; as the $\sigma$ of manual stations approaches~$2$, $\rho^*$ tends to~$1$ and the test loses its discriminative power, so the detectability of the line as a whole is governed by its most variable operation. Section~\ref{sec:e4} validates the result with a single-channel test at $\alpha=0.01$; in the three-path configuration the timing channel receives $\alpha/3$, which corresponds to $\rho^*=47.3\%$ at $\sigma=0.236$.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.82\linewidth]{figures/fig_sigma.pdf}
+\caption{$\rho^*$ as a function of $\sigma$ for a one-sided test at $\alpha=0.01$. Marked points are a low-variability operation, the globally weighted $\sigma$, and a manual station.}
+\label{fig:sigma}
+\Description{The critical relative advance increases with timing variability and tends to one; at the global sigma of 0.236, rho star is about forty-two percent.}
+\end{figure}
+
+% ============================================================
+%  Section 6: Experiments
+% ============================================================
+\section{Experiments and Results}
+\label{sec:experiments}
+
+\subsection{Experimental Setup}
+\label{sec:setup}
+
+The main data are the {Fischertechnik} smart-factory {IoT} event log released by the teaching factory of the {University of Trier}~\cite{malburg2022trier}. We chose this log because it is one of the few public activity logs that provide both a {BPMN} reference model and the assignment--execution--completion lifecycle, not because its scale is representative. Datasets of 1~Hz process variables such as {HAI} cannot instantiate assignments and process activities~\cite{shin2020hai}, and surveys of industrial-control testbeds and public datasets are likewise dominated by process variables and network traffic~\cite{conti2021testbeds,dobler2025datasets}; we therefore report no cross-dataset results. After cleaning, the full log contains $3{,}062$ activities, and the dozen or so devices on the line are all service endpoints that are invoked.
+
+The diversity within the log is used for stress tests and does not substitute for a second external dataset: $16$ {BPMN} models are released with the data; the official error-containing version (with NTP clock drift and duplicated and missing records) is used for false-alarm stress tests; and the temporal test fold contains five workflows unseen in the training fold. The feasibility mask $\mathbf F$ is derived automatically from the {BPMN} by the rules of Section~\ref{sec:hard}.
+
+Public activity logs contain no injection labels~\cite{conti2021testbeds,dobler2025datasets}. We map replay, injection, and dropping in the {Dolev--Yao} model to the fields of this log, with the rules given in Table~\ref{tab:inject}; the injector is released with the code. The data are split in time order into disjoint fit ($1{,}951$ activities), calibration ($603$), and test ($508$ benign events) folds, and injections are applied only to the test fold. The main table uses an injection rate of $20\%$, and we also sweep $5\%/10\%/20\%/40\%$; the default relative advance is $\rho=0.30$. The sample structure is $1$ log $\times$ $1$ temporal split $\times$ $6$ attack classes $\times$ $3$ injection seeds; the injection seeds ($0,1,2$) determine only the injection positions and do not re-split the data, and the detector's fitting seed is fixed at $0$. Over the three seeds, each attack class has $297$ injections ($290$ for {A1}, $303$ for {A2}, $201$ for {A6}), and under a given seed all methods face the same attacked stream. The relative-advance sweep of Section~\ref{sec:e4} additionally uses a calibration set sampled with stratification by group ($n_{\mathrm{cal}}=701$), so that every (device, operation) group has enough calibration samples. Detection delays are archived per injection instance, and box plots include only instances detected within the budget. All experiments run on a single machine ({Intel Xeon W-1270}, $64$~GB of memory) with {Python}~3.7.6, {NumPy}~1.18.1, and {SciPy}~1.4.1.
+
+All three main baselines are reimplemented from the structural constraints of the original papers rather than from official code: neither {BUTLA} nor {TABOR} comes with a released implementation that accepts this log format, and the hidden semi-Markov model ({HSMM}) is a model class rather than an industrial detector. Table~\ref{tab:repro} lists the structure retained and the approximations made. Every method that outputs continuous scores uses the same {CUSUM} (reference value $c=1.5$, delay budget of $10$ messages, reset after alarm). Each method's false-alarm budget is split evenly across its sub-detectors, and a sub-detector with budget $\alpha_i$ calibrates its threshold $h$ for $\mathrm{ARL}_0=1/\alpha_i$: the label-only ablation has $1$ path, {B1}/{B3} have $2$ each, and {B2} and our method have $3$ each. To compare methods at the same false-alarm level, the thresholds and {CUSUM} limits in the main table are calibrated on the uninjected version of the test fold, which aligns the empirical false-alarm rates with $\alpha$. This setting uses neither attack labels nor the benign events inside the attacked streams, but it borrows the benign distribution of the test fold and is thus an idealized calibration. In deployment thresholds can come only from the calibration fold, so we also rerun every method with the calibration fold as the reference stream; the false-alarm rates are then no longer aligned, and the detections are reported together with the test-fold false-alarm rates in Section~\ref{sec:e1}. Our method, like every baseline, is fitted on the fit fold only. In the main table, the raw scores of our three paths and the baseline scores go through the same decision procedure (empirical $p$-values against the reference stream and the {CUSUM} above), bypassing the frozen conformal calibrator, so that two threshold mechanisms are not mixed in the comparison; per-channel empirical false-alarm rates with the conformal calibrator are given in Section~\ref{sec:boundary}. The label-only first-order Markov likelihood is an ablation that removes the time dimension, not an independent prior method. The reference-model conformance proxy (alarm on any violation of $\mathbf F$) makes the same decisions as the hard-constraint layer and is not listed separately in the main table; its single-message results are the hard-constraint column of Table~\ref{tab:coverage}.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.12}
+\caption{Reimplementation protocol for the main baselines. The comparison is against the structural constraints of the original papers, not against official binaries.}
+\label{tab:repro}
+\centering
+\small
+\begin{tabular}{lL{3.4cm}L{4.4cm}}
+\toprule
+Method & Retained & Approximation on this log \\
+\midrule
+{B1} {BUTLA}-style~\cite{maier2011timed}
+  & One automaton learned per component; no cross-component check; duration as a deviation tolerance
+  & Component taken as device; tolerance replaced by the empirical quantile at the same $\alpha$, so that differences in false alarms are not counted as differences between methods \\
+{B2} {TABOR}-style~\cite{lin2018tabor}
+  & Within-stage dependencies; no assignment (command) data
+  & Stage taken as device; within-stage joint as $P(o)\prod P(v\mid o)$ (compared with the saturated joint below the table) \\
+{B3} {HSMM}~\cite{tan2008hsmm}
+  & Semi-Markov model with explicit durations
+  & Observations are the operation and $\log\tau$; $K\in\{2,3,4,6\}$, with $K=6$ selected by held-out likelihood \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The within-stage structure learned in the original paper lies between the naive factorization and the saturated joint distribution $P(o,v_1,\dots,v_m)$. Replacing the within-stage distribution of {B2} with the saturated joint under the main-table protocol changes its six-class mean from $0.21$ to $0.22$ and its {A3} result from $0.10$ to $0.08$; our method remains above this variant on all six attack classes.
+
+When the rule ``any alarm in the window counts as a detection'' is applied within the delay budget, random false alarms in the window yield some detection rate even for a detector with no real detection capability. This chance-alarm floor is $1-(1-\mathrm{FPR})^{B+1}$, where $B=10$ is the delay budget. All main results in the tables have this floor subtracted, and values without the subtraction are not quoted. Per-message detection rates are limited by the length of the reference stream and are not used as main results at this scale.
+
+Methods are compared with the injection instance as the pairing unit: under a given seed all methods face the same attacked stream, and for each injection we record whether it is detected within the delay budget. For each attack class we apply a two-sided exact {McNemar} test to the difference between our method and each competitor, and we compute $95\%$ confidence intervals for the difference in detection rate from $2{,}000$ bootstrap resamples over injection instances. The $6$ attack classes and $4$ competitors give $24$ comparisons, corrected by the {Holm} method. The test is applied to raw detections without subtracting the chance-alarm floor; treating injections within the same attacked stream as independent is an approximation.
+
+\subsection{Single-Channel Coverage Diagnosis}
+\label{sec:diag}
+
+Before the end-to-end comparison, Table~\ref{tab:coverage} gives the single-message detection rate of each of the three paths, to show which path is responsible for which attack. {A2} is rejected by the unary capability set, and the timing channel is insensitive to it. {A3}/{A5} leave labels unchanged and only compress sojourn times; the hard-constraint layer and the structural channel detect almost nothing, and the timing channel is the only one with substantial detection. {A1} keeps historical durations, so the timing channel gains nothing and detection is carried by the hard-constraint layer and the structural channel. {A4} inserts the most probable next step according to the transition model, and the single-message detection of all three paths is close to the false-alarm level. {A6} deletes an entire activity that has not yet started, so the timeout watchdog is never triggered, and the structural channel sees only a weak signal downstream. Figure~\ref{fig:coverage} plots the same table as a heat map of the net lift over false alarms.
+
+The numbers in Table~\ref{tab:coverage} cannot be compared directly with Table~\ref{tab:e1}: the former is a single-channel, single-message diagnosis without budget splitting and without subtracting the chance-alarm floor; the latter is the end-to-end net detection of three parallel paths with $\alpha/3$ per path, a delay budget of $10$ messages, and the chance-alarm floor subtracted. For example, the single-message timing detection on {A3} is $0.43$, whereas Table~\ref{tab:e1} reports $0.18$; the two are not in conflict.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.15}
+\caption{Single-message detection rates of the three production paths on the six injection classes, with the false-alarm rate on the same benign events in parentheses. Each path decides on its own at $\alpha=0.01$ with frozen models; test fold of $508$ events, injection rate $20\%$, mean over three injection seeds. The hard-constraint value of $0.06$ on {A2} is not a purely benign false alarm but a consequence of the cascaded check: the benign event following an injection has the forged operation as its predecessor and is therefore rejected by the binary reachability check. Its deployment meaning is ``attack detected but attributed to the following event'', so it is reported separately from the purely benign false-alarm rates of Section~\ref{sec:e1}.}
+\label{tab:coverage}
+\centering
+\small
+\begin{tabular}{llccc}
+\toprule
+ID & Class & Hard constraint $\mathbf F$ & Structural & Timing \\
+\midrule
+{A1} & Naive replay & $0.22\,(0.00)$ & $0.21\,(0.02)$ & $0.03\,(0.02)$ \\
+{A2} & Physically infeasible injection & $0.98\,(0.06)$ & $0.29\,(0.02)$ & $0.00\,(0.02)$ \\
+{A3} & Early-completion replay & $0.00\,(0.00)$ & $0.02\,(0.01)$ & $0.43\,(0.02)$ \\
+{A4} & State mimicry (known model) & $0.03\,(0.00)$ & $0.01\,(0.01)$ & $0.00\,(0.02)$ \\
+{A5} & Gradual drift & $0.00\,(0.00)$ & $0.01\,(0.01)$ & $0.48\,(0.03)$ \\
+{A6} & Message suppression & $0.00\,(0.00)$ & $0.16\,(0.01)$ & $0.04\,(0.02)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.98\linewidth]{figures/fig_coverage.pdf}
+\caption{Net lift of the three production paths over the benign false-alarm rate ({DR}$-${FPR}). {A2} is covered by the hard-constraint layer, only the timing channel gives a substantial lift on {A3}/{A5}, and {A4} has no dedicated path.}
+\label{fig:coverage}
+\Description{A three-by-six heat map of the net detection lift of the hard-constraint, structural, and timing paths on A1 to A6; the hard-constraint cell for A2 and the timing cells for A3 and A5 are dark, and A4 is close to zero.}
+\end{figure}
+
+\subsection{Comparison with Timed Automata and Semi-Markov Models}
+\label{sec:e1}
+
+Table~\ref{tab:e1} gives the net detection rates at $\alpha=0.01$. Our method averages $0.48$ over the six attack classes, against $0.17/0.21/0.11$ for {B1}/{B2}/{B3}. We discuss three groups of attacks in turn.
+
+First, pure timing attacks. {A3}/{A5} leave labels unchanged, and the label-only ablation scores $-0.01$ and $0.00$ after subtracting the chance-alarm floor; its score stream coincides with the benign stream message by message, consistent with Proposition~\ref{prop:ta}(ii). On {A5} our method reaches $0.87$, the largest margin in the table; timed-automaton baselines also capture cumulative drift ($0.59/0.48$), but remain below the distributional channel with its left-tail test per (device, operation). On {A3} our method reaches $0.18{\pm}0.01$, against $0.10{\pm}0.03$ and $0.10{\pm}0.04$ for {B1}/{B2}. In the per-injection paired test, the difference in detection rate is $0.067$ against {B1} ($95\%$ interval $[0.020,0.114]$, Holm-corrected $p=0.031$) and $0.064$ against {B2} ($[0.010,0.118]$, corrected $p=0.096$, not significant). The gain is modest, and it arises because sporadic early reports can still be accumulated under distributional residuals. {B3} reaches only $0.06$ on {A3}, which shows that the gain does not come merely from the model-class difference of ``semi-Markov model versus interval guard'': the duration kernel of {HSMM} is tied to hidden states, and an early report with an unchanged label is absorbed as a slightly shorter stay.
+
+Second, replay and infeasible injection. On {A1}/{A2} our method reaches $0.55/0.95$, higher than all three main baselines (paired test, Holm-corrected $p<10^{-20}$ in every case). {A2} is covered by the unary capability set; the within-stage dependencies of {B2} cannot substitute for the reference model. {B2} and {B1} perform similarly on most attack classes: within-stage dependencies carry little information on this log, and the extreme scores that {B2} assigns to ``this device has never executed this operation'' already occur in the benign test fold (the unseen combinations described in Section~\ref{sec:hard}), whereas the reference model does not reject these combinations.
+
+Third, attacks that change the number of events. On {A4}/{A6} our method reaches $0.17/0.14$, below the $0.23/0.28$ of the label-only ablation (Holm-corrected $p=0.001$ and $p<10^{-6}$). These two attacks are handled mainly by the structural channel; with the even three-way split it receives only $\alpha/3$, whereas the label-only ablation keeps all of $\alpha$ on its single path, and the budget split is an explanation consistent with the gap. We report this gap as a cost of the multi-channel design, not as a main conclusion. At $\alpha=0.05$ our method ($0.18/0.19$) is still below the label-only ablation ($0.41/0.45$) on {A4}/{A6}, so the disadvantage is not caused by insufficient calibration resolution at $\alpha=0.01$; the ranking is not fully preserved, however, since on {A1} our method also falls below the label-only ablation at this level ($0.47$ versus $0.61$).
+
+The {EM} likelihood of {B3} converges monotonically and its duration kernel is non-degenerate, so it serves as a baseline directly comparable to ``timing plus structure''; its mean is only $0.11$, and only $0.31$ on {A2}, consistent with the absence of feasibility constraints in a hidden-state model. When thresholds are instead calibrated with the calibration fold as the reference stream (Section~\ref{sec:setup}), every method exceeds the nominal sequential false-alarm rate of $0.01$ on the test fold: {B1} $0.043$, {B2} $0.138$, {B3} $0.028$, label-only $0.018$, ours $0.030$. Our method thus also fails to maintain the nominal false-alarm rate under a temporal split, consistent with the per-channel results of Section~\ref{sec:boundary}. As the false-alarm rates are no longer aligned, the net detections serve only as a qualitative reference: our method is still the highest on {A3}/{A5} ($0.45/0.71$) and falls below the label-only ablation on {A2} ($0.72$ versus $0.76$). Taken together, the advantage on duration forgery holds against all three baselines on {A5}, and on {A3} it is significant only against {B1}/{B3}.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.15}
+\caption{Net detection rates at $\alpha=0.01$ with a delay budget of $10$ messages and the chance-alarm floor subtracted. Mean $\pm$ population standard deviation over three injection seeds, $201$--$303$ injections per attack class in total. Label-only is the Markov ablation. Sequential false-alarm rates in the attacked streams (nominal $0.01$): {B1} $0.006$, {B2} $0.006$, {B3} $0.008$, label-only $0.008$, ours $0.004$. Paired tests (exact {McNemar}, {Holm} correction over $24$ comparisons) are reported in Section~\ref{sec:e1}; results with thresholds calibrated on the calibration fold are given in Table~\ref{tab:e1calib}.}
+\label{tab:e1}
+\centering
+\scriptsize
+\begin{tabular}{lccccc}
+\toprule
+Attack & {B1} {BUTLA} & {B2} {TABOR}-style & {B3} {HSMM} & Label-only & Ours \\
+\midrule
+{A1} Naive replay & $0.04{\pm}0.01$ & $0.04{\pm}0.01$ & $-0.01{\pm}0.03$ & $0.48{\pm}0.04$ & $0.55{\pm}0.04$ \\
+{A2} Infeasible injection & $0.37{\pm}0.05$ & $0.67{\pm}0.03$ & $0.31{\pm}0.04$ & $0.76{\pm}0.04$ & $0.95{\pm}0.00$ \\
+{A3} Early-completion replay & $0.10{\pm}0.03$ & $0.10{\pm}0.04$ & $0.06{\pm}0.04$ & $-0.01{\pm}0.02$ & $0.18{\pm}0.01$ \\
+{A4} State mimicry & $-0.04{\pm}0.01$ & $-0.01{\pm}0.01$ & $0.02{\pm}0.01$ & $0.23{\pm}0.04$ & $0.17{\pm}0.03$ \\
+{A5} Gradual drift & $0.59{\pm}0.09$ & $0.48{\pm}0.07$ & $0.25{\pm}0.08$ & $0.00{\pm}0.12$ & $0.87{\pm}0.06$ \\
+{A6} Message suppression & $-0.05{\pm}0.01$ & $-0.01{\pm}0.03$ & $0.05{\pm}0.02$ & $0.28{\pm}0.08$ & $0.14{\pm}0.06$ \\
+\midrule
+Mean & $0.17$ & $0.21$ & $0.11$ & $0.29$ & $0.48$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.15}
+\caption{Net detection rates and test-fold sequential false-alarm rates with thresholds calibrated on the calibration fold ($603$ events) ($\alpha=0.01$, delay budget of $10$ messages, mean $\pm$ population standard deviation over three injection seeds). The false-alarm rates of the methods are no longer aligned; the chance-alarm floor is subtracted according to each method's measured false-alarm rate, and the results serve only as a qualitative reference.}
+\label{tab:e1calib}
+\centering
+\scriptsize
+\begin{tabular}{lccccc}
+\toprule
+Attack & {B1} {BUTLA} & {B2} {TABOR}-style & {B3} {HSMM} & Label-only & Ours \\
+\midrule
+{A1} Naive replay & $-0.05{\pm}0.06$ & $-0.23{\pm}0.04$ & $-0.03{\pm}0.01$ & $0.54{\pm}0.05$ & $0.45{\pm}0.02$ \\
+{A2} Infeasible injection & $0.26{\pm}0.08$ & $0.20{\pm}0.00$ & $0.53{\pm}0.01$ & $0.76{\pm}0.03$ & $0.72{\pm}0.00$ \\
+{A3} Early-completion replay & $0.28{\pm}0.03$ & $-0.13{\pm}0.05$ & $0.08{\pm}0.06$ & $0.00{\pm}0.01$ & $0.45{\pm}0.04$ \\
+{A4} State mimicry & $-0.12{\pm}0.04$ & $-0.32{\pm}0.03$ & $0.13{\pm}0.07$ & $0.30{\pm}0.04$ & $0.16{\pm}0.02$ \\
+{A5} Gradual drift & $0.55{\pm}0.02$ & $0.15{\pm}0.03$ & $0.24{\pm}0.08$ & $-0.02{\pm}0.22$ & $0.71{\pm}0.02$ \\
+{A6} Message suppression & $-0.12{\pm}0.03$ & $-0.36{\pm}0.05$ & $0.12{\pm}0.03$ & $0.36{\pm}0.06$ & $0.17{\pm}0.09$ \\
+\midrule
+Mean & $0.13$ & $-0.11$ & $0.18$ & $0.32$ & $0.44$ \\
+Sequential FPR & $0.043$ & $0.138$ & $0.028$ & $0.018$ & $0.030$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Figure~\ref{fig:e1} plots Table~\ref{tab:e1} as grouped bars; the label-only ablation stays near zero on {A3}/{A5}, reflecting the blind spot created by removing the time dimension. Figure~\ref{fig:e1delay} shows box plots of the detection delay in the same evaluation, counting only injections detected within the delay budget; undetected instances do not enter the quantiles. Table~\ref{tab:arl0} gives the alarm intervals on the purely benign stream, counted separately from the sequential false alarms in the attacked streams. On the $508$ benign events each method raises only $2$--$4$ alarms (ours: $2$, i.e.\ a sequential false-alarm rate of $0.004$), so the interval statistics are only a reference and are insufficient to estimate $\mathrm{ARL}_0$. Figure~\ref{fig:e1rate} sweeps the injection rate from $5\%$ to $40\%$. On {A2} our method is the highest at every injection rate, but its lead narrows as the rate increases. On {A5} our method is slightly below {B1} only at $10\%$ ($0.67$ versus $0.69$). On {A3} our method exceeds the timed-automaton baselines only at $20\%$ and $40\%$, not at $5\%$ and $10\%$. On {A4} it is below the label-only ablation at every injection rate, and on {A6} it exceeds the latter only at $5\%$.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.98\linewidth]{figures/fig_e1_dr.pdf}
+\caption{Net detection rates at $\alpha=0.01$ with a delay budget of $10$ messages and the chance-alarm floor subtracted. Label-only is the Markov ablation, not an independent prior method.}
+\label{fig:e1}
+\Description{Grouped bars for BUTLA, TABOR-style, HSMM, label-only, and ours on the six attack classes; ours is highest on A2 and A5, and label-only is zero on A3 and A5.}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.98\linewidth]{figures/fig_e1_delay.pdf}
+\caption{Detection delays (in messages) of each method on the six attack classes at $\alpha=0.01$ with a delay budget of $10$ messages. Boxes include only detections within the budget; for undetected injections see the net detection rates.}
+\label{fig:e1delay}
+\Description{Grouped box plots for BUTLA, TABOR-style, HSMM, label-only, and ours on the six attack classes; the vertical axis is the detection delay in messages.}
+\end{figure}
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.12}
+\caption{Alarm intervals on the purely benign stream of the test fold ($508$ events). The three seeds share the same benign stream, and alarms are counted on that stream; intervals include the stretch from the start of the stream to the first alarm. Alarms are too few to estimate $\mathrm{ARL}_0$.}
+\label{tab:arl0}
+\centering
+\small
+\begin{tabular}{lccc}
+\toprule
+Method & Median interval & Mean interval & Alarms \\
+\midrule
+{B1} {BUTLA} & $21$ & $152$ & $3$ \\
+{B2} {TABOR}-style & $59$ & $158$ & $3$ \\
+{B3} {HSMM} & $119$ & $115$ & $4$ \\
+Label-only & $56$ & $83$ & $4$ \\
+Ours & $218$ & $218$ & $2$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.98\linewidth]{figures/fig_e1_rate.pdf}
+\caption{Net detection rate versus injection rate ($5\%$--$40\%$). One panel per attack class, showing whether the conclusions break down as attack density increases.}
+\label{fig:e1rate}
+\Description{Six panels, one per attack class; the horizontal axis is the injection rate, the vertical axis the net detection rate, with five method curves.}
+\end{figure}
+
+\subsection{Ablation}
+\label{sec:e2}
+
+The ablation follows the decision procedure of the main table at $\alpha=0.01$ and \emph{fixes the false-alarm budget of each path}, to avoid the confound that removing one path would give more budget to the others. The full configuration averages $0.48$ over the six attack classes. Removing the timing channel lowers the mean by $0.18$ and drives {A3}/{A5} to zero ($0.18\to -0.01$, $0.87\to -0.02$). Without the timing channel only the hard-constraint layer and the structural channel remain; both read labels only and thus detect nothing of pure duration attacks, which corroborates the zero detection of the label-only ablation on the same two classes in Table~\ref{tab:e1}. Removing the hard-constraint layer lowers the mean by $0.08$, with the drop concentrated on {A2} ($0.95\to0.70$) and {A1} ($0.55\to0.42$). Removing the structural channel lowers the mean by $0.05$, with the drop concentrated on {A6} ($0.14\to-0.02$) and {A4} ($0.17\to0.08$). At $\alpha=0.05$ the three drops are $0.16$, $0.04$, and $0.03$, in the same order. Of the three paths, only the timing channel is irreplaceable: it is the sole source of detection on {A3}/{A5}. Figure~\ref{fig:e2} shows the per-class comparison and the change in the mean.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.98\linewidth]{figures/fig_e2_ablation.pdf}
+\caption{Ablation of the three production paths ($\alpha=0.01$, fixed per-path false-alarm budget, mean over three injection seeds, chance-alarm floor subtracted). Removing timing drives {A3}/{A5} to zero; the drop from removing the hard-constraint layer is concentrated on {A2}/{A1}, and that from removing the structural channel on {A6}/{A4}.}
+\label{fig:e2}
+\Description{Left: bars for the full configuration and without timing, without the hard-constraint layer, and without the structural channel on the six attack classes; right: mean drops of 0.18, 0.08, and 0.05.}
+\end{figure}
+
+The role of conformal calibration shows on the false-alarm side: on the stratified calibration set of Section~\ref{sec:e4}, replacing the one-sided threshold by a Gaussian quantile raises the empirical false-alarm rate on the test set from $0.0126$ to $0.0168$ (nominal $0.01$).
+
+Several design choices of the method were also settled by measurement. If the timing channel took a truncated parametric $p$-value instead of $-z$, the single-message detection on {A3} would fall from $0.43$ to $0.06$ (on the same basis as Table~\ref{tab:coverage}). Material-token conservation was considered as a candidate channel, but its benign violation rate is too high and its net end-to-end contribution is zero (Section~\ref{sec:limitations}); it is therefore excluded from the production configuration and consumes no false-alarm budget.
+
+\subsection{Relative-Advance Sweep}
+\label{sec:e4}
+
+We apply the injection $\tau\mapsto(1-\rho)\tau$ to real sojourn times. The $\rho^*$ of Proposition~\ref{prop:rho} uses the global $\sigma=0.236$ of the fit fold (not conditioned on covariates), giving $\rho^*=42.2\%$ for a one-sided test at $\alpha=0.01$. The theoretical values in Table~\ref{tab:e4} and Figure~\ref{fig:e4} are the mixture prediction over operation groups (Section~\ref{sec:bound}); their mean absolute deviation from the measurements over the whole range is $0.027$ ($95\%$ interval $[0.018,0.035]$ from $2000$ bootstrap resamples drawn independently from the calibration and test folds; $0.012$--$0.031$ over $20$ fold-split seeds). At $\rho=0.30<\rho^*$ the measured single-message detection already reaches $0.52$, and at $\rho=0.40\approx\rho^*$ it is $0.74$, whereas a single Gaussian would give only $1/2$ at $\rho^*$; this is exactly what the mixture power curve predicts.
+
+{CUSUM} turns weak signals into usable detection capability. In this experiment it is driven by parametric left-tail $p$-values on the stratified calibration set, with a threshold corresponding to $\mathrm{ARL}_0=500$ and a delay budget of $40$ messages. At $\rho=0.15$ the single-message detection is $0.21$ and rises to $0.55$ after accumulation, with a median delay of $15$ messages; at $\rho=0.20$ it rises to $0.85$; at $\rho=0.30$ it is $0.93$, with a median delay of $7$ messages (Figure~\ref{fig:delay}). Detection saturates at about $0.96$; the undetected remainder comes from groups with very large $\sigma$, consistent with overall detectability being governed by the most variable operation.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.12}
+\caption{Relative-advance sweep for a one-sided test at $\alpha=0.01$ (stratified calibration set $n_{\mathrm{cal}}=701$, $715$ test events). Shift $\Delta=\log(1-\rho)$; $\bar\sigma$ is the mean timing variability of the test groups (about $0.24$); the theory column is the mixture prediction over operations.}
+\label{tab:e4}
+\centering
+\small
+\begin{tabular}{ccccc}
+\toprule
+$\rho$ & $\lvert\Delta\rvert$ & $\lvert\Delta\rvert/\bar\sigma$ & Measured {DR} & Theory \\
+\midrule
+$0.05$ & $0.051$ & $0.21$ & $0.062$ & $0.057$ \\
+$0.10$ & $0.105$ & $0.44$ & $0.073$ & $0.132$ \\
+$0.15$ & $0.163$ & $0.68$ & $0.206$ & $0.239$ \\
+$0.20$ & $0.223$ & $0.93$ & $0.291$ & $0.338$ \\
+$0.30$ & $0.357$ & $1.49$ & $0.516$ & $0.537$ \\
+$0.40$ & $0.511$ & $2.13$ & $0.740$ & $0.745$ \\
+$0.50$ & $0.693$ & $2.89$ & $0.899$ & $0.878$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.82\linewidth]{figures/fig_e4_rho.pdf}
+\caption{Single-message detection rate versus relative advance. The theory curve is the group-mixture prediction; the vertical line marks $\rho^*=42.2\%$ at the global $\sigma=0.236$.}
+\label{fig:e4}
+\Description{The measured single-message detection rate and the per-operation mixture prediction rise with the relative advance; a vertical line marks rho star at the global sigma, where the mixture power is already clearly above one half.}
+\end{figure}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=0.98\linewidth]{figures/fig_delay.pdf}
+\caption{Power of {CUSUM} relative to the single-message threshold, and box plots of the detection delay. Driven by parametric left-tail $p$-values on the stratified calibration set, threshold for $\mathrm{ARL}_0=500$, delay budget of $40$ messages, $53$ test substreams. Boxes include only injections detected within the budget; undetected injections are censored (see the net detection rates in the main table).}
+\label{fig:delay}
+\Description{Left: the CUSUM detection rate is clearly above the single-message rate at small relative advances; right: the median delay decreases as the relative advance increases.}
+\end{figure}
+
+\subsection{Deployment Conditions and Scope}
+\label{sec:boundary}
+\label{sec:e5}
+\label{sec:robust}
+\label{sec:gate}
+\label{sec:e6}
+\label{sec:e8}
+
+The preceding subsections present the main results. This subsection reports four sets of data that must be stated before deployment.
+
+First, false alarms under a temporal split. The conformal guarantee relies on exchangeability, whereas real deployment can only split data in time order. Table~\ref{tab:fprsplit} splits fitting and testing $75\%/25\%$ by case (about $636$ test messages): the random folds use $5$ random splits; the temporal fold admits only one split, and its $5$ seeds change only the randomization in fitting and conformal calibration, hence the very small standard deviations. The table shows that under random splits the empirical false-alarm rates stay close to their nominal values, whereas under the temporal split at $\alpha=0.01$ the timing channel rises to $0.024$ and the structural channel to $0.012$. Among the $16$ workflows released with the data, the median {Jaccard} similarity of their transition sets is only $0.324$, i.e.\ the transition structures of different workflows differ substantially; new product types must therefore be recalibrated, or calibrated in strata by type. These values are per-channel single-message false-alarm rates and are computed differently from the sequential false-alarm rate of $0.004$ in the attacked streams of Section~\ref{sec:e1}; if the sequential thresholds are also taken from the calibration fold, the sequential false-alarm rate of our method is $0.030$ (Section~\ref{sec:e1}), in the same direction as the per-channel results.
+
+Second, stress tests within the log (Table~\ref{tab:shift}). The timing false-alarm rate on the official error-containing version is $0.112$; it stems from benign timing anomalies caused by data-acquisition defects, not from attacks. On unseen workflows the timing false-alarm rate is $0.067$. The hard-constraint layer has false-alarm rates of $0.003$ and $0$ in these two cases. Product changeover is a distribution shift: the timing channel must be recalibrated per product type, whereas the hard-constraint layer need not be.
+
+Third, recalibration of the duration kernel. Artificially doubling the $\sigma$ of the fit fold lowers the single-message and {CUSUM} detection at $\rho=0.30$ from $0.52$ and $0.94$ to $0.22$ and $0.45$; at $\sigma\approx0.96$ only $0.05$ of single-message detection remains, so the scope is delimited by the most variable operation. Table~\ref{tab:e6} further demonstrates on a self-built simulated production line that the duration kernel must be recalibrated per scenario. The three scenarios share the operation vocabulary and the feasibility mask $\mathbf F$: scenario~I has $2$ automated guided vehicles and $1$ robot arm with $\sigma=0.12$ and short travel distances; scenario~II has $4$ automated guided vehicles and $2$ robot arms with $\sigma=0.12$ and long travel distances; scenario~III has the layout of scenario~I with $\sigma=0.35$. On scenario~II, {A3} detection is $0.56$ with the duration kernel calibrated on the scenario itself and drops to $0.06$ with the kernel of scenario~I (the scenario has only $18$ {A3} injections, i.e.\ $10/18$ versus $1/18$); transfer in the reverse direction (II$\to$I) drives the timing false-alarm rate to $0.493$. In every setting the hard-constraint layer has zero false alarms, because all scenarios share the same $\mathbf F$.
+
+Fourth, gating and computational cost. Under $200$ sustained early reports with $\rho=0.30$, disabling the gate lets $26.4\%$ of the forged advance enter the baseline (all $200/200$ updates take effect), whereas enabling it reduces this to $1.4\%$ ($3/200$). The median per-event processing latency on a single core is $123\,\mu\mathrm{s}$ ($p_{95}=191\,\mu\mathrm{s}$, $n=1{,}524$); when the scale is increased by replicating device names, the median latency does not grow with scale. We did not measure on a dedicated controller.
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.12}
+\caption{Per-channel empirical conformal false-alarm rates. Split $75\%/25\%$ by case (about $636$ test messages); the random fold uses $5$ random splits, the temporal fold $5$ seeds under the same split; mean $\pm$ standard deviation.}
+\label{tab:fprsplit}
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+Channel & \multicolumn{2}{c}{Random fold} & \multicolumn{2}{c}{Temporal} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+ & $\alpha{=}0.05$ & $\alpha{=}0.01$ & $\alpha{=}0.05$ & $\alpha{=}0.01$ \\
+\midrule
+Timing & $0.051{\pm}0.007$ & $0.006{\pm}0.005$ & $0.098{\pm}0.001$ & $0.024{\pm}0.001$ \\
+Structural & $0.048{\pm}0.013$ & $0.008{\pm}0.006$ & $0.064{\pm}0.003$ & $0.012{\pm}0.001$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.12}
+\caption{Stress tests within the same {Trier} log ($\alpha=0.01$, no injection). The error-containing version is released by the original authors; seen and unseen workflows are obtained by splitting the temporal test fold.}
+\label{tab:shift}
+\label{tab:cprime}
+\label{tab:e9}
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+Setting & $n$ & Hard constraint & Timing & Structural \\
+\midrule
+Cleaned temporal test fold & $508$ & $0.000$ & $0.024$ & $0.012$ \\
+Official error-containing full log & $2{,}778$ & $0.003$ & $0.112$ & $0.011$ \\
+Seen workflows & $329$ & $0.000$ & $0.000$ & $0.012$ \\
+Unseen workflows & $179$ & $0.000$ & $0.067$ & $0.006$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!t]
+\renewcommand{\arraystretch}{1.12}
+\caption{Recalibration of the duration kernel on self-built simulated scenarios ($\alpha=0.01$, $\rho=0.30$). The first three columns are the false-alarm rates of each path, and the {A3} column is the single-message detection of the timing channel; ``I$\to$II'' means calibrated on scenario~I and tested on scenario~II. Each scenario has $69$--$90$ benign events and $13$--$18$ {A3} injections.}
+\label{tab:e6}
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+Setting & Hard constraint & Timing & Structural & {A3} \\
+\midrule
+Scenario~I & $0.000$ & $0.000$ & $0.014$ & $0.462$ \\
+Scenario~II & $0.000$ & $0.000$ & $0.011$ & $0.556$ \\
+Scenario~III & $0.000$ & $0.000$ & $0.014$ & $0.308$ \\
+I$\to$II & $0.000$ & $0.000$ & $0.000$ & $0.056$ \\
+I$\to$III & $0.000$ & $0.101$ & $0.000$ & $0.385$ \\
+II$\to$I & $0.000$ & $0.493$ & $0.000$ & $0.692$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ============================================================
+%  Section 7: Conclusion
+% ============================================================
+\section{Conclusion}
+\label{sec:conclusion}
+
+\subsection{Conclusions and Contributions}
+\label{sec:contributions}
+
+We have formalized injection detection on discrete activity events with a lifecycle. On the theoretical side, we have shown in a numbered proposition (Proposition~\ref{prop:ta}) that the detector family which thresholds only the predicted probability of labels adds nothing beyond the feasibility mask for label-consistent injections under a zero-false-alarm constraint, and we have derived the critical relative advance $\rho^*(\alpha,\sigma)$.
+
+On the methodological side, we build a hard-constraint layer from the reference-model feasibility mask (zero violations on the cleaned normal data) and a timing channel from distributional sojourn times grouped by (device, operation); the two statistical channels are calibrated by conformal prediction and accumulated by {CUSUM} tests. Compared with decomposed timed automata and within-stage dependency models, our method differs in two respects: distributional durations allow early reports inside the guard to be accumulated, and feasibility comes from the reference model rather than being learned from logs.
+
+The experiments show that physically infeasible injection is covered by the feasibility mask (net detection $0.95$); on gradual drift our method achieves $0.87$, while the label-only ablation scores zero; on early-completion replay at a $20\%$ injection rate it achieves $0.18$, higher than {BUTLA} and not significantly different from the {TABOR}-style baseline; and the mixture power curve predicted by the critical-relative-advance model agrees with the measurements. These results indicate that, for lifecycle activity events in industry, reference-model feasibility and distributional sojourn times are two kinds of evidence missing from label-only detection; the disadvantage on {A4}/{A6} shows that they cannot replace workflow structure.
+
+\subsection{Limitations}
+\label{sec:limitations}
+
+\textbf{(1) State mimicry and message suppression lack a dedicated detection path.}
+On {A4}/{A6} our detection is below that of the label-only ablation. There are two possible causes whose effects have not been separated: after the three-way split the structural channel receives only $\alpha/3$, and its state is the operation name, which is insensitive to the device. This limitation qualifies the comparison of ``six-class means'' but does not affect the claims about {A2} and {A3}/{A5}.
+
+\textbf{(2) Without workpiece identities, material-flow invariants cannot serve as reliable constraints.}
+The benign violation rate $q$ rises from $0.0054$ on the training fold to $0.047$ on the deployment stream, which caps single-message detection at only $0.21$ for $\alpha=0.01$. Approximate cross-case workpiece identities lower $q$ to $2.3\%$, still above $\alpha$, and end-to-end performance is the same as without the constraint, so the token constraint is not included in the detector. This limitation does not affect the three claims of this paper; it only means that the hard-constraint layer cannot yet cover cross-device material-flow forgery.
+
+\textbf{(3) The main evaluation uses a single public log, synthetic injections, and reimplemented baselines.}
+The main evaluation has only one public log that provides both {BPMN} and the activity lifecycle; attacks are synthesized by a reproducible injector; the baselines are reimplemented from the structural constraints of the original papers rather than taken from official code; and no comparison is made with learned sequence models that use time features. The workflow splits within the log, the official error-containing version, and the unseen workflows serve only as stress tests and cannot substitute for a second external dataset; under a temporal split the conformal guarantee no longer holds automatically, and duration kernels cannot be transferred across scenarios directly (Section~\ref{sec:boundary}). This limitation threatens the external validity of the results on {A2} and {A3}/{A5}, but does not affect Proposition~\ref{prop:ta}.
+
+\subsection{Future Work}
+\label{sec:future_work}
+
+\textbf{(1) Validate material-token constraints on production lines with workpiece identifiers.}
+This addresses Limitation~(2). With workpiece identities, if the benign violation rate in deployment can be brought down to the order of $\alpha$, token conservation could complement the hard-constraint layer and detect cross-device material-flow forgery.
+
+\textbf{(2) Design a rule for allocating the false-alarm budget across channels without attack labels.}
+This addresses Limitation~(1). The current $\alpha/3$ is the even Bonferroni split under a parallel OR decision, and the disadvantage on {A4}/{A6} may be related to the structural channel receiving only $\alpha/3$. An allocation rule must not use attack labels to tune thresholds in reverse.
+
+\textbf{(3) Add a second external dataset, official baseline implementations, and learned sequence baselines.}
+This addresses Limitation~(3). Testing the external validity of the conclusions requires another public log that provides both {BPMN} and the activity lifecycle, or official baseline implementations that accept this log format, complemented by learned sequence models with time features as competitors.
+
+\textbf{(4) Study online recalibration of the duration kernel.}
+This addresses Limitation~(3) and Section~\ref{sec:boundary}. The self-built scenarios show that transferring the duration kernel across scenarios sharply lowers {A3} detection or raises false alarms, whereas the feasibility mask need not be re-estimated. Future work could update the duration kernel adaptively per product type under gate protection, so that the detector need not be refitted from scratch after a product changeover.
+
+\section{Data Availability}
+\label{sec:data}
+
+The {Fischertechnik} {Trier} smart-factory event log is released by its original authors~\cite{malburg2022trier}; a copy of the data is available on {Figshare} at \texttt{10.6084/m9.figshare.20130794}. The injection protocol, baseline reimplementations, diagnostic scripts, and evaluation archives are in the accompanying code repository, available from the corresponding author during review and to be made public upon acceptance. The main tables and box plots are read from JSON archives, and no quantile is filled in by hand. Paper-level {CSV} files are aggregated from the archives by \texttt{py -m tools.export\_experiments}. The self-built scenarios~I/II/III (configurations {A}/{B}/{C} in the code) are regenerated from seeds by \texttt{algorithm/plant.py}. {HAI} is used only to check the data dictionary and is not imported into the {CSV} files.
+
+\begin{acks}
+We thank the {University of Trier} for releasing an {IoT} event log with a {BPMN} reference model, which made it possible for the feasibility mask to come from an external reference model rather than being learned from the log.
+\end{acks}
+
+% Bibliography (placed at document end)
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{reference-base}
+
+\end{document}

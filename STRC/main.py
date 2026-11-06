@@ -4,6 +4,13 @@
     py main.py --help
     py main.py --instance ../clbs/input/example_3x3x2.json \\
                --disturbance input/disturbances/corridor_block_example.json
+
+STRC one-shot entry: load a schedule, inject a disturbance, repair on the closure, then validate.
+
+Usage (from the STRC/ directory):
+    py main.py --help
+    py main.py --instance ../clbs/input/example_3x3x2.json \\
+               --disturbance input/disturbances/corridor_block_example.json
 """
 from __future__ import annotations
 

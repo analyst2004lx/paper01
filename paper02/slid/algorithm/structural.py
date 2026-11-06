@@ -13,6 +13,16 @@ case 级链:21 个状态、2,780 次转移、282 个 case、140 个变体,样本
 
 p 值**必须取随机化(平滑)形式**,否则原子化会让 conformal 校准彻底失效
 (实测朴素形式在 (设备, case) 链上经验 FPR 达 1.000)。
+
+M3 structural channel: transition likelihood under a Dirichlet posterior predictive.
+
+**The granularity is the case-level workflow activity sequence, not a device-level state chain.**
+
+Measured basis: after chaining by (device, case), 65.1% of 2,109 chains have length 1 and 28.5% have length 2; 3,062 activities yield only 953 transitions, and every structural p-value takes a single value — the device-level channel carries zero information. The cause is that devices on this line are stateless service endpoints, each job calling them once or twice; the device-internal state machine the original method imagined ("AGV idle/move/load") does not exist at this granularity. It lives in the 109 fine-grained sub-activities of the sub-logs.
+
+Case-level chain: 21 states, 2,780 transitions, 282 cases, 140 variants. The sample-to-state ratio is healthy (132:1), and the posterior is no longer dominated by the prior.
+
+The p-value **must be the randomized (smoothed) form**. Otherwise atoms make conformal calibration fail completely (the naive form reaches an empirical FPR of 1.000 on a (device, case) chain).
 """
 from __future__ import annotations
 
@@ -21,6 +31,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 DIRICHLET_ALPHA0 = 0.5      # Jeffreys 型浓度参数,消除小样本伪零概率
+# Jeffreys concentration; removes small-sample pseudo-zeros
 _EPS = 1e-15
 
 
@@ -28,7 +39,7 @@ _EPS = 1e-15
 class TransitionModel:
     states: list[str] = field(default_factory=list)
     counts: np.ndarray | None = None      # (k, k)
-    mask: np.ndarray | None = None        # F 强制的真零,与伪零区分
+    mask: np.ndarray | None = None        # F 强制的真零,与伪零区分 / true zeros forced by F, distinct from pseudo-zeros
     index: dict = field(default_factory=dict)
     alpha0: float = DIRICHLET_ALPHA0
 
@@ -37,6 +48,10 @@ class TransitionModel:
 
         伪零(样本没见过)与真零(模型禁止)是两回事:前者该被 Dirichlet
         先验抬成小正数,后者必须严格为 0,否则 F 的硬约束会被 M3 悄悄软化。
+
+        Row posterior predictive. True zeros forced by the mask must be kept; the prior must not smooth them away.
+
+        A pseudo-zero (unseen in the sample) and a true zero (forbidden by the model) are different: the former should be lifted to a small positive by the Dirichlet prior; the latter must stay exactly 0, or M3 would quietly soften the hard constraint F.
         """
         i = self.index.get(prev)
         if i is None or self.counts is None:
@@ -64,6 +79,12 @@ def fit(case_chains, model=None, alpha0: float = DIRICHLET_ALPHA0,
     那是一项独立的推导,不能拿设备级 F 顶替。
 
     `states` 可显式给定状态全集,避免不同折推出不同维度的矩阵。
+
+    Estimate transition counts on case-level activity sequences.
+
+    `case_chains` is {case: [activity or operation name, ...]}. `model` supplies F for the true zeros. The current F is **within-device** reachability and does not apply directly to case-level cross-device transitions, so the mask is off by default — adding it requires a case-level activity reachability relation exported from BPMN, a separate derivation that a device-level F cannot stand in for.
+
+    `states` may give the full state set explicitly, so different folds do not produce matrices of different dimension.
     """
     seqs = {k: [_op(x) for x in v] for k, v in case_chains.items()}
     if states is None:
@@ -103,6 +124,14 @@ def struct_pvalue(tm: TransitionModel, prev: str, cur: str,
     论文中做对照,展示朴素形式如何使 FPR 失控;生产路径一律用随机化形式。
 
     前驱状态未见过时返回 None(弃权),不能拿一个编造的分布去打分。
+
+    Randomized structural p-value:
+
+        p = sum_{j: P_j < P_cur} P_j + U * sum_{j: P_j == P_cur} P_j,  U~Unif(0,1)
+
+    This is the probability-integral transform of "how unlikely the observed transition is". `randomised=False` is only a paper control, to show how the naive form lets the FPR run away; the production path always randomizes.
+
+    Return None (abstain) when the predecessor state was never seen. Do not score against an invented distribution.
     """
     pred = tm.predictive(prev)
     j = tm.index.get(cur)
@@ -132,6 +161,14 @@ def struct_score(tm: TransitionModel, prev: str, cur: str) -> float | None:
     条约束针对的是**直接拿去比 alpha** 的 p 值,不是喂给校准器的分数。
 
     前驱或当前状态未见过时返回 None(弃权)。
+
+    Non-p-value structural nonconformity: the predictive probability P(cur|prev) itself; smaller is more anomalous.
+
+    **Why this function exists, and why `struct_pvalue` is not enough.** The randomized PIT p = below + U*at is exactly uniform for a single transition, but it spreads a "tied atom in the tail" into an interval: under Dirichlet smoothing, dozens of never-seen transitions have exactly equal probability, so `at` is a large tail mass and a truly rare transition has about a half chance of drawing a p-value above alpha. This is the same kind of error as the timing channel's p-value hitting the floor in conclusion 29 — ordered evidence is crushed into unordered evidence.
+
+    When the score is handed to the later conformal layer, a monotone score is enough: resolution comes from the benign empirical distribution, and ties are broken once by conformal's own randomization **at the threshold**, not once per message. That does not contradict "discrete channels always use a randomized p-value" (conclusion 14): that constraint is about p-values **compared directly with alpha**, not about scores fed to a calibrator.
+
+    Return None (abstain) when the predecessor or the current state was never seen.
     """
     pred = tm.predictive(prev)
     j = tm.index.get(cur)
@@ -142,7 +179,10 @@ def struct_score(tm: TransitionModel, prev: str, cur: str) -> float | None:
 
 def pvalue_stream(tm: TransitionModel, case_chains, keys=None,
                   randomised: bool = True, rng=None) -> list[float]:
-    """在若干 case 上批量打分,返回全部转移的结构 p 值。"""
+    """在若干 case 上批量打分,返回全部转移的结构 p 值。
+
+    Score several cases in batch and return the structural p-value of every transition.
+    """
     out = []
     for k in (keys if keys is not None else case_chains):
         seq = [_op(x) for x in case_chains[k]]
@@ -154,7 +194,10 @@ def pvalue_stream(tm: TransitionModel, case_chains, keys=None,
 
 
 def device_case_chains(acts) -> dict:
-    """(设备, case) 链,仅用于复现"设备级通道为空"的反例。"""
+    """(设备, case) 链,仅用于复现"设备级通道为空"的反例。
+
+    (device, case) chains, used only to reproduce the counterexample that the device-level channel is empty.
+    """
     chains: dict = {}
     for a in acts:
         chains.setdefault((a.device, a.case), []).append(a)

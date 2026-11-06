@@ -30,6 +30,32 @@ makespan,所以那样是对的;但论文第 5.7 小节的代价律、5.3 小节�
 运行(clbs/ 目录下):
   py -u -m tools.ladder_diag [--budget 90] [--seeds 42,7,2024] [--only 名字,名字]
                              [--case-study "A funnel"] [--no-conv]
+
+Fill in the three things the baseline ladder did not record: per-arm cost, the convergence trace, and timetables for the case study.
+
+Why a separate tool. tools/baseline_ladder.py stores only each run's makespan in CSV, while run_ga() also returns decodes, runtime_sec, and per-generation history/history_sec. The main result needs only makespan, so that was right; but paper subsections 5.7 (cost law), 5.3 (convergence), and 5.8 (Gantt) need the part that was dropped. Changing baseline_ladder.py and rerunning takes more than six hours, and these three items do not need the statistical power of ten seeds:
+
+  - Cost per evaluation is a **structural property** of each arm (open-loop constant matrix / closed-loop full routing / closed-loop plus dispatch probing). Arms differ by one or two orders of magnitude, so a few seeds fix the magnitude.
+  - The convergence plot is **illustrative**: it shows curve shape and that the surrogate objective descends to an unrealizable position, not a statistical claim.
+  - The Gantt chart is a **single-instance case** and uses only one seed anyway.
+
+This tool therefore runs the same four arms and the same wall-clock budget on a few representative instances, and records what should be recorded. Any statistical claim that enters the paper text still comes from baseline_ladder.csv; this tool's output is only for figures and the cost discussion.
+
+The four arms match baseline_ladder.py exactly (otherwise the figure and the table are not the same thing):
+  B0   open-loop search (ideal matrix) -> execute on the real router, reproducing the planned dispatch
+  B0+  the schedule from that same open-loop search, but vehicles are chosen from the reservation table at execution
+  B1   closed-loop search + rule dispatch
+  B2   closed-loop search + reservation-table probe dispatch (this paper's method)
+B0 and B0+ **share one open-loop search**, so their cost definition is the same and only execution differs — the cost figure must show that, so readers do not think B0+ spent another search.
+
+Outputs (clbs/output/):
+  ladder_cost.csv         case,seed,arm,decodes,runtime_sec,ms_per_eval,makespan,surrogate
+  ladder_convergence.csv  case,seed,arm,t_sec,best      (long table, for the convergence plot)
+  case_study/*.json       timetables (for the Gantt chart and critical-chain attribution)
+
+Run (from the clbs/ directory):
+  py -u -m tools.ladder_diag [--budget 90] [--seeds 42,7,2024] [--only name,name]
+                             [--case-study "A funnel"] [--no-conv]
 """
 from __future__ import annotations
 
@@ -57,6 +83,10 @@ def chain_of(res) -> list:
     归因标签由 decoder.critical_chain 给出:corridor 是让行等待(争用),machine 是等机器
     释放,operation 是加工本身,vehicle/upstream 是车辆不可用或上游未完工。第 5.8 小节的
     论点正是这个构成随机制变化——争用被消掉之后,顶上来的是别的约束,这就是稀释效应的图示。
+
+    Serialize the critical chain into a form a figure can consume directly.
+
+    Attribution labels come from decoder.critical_chain: corridor is yield wait (contention), machine is waiting for a machine release, operation is processing itself, vehicle/upstream is a vehicle unavailable or an upstream operation unfinished. Subsection 5.8's point is that this composition changes with the mechanism — after contention is removed, some other constraint comes to the front, which is the picture of the dilution effect.
     """
     out = []
     for it in critical_chain(res):
@@ -74,19 +104,29 @@ def chain_of(res) -> list:
 
 # 三格代表性算例:最拥堵、中等、车队最紧。第三格是逐格表里唯一"闭环单独用反而有害"的一格,
 # 收敛图上它的形状最能说明问题,故必须在内。
+# Three representative instances: most congested, medium, and the tightest fleet.
+# The third is the only cell where closed-loop alone is harmful; its shape on the
+# convergence plot is the most informative, so it must be included.
 DEFAULT_CASES = ["A funnel", "A mid", "B NA/NM 0.5"]
 
 
 def run_one(inst, net, cfg) -> Dict[str, dict]:
-    """在一个算例的一个种子上跑完四档,返回每档的成本、轨迹与时刻表。"""
+    """在一个算例的一个种子上跑完四档,返回每档的成本、轨迹与时刻表。
+
+    Run all four arms on one instance and one seed; return cost, trace, and timetable per arm.
+    """
     out: Dict[str, dict] = {}
 
     # ---- 开环搜索一次,B0 与 B0+ 共用它 ----
+    # ---- One open-loop search, shared by B0 and B0+ ----
     o0 = run_ga(inst, net, replace(cfg, dispatch="rule"),
                 conflict_free=False, use_ls=True)
     ch = o0["best_chrom"]
     # 开环搜索自报的完工时间是**代理目标**(查理想矩阵、无让行),它不可实现;
     # 真实值要把同一份计划放进无冲突路由器执行才能得到。收敛图的关键就在这个落差。
+    # The completion time reported by open-loop search is a **surrogate** (ideal
+    # matrix, no yielding) and is not realizable; the true value requires executing
+    # the same plan on the conflict-free router. That gap is the point of the plot.
     surrogate = o0["best_result"].makespan
     r_b0 = decode(inst, net, ch["ma"], ch["os"], conflict_free=True,
                   dispatch="rule",
@@ -99,6 +139,7 @@ def run_one(inst, net, cfg) -> Dict[str, dict]:
             "decodes": o0["decodes"], "runtime_sec": o0["runtime_sec"],
             "ms_per_eval": ms, "makespan": res.makespan,
             # 代理目标的轨迹对两档相同(同一次搜索),真实值只有终点一个
+            # The surrogate trace is the same for both arms (one search); the true value is only the endpoint.
             "surrogate": surrogate,
             "history": o0["history"], "history_sec": o0["history_sec"],
             "timetable": res.to_timetable(),
@@ -106,6 +147,7 @@ def run_one(inst, net, cfg) -> Dict[str, dict]:
         }
 
     # ---- 闭环两档,各自独立搜索,只差派车 ----
+    # ---- Two closed-loop arms, independent searches, differing only in dispatch ----
     for arm, disp in (("B1", "rule"), ("B2", "exact")):
         o = run_ga(inst, net, replace(cfg, dispatch=disp),
                    conflict_free=True, use_ls=True)
@@ -114,6 +156,7 @@ def run_one(inst, net, cfg) -> Dict[str, dict]:
             "ms_per_eval": 1000.0 * o["runtime_sec"] / max(o["decodes"], 1),
             "makespan": o["best_result"].makespan,
             # 闭环各档的适应度自始至终就是真实值,故没有代理目标可言
+            # Each closed-loop arm's fitness is the true value throughout, so there is no surrogate.
             "surrogate": None,
             "history": o["history"], "history_sec": o["history_sec"],
             "timetable": o["best_result"].to_timetable(),
@@ -159,6 +202,7 @@ def main() -> int:
                 errs = validate(inst, d["timetable"])
                 flag = "" if not errs else "  !! 校验失败:%s" % errs[:1]
                 # 9 列:case,contention,arm,seed,decodes,runtime,ms/eval,makespan,surrogate
+                # 9 columns: case, contention, arm, seed, decodes, runtime, ms/eval, makespan, surrogate
                 cost_rows.append("%s,%.4f,%s,%d,%d,%.2f,%.4f,%.4f,%s"
                                  % (nm, cont, arm, s, d["decodes"],
                                     d["runtime_sec"], d["ms_per_eval"],
@@ -173,6 +217,7 @@ def main() -> int:
                     print("  %s %s seed=%d%s" % (nm, arm, s, flag))
 
             # 案例分析只留一个种子的时刻表:甘特图是个案,多存只会让人误以为是统计结果。
+            # The case study keeps one seed's timetable: a Gantt chart is a single case; storing more would look like a statistic.
             if nm == study and s == seeds[0]:
                 d = os.path.join(OUT, "case_study")
                 os.makedirs(d, exist_ok=True)

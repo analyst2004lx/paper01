@@ -15,6 +15,18 @@
                 哪台臂,你挤的还是同样那几条走廊。
 
 运行(clbs/ 目录下):  py -m tools.layout_diag
+
+"Reassignment lever" diagnosis of a layout: if one arm is swapped, how many **contended** corridors actually change?
+
+Where the question comes from: a dumbbell layout hangs each RA on the hub by a private spur, and every transport must pass `v0 -> e_i -> h1`. Reassigning an operation from near arm A to near arm B then changes only the spur **that only it uses** — no contended segment is swapped. If so, the reassignment operator cannot relieve congestion in principle; it can change only processing time, independent of the network.
+
+Three quantities (all weighted by corridor traversal time):
+
+  Private share    Fraction of path time on corridors used by only one RA. That part cannot contend with other jobs; reassignment that moves it changes nothing.
+  Shared share     Fraction of path time on corridors shared by two or more RAs.
+  Reassignment lever   For each RA pair, the symmetric difference of the two paths on the **shared** segments, divided by mean path duration. This is "how much contention exposure swapping an arm can change". A lever of 0 means that whichever arm you switch to, you still crowd the same corridors.
+
+Run (from the clbs/ directory):  py -m tools.layout_diag
 """
 from __future__ import annotations
 
@@ -31,7 +43,10 @@ from algorithm.generator import build_instance, make_spec
 
 def route_sets(net: Network, lu: str, arm_nodes: Sequence[str]
                ) -> Dict[str, Dict[str, float]]:
-    """每台 RA 的 LU->RA 最短路走廊集合(走廊 -> 通行时间)。"""
+    """每台 RA 的 LU->RA 最短路走廊集合(走廊 -> 通行时间)。
+
+    Shortest-path corridor set LU->RA for each RA (corridor -> traversal time).
+    """
     out: Dict[str, Dict[str, float]] = {}
     for node in arm_nodes:
         cids = net.shortest_path_corridors(lu, node)
@@ -49,7 +64,7 @@ def analyze_layout(label: str, spec_kwargs: dict) -> dict:
     arm_nodes = [inst.machine_node[m] for m in sorted(inst.machine_node)]
     routes = route_sets(net, inst.lu_node, arm_nodes)
 
-    # 每条走廊被多少台 RA 的最短路使用
+    # 每条走廊被多少台 RA 的最短路使用 / how many RAs' shortest paths use each corridor
     mult: Dict[str, int] = {}
     for r in routes.values():
         for c in r:
@@ -60,7 +75,7 @@ def analyze_layout(label: str, spec_kwargs: dict) -> dict:
     shar_t = sum(t for r in routes.values() for c, t in r.items() if c in shared)
     total_t = priv_t + shar_t
 
-    # 改派杠杆:两两 RA 在共用段上的对称差
+    # 改派杠杆:两两 RA 在共用段上的对称差 / reassignment lever: symmetric difference of RA pairs on shared segments
     leverages: List[float] = []
     nodes = list(routes)
     for i in range(len(nodes)):

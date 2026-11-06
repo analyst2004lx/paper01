@@ -1,0 +1,2680 @@
+[
+ {
+  "id": "C001",
+  "page": 1,
+  "pdf_line": 10,
+  "tex_line": 473,
+  "comment": "描述要通俗易懂、简明扼要\n用加工机器代替机械臂",
+  "anchor": "WEI LI, School of Computer Science and Engineering, Southeast University, PR China",
+  "highlights": [
+   {
+    "text": "当有限车队共享稀疏的走廊网络时",
+    "pdf_lines": [
+     10
+    ],
+    "tex_line": 473
+   },
+   {
+    "text": "，而是路由决策的结果（本文的路由指车辆在走廊网络上的无冲突路径规划）；",
+    "pdf_lines": [
+     10
+    ],
+    "tex_line": 473
+   },
+   {
+    "text": "在运输耗时超过加工、拥堵集中于少数共享走廊的车间中",
+    "pdf_lines": [
+     10
+    ],
+    "tex_line": 474
+   }
+  ]
+ },
+ {
+  "id": "C002",
+  "page": 1,
+  "pdf_line": 10,
+  "tex_line": 474,
+  "comment": "导致什么后果？",
+  "anchor": "柔性作业车间的加工与运输一体化调度通常将行驶时间设为按位置索引的常数矩阵，即假定车辆之间互不干扰。当有限车队",
+  "highlights": [
+   {
+    "text": "机械臂",
+    "pdf_lines": [
+     10
+    ],
+    "tex_line": 474
+   }
+  ]
+ },
+ {
+  "id": "H001",
+  "page": 1,
+  "pdf_lines": [
+   10
+  ],
+  "tex_line": 467,
+  "highlight": "柔性作业车间调度与AGV 无冲突路由的路由内嵌评价闭环双层框架"
+ },
+ {
+  "id": "C003",
+  "page": 1,
+  "pdf_line": 13,
+  "tex_line": 475,
+  "comment": "AGV谁指派？\n上层的指派方法？",
+  "anchor": "本文提出闭环双层框架：上层决定机器指派与工序排序，下层以时间窗预约生成无冲突路径；下层的路由信息以两种方",
+  "highlights": [
+   {
+    "text": "以往工作未将这一权衡纳入搜索的评价目标加以度量。",
+    "pdf_lines": [
+     11,
+     12
+    ],
+    "tex_line": 475
+   }
+  ]
+ },
+ {
+  "id": "H002",
+  "page": 1,
+  "pdf_lines": [
+   11
+  ],
+  "tex_line": 475,
+  "highlight": "机械臂"
+ },
+ {
+  "id": "H003",
+  "page": 1,
+  "pdf_lines": [
+   11
+  ],
+  "tex_line": 475,
+  "highlight": "机械"
+ },
+ {
+  "id": "H004",
+  "page": 1,
+  "pdf_lines": [
+   13
+  ],
+  "tex_line": 477,
+  "highlight": "闭环双层框架"
+ },
+ {
+  "id": "C004",
+  "page": 1,
+  "pdf_line": 17,
+  "tex_line": 477,
+  "comment": "评价方法？",
+  "anchor": "选实际送达最早的车辆，而非按假定一路畅通的行驶时间估算选车。为使其单次评价保持低开销，本文给出两项加速——可",
+  "highlights": [
+   {
+    "text": "让行延误",
+    "pdf_lines": [
+     14
+    ],
+    "tex_line": 477
+   },
+   {
+    "text": "两项加速——可采纳下界剪枝与胜者路径复用——",
+    "pdf_lines": [
+     17,
+     18
+    ],
+    "tex_line": 480
+   }
+  ]
+ },
+ {
+  "id": "H005",
+  "page": 1,
+  "pdf_lines": [
+   14
+  ],
+  "tex_line": 477,
+  "highlight": "为路由内嵌评价"
+ },
+ {
+  "id": "H006",
+  "page": 1,
+  "pdf_lines": [
+   14
+  ],
+  "tex_line": 477,
+  "highlight": "价（评价通路）"
+ },
+ {
+  "id": "H007",
+  "page": 1,
+  "pdf_lines": [
+   16
+  ],
+  "tex_line": 479,
+  "highlight": "其二为预约表感知派遣（决策通"
+ },
+ {
+  "id": "H008",
+  "page": 1,
+  "pdf_lines": [
+   24
+  ],
+  "tex_line": 507,
+  "highlight": "预约表感知的车辆派遣"
+ },
+ {
+  "id": "C005",
+  "page": 1,
+  "pdf_line": 32,
+  "tex_line": 558,
+  "comment": "路网描述不够清晰。拥堵？碰撞？排队？",
+  "anchor": "1.1研究背景与动机",
+  "highlights": []
+ },
+ {
+  "id": "H009",
+  "page": 1,
+  "pdf_lines": [
+   35
+  ],
+  "tex_line": 561,
+  "highlight": "[22]，可从按位置对索引的矩阵中读出。这是文献中的主流约定"
+ },
+ {
+  "id": "H010",
+  "page": 1,
+  "pdf_lines": [
+   35,
+   36
+  ],
+  "tex_line": 562,
+  "highlight": "当车队规模相对于通道网络足够小、车辆彼此很少相遇时，该假设是合理的"
+ },
+ {
+  "id": "H011",
+  "page": 1,
+  "pdf_lines": [
+   43
+  ],
+  "tex_line": 521,
+  "highlight": " 230240012@"
+ },
+ {
+  "id": "C006",
+  "page": 2,
+  "pdf_line": 53,
+  "tex_line": 567,
+  "comment": "绕行就不考虑按距离计算了？",
+  "anchor": "次运输的耗时由两部分组成：按距离计算的行驶时间，以及因走廊被其他车辆占用而在停靠点等待或绕行的时",
+  "highlights": [
+   {
+    "text": "或绕行的时",
+    "pdf_lines": [
+     53
+    ],
+    "tex_line": 567
+   }
+  ]
+ },
+ {
+  "id": "H012",
+  "page": 2,
+  "pdf_lines": [
+   53
+  ],
+  "tex_line": 567,
+  "highlight": "距离计算的行驶时间"
+ },
+ {
+  "id": "C007",
+  "page": 2,
+  "pdf_line": 54,
+  "tex_line": 569,
+  "comment": "太绝对，实时、局部优化也是可以的",
+  "anchor": "间。后者使一个工件的运输会推迟其他工件的作业。",
+  "highlights": [
+   {
+    "text": "只有在调度器可以调整作业指派时才有优化空",
+    "pdf_lines": [
+     56
+    ],
+    "tex_line": 569
+   }
+  ]
+ },
+ {
+  "id": "H013",
+  "page": 2,
+  "pdf_lines": [
+   54
+  ],
+  "tex_line": 567,
+  "highlight": "后者使一个工件的运输会推迟其他工件的作业"
+ },
+ {
+  "id": "C008",
+  "page": 2,
+  "pdf_line": 57,
+  "tex_line": 569,
+  "comment": "啰嗦",
+  "anchor": "械臂（即更换工序的加工地点）。当一道工序可由某个可选集合中的任一机械臂加工、且加工时间取决于所选",
+  "highlights": []
+ },
+ {
+  "id": "C009",
+  "page": 2,
+  "pdf_line": 66,
+  "tex_line": 578,
+  "comment": "先讲例子，再给出结论",
+  "anchor": "图1 用一个可复算的最小算例表明：同一对指派，用常数运输时间矩阵评价时选快臂更优，用无冲突路由评",
+  "highlights": [
+   {
+    "text": "一个可复算的最小算例表明：同一对指派，用常数运输时间矩阵评价时选快臂更优，用无冲突路由评价时选慢臂更优",
+    "pdf_lines": [
+     66,
+     67
+    ],
+    "tex_line": 578
+   }
+  ]
+ },
+ {
+  "id": "C010",
+  "page": 2,
+  "pdf_line": 67,
+  "tex_line": 578,
+  "comment": "加工机器之间的移动？",
+  "anchor": "价时选慢臂更优。算例共 个工件、 辆：焦点工件 的一道工序可选（𝑃）或（𝑃），另",
+  "highlights": [
+   {
+    "text": "道工序",
+    "pdf_lines": [
+     67
+    ],
+    "tex_line": 578
+   },
+   {
+    "text": "𝑡= 𝑥𝑡= 0），「」表示自开始（起算的时刻。",
+    "pdf_lines": [
+     71
+    ],
+    "tex_line": null
+   },
+   {
+    "text": "J1底部是焦点工件单独一件的往返时间，用来确定快、慢两臂加工时间至少要差多少",
+    "pdf_lines": [
+     72,
+     73
+    ],
+    "tex_line": 583
+   }
+  ]
+ },
+ {
+  "id": "H014",
+  "page": 2,
+  "pdf_lines": [
+   67
+  ],
+  "tex_line": 578,
+  "highlight": "焦点工件"
+ },
+ {
+  "id": "H015",
+  "page": 2,
+  "pdf_lines": [
+   73
+  ],
+  "tex_line": 583,
+  "highlight": "用来比较两种评价方式给出的指派次序"
+ },
+ {
+  "id": "H016",
+  "page": 2,
+  "pdf_lines": [
+   78
+  ],
+  "tex_line": null,
+  "highlight": "𝑃𝑃19 < 6 + 𝑡𝑡> 13；当s𝑃low，即slow"
+ },
+ {
+  "id": "H017",
+  "page": 2,
+  "pdf_lines": [
+   82
+  ],
+  "tex_line": 590,
+  "highlight": "由与全文相同的解码器求得"
+ },
+ {
+  "id": "H018",
+  "page": 2,
+  "pdf_lines": [
+   86
+  ],
+  "tex_line": 593,
+  "highlight": "廊让行不进入评价"
+ },
+ {
+  "id": "H019",
+  "page": 2,
+  "pdf_lines": [
+   93
+  ],
+  "tex_line": 599,
+  "highlight": "将同一对指派改由无冲突路由评价"
+ },
+ {
+  "id": "H020",
+  "page": 3,
+  "pdf_lines": [
+   124
+  ],
+  "tex_line": 608,
+  "highlight": "两种评价下给出相反次序"
+ },
+ {
+  "id": "H021",
+  "page": 3,
+  "pdf_lines": [
+   126
+  ],
+  "tex_line": 612,
+  "highlight": "差值由−13 变为+35"
+ },
+ {
+  "id": "H022",
+  "page": 3,
+  "pdf_lines": [
+   127
+  ],
+  "tex_line": 613,
+  "highlight": "在围绕该算例的1200 组参数中，有205 组（17%）出现反转"
+ },
+ {
+  "id": "C011",
+  "page": 3,
+  "pdf_line": 131,
+  "tex_line": 623,
+  "comment": "已有工作存在问题没讲清楚",
+  "anchor": "1.2与已有工作的差距",
+  "highlights": []
+ },
+ {
+  "id": "H023",
+  "page": 3,
+  "pdf_lines": [
+   131
+  ],
+  "tex_line": 623,
+  "highlight": "与已有工作的差距"
+ },
+ {
+  "id": "H024",
+  "page": 3,
+  "pdf_lines": [
+   132
+  ],
+  "tex_line": 625,
+  "highlight": "，"
+ },
+ {
+  "id": "H025",
+  "page": 3,
+  "pdf_lines": [
+   132
+  ],
+  "tex_line": 625,
+  "highlight": "，"
+ },
+ {
+  "id": "C012",
+  "page": 3,
+  "pdf_line": 135,
+  "tex_line": 625,
+  "comment": "与实际相符吗？",
+  "anchor": "部分：带运输时间的柔性作业车间调度以常数运输时间矩阵表示行驶，车辆互不干扰；无冲突路径规划处理车",
+  "highlights": [
+   {
+    "text": "现有工作大多只覆盖其中一",
+    "pdf_lines": [
+     133
+    ],
+    "tex_line": 625
+   },
+   {
+    "text": "车辆互不干",
+    "pdf_lines": [
+     135
+    ],
+    "tex_line": 626
+   }
+  ]
+ },
+ {
+  "id": "C013",
+  "page": 3,
+  "pdf_line": 133,
+  "tex_line": 625,
+  "comment": "存在啥问题？要直接讲出存在的问题",
+  "anchor": "走廊排他，行驶时间由各车路径共同决定，而非取自常数矩阵；车辆之间无冲突。现有工作大多只覆盖其中一",
+  "highlights": []
+ },
+ {
+  "id": "H026",
+  "page": 3,
+  "pdf_lines": [
+   133
+  ],
+  "tex_line": 625,
+  "highlight": "走廊排他"
+ },
+ {
+  "id": "H027",
+  "page": 3,
+  "pdf_lines": [
+   133
+  ],
+  "tex_line": 625,
+  "highlight": "径共同决"
+ },
+ {
+  "id": "H028",
+  "page": 3,
+  "pdf_lines": [
+   135
+  ],
+  "tex_line": 626,
+  "highlight": "部分"
+ },
+ {
+  "id": "H029",
+  "page": 3,
+  "pdf_lines": [
+   136
+  ],
+  "tex_line": 626,
+  "highlight": "不随排产改变。同时满足三者的工作较"
+ },
+ {
+  "id": "C014",
+  "page": 3,
+  "pdf_line": 140,
+  "tex_line": 628,
+  "comment": "不超过就可以不用考虑？",
+  "anchor": "对象的一类场景：运输耗时超过加工（𝑇̄/𝑇 ̄≈4.0，常用公开算例最高仅0.12），机械臂之间以单车道走廊相",
+  "highlights": []
+ },
+ {
+  "id": "C015",
+  "page": 3,
+  "pdf_line": 140,
+  "tex_line": 628,
+  "comment": "是否普遍？",
+  "anchor": "对象的一类场景：运输耗时超过加工（𝑇𝑡/𝑇𝑝≈4.0，常用公开算例最高仅0.12），机械臂之间以单车道走廊相",
+  "highlights": []
+ },
+ {
+  "id": "H030",
+  "page": 3,
+  "pdf_lines": [
+   142
+  ],
+  "tex_line": 629,
+  "highlight": "以争用强度为受控变量考察这一权衡"
+ },
+ {
+  "id": "H031",
+  "page": 3,
+  "pdf_lines": [
+   142
+  ],
+  "tex_line": 629,
+  "highlight": "面向精确分解难以"
+ },
+ {
+  "id": "H032",
+  "page": 3,
+  "pdf_lines": [
+   143
+  ],
+  "tex_line": 629,
+  "highlight": "求解的规模"
+ },
+ {
+  "id": "H033",
+  "page": 3,
+  "pdf_lines": [
+   145
+  ],
+  "tex_line": 630,
+  "highlight": "解码中嵌入路"
+ },
+ {
+  "id": "C016",
+  "page": 3,
+  "pdf_line": 150,
+  "tex_line": 631,
+  "comment": "AGV指派呢？采用的方法？",
+  "anchor": "1.3本文方法",
+  "highlights": [
+   {
+    "text": "派如何在「快而路堵」与「慢而路通」的机械臂之间权衡，将让行延误计入搜索评价能带来多少收益、在何种争用程度下值得付出其计算代价，尚缺少同等算力下的度量",
+    "pdf_lines": [
+     146,
+     147
+    ],
+    "tex_line": 631
+   }
+  ]
+ },
+ {
+  "id": "C017",
+  "page": 3,
+  "pdf_line": 150,
+  "tex_line": 633,
+  "comment": "方法没讲清楚",
+  "anchor": "1.3本文方法",
+  "highlights": []
+ },
+ {
+  "id": "C018",
+  "page": 3,
+  "pdf_line": 152,
+  "tex_line": 635,
+  "comment": "文章的目的是啥？",
+  "anchor": "的路由信息以评价与决策两种方式进入排产（详见下两段），本文分别度量这两种方式对完工时间的贡献。",
+  "highlights": [
+   {
+    "text": "；下层的路由信息以评价与决策两种方式进入排产（详见下两段），本文分别度量这两种方式对完工时间的贡献。",
+    "pdf_lines": [
+     151,
+     152
+    ],
+    "tex_line": 635
+   }
+  ]
+ },
+ {
+  "id": "H034",
+  "page": 3,
+  "pdf_lines": [
+   154,
+   155
+  ],
+  "tex_line": 637,
+  "highlight": "将每个候选解的适应度取为下层完成无冲突路由后的完工时间，让行等待因此进入搜索所优化的目标，而不再是事后做可行性校验。"
+ },
+ {
+  "id": "H035",
+  "page": 4,
+  "pdf_lines": [
+   157
+  ],
+  "tex_line": 638,
+  "highlight": "；在固定算力下，"
+ },
+ {
+  "id": "H036",
+  "page": 4,
+  "pdf_lines": [
+   157
+  ],
+  "tex_line": 638,
+  "highlight": "高的单次评价开销会减少可完成的评价次"
+ },
+ {
+  "id": "H037",
+  "page": 4,
+  "pdf_lines": [
+   158
+  ],
+  "tex_line": 639,
+  "highlight": "「扩展为完全迭代的回路"
+ },
+ {
+  "id": "H038",
+  "page": 4,
+  "pdf_lines": [
+   158,
+   160
+  ],
+  "tex_line": 639,
+  "highlight": "但二者均未报告这一做法的计算代价及其相对开环排产的收益。本文在同等挂钟预算下度量该权衡"
+ },
+ {
+  "id": "H039",
+  "page": 4,
+  "pdf_lines": [
+   162
+  ],
+  "tex_line": 642,
+  "highlight": "预约表"
+ },
+ {
+  "id": "H040",
+  "page": 4,
+  "pdf_lines": [
+   162
+  ],
+  "tex_line": 642,
+  "highlight": "两段"
+ },
+ {
+  "id": "H041",
+  "page": 4,
+  "pdf_lines": [
+   165
+  ],
+  "tex_line": 643,
+  "highlight": "使单次评价在同等挂钟预算下保持低开销"
+ },
+ {
+  "id": "C019",
+  "page": 4,
+  "pdf_line": 169,
+  "tex_line": 649,
+  "comment": "具体文献的具体方法？",
+  "anchor": "1.4主要结果",
+  "highlights": [
+   {
+    "text": "前两级代表文献中两类常见的流程结构：",
+    "pdf_lines": [
+     171,
+     172
+    ],
+    "tex_line": 649
+   },
+   {
+    "text": "本文构造四级基线阶梯",
+    "pdf_lines": [
+     171
+    ],
+    "tex_line": 649
+   }
+  ]
+ },
+ {
+  "id": "C020",
+  "page": 4,
+  "pdf_line": 169,
+  "tex_line": 647,
+  "comment": "结论没讲清楚",
+  "anchor": "1.4主要结果",
+  "highlights": []
+ },
+ {
+  "id": "C021",
+  "page": 4,
+  "pdf_line": 176,
+  "tex_line": 650,
+  "comment": "消融实验？",
+  "anchor": "索时是否计入冲突造成的延误，以及按畅通时间选车还是按预约表试算选车。只有仅改变一个维度的对比，才",
+  "highlights": [
+   {
+    "text": "2 × 2四个配置按两个维度构成对照：",
+    "pdf_lines": [
+     175
+    ],
+    "tex_line": 650
+   }
+  ]
+ },
+ {
+  "id": "H042",
+  "page": 4,
+  "pdf_lines": [
+   176
+  ],
+  "tex_line": 650,
+  "highlight": "有仅改变一个维度的对比"
+ },
+ {
+  "id": "H043",
+  "page": 4,
+  "pdf_lines": [
+   177
+  ],
+  "tex_line": 652,
+  "highlight": "四个配置共用同一上层搜索、同一路由器与同一挂钟预算"
+ },
+ {
+  "id": "H044",
+  "page": 4,
+  "pdf_lines": [
+   178
+  ],
+  "tex_line": 652,
+  "highlight": "而不反映各文献具体算法的实现强弱"
+ },
+ {
+  "id": "H045",
+  "page": 4,
+  "pdf_lines": [
+   191
+  ],
+  "tex_line": 663,
+  "highlight": "Holm。逐组检验按族做校正"
+ },
+ {
+  "id": "C022",
+  "page": 4,
+  "pdf_line": 202,
+  "tex_line": 675,
+  "comment": "调度方法？",
+  "anchor": "1.5贡献",
+  "highlights": [
+   {
+    "text": "算例层：争用强度可控的算例族，用于考察快慢机械臂之间的改派权衡",
+    "pdf_lines": [
+     203
+    ],
+    "tex_line": 675
+   }
+  ]
+ },
+ {
+  "id": "C023",
+  "page": 4,
+  "pdf_line": 202,
+  "tex_line": 671,
+  "comment": "贡献描述不清",
+  "anchor": "1.5贡献",
+  "highlights": []
+ },
+ {
+  "id": "H046",
+  "page": 4,
+  "pdf_lines": [
+   206,
+   207
+  ],
+  "tex_line": 676,
+  "highlight": "。以常数运输时间矩阵排产的模型无法反映这一比较，因为矩阵[19]；[10]不含让行等待含无冲突路由但每道工序机器固定的模型同样不涉及这一比较，因为不存在改派"
+ },
+ {
+  "id": "C024",
+  "page": 4,
+  "pdf_line": 207,
+  "tex_line": 676,
+  "comment": "此处通常不讲他人工作",
+  "anchor": "不含让行等待[19]；含无冲突路由但每道工序机器固定的模型同样不涉及这一比较，因为不存在改派[10]。",
+  "highlights": []
+ },
+ {
+  "id": "H047",
+  "page": 5,
+  "pdf_lines": [
+   209,
+   210
+  ],
+  "tex_line": 678,
+  "highlight": "van OsBasten [21]Lyu[13]与以及等虽同样考虑无冲突路由下的柔性指派，但未以争用强度为受控变量考察其影响；本"
+ },
+ {
+  "id": "H048",
+  "page": 5,
+  "pdf_lines": [
+   213
+  ],
+  "tex_line": 680,
+  "highlight": "框架层：闭环双层框架，并度量路由内嵌评价对完工时间的贡献"
+ },
+ {
+  "id": "H049",
+  "page": 5,
+  "pdf_lines": [
+   218
+  ],
+  "tex_line": 683,
+  "highlight": "机制层：预约表感知派遣，以及使其低开销的两项加速"
+ },
+ {
+  "id": "H050",
+  "page": 5,
+  "pdf_lines": [
+   221,
+   222
+  ],
+  "tex_line": 686,
+  "highlight": "4)实证层：两条通路的贡献量级不同，各自起作用且不可互相替"
+ },
+ {
+  "id": "C025",
+  "page": 5,
+  "pdf_line": 231,
+  "tex_line": 696,
+  "comment": "一是运输时间固定，优化任务指派方案\n二是任务指派固定，优化运输路径（无冲突）\n三是运输时间和任务指派联合优化？",
+  "anchor": "2相关工作",
+  "highlights": []
+ },
+ {
+  "id": "H051",
+  "page": 5,
+  "pdf_lines": [
+   232,
+   233
+  ],
+  "tex_line": 699,
+  "highlight": "，以及将二者纳入同一问题的一体化工作"
+ },
+ {
+  "id": "H052",
+  "page": 5,
+  "pdf_lines": [
+   233
+  ],
+  "tex_line": 699,
+  "highlight": "1表汇总了各类工作与本文的对照。"
+ },
+ {
+  "id": "C026",
+  "page": 5,
+  "pdf_line": 236,
+  "tex_line": 701,
+  "comment": "运输时间固定导致什么问题？",
+  "anchor": "2.1考虑运输的柔性作业车间调度",
+  "highlights": []
+ },
+ {
+  "id": "H053",
+  "page": 5,
+  "pdf_lines": [
+   236
+  ],
+  "tex_line": 701,
+  "highlight": "度"
+ },
+ {
+  "id": "C027",
+  "page": 5,
+  "pdf_line": 237,
+  "tex_line": 703,
+  "comment": "运输时间固定，不考虑运输车辆行车路径冲突、拥塞、等待",
+  "anchor": "带运输的柔性作业车间调度（FJSP_PT）把物料移动纳入排程。Xin 等[22] 综述了该领域至2023 年的进展，指",
+  "highlights": [
+   {
+    "text": "出占主导地位的建模方式是按位置对索引的常数行驶时间矩阵",
+    "pdf_lines": [
+     239
+    ],
+    "tex_line": 703
+   }
+  ]
+ },
+ {
+  "id": "H054",
+  "page": 5,
+  "pdf_lines": [
+   237
+  ],
+  "tex_line": null,
+  "highlight": " 2023综述了该领域至年的进展"
+ },
+ {
+  "id": "H055",
+  "page": 5,
+  "pdf_lines": [
+   239,
+   240
+  ],
+  "tex_line": 703,
+  "highlight": "不随其他车辆是否占用同一走廊而改"
+ },
+ {
+  "id": "C028",
+  "page": 5,
+  "pdf_line": 240,
+  "tex_line": 703,
+  "comment": "作用？",
+  "anchor": "辆是否占用同一走廊而改变。一般FJSP 的建模与算法另见Dauzère-Pérès 等[1]；该族公开基准由Homayouni",
+  "highlights": [
+   {
+    "text": "FJSPDauzère-Pérès[1]；Homayouni般的建模与算法另见等该族公开基准由Fontes [6]与整理。",
+    "pdf_lines": [
+     240,
+     241
+    ],
+    "tex_line": 703
+   }
+  ]
+ },
+ {
+  "id": "C029",
+  "page": 5,
+  "pdf_line": 242,
+  "tex_line": 707,
+  "comment": "解决的是啥问题？",
+  "anchor": "近年工作沿用这一矩阵，主要在求解方法上推进。Meng 等[14] 提出多AGV 情形下的约束规划模型与约束",
+  "highlights": [
+   {
+    "text": "2927关闭了个开放基准算例并改进了个最优已知",
+    "pdf_lines": [
+     244
+    ],
+    "tex_line": 707
+   }
+  ]
+ },
+ {
+  "id": "H056",
+  "page": 5,
+  "pdf_lines": [
+   244
+  ],
+  "tex_line": 707,
+  "highlight": "双种群遗传算法"
+ },
+ {
+  "id": "H057",
+  "page": 5,
+  "pdf_lines": [
+   245
+  ],
+  "tex_line": 707,
+  "highlight": "局部搜索"
+ },
+ {
+  "id": "H058",
+  "page": 5,
+  "pdf_lines": [
+   246,
+   247
+  ],
+  "tex_line": 708,
+  "highlight": "，车辆之间不会因争用走廊而互相推"
+ },
+ {
+  "id": "C030",
+  "page": 5,
+  "pdf_line": 249,
+  "tex_line": 708,
+  "comment": "该文章使用什么方法解决的啥问题？",
+  "anchor": "径也只能追溯到前驱工序或机器繁忙，无法定位到具体走廊。Xin 等[22] 亦指出，这类假设「会降低问题复杂",
+  "highlights": [
+   {
+    "text": "「",
+    "pdf_lines": [
+     249
+    ],
+    "tex_line": 708
+   },
+   {
+    "text": "关键问题参数取",
+    "pdf_lines": [
+     250
+    ],
+    "tex_line": 709
+   }
+  ]
+ },
+ {
+  "id": "H059",
+  "page": 5,
+  "pdf_lines": [
+   249
+  ],
+  "tex_line": 708,
+  "highlight": "无法定位到具体走廊"
+ },
+ {
+  "id": "H060",
+  "page": 5,
+  "pdf_lines": [
+   250
+  ],
+  "tex_line": 709,
+  "highlight": "性质"
+ },
+ {
+  "id": "C031",
+  "page": 5,
+  "pdf_line": 254,
+  "tex_line": 715,
+  "comment": "无冲突路径规划？是用于柔性作业车间调度吗？",
+  "anchor": "2.2任务外生的无冲突路由与拥堵感知派车",
+  "highlights": []
+ },
+ {
+  "id": "H061",
+  "page": 6,
+  "pdf_lines": [
+   261,
+   262,
+   263,
+   264
+  ],
+  "tex_line": 744,
+  "highlight": "相关工作与本文的对照。「机器异构」指一道工序有多台可选机器且加工时间随机器而变；「走廊排他」指一条走廊任一时刻是否至多只容一辆车：在单车道走廊上，两车同向跟驰或对向会车都可能碰撞或死锁，走廊须作为排他资源分时占用，这一建模更符合实际车间；「排产评价所用运输时长」指上层比较候选排产时所用的运输时长：「畅通估计」为不计其AGV他车辆、按最短路算出的时长，「路由实算」为完成无冲突路由后、含让行等待的时长；「度量闭环收益与代价」指是否在同等算力下、相对开环度量了将路由纳入搜索评价的收益与计算开销。"
+ },
+ {
+  "id": "H062",
+  "page": 6,
+  "pdf_lines": [
+   286,
+   287
+  ],
+  "tex_line": 721,
+  "highlight": "任务的释放时刻、起点与终点都是路由器的输入，路由器无法修改产生这些任务的机器指派"
+ },
+ {
+  "id": "H063",
+  "page": 6,
+  "pdf_lines": [
+   293
+  ],
+  "tex_line": 729,
+  "highlight": "同时考虑柔性指派与无冲突路由的工作较少"
+ },
+ {
+  "id": "C032",
+  "page": 6,
+  "pdf_line": 296,
+  "tex_line": 730,
+  "comment": "目的是啥？",
+  "anchor": "把冲突作为割回传。多数基准算例求至可证最优，约一半相对此前启发式改进完工时间至少10%。但精确分解",
+  "highlights": [
+   {
+    "text": "作者也把更充分地利用「不可行由哪些冲突造成」列为后续方向",
+    "pdf_lines": [
+     297
+    ],
+    "tex_line": 730
+   }
+  ]
+ },
+ {
+  "id": "H064",
+  "page": 6,
+  "pdf_lines": [
+   296
+  ],
+  "tex_line": 730,
+  "highlight": "多数基准算例求至可证最优"
+ },
+ {
+  "id": "C033",
+  "page": 6,
+  "pdf_line": 298,
+  "tex_line": 731,
+  "comment": "做什么处理？",
+  "anchor": "段方法，先用混合遗传算法确定指派与顺序，再用时间窗Dijkstra 消解冲突，节点与路段均同时只容一辆车；但",
+  "highlights": []
+ },
+ {
+  "id": "C034",
+  "page": 6,
+  "pdf_line": 299,
+  "tex_line": 731,
+  "comment": "导致什么问题？",
+  "anchor": "第二阶段即使发现走廊拥堵，也无法改动第一阶段的选择。Li 等[10] 在栅格上同时禁止节点与边冲突，并加入",
+  "highlights": []
+ },
+ {
+  "id": "H065",
+  "page": 6,
+  "pdf_lines": [
+   299
+  ],
+  "tex_line": 731,
+  "highlight": "也无法改动第一阶段的选择"
+ },
+ {
+  "id": "H066",
+  "page": 6,
+  "pdf_lines": [
+   303
+  ],
+  "tex_line": 733,
+  "highlight": "研究重点是确定车队规模，算"
+ },
+ {
+  "id": "C035",
+  "page": 6,
+  "pdf_line": 307,
+  "tex_line": 733,
+  "comment": "没有超过呢？",
+  "anchor": "研究运输耗时超过加工、拥堵集中于少数共享走廊的车间（预约走廊而非节点，见第3.5 节）：在精确分解难以",
+  "highlights": [
+   {
+    "text": "例规模较小",
+    "pdf_lines": [
+     304
+    ],
+    "tex_line": 733
+   },
+   {
+    "text": "，现有工作的缺口不在于是否处理车辆冲突，而在于路由结果如何进入排产，以及这样做值多少",
+    "pdf_lines": [
+     306
+    ],
+    "tex_line": 740
+   }
+  ]
+ },
+ {
+  "id": "C036",
+  "page": 6,
+  "pdf_line": 311,
+  "tex_line": 741,
+  "comment": "想说明啥？",
+  "anchor": "算例，其拥堵中可由改派绕开的部分可能差别很大，留给调度的优化空间也随之不同。",
+  "highlights": [
+   {
+    "text": "以预约表感知派",
+    "pdf_lines": [
+     308
+    ],
+    "tex_line": 741
+   },
+   {
+    "text": "两条通",
+    "pdf_lines": [
+     308
+    ],
+    "tex_line": 741
+   },
+   {
+    "text": " 𝑇𝑡̄/𝑇 争用强度可控的算例族考察收益随争用的变化——相同的两个𝑡̄𝑝̄算例，其拥堵中可由改派绕开的部分可能差别很大，留给调度的优化空间也随之不同",
+    "pdf_lines": [
+     309,
+     310,
+     311
+    ],
+    "tex_line": 741
+   }
+  ]
+ },
+ {
+  "id": "H067",
+  "page": 6,
+  "pdf_lines": [
+   309
+  ],
+  "tex_line": 741,
+  "highlight": "同等挂钟预算下分别度量"
+ },
+ {
+  "id": "C037",
+  "page": 7,
+  "pdf_line": 331,
+  "tex_line": 778,
+  "comment": "n个工件不同？",
+  "anchor": "3.1问题描述",
+  "highlights": []
+ },
+ {
+  "id": "C038",
+  "page": 7,
+  "pdf_line": 336,
+  "tex_line": 780,
+  "comment": "条件or问题？该问题求啥？",
+  "anchor": "解一个算例意味着同时确定四组决策：",
+  "highlights": [
+   {
+    "text": "机械臂",
+    "pdf_lines": [
+     332
+    ],
+    "tex_line": 780
+   },
+   {
+    "text": "机械臂占据图中的固定节点，",
+    "pdf_lines": [
+     335
+    ],
+    "tex_line": 783
+   },
+   {
+    "text": "。求解一个算例意味着同时确定四组决策：",
+    "pdf_lines": [
+     335,
+     336
+    ],
+    "tex_line": 784
+   }
+  ]
+ },
+ {
+  "id": "H068",
+  "page": 7,
+  "pdf_lines": [
+   332
+  ],
+  "tex_line": 780,
+  "highlight": "一个算"
+ },
+ {
+  "id": "H069",
+  "page": 7,
+  "pdf_lines": [
+   332
+  ],
+  "tex_line": 780,
+  "highlight": "个算例"
+ },
+ {
+  "id": "H070",
+  "page": 7,
+  "pdf_lines": [
+   332
+  ],
+  "tex_line": 780,
+  "highlight": "它们在一个以图表示的车间路网中运"
+ },
+ {
+  "id": "H071",
+  "page": 7,
+  "pdf_lines": [
+   333,
+   334
+  ],
+  "tex_line": 782,
+  "highlight": "𝑛𝑗"
+ },
+ {
+  "id": "H072",
+  "page": 7,
+  "pdf_lines": [
+   333
+  ],
+  "tex_line": 782,
+  "highlight": "𝑀"
+ },
+ {
+  "id": "H073",
+  "page": 7,
+  "pdf_lines": [
+   334,
+   335
+  ],
+  "tex_line": 783,
+  "highlight": "𝑃𝑡"
+ },
+ {
+  "id": "C039",
+  "page": 7,
+  "pdf_line": 338,
+  "tex_line": 787,
+  "comment": "指派每个工件的工序？",
+  "anchor": "(i) 把每道工序𝑂𝑗𝑖指派给某台机械臂𝑚∈Ω𝑗𝑖;",
+  "highlights": []
+ },
+ {
+  "id": "H074",
+  "page": 7,
+  "pdf_lines": [
+   341
+  ],
+  "tex_line": 790,
+  "highlight": "时间"
+ },
+ {
+  "id": "H075",
+  "page": 7,
+  "pdf_lines": [
+   341
+  ],
+  "tex_line": 790,
+  "highlight": "间与空间"
+ },
+ {
+  "id": "C040",
+  "page": 7,
+  "pdf_line": 361,
+  "tex_line": 837,
+  "comment": "出发点与加工机器之间，以及加工机器与加工机器之间",
+  "anchor": "A5. 车辆。𝑁𝐴辆车同构、单载量，空载与满载均以恒定速度行驶，不建模加减速与电量；全部车辆在𝑡= 0 时",
+  "highlights": [
+   {
+    "text": "𝑣一个运输任务是一次单程移动——从到第一台机械臂、在前后两台不同机械0𝛿= 1𝑣臂之间，或当时从最后一台机械臂返回0；ret",
+    "pdf_lines": [
+     362,
+     363
+    ],
+    "tex_line": 837
+   }
+  ]
+ },
+ {
+  "id": "C041",
+  "page": 8,
+  "pdf_line": 366,
+  "tex_line": 843,
+  "comment": "图G的每一条边都是走廊？图G的顶点呢？",
+  "anchor": "刻可由路由层推迟。",
+  "highlights": [
+   {
+    "text": "𝑒走廊",
+    "pdf_lines": [
+     368
+    ],
+    "tex_line": 843
+   }
+  ]
+ },
+ {
+  "id": "H076",
+  "page": 8,
+  "pdf_lines": [
+   366
+  ],
+  "tex_line": 841,
+  "highlight": "由路由"
+ },
+ {
+  "id": "H077",
+  "page": 8,
+  "pdf_lines": [
+   366
+  ],
+  "tex_line": 841,
+  "highlight": "由路由层"
+ },
+ {
+  "id": "C042",
+  "page": 8,
+  "pdf_line": 374,
+  "tex_line": null,
+  "comment": "现有FJSP工作不考虑该条件？",
+  "anchor": "工作（第6.3 节第(5) 条）。",
+  "highlights": []
+ },
+ {
+  "id": "C043",
+  "page": 8,
+  "pdf_line": 377,
+  "tex_line": 853,
+  "comment": "本质是运输时间的动态性，而非静态",
+  "anchor": "与机器相关的加工时间）与A6（将争用表述为显式的排他资源约束，而非常数行驶时间矩阵），由此，运输时",
+  "highlights": []
+ },
+ {
+  "id": "C044",
+  "page": 8,
+  "pdf_line": 383,
+  "tex_line": 854,
+  "comment": "j、i的含义？",
+  "anchor": "3.3决策变量与派生的运输任务",
+  "highlights": [
+   {
+    "text": "无死锁不列为假",
+    "pdf_lines": [
+     378
+    ],
+    "tex_line": 854
+   },
+   {
+    "text": "m(𝑗, 𝑖)为",
+    "pdf_lines": [
+     384
+    ],
+    "tex_line": 860
+   }
+  ]
+ },
+ {
+  "id": "H078",
+  "page": 8,
+  "pdf_lines": [
+   384
+  ],
+  "tex_line": 860,
+  "highlight": "𝛿= 1ret"
+ },
+ {
+  "id": "H079",
+  "page": 8,
+  "pdf_lines": [
+   388
+  ],
+  "tex_line": 864,
+  "highlight": "与车辆路径问题不同，运输任务并不是输入的一部"
+ },
+ {
+  "id": "H080",
+  "page": 8,
+  "pdf_lines": [
+   391
+  ],
+  "tex_line": 871,
+  "highlight": "(𝑗, 𝑖)务"
+ },
+ {
+  "id": "H081",
+  "page": 8,
+  "pdf_lines": [
+   393
+  ],
+  "tex_line": 871,
+  "highlight": " (i)策组"
+ },
+ {
+  "id": "H082",
+  "page": 8,
+  "pdf_lines": [
+   401
+  ],
+  "tex_line": 880,
+  "highlight": "时序关系与可行性条件"
+ },
+ {
+  "id": "C045",
+  "page": 8,
+  "pdf_line": 405,
+  "tex_line": null,
+  "comment": "含义？A是时刻？",
+  "anchor": "𝑚∈Ω𝑗𝑖",
+  "highlights": [
+   {
+    "text": "𝑆𝑗𝑖",
+    "pdf_lines": [
+     407
+    ],
+    "tex_line": null
+   }
+  ]
+ },
+ {
+  "id": "H083",
+  "page": 8,
+  "pdf_lines": [
+   412
+  ],
+  "tex_line": null,
+  "highlight": "(𝑗, 𝑖) ∉𝒯(𝑥)，若则工件本已在该"
+ },
+ {
+  "id": "H084",
+  "page": 9,
+  "pdf_lines": [
+   424
+  ],
+  "tex_line": null,
+  "highlight": "′,′[𝜂, 𝜂+ 𝜏𝑒) ∩[𝜂𝜂′ + 𝜏𝑒) = ∅𝑒𝑒"
+ },
+ {
+  "id": "H085",
+  "page": 9,
+  "pdf_lines": [
+   427
+  ],
+  "tex_line": 919,
+  "highlight": "。目标函数为"
+ },
+ {
+  "id": "H086",
+  "page": 9,
+  "pdf_lines": [
+   431
+  ],
+  "tex_line": 926,
+  "highlight": "(5)可收紧为"
+ },
+ {
+  "id": "C046",
+  "page": 9,
+  "pdf_line": 438,
+  "tex_line": null,
+  "comment": "前面已经讲过了，这里是否冗余？",
+  "anchor": "3.5与FJSP_PT 的关系",
+  "highlights": [
+   {
+    "text": ".5与FJSP_PT 的关系",
+    "pdf_lines": [
+     438
+    ],
+    "tex_line": null
+   }
+  ]
+ },
+ {
+  "id": "C047",
+  "page": 9,
+  "pdf_line": 443,
+  "tex_line": 938,
+  "comment": "本质区别？",
+  "anchor": "下界，也在开环基线中用于按畅通行驶时间估计到达时刻。",
+  "highlights": []
+ },
+ {
+  "id": "H087",
+  "page": 9,
+  "pdf_lines": [
+   445
+  ],
+  "tex_line": 940,
+  "highlight": "与同样给出显式路网的工作相比，差别在于预约的对象。"
+ },
+ {
+  "id": "C048",
+  "page": 9,
+  "pdf_line": 452,
+  "tex_line": 954,
+  "comment": "啥问题？他人工作是否已证明？",
+  "anchor": "3.6计算复杂度",
+  "highlights": [
+   {
+    "text": "下算例",
+    "pdf_lines": [
+     455
+    ],
+    "tex_line": 954
+   },
+   {
+    "text": "义的问题是强NP难的",
+    "pdf_lines": [
+     453,
+     454
+    ],
+    "tex_line": 949
+   }
+  ]
+ },
+ {
+  "id": "H088",
+  "page": 9,
+  "pdf_lines": [
+   455
+  ],
+  "tex_line": 954,
+  "highlight": "限制到如下算"
+ },
+ {
+  "id": "C049",
+  "page": 10,
+  "pdf_line": 473,
+  "tex_line": 971,
+  "comment": "该部分内容的目的？",
+  "anchor": "3.7算例特征的刻画",
+  "highlights": []
+ },
+ {
+  "id": "H089",
+  "page": 10,
+  "pdf_lines": [
+   503,
+   505
+  ],
+  "tex_line": 1007,
+  "highlight": "LBcut（LBchain（LBload在本文算例上，三者中取到最大的是十组中八组）与其余两组），从未最大——这与争用集中在上下料出口的算例设计相符。"
+ },
+ {
+  "id": "H090",
+  "page": 10,
+  "pdf_lines": [
+   505
+  ],
+  "tex_line": 1009,
+  "highlight": "27%58%），。该下界较松（与已知最好解的间隙为至只用于正确性校验"
+ },
+ {
+  "id": "H091",
+  "page": 10,
+  "pdf_lines": [
+   506
+  ],
+  "tex_line": 1009,
+  "highlight": "5.1.25.86.2明实现有误（第节）；它不能说明解与最优的距离，这一问题见第节与第节局"
+ },
+ {
+  "id": "H092",
+  "page": 10,
+  "pdf_lines": [
+   506,
+   507
+  ],
+  "tex_line": 1009,
+  "highlight": "5.1.25.86.2它的解都说明实现有误（第节）；它不能说明解与最优的距离，这一问题见第节与第节局(3)限"
+ },
+ {
+  "id": "H093",
+  "page": 10,
+  "pdf_lines": [
+   506
+  ],
+  "tex_line": 1009,
+  "highlight": "任何低于它"
+ },
+ {
+  "id": "C050",
+  "page": 10,
+  "pdf_line": 514,
+  "tex_line": 1017,
+  "comment": "直接用他人方法？文化基因算法是一个框架？全局和局部具体用什么算法？",
+  "anchor": "本框架把第3 节的四组决策分配到两层。输入是一个算例：工件的工序链、机器的可选集与工时、车队规模与",
+  "highlights": [
+   {
+    "text": "[23]指派与排序上搜索",
+    "pdf_lines": [
+     515
+    ],
+    "tex_line": 1017
+   }
+  ]
+ },
+ {
+  "id": "C051",
+  "page": 10,
+  "pdf_line": 516,
+  "tex_line": 1018,
+  "comment": "候选解是啥？为何要翻译？",
+  "anchor": "器把上层的一个候选解翻译成一串带先后约束的运输任务；下层以时间窗预约把这串任务转化为无冲突路径。",
+  "highlights": [
+   {
+    "text": "一个候选解翻译成",
+    "pdf_lines": [
+     516
+    ],
+    "tex_line": 1018
+   }
+  ]
+ },
+ {
+  "id": "C052",
+  "page": 10,
+  "pdf_line": 516,
+  "tex_line": 1018,
+  "comment": "反馈？",
+  "anchor": "器把上层的一个候选解翻译成一串带先后约束的运输任务；下层以时间窗预约把这串任务转化为无冲突路径。",
+  "highlights": [
+   {
+    "text": "下层以时间窗预约把这串任务转化为无冲突路径",
+    "pdf_lines": [
+     516
+    ],
+    "tex_line": 1018
+   }
+  ]
+ },
+ {
+  "id": "C053",
+  "page": 11,
+  "pdf_line": 521,
+  "tex_line": 467,
+  "comment": "解码器属于上层还是下层？或者都不是？",
+  "anchor": "路由内嵌评价闭环双层框架11",
+  "highlights": []
+ },
+ {
+  "id": "C054",
+  "page": 11,
+  "pdf_line": 536,
+  "tex_line": null,
+  "comment": "两种反馈的却别和必要性？",
+  "anchor": "1    ",
+  "highlights": []
+ },
+ {
+  "id": "C055",
+  "page": 11,
+  "pdf_line": 537,
+  "tex_line": null,
+  "comment": "整个方法的输入和输出？",
+  "anchor": "2    ",
+  "highlights": []
+ },
+ {
+  "id": "C056",
+  "page": 11,
+  "pdf_line": 540,
+  "tex_line": 1045,
+  "comment": "是啥？生成时间表不需要确定运输路径？",
+  "anchor": "层的一个候选解翻译成一串运输任务。两条反馈通路以颜色区分，进入上层的位置不同：通路一（蓝，标记1）把下层完成",
+  "highlights": [
+   {
+    "text": "无冲突时间",
+    "pdf_lines": [
+     541
+    ],
+    "tex_line": 1045
+   },
+   {
+    "text": "时间表",
+    "pdf_lines": [
+     541
+    ],
+    "tex_line": 1045
+   }
+  ]
+ },
+ {
+  "id": "C057",
+  "page": 11,
+  "pdf_line": 544,
+  "tex_line": 1025,
+  "comment": "该值的含义？",
+  "anchor": "评价通路，即路由内嵌评价。每一代中每个候选解的适应度，均取下层完成全部运输任务的无冲突路由之后",
+  "highlights": [
+   {
+    "text": "上层即以该值为优化目标",
+    "pdf_lines": [
+     546
+    ],
+    "tex_line": 1025
+   }
+  ]
+ },
+ {
+  "id": "H094",
+  "page": 11,
+  "pdf_lines": [
+   544
+  ],
+  "tex_line": 1025,
+  "highlight": "评价通路，即路由内嵌评价"
+ },
+ {
+  "id": "H095",
+  "page": 11,
+  "pdf_lines": [
+   548
+  ],
+  "tex_line": 1028,
+  "highlight": "决策通路"
+ },
+ {
+  "id": "C058",
+  "page": 11,
+  "pdf_line": 555,
+  "tex_line": 1032,
+  "comment": "如何不同？",
+  "anchor": "框架结构见图2。两条通路进入上层的位置不同，因而单次评价的计算开销也不同。",
+  "highlights": [
+   {
+    "text": "另实现的两种层间接口为",
+    "pdf_lines": [
+     552
+    ],
+    "tex_line": 1032
+   },
+   {
+    "text": "4.6、4.75构造见第、节，对照结果见第节。",
+    "pdf_lines": [
+     553,
+     554
+    ],
+    "tex_line": 1033
+   },
+   {
+    "text": "两条通路进入上层的位置不同",
+    "pdf_lines": [
+     555
+    ],
+    "tex_line": 1035
+   }
+  ]
+ },
+ {
+  "id": "C059",
+  "page": 11,
+  "pdf_line": 557,
+  "tex_line": 1060,
+  "comment": "表结构？与AGV、道路的关系？",
+  "anchor": "4.2下层：时间窗预约与无冲突路由",
+  "highlights": [
+   {
+    "text": "此预约表",
+    "pdf_lines": [
+     559
+    ],
+    "tex_line": 1060
+   }
+  ]
+ },
+ {
+  "id": "C060",
+  "page": 11,
+  "pdf_line": 557,
+  "tex_line": 1056,
+  "comment": "先有任务指派，再有路径规划？",
+  "anchor": "4.2下层：时间窗预约与无冲突路由",
+  "highlights": []
+ },
+ {
+  "id": "C061",
+  "page": 11,
+  "pdf_line": 567,
+  "tex_line": 1062,
+  "comment": "时刻？代价？",
+  "anchor": "的停靠位上」，代价为𝑡（算法1）。考察一条从当前节点出发的走廊时，向预约表查询最早可行进入时刻𝑡′ ≥𝑡；",
+  "highlights": [
+   {
+    "text": "穿越节点耗时为零，",
+    "pdf_lines": [
+     562
+    ],
+    "tex_line": 1062
+   },
+   {
+    "text": "时间窗Dijkstra",
+    "pdf_lines": [
+     565
+    ],
+    "tex_line": 1066
+   },
+   {
+    "text": "𝑡」，代价为",
+    "pdf_lines": [
+     567
+    ],
+    "tex_line": 1067
+   }
+  ]
+ },
+ {
+  "id": "H096",
+  "page": 11,
+  "pdf_lines": [
+   564
+  ],
+  "tex_line": 1063,
+  "highlight": "校验器"
+ },
+ {
+  "id": "C062",
+  "page": 11,
+  "pdf_line": 565,
+  "tex_line": 1066,
+  "comment": "如何搜索？逐跳规划or一次性规划？算法1？基本思想？",
+  "anchor": "4.2.2时间窗Dijkstra. 一段行驶用标签设定（label-setting）搜索来规划。标签(𝑢, 𝑡) 表示「在时刻𝑡停在节点𝑢",
+  "highlights": []
+ },
+ {
+  "id": "H097",
+  "page": 12,
+  "pdf_lines": [
+   574
+  ],
+  "tex_line": 1094,
+  "highlight": "𝑠𝑔起点𝑠、终点"
+ },
+ {
+  "id": "C063",
+  "page": 12,
+  "pdf_line": 590,
+  "tex_line": 1073,
+  "comment": "任务？车辆？",
+  "anchor": "引理1 (每个节点只需保留最早到达标签). 每个节点只保留到达最早的标签，即可得到在当前预约表下最早",
+  "highlights": []
+ },
+ {
+  "id": "H098",
+  "page": 12,
+  "pdf_lines": [
+   600,
+   601,
+   602
+  ],
+  "tex_line": 1087,
+  "highlight": "DijkstraSIPP）[8]；因此用普通即可，不必像安全区间规划（那样按可行时段分标签若再引入第二项指标4.6（例如走廊时段附加代价），更早到达不再总是更好，须改用多标签搜索（第节）。"
+ },
+ {
+  "id": "H099",
+  "page": 12,
+  "pdf_lines": [
+   604
+  ],
+  "tex_line": 1112,
+  "highlight": "2这一点保证下文命题成立"
+ },
+ {
+  "id": "C064",
+  "page": 12,
+  "pdf_line": 614,
+  "tex_line": 1119,
+  "comment": "n个工件的工序总和？",
+  "anchor": "4.3上层：编码与事件驱动解码",
+  "highlights": [
+   {
+    "text": "∗–3𝑡对空预约表，在所有取货–送货节点对上运行同一搜索，即得到第节的畅通最短路矩阵。它用于三处：开4.5环配置里按畅通时间估计到达时刻、改派邻域中的邻近项，以及两阶段基线的运输时间；同时也是第节剪枝所用的可采纳下界。",
+    "pdf_lines": [
+     609,
+     610,
+     612
+    ],
+    "tex_line": 1119
+   }
+  ]
+ },
+ {
+  "id": "C065",
+  "page": 12,
+  "pdf_line": 614,
+  "tex_line": 1126,
+  "comment": "啥是个体？",
+  "anchor": "4.3上层：编码与事件驱动解码",
+  "highlights": [
+   {
+    "text": "个体",
+    "pdf_lines": [
+     615
+    ],
+    "tex_line": 1126
+   }
+  ]
+ },
+ {
+  "id": "C066",
+  "page": 12,
+  "pdf_line": 614,
+  "tex_line": 1122,
+  "comment": "向量元素为执行该工序的机器？",
+  "anchor": "4.3上层：编码与事件驱动解码",
+  "highlights": [
+   {
+    "text": "𝑘，第个𝑘Ω分量是第道工序在中所选的机械臂；𝑗𝑖",
+    "pdf_lines": [
+     615,
+     617
+    ],
+    "tex_line": null
+   }
+  ]
+ },
+ {
+  "id": "C067",
+  "page": 12,
+  "pdf_line": 616,
+  "tex_line": 1126,
+  "comment": "机器指派向量的排序不体现工序序列？并行如何体现？",
+  "anchor": "4.3.1染色体编码. 设工序总数为𝑁。一个个体由两段构成：长度为𝑁的机器指派向量，按固定枚举，第𝑘个",
+  "highlights": [
+   {
+    "text": "工序序列",
+    "pdf_lines": [
+     617
+    ],
+    "tex_line": 1126
+   }
+  ]
+ },
+ {
+  "id": "H100",
+  "page": 12,
+  "pdf_lines": [
+   619
+  ],
+  "tex_line": 1130,
+  "highlight": "𝛿= 1当时，ret"
+ },
+ {
+  "id": "C068",
+  "page": 12,
+  "pdf_line": 623,
+  "tex_line": 1133,
+  "comment": "不可解？开销大？性能差？",
+  "anchor": "不能再保证任意染色体均可解码，从而需要修复算子。",
+  "highlights": [
+   {
+    "text": "）。若另设第三段表示派车，搜索空间会扩大，且不能再保证任意染色体均可解码，从而需要修复算子。",
+    "pdf_lines": [
+     622,
+     623
+    ],
+    "tex_line": 1133
+   }
+  ]
+ },
+ {
+  "id": "H101",
+  "page": 13,
+  "pdf_lines": [
+   626
+  ],
+  "tex_line": null,
+  "highlight": "𝑥算例、路网、指派、工序序列"
+ },
+ {
+  "id": "C069",
+  "page": 13,
+  "pdf_line": 646,
+  "tex_line": 1138,
+  "comment": "如何做到？节点与机械臂的关系？",
+  "anchor": "4.3.2事件驱动解码器. 解码器（算法2）实现评价通路。它自左向右扫过工序序列，为每台机械臂维护其空闲",
+  "highlights": [
+   {
+    "text": "为每台机械臂维护其空闲时刻，为每个工件维护其当前节点与就绪时刻，为每辆车维护其当前节点与可用时刻",
+    "pdf_lines": [
+     646,
+     647
+    ],
+    "tex_line": 1138
+   }
+  ]
+ },
+ {
+  "id": "C070",
+  "page": 13,
+  "pdf_line": 646,
+  "tex_line": 1138,
+  "comment": "先讲整体，再讲局部\n解码器的必要性？",
+  "anchor": "4.3.2事件驱动解码器. 解码器（算法2）实现评价通路。它自左向右扫过工序序列，为每台机械臂维护其空闲",
+  "highlights": []
+ },
+ {
+  "id": "C071",
+  "page": 13,
+  "pdf_line": 649,
+  "tex_line": 1140,
+  "comment": "如何选？",
+  "anchor": "工件当前位置不同时，便生成式(1) 的运输任务，选定一辆车，并针对实时的预约表规划两段路径：到取货点",
+  "highlights": [
+   {
+    "text": "选定一辆车",
+    "pdf_lines": [
+     648
+    ],
+    "tex_line": 1140
+   }
+  ]
+ },
+ {
+  "id": "H102",
+  "page": 13,
+  "pdf_lines": [
+   648
+  ],
+  "tex_line": 1140,
+  "highlight": "(1)成式的"
+ },
+ {
+  "id": "H103",
+  "page": 13,
+  "pdf_lines": [
+   650
+  ],
+  "tex_line": 1141,
+  "highlight": "(6)式衔"
+ },
+ {
+  "id": "H104",
+  "page": 13,
+  "pdf_lines": [
+   650
+  ],
+  "tex_line": 1141,
+  "highlight": "(10)式开工"
+ },
+ {
+  "id": "C072",
+  "page": 13,
+  "pdf_line": 652,
+  "tex_line": 1177,
+  "comment": "啥规则？",
+  "anchor": "解码具有确定性：预约按解码器生成任务的次序写入；两处时刻相同时均按固定规则决定先后——路由的标",
+  "highlights": [
+   {
+    "text": "按固定规则",
+    "pdf_lines": [
+     652
+    ],
+    "tex_line": 1177
+   }
+  ]
+ },
+ {
+  "id": "C073",
+  "page": 13,
+  "pdf_line": 659,
+  "tex_line": 1179,
+  "comment": "冲突？死锁？完工时间？",
+  "anchor": "锁且完工时间有限的时间表。因此搜索中不必调用修复算子。",
+  "highlights": [
+   {
+    "text": "5。第节按种子配对、比较同一预算下的结果，依赖这一点。",
+    "pdf_lines": [
+     655,
+     656
+    ],
+    "tex_line": 1179
+   },
+   {
+    "text": "的时间表",
+    "pdf_lines": [
+     659
+    ],
+    "tex_line": 1183
+   }
+  ]
+ },
+ {
+  "id": "H105",
+  "page": 13,
+  "pdf_lines": [
+   655
+  ],
+  "tex_line": 1179,
+  "highlight": "染色体总对应唯一一张时间表，评价是确定性的"
+ },
+ {
+  "id": "C074",
+  "page": 13,
+  "pdf_line": 672,
+  "tex_line": 1197,
+  "comment": "如何派车没讲清楚",
+  "anchor": "4.4预约表感知的车辆派遣",
+  "highlights": []
+ },
+ {
+  "id": "C075",
+  "page": 13,
+  "pdf_line": 673,
+  "tex_line": 1200,
+  "comment": "目的？",
+  "anchor": "选车既可以按畅通最短路时间估计，也可以按预约表上的试算。开环规则对每辆车打分",
+  "highlights": [
+   {
+    "text": "每辆车打分",
+    "pdf_lines": [
+     673
+    ],
+    "tex_line": 1200
+   }
+  ]
+ },
+ {
+  "id": "H106",
+  "page": 13,
+  "pdf_lines": [
+   673
+  ],
+  "tex_line": 1200,
+  "highlight": "选车既可以按畅通最短路时间估计，也可以按预约表上的试"
+ },
+ {
+  "id": "C076",
+  "page": 14,
+  "pdf_line": 678,
+  "tex_line": 1206,
+  "comment": "空载、满载交替出现？",
+  "anchor": "是多AGV 派遣综述中的典型单属性规则[12]。",
+  "highlights": [
+   {
+    "text": "走廊上却已占用的车辆",
+    "pdf_lines": [
+     677
+    ],
+    "tex_line": 1206
+   },
+   {
+    "text": "：先规划空载段并将其临时写入预约表，再规划满载段",
+    "pdf_lines": [
+     680
+    ],
+    "tex_line": 1209
+   }
+  ]
+ },
+ {
+  "id": "H107",
+  "page": 14,
+  "pdf_lines": [
+   686
+  ],
+  "tex_line": 1215,
+  "highlight": "该机制的代价是"
+ },
+ {
+  "id": "H108",
+  "page": 14,
+  "pdf_lines": [
+   688
+  ],
+  "tex_line": 1217,
+  "highlight": "5第节因此只在同一挂钟时限下比较两种派"
+ },
+ {
+  "id": "C077",
+  "page": 14,
+  "pdf_line": 691,
+  "tex_line": 1222,
+  "comment": "如何得到的？",
+  "anchor": "4.5低开销：可采纳下界剪枝与胜者路径复用",
+  "highlights": [
+   {
+    "text": "2.90%（7）；约表感知派遣比规则派车好图",
+    "pdf_lines": [
+     692
+    ],
+    "tex_line": 1222
+   }
+  ]
+ },
+ {
+  "id": "H109",
+  "page": 14,
+  "pdf_lines": [
+   692
+  ],
+  "tex_line": 1222,
+  "highlight": "按相同代数比较"
+ },
+ {
+  "id": "H110",
+  "page": 14,
+  "pdf_lines": [
+   693
+  ],
+  "tex_line": 1223,
+  "highlight": "12.2但其单次评价开销为后者的倍"
+ },
+ {
+  "id": "H111",
+  "page": 14,
+  "pdf_lines": [
+   693
+  ],
+  "tex_line": 1223,
+  "highlight": "增益被额外的计算开销抵消，净效果接近"
+ },
+ {
+  "id": "C078",
+  "page": 15,
+  "pdf_line": 732,
+  "tex_line": 1263,
+  "comment": "目的和作用？",
+  "anchor": "4.6另两种层间接口：附加代价与让行记录",
+  "highlights": [
+   {
+    "text": "另两种层间接口：附加代价与让行记录",
+    "pdf_lines": [
+     732
+    ],
+    "tex_line": 1263
+   }
+  ]
+ },
+ {
+  "id": "H112",
+  "page": 15,
+  "pdf_lines": [
+   760
+  ],
+  "tex_line": null,
+  "highlight": "4.7按让行记录的局部搜索"
+ },
+ {
+  "id": "C079",
+  "page": 16,
+  "pdf_line": 817,
+  "tex_line": 1355,
+  "comment": "外层的含义？",
+  "anchor": "4.8外层遗传算法",
+  "highlights": [
+   {
+    "text": "4.8外层遗传算法",
+    "pdf_lines": [
+     817
+    ],
+    "tex_line": null
+   }
+  ]
+ },
+ {
+  "id": "H113",
+  "page": 16,
+  "pdf_lines": [
+   820
+  ],
+  "tex_line": 1358,
+  "highlight": "择用锦标赛并"
+ },
+ {
+  "id": "C080",
+  "page": 17,
+  "pdf_line": 847,
+  "tex_line": 1383,
+  "comment": "归纳为不同的实验目的和实验方案\n通常先有整体性能对比，再有消融实验分析\n1. 实验方案（目的、和谁比、比什么）\n2. 实验环境（数据集、参数、软硬件配置）\n3. 实验结果（与实验方案一一对应，突出结果原因分析，体现工作优势）",
+  "anchor": "5实验与结果分析",
+  "highlights": [
+   {
+    "text": "本节回答四个问题：将让行等待纳入适应度（闭环）带来多大收益？预约表感知派遣再带来多大收益，它能否替代闭环，二者合用时是否相互放大？这些收益在多大的算",
+    "pdf_lines": [
+     849,
+     850
+    ],
+    "tex_line": 1383
+   },
+   {
+    "text": "替代闭环，二者合用时是否相互放大？这些收益在多大的算例范围内成立，以现有种子数能否确定其成立范围？已实现但未取得净收益的其他接口，其失效原因是什么？",
+    "pdf_lines": [
+     850,
+     851
+    ],
+    "tex_line": 1383
+   }
+  ]
+ },
+ {
+  "id": "C081",
+  "page": 17,
+  "pdf_line": 854,
+  "tex_line": 1386,
+  "comment": "已有工作实验数据集？",
+  "anchor": "5.1实验设置",
+  "highlights": []
+ },
+ {
+  "id": "H114",
+  "page": 17,
+  "pdf_lines": [
+   855
+  ],
+  "tex_line": 1390,
+  "highlight": "受控算例"
+ },
+ {
+  "id": "C082",
+  "page": 17,
+  "pdf_line": 859,
+  "tex_line": 1395,
+  "comment": "想说明啥？",
+  "anchor": "则更强：任何图的全对最短路都满足三角不等式，这2 张矩阵即便允许有向图也无法还原。若由矩阵反推路网，",
+  "highlights": [
+   {
+    "text": "文献参考值不再可比",
+    "pdf_lines": [
+     860
+    ],
+    "tex_line": 1395
+   }
+  ]
+ },
+ {
+  "id": "C083",
+  "page": 17,
+  "pdf_line": 863,
+  "tex_line": 1396,
+  "comment": "工序长短不一？",
+  "anchor": "它标定的是上层搜索强度，不是本文框架。",
+  "highlights": [
+   {
+    "text": "3.7，第节的特征5.8量可逐个单独变化。另有一种公开算例上的比较——删去争用约束、退回与文献同一数学问题——见第节，它标定的是上层搜索强度，不是本文框架。",
+    "pdf_lines": [
+     860,
+     861,
+     862,
+     863
+    ],
+    "tex_line": 1396
+   },
+   {
+    "text": "336、每工件道工序共道真实工序",
+    "pdf_lines": [
+     864
+    ],
+    "tex_line": null
+   }
+  ]
+ },
+ {
+  "id": "H115",
+  "page": 17,
+  "pdf_lines": [
+   865
+  ],
+  "tex_line": 1400,
+  "highlight": "十组上"
+ },
+ {
+  "id": "H116",
+  "page": 17,
+  "pdf_lines": [
+   865
+  ],
+  "tex_line": 1400,
+  "highlight": "生成器"
+ },
+ {
+  "id": "C084",
+  "page": 17,
+  "pdf_line": 870,
+  "tex_line": 1403,
+  "comment": "不同场景？",
+  "anchor": "A 族：布局（争用结构）。前三组算例采用脊式（spine）布局：一条主干走廊（脊）贯穿机械臂区，各机械",
+  "highlights": [
+   {
+    "text": "𝐹变",
+    "pdf_lines": [
+     868
+    ],
+    "tex_line": 1403
+   }
+  ]
+ },
+ {
+  "id": "H117",
+  "page": 17,
+  "pdf_lines": [
+   873
+  ],
+  "tex_line": 1408,
+  "highlight": "量产厂房中常见的脊式布局—"
+ },
+ {
+  "id": "H118",
+  "page": 17,
+  "pdf_lines": [
+   875,
+   877
+  ],
+  "tex_line": 1410,
+  "highlight": "，是有意构造的高争用情形，也正是闭环机制要处理的情形。"
+ },
+ {
+  "id": "H119",
+  "page": 17,
+  "pdf_lines": [
+   878
+  ],
+  "tex_line": 1411,
+  "highlight": "[17]，串联式单车环使车辆互不相遇几乎没有争用，不适合本文的研究目的"
+ },
+ {
+  "id": "H120",
+  "page": 17,
+  "pdf_lines": [
+   879,
+   880
+  ],
+  "tex_line": 1413,
+  "highlight": "：网格——路口多，绕行也多，被占走廊可以改道，争用下降，但上下料点到最远机械臂的路程变长。"
+ },
+ {
+  "id": "H121",
+  "page": 18,
+  "pdf_lines": [
+   899
+  ],
+  "tex_line": 1429,
+  "highlight": "𝑁𝐴/𝑁B族：车臂比。𝐴𝑀"
+ },
+ {
+  "id": "H122",
+  "page": 18,
+  "pdf_lines": [
+   901
+  ],
+  "tex_line": 1433,
+  "highlight": "𝐹C族：柔性"
+ },
+ {
+  "id": "H123",
+  "page": 18,
+  "pdf_lines": [
+   913,
+   914,
+   916,
+   917
+  ],
+  "tex_line": 1445,
+  "highlight": "HomayouniFontes [6]20𝐻𝐹𝑇𝑡̄/ 𝑇与公开算例的对照。.自建算例的、与以与整理的个公开算例为外部参𝑡̄𝑝̄5.80.38，照（第节亦用其做退化对标）；两者的特征以同一特征函数、同一口径计算，可直接比较。柔性中位为C0.135，200.258，0.6𝐹= 0.3本节基点约为其一倍半，族落在公开区间内；异构度中位仅个算例中最大为无0.12，𝐻= 0.3；𝑇𝑡̄/𝑇 4.0一达到本节的公开最高仅本节标到。𝑡̄𝑝̄"
+ },
+ {
+  "id": "H124",
+  "page": 18,
+  "pdf_lines": [
+   924
+  ],
+  "tex_line": null,
+  "highlight": "比较协议5.1.2.比较依赖下列规"
+ },
+ {
+  "id": "H125",
+  "page": 18,
+  "pdf_lines": [
+   926
+  ],
+  "tex_line": 1473,
+  "highlight": "开环按畅通行驶时间排出的完工时间，在真实走廊上往往不可行"
+ },
+ {
+  "id": "H126",
+  "page": 19,
+  "pdf_lines": [
+   953,
+   954
+  ],
+  "tex_line": 1487,
+  "highlight": "表实验批次一览。主批次支撑表7 与表8 的全部统计结论；其余批次各回答一个具体问题，不与主批次逐组并列。「加速」5.78指第节的4.5"
+ },
+ {
+  "id": "H127",
+  "page": 19,
+  "pdf_lines": [
+   975
+  ],
+  "tex_line": 1511,
+  "highlight": "种子与配对检验"
+ },
+ {
+  "id": "H128",
+  "page": 19,
+  "pdf_lines": [
+   981
+  ],
+  "tex_line": 1517,
+  "highlight": "多重比较与效应量"
+ },
+ {
+  "id": "H129",
+  "page": 19,
+  "pdf_lines": [
+   981
+  ],
+  "tex_line": null,
+  "highlight": "Wilcoxon文二十余个检验"
+ },
+ {
+  "id": "C085",
+  "page": 20,
+  "pdf_line": 1004,
+  "tex_line": 1537,
+  "comment": "实验参数",
+  "anchor": "5.1.3实现与运行环境. 实验在Intel Xeon W-1270 @ 3.40 GHz 上单线程运行；实现为纯Python（≥3.9.6），仅",
+  "highlights": []
+ },
+ {
+  "id": "H130",
+  "page": 20,
+  "pdf_lines": [
+   1005
+  ],
+  "tex_line": 1538,
+  "highlight": "外层遗传算法与局部搜索超参取默认值，未调参，全部配置一致"
+ },
+ {
+  "id": "H131",
+  "page": 20,
+  "pdf_lines": [
+   1015,
+   1016
+  ],
+  "tex_line": 1545,
+  "highlight": "比较需分别回答两个问题：与文献中常见的流程结构对齐时完工时间相差多少，以及只改变一个部件时相差多少"
+ },
+ {
+  "id": "H132",
+  "page": 20,
+  "pdf_lines": [
+   1016
+  ],
+  "tex_line": 1545,
+  "highlight": "少。前者要求结构对应，后者要求一次只改变一处。仅报告消融无法与常见流程结构对"
+ },
+ {
+  "id": "H133",
+  "page": 20,
+  "pdf_lines": [
+   1016,
+   1017
+  ],
+  "tex_line": 1547,
+  "highlight": "对应；仅报告文献比较则会将无冲突路由本身的收益计入本文机制。因此采用四级阶梯，每一级对应一种可明确指认的结构。"
+ },
+ {
+  "id": "H134",
+  "page": 29,
+  "pdf_lines": [
+   1473
+  ],
+  "tex_line": 1917,
+  "highlight": "5.7案例：漏斗算例上的甘特图与关键链"
+ },
+ {
+  "id": "H135",
+  "page": 29,
+  "pdf_lines": [
+   1485
+  ],
+  "tex_line": null,
+  "highlight": "5.8公开基准上的退化比较"
+ },
+ {
+  "id": "C086",
+  "page": 32,
+  "pdf_line": 1653,
+  "tex_line": 2010,
+  "comment": "工作？贡献？结论？",
+  "anchor": "6.1总结",
+  "highlights": []
+ },
+ {
+  "id": "H136",
+  "page": 33,
+  "pdf_lines": [
+   1677,
+   1679
+  ],
+  "tex_line": 2035,
+  "highlight": "故本文不就机制随规模的变化作结论。"
+ },
+ {
+  "id": "C087",
+  "page": 34,
+  "pdf_line": 1726,
+  "tex_line": 2079,
+  "comment": "格式",
+  "anchor": "References",
+  "highlights": []
+ },
+ {
+  "id": "H137",
+  "page": 34,
+  "pdf_lines": [
+   1726
+  ],
+  "tex_line": 2079,
+  "highlight": "References"
+ },
+ {
+  "id": "H138",
+  "page": 34,
+  "pdf_lines": [
+   1727
+  ],
+  "tex_line": null,
+  "highlight": "2024. "
+ }
+]

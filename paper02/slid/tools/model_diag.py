@@ -8,6 +8,17 @@
     case 级链 21 个状态 / 2,780 次转移 / 140 个变体
 
 用法(在 paper02/slid/ 下):  py -m tools.model_diag
+
+Regression check after M1/M2/M5 land: line up with the verified numbers of the probe scripts under database/.
+
+Target numbers (output of derive_invariants_v4.py and probe_structural_v3.py):
+    282 cases / 3,062 activities (failures excluded)
+    F   953 checks, 0 violations      -> 0.00%
+    I   2,768 checks, 47 violations   -> 1.70%   (LATE 17 / NEVER 29 / FAILED 1)
+    1,791 moves, 47 unmodeled         -> coverage 97.38%
+    case-level chain: 21 states / 2,780 transitions / 140 variants
+
+Usage (from paper02/slid/):  py -m tools.model_diag
 """
 from __future__ import annotations
 

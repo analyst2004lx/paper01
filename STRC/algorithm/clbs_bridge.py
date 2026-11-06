@@ -2,6 +2,11 @@
 
 clbs 内部使用相对导入(from .network import ...),因此必须以 package 方式加载。
 STRC 其余模块只应从本文件转导出符号,不要直接 `import algorithm.*` 指望落到 clbs。
+
+Mount clbs/algorithm, under the repository root, as a separate package `_clbs_algorithm`, so the name does not collide with STRC/algorithm.
+
+clbs uses relative imports internally (from .network import ...), so it must be loaded as a package.
+Other STRC modules should re-export symbols only from this file; do not `import algorithm.*` and expect to land in clbs.
 """
 from __future__ import annotations
 
@@ -51,7 +56,7 @@ def _load_sub(name: str):
     return mod
 
 
-# 按依赖序加载(与 clbs 相对导入一致)
+# 按依赖序加载(与 clbs 相对导入一致) / Load in dependency order (same as clbs relative imports)
 _instance = _load_sub("instance")
 _network = _load_sub("network")
 _stats = _load_sub("stats")
@@ -64,6 +69,7 @@ _report = _load_sub("report")
 _generator = _load_sub("generator")
 
 # 供 schedule_io 等复用 clbs 染色体构造(不要在 STRC 里再实现一遍)
+# Reuse clbs chromosome construction here; do not implement it again inside STRC.
 clbs_ga = _ga
 
 load_instance = _instance.load_instance

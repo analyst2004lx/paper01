@@ -7,6 +7,13 @@
 
 用法:
     py -m tools.e5_admissible experiments/e5_repro_ga_cong.csv ...
+
+Stratify E5 budget points by whether they satisfy assumption A2, then see who wins on makespan.
+
+Motivation: E5 originally compared R0+ and R2 only by Cmax, but R0+ decodes again from t=0 and is not bound by "a finished occupation is not revised". After stratifying by how many reservations that had already finished before t_now it rewrote (the R0_past_changed column of e5_cross_curve), one can separate how much of its advantage comes from better coordination and how much from rescheduling history outside the bound.
+
+Usage:
+    py -m tools.e5_admissible experiments/e5_repro_ga_cong.csv ...
 """
 from __future__ import annotations
 
@@ -42,6 +49,7 @@ def main(argv):
     print(f"基线模式分布 {dict(by_mode)}\n")
 
     # ---- 1. R0+ 的挂钟下限:预算守不住的那些点上它实际花了多久 ----
+# ---- 1. Wall-clock floor of R0+: how long it actually took on points that missed the budget ----
     print("== R0+ 挂钟下限(按算例) ==")
     insts = sorted({r["instance"] for r in rows})
     for inst in insts:
@@ -59,6 +67,7 @@ def main(argv):
     print()
 
     # ---- 2. 按 A2 可采纳性分层,看 Cmax 谁赢 ----
+# ---- 2. Stratify by A2 admissibility and see who wins on Cmax ----
     print("== 按 A2 可采纳性分层的完工时间胜负 ==")
     adm, viol = [], []
     for r in rows:
@@ -76,7 +85,7 @@ def main(argv):
         print(f"  {label}: {len(grp)} 个点 -> {dict(w)}")
     print()
 
-    # ---- 3. R2 自身的 A2 合规性 ----
+    # ---- 3. R2 自身的 A2 合规性 ---- / ---- 3. R2's own compliance with A2 ----
     print("== R2 的 A2 合规性 ==")
     for mode in sorted(by_mode):
         sub = [r for r in rows if r["baseline_mode"] == mode]
@@ -91,8 +100,10 @@ def main(argv):
     print()
 
     # ---- 4. 逐算例-种子的 Cmax 对比(取 R0+ 在可采纳点上的最好值) ----
+# ---- 4. Per instance-seed Cmax comparison (R0+'s best value on admissible points) ----
     print("== 每个算例-种子:R2 vs R0+ 在可采纳点上的最好 Cmax ==")
     # 键必须带 baseline_mode:同一算例-种子在两种基线下是两组完全不同的读数
+# The key must include baseline_mode: the same instance-seed under two baselines is two completely different readings
     keys = sorted({(r["instance"], r["seed"], r["baseline_mode"]) for r in rows},
                   key=lambda t: (t[0], t[2], int(t[1])))
     for inst, seed, mode in keys:

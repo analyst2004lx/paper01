@@ -20,6 +20,20 @@ AGV 数、每工件工序数、H、F 与 T̄t/T̄p 标定目标一律取同值,�
 (见 `database/README.md`),运输在其上几乎不构成争用;若把工件数据一并搬入,走廊争用
 连同以它为研究对象的一整套结论都会退化到观察不到。因此工件与 T̄t/T̄p 标定仍沿用本项目
 口径,外部化的只有路网。
+
+Generate instances from public-dataset layout topologies (layout source externalized).
+
+Usage (from the clbs/ directory):
+
+    py -m tools.gen_pub_layouts                  # write input/pub/
+    py -m tools.gen_pub_layouts --list           # print the feature table only, do not write files
+    py -m tools.gen_pub_layouts --keys LyuL4 LyuL6
+
+These instances differ from the `S8x4x4` family of `tools.gen_instances` **only in layout source**: job count, AGV count, operations per job, H, F, and the mean Tt/Tp calibration target are all the same, so the difference between the two batches can be attributed cleanly to "who designed the topology".
+
+Why this batch exists. The self-built layout family (mid/high/funnel) is one dumbbell family; the members differ only in LU-exit and mid-section parallel corridor counts, i.e. capacity, not geometry. Structural predictability of closure size could not be measured on those three, but that negative result is **confounded** — it does not separate "the structural indicator is too coarse" from "geometric differences within one family are too small for any indicator to resolve". A batch of layouts not designed by this paper, and geometrically truly different, is what separates the two explanations. Numbers and definitions are in the comment on `algorithm.generator.PUB_LAYOUTS`.
+
+**Borrow only the topology, not the job data.** On the public families already measured, mean transport time is only a few percent of mean processing time (see `database/README.md`), so transport barely creates contention; if the job data were imported too, corridor contention and the whole set of conclusions that study it would shrink until they could not be observed. Job data and the mean Tt/Tp calibration therefore stay on this project's definitions; only the network is externalized.
 """
 from __future__ import annotations
 
@@ -87,6 +101,9 @@ def main() -> int:
             except ValueError as exc:
                 # 小布局在固定 F 下可能与 B1(|Ω|>=2)冲突。此处**不**为它单独放宽 F:
                 # F 是本批要held住的因子,为一张布局改它就等于多引入一个变量。
+                # A small layout at fixed F may conflict with B1 (|Ω|>=2). Do **not**
+                # relax F for it alone: F is the factor this batch holds fixed, and
+                # changing it for one layout introduces another variable.
                 skipped.append((key, str(exc)))
                 continue
             data = build_instance(spec)

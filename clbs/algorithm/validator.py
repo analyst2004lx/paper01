@@ -9,6 +9,18 @@
 (f) 运输-工序衔接:载货段完成 <= 对应工序 start,起运 >= 前道 finish;
 (g) C_max 一致性:等于全部工件末道(伪)工序完成时刻的最大值,**不含空载段**;
 (h) 载货段不得晚于 C_max(空载归位段允许,见 (g) 的口径注释)。
+
+Independent validator (specification section 9): it does not reuse decoder logic, and checks the timetable directly against the modeling-document constraints one by one.
+
+Checks:
+(a) operation precedence and processing time: within a job, i increases, finish = start + p, and start >= the previous operation's finish;
+(c) machine eligibility: the assigned robotic arm must lie in the feasible set Ω;
+(b) machine mutual exclusion: intervals [start, finish) on the same robotic arm are pairwise non-overlapping;
+(d) AGV consistency: segments of the same vehicle do not overlap in time, the path is spatially continuous, and the interval length equals the corridor travel time;
+(e) corridor mutual exclusion: time windows [enter, exit) on the same physical corridor (both directions merged) are pairwise non-overlapping;
+(f) transport-operation handoff: the loaded segment finishes <= the corresponding operation start, and departure >= the previous operation's finish;
+(g) C_max consistency: equal to the maximum completion time of every job's last (pseudo-)operation, excluding empty segments;
+(h) a loaded segment must not finish after C_max (empty return-to-park segments may; see the note on (g)).
 """
 from __future__ import annotations
 
@@ -23,13 +35,17 @@ _TASK_RE = re.compile(r"^J(\d+)-(\d+)-(empty|loaded)$")
 
 
 def validate(inst: Instance, timetable: dict) -> List[str]:
-    """返回违反约束的描述列表;空列表表示时刻表可行。"""
+    """返回违反约束的描述列表;空列表表示时刻表可行。
+
+    Return a list of constraint-violation descriptions; an empty list means the timetable is feasible.
+    """
     errors: List[str] = []
     ops = timetable.get("operations", [])
     segs = timetable.get("agv_segments", [])
     returns = timetable.get("returns", [])
 
     # ---- (a)(c) 工序先后、工时、机器合法性 ----
+    # (a)(c) precedence, processing time, and machine eligibility
     by_job: Dict[int, List[dict]] = {}
     for o in ops:
         by_job.setdefault(o["job"], []).append(o)
@@ -54,6 +70,7 @@ def validate(inst: Instance, timetable: dict) -> List[str]:
             prev_finish = o["finish"]
 
     # ---- (b) 机器互斥 ----
+    # (b) machine mutual exclusion
     by_machine: Dict[int, List[dict]] = {}
     for o in ops:
         by_machine.setdefault(o["machine"], []).append(o)
@@ -64,6 +81,7 @@ def validate(inst: Instance, timetable: dict) -> List[str]:
                 errors.append(f"(b) RA{m} 上工序重叠: ({a['job']},{a['i']}) 与 ({b['job']},{b['i']})")
 
     # ---- (d) AGV 分段:时间不重叠、空间连续、区间长度合法 ----
+    # (d) AGV segments: no time overlap, spatial continuity, legal interval length
     adj: Dict[Tuple[str, str], float] = {}
     for c in inst.corridors:
         adj[(c["u"], c["v"])] = c["time"]
@@ -86,6 +104,7 @@ def validate(inst: Instance, timetable: dict) -> List[str]:
                 errors.append(f"(d) AGV{k} 路径不连续: ...->{a['v']} 后从 {b['u']} 出发")
 
     # ---- (e) 走廊互斥(双向合并,半开区间) ----
+    # (e) corridor mutual exclusion (both directions merged, half-open intervals)
     by_corridor: Dict[str, List[dict]] = {}
     for s in segs:
         by_corridor.setdefault(corridor_id(s["u"], s["v"]), []).append(s)
@@ -97,6 +116,7 @@ def validate(inst: Instance, timetable: dict) -> List[str]:
                               f"与 AGV{b['agv']}[{b['enter']},{b['exit']})")
 
     # ---- (f) 运输-工序衔接(按任务命名 J{j}-{i}-loaded 交叉核对) ----
+    # (f) transport-operation handoff (cross-check tasks named J{j}-{i}-loaded)
     op_index = {(o["job"], o["i"]): o for o in ops}
     loaded_span: Dict[Tuple[int, int], Tuple[float, float]] = {}
     for s in segs:
@@ -119,6 +139,11 @@ def validate(inst: Instance, timetable: dict) -> List[str]:
     # 口径(建模文档 E1 / 规格假设 8):全部工件末道(伪)工序完成时刻的最大值,
     # **不含任何空载段**。空载归位段允许晚于 C_max(车队收尾不属于工件完工),
     # 故此处不并入 agv_segments;越界检查改由下面 (h) 独立承担。
+    # (g) C_max consistency.
+    # Definition (modeling document E1 / spec assumption 8): the maximum completion
+    # time of every job's last (pseudo-)operation, excluding every empty segment.
+    # An empty return-to-park segment may finish after C_max (fleet wrap-up is not job completion),
+    # so agv_segments are not folded in here; the overrun check is carried separately by (h) below.
     events = [o["finish"] for o in ops] + [r["complete"] for r in returns]
     expected = max(events) if events else 0.0
     if abs(timetable.get("makespan", -1) - expected) > EPS:
@@ -127,6 +152,9 @@ def validate(inst: Instance, timetable: dict) -> List[str]:
     # ---- (h) 载货段不得晚于 C_max ----
     # 载货段晚于 C_max 意味着某件工件在"报告完工"之后还在被搬运,属真实错误;
     # 这条与 (g) 分离,使 C_max 口径的收敛不会丢掉原先的越界防御。
+    # (h) A loaded segment must not finish after C_max.
+    # A loaded segment past C_max means some job is still being carried after the reported completion, which is a real error.
+    # Keeping this separate from (g) means tightening the C_max definition does not drop the previous overrun defense.
     for s in segs:
         mt = _TASK_RE.match(s.get("task", ""))
         if mt and mt.group(3) == "loaded" and s["exit"] > expected + EPS:

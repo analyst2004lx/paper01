@@ -57,9 +57,11 @@ DEFAULT_XES = os.path.normpath(os.path.join(
     ROOT, "..", "database", "ft_trier_iot_log", "MainProcess_cleaned.xes"))
 
 # 论文/专利自报的系数
+# coefficients reported by the paper / patent
 GAMMA_STAR = 0.73          # 论文 Scenario A 网格搜索最优 (kappa*)
+# paper Scenario A grid-search optimum (kappa*)
 GAMMA_GRID = np.arange(0.10, 2.001, 0.05)
-K_STAR = 10.25             # 专利线性版系数
+K_STAR = 10.25             # 专利线性版系数 / patent linear-form coefficient
 K_GRID = np.arange(0.5, 20.001, 0.25)
 
 SQRT2 = math.sqrt(2.0)
@@ -71,6 +73,10 @@ def load_case_sequences(path: str):
     时长按活动名池化(跨资源),这对本文是**保守**的:池化把资源异质性算进
     sigma,高估了 sigma、低估了时序通道的检出能力。真实建模按
     (resource, activity) 分组会更紧。
+
+    Case-level workflow activity sequences (the only workable granularity fixed by conclusion 13) plus the per-activity sojourn.
+
+    Sojourns are pooled by activity name (across resources). For this paper that is **conservative**: pooling folds resource heterogeneity into sigma, overestimates sigma, and underestimates the timing channel's detection power. A real model grouped by (resource, activity) would be tighter.
     """
     acts: dict[tuple, dict] = defaultdict(dict)
     for trace in ET.parse(path).getroot().findall(XES_NS + "trace"):
@@ -102,7 +108,10 @@ def load_case_sequences(path: str):
 
 
 def build_markov(seqs):
-    """MBDF 的一阶转移矩阵与边缘分布(按其自身设定用极大似然,不加先验)。"""
+    """MBDF 的一阶转移矩阵与边缘分布(按其自身设定用极大似然,不加先验)。
+
+    MBDF's first-order transition matrix and marginal (maximum likelihood, as it specifies, with no prior).
+    """
     states = sorted({s for v in seqs.values() for s in v})
     idx = {s: i for i, s in enumerate(states)}
     n = len(states)
@@ -117,6 +126,7 @@ def build_markov(seqs):
     P = np.divide(counts, row[:, None], out=np.zeros_like(counts),
                   where=row[:, None] > 0)
     p_bn = occ / occ.sum()                     # P_BN(s_i),贝叶斯层的边缘概率
+    # P_BN(s_i), the marginal probability of the Bayesian layer
     return states, counts, P, row, p_bn
 
 
@@ -128,7 +138,10 @@ def deviations(P):
 
 
 def thresholds(P, p_bn, *, gamma=None, k=None):
-    """eps 只依赖预测主状态 c = argmax_j P[i,j]。"""
+    """eps 只依赖预测主状态 c = argmax_j P[i,j]。
+
+    eps depends only on the predicted main state c = argmax_j P[i, j].
+    """
     c = P.argmax(axis=1)
     pc = np.clip(p_bn[c], 1e-12, 1.0)
     if gamma is not None:
@@ -137,25 +150,33 @@ def thresholds(P, p_bn, *, gamma=None, k=None):
 
 
 def analyse(states, P, row, p_bn, delta, eps, cmode):
-    """返回单一系数取值下的诊断量。"""
+    """返回单一系数取值下的诊断量。
+
+    Return the diagnostic quantities at one coefficient setting.
+    """
     live = row > 0
     n = len(states)
     # 预测分布的先验权重:用前驱状态被观测到的频次
+    # prior weight of the predictive distribution: the number of times the predecessor state was observed
     w = row / row.sum()
 
     undetectable = delta < eps[:, None]            # (i, j) 注入后不会报警
+    # (i, j) does not alarm after injection
     modal = P.argmax(axis=1)
     modal_safe = undetectable[np.arange(n), modal]  # A4 状态模仿是否成功
+    # whether A4 state mimicry succeeds
 
-    # 整行盲:该行任何观测都不报警
+    # 整行盲:该行任何观测都不报警 / whole row blind: no observation in this row alarms
     row_max_delta = np.where(live, delta.max(axis=1), 0.0)
     fully_blind = live & (eps > row_max_delta)
 
     # 良性误报率:delta 是 (i,j) 的函数,良性 j 以 P[i,j] 出现
+    # benign false-alarm rate: delta is a function of (i, j), and a benign j appears with P[i, j]
     fpr_row = (undetectable == False) * P
     fpr = float((w * fpr_row.sum(axis=1))[live].sum())
 
     # 攻击者可自由伪造的转移质量:落在 U_i 内的良性转移占比
+    # transition mass the attacker can forge freely: the share of benign transitions that fall inside U_i
     mimic_mass = float((w * (undetectable * P).sum(axis=1))[live].sum())
 
     return {
@@ -197,6 +218,7 @@ def main() -> int:
     print()
 
     # ---- T-a.2 结构版:delta 的取值范围与冗余项 ----
+    # T-a.2 structural version: the range of delta and the redundant terms
     print("=" * 78)
     print("T-a.2  几何距离退化:delta_j^2 = 1 - 2 p_j + ||p||^2")
     print("=" * 78)
@@ -221,6 +243,7 @@ def main() -> int:
     print()
 
     # ---- T-a.1 数值版:两种阈值形式下的盲区 ----
+    # T-a.1 numerical version: the blind region under the two threshold forms
     print("=" * 78)
     print("T-a.1  两种阈值形式在各自自报系数下的不可检测集合")
     print("=" * 78)
@@ -251,6 +274,7 @@ def main() -> int:
         print(f"    良性数据上的误报率      {r['fpr']*100:.1f}%")
 
     # ---- T-a.3 不可能性:扫系数,证明无论怎么调都逃不掉 ----
+    # T-a.3 impossibility: sweep the coefficients and show that no setting escapes
     print()
     print("=" * 78)
     print("T-a.3  不可能性:DR(状态模仿) 与 FPR 在任何系数取值下都同步移动")
@@ -272,6 +296,7 @@ def main() -> int:
               f"{fp*100:>9.1f}% {mm*100:>10.1f}%")
 
     # 找出能把 A4 压到 50% 以下所需的 FPR
+    # find the FPR required to push A4 below 50%
     feasible = [(fp, ms, g) for g, _, ms, fp, _ in sweep if ms <= 0.5]
     print()
     if feasible:
@@ -286,6 +311,7 @@ def main() -> int:
         print(f"  反之,要做到零误报(gamma={g:.2f}),状态模仿得手率为 {ms*100:.1f}%。")
 
     # 零误报可标记集 == 掩码已拒绝集
+    # the zero-false-alarm markable set equals the mask-rejected set
     print()
     zero_fp_flaggable = int(((P == 0) & live[:, None]).sum())
     total_pairs = int(live.sum()) * n
@@ -295,6 +321,7 @@ def main() -> int:
     print(f"  阈值层对标签自洽的注入贡献恒为零。**")
 
     # ---- 互补性:MBDF 恰好全盲的地方,正是时序通道最锐利的地方 ----
+    # complementarity: where MBDF is completely blind is exactly where the timing channel is sharpest
     print()
     print("=" * 78)
     print("互补性  MBDF 精确全盲的转移 vs 本文时序通道的 rho*")
@@ -306,6 +333,7 @@ def main() -> int:
     print("  抢跑就落进时序通道。")
     print()
     z = 2.3263          # 单侧 alpha=0.01,与 timing.rho_star 口径一致
+    # one-sided alpha=0.01, the same rule as timing.rho_star
     exact = [i for i in np.where(live)[0] if d_modal[i] < 1e-12]
     print(f"  {'前驱状态(MBDF delta=0)':<32} {'n':>4} {'sigma_log':>10} "
           f"{'rho*':>7}  时序通道")

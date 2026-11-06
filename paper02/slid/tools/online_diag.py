@@ -9,6 +9,16 @@
   Q3 门控更新是否真的挡住了投毒(与原专利"无条件在线更新"的差别)
 
 用法(在 paper02/slid/ 下):  py -m tools.online_diag
+
+M0/M9 online-replay measurement: how much of a guarantee verified on random folds survives under temporal-order deployment.
+
+This is so far the project's only **validity** experiment rather than a performance experiment. Every earlier conclusion rests on a random-fold split, while M8 rule 3 requires a random split to keep exchangeability — a field deployment can only fit on the past and decide on the future. The two conflict directly and can only be measured:
+
+  Q1 Under a temporal split, does the empirical FPR of per-channel conformal still hold the nominal level?
+  Q2 What is the per-message processing latency (E8, single-core CPU; O(1) is an argument from complexity, the constant factor is measured)
+  Q3 Does the gated update actually block poisoning (the difference from the original patent's "unconditional online update")
+
+Usage (from paper02/slid/):  py -m tools.online_diag
 """
 from __future__ import annotations
 
@@ -18,7 +28,7 @@ import time
 
 import numpy as np
 
-from algorithm import conformal, fusion, ingest, procmodel
+from algorithm import archive, conformal, fusion, ingest, procmodel
 from algorithm.detector import CHANNELS, Detector, DetectorConfig
 
 ALPHAS = (0.05, 0.01)
@@ -50,7 +60,10 @@ def _by_case(acts):
 
 
 def channel_fpr(det: Detector, test, rng):
-    """在留出的未来数据上,逐通道 conformal p 值的经验 FPR。"""
+    """在留出的未来数据上,逐通道 conformal p 值的经验 FPR。
+
+    Empirical FPR of the per-channel conformal p-values on held-out future data.
+    """
     det._reset_online()
     rows = []
     for a in sorted((x for x in test if x.t_consume is not None),
@@ -71,7 +84,12 @@ def channel_fpr(det: Detector, test, rng):
 
 
 def latency(det: Detector, test, rng, reps: int = 3):
-    """E8:逐消息处理时延。测的是 observe() 全流程,含硬层与序贯。"""
+    """E8:逐消息处理时延。测的是 observe() 全流程,含硬层与序贯。
+
+    E8: per-message processing latency. It measures the whole observe() path, including the hard-constraint layer and the sequential layer.
+    """
+    prev = det.cfg.online_update
+    det.cfg.online_update = False
     stream = sorted((x for x in test if x.t_consume is not None),
                     key=lambda x: (x.t_consume, x.order))
     per = []
@@ -82,7 +100,53 @@ def latency(det: Detector, test, rng, reps: int = 3):
             det.observe(a, rng=rng)
             per.append((time.perf_counter() - t0) * 1e6)
     det._reset_online()
+    det.cfg.online_update = prev
     return np.array(per)
+
+
+def _scale_m(det, test, rng, ms=(1, 10, 50, 100)):
+    """把同一段流复制到 M 个设备名上,看逐消息时延是否随 M 涨。
+
+    别名必须挂上原设备的时长表,否则 ``device#m`` 走未见弃权,测到的是
+    快路径而不是生产热路径。
+
+    Copy the same stream onto M device names, to see whether the per-message latency grows with M.
+
+    An alias must carry the original device's sojourn table, or ``device#m`` takes the unseen-abstention path and what is measured is the fast path rather than the production hot path.
+    """
+    import copy
+    base = sorted((x for x in test if x.t_consume is not None),
+                  key=lambda x: (x.t_consume, x.order))[:80]
+    orig_timing = dict(det.timing)
+    prev = det.cfg.online_update
+    det.cfg.online_update = False
+    out = []
+    for M in ms:
+        extra = {}
+        stream = []
+        for m in range(M):
+            for a in base:
+                b = copy.copy(a)
+                if m:
+                    b.device = f"{a.device}#m{m}"
+                    model = orig_timing.get((a.device, a.op))
+                    if model is not None:
+                        extra[(b.device, a.op)] = model
+                stream.append(b)
+        stream.sort(key=lambda x: (x.t_consume, x.order, x.device))
+        det.timing = {**orig_timing, **extra}
+        det._reset_online()
+        per = []
+        for a in stream:
+            t0 = time.perf_counter()
+            det.observe(a, rng=rng)
+            per.append((time.perf_counter() - t0) * 1e6)
+        out.append({"M": M, "median_us": float(np.median(per)),
+                    "n_seq": len(det._seq), "n_msg": len(stream)})
+        det._reset_online()
+        det.timing = orig_timing
+    det.cfg.online_update = prev
+    return out
 
 
 def poisoning(live, model, seed: int, rho: float = 0.30, n_inject: int = 200):
@@ -91,6 +155,10 @@ def poisoning(live, model, seed: int, rho: float = 0.30, n_inject: int = 200):
     攻击者不求单条不被发现,而是求把自己的行为**喂进基线**——若在线更新
     无条件执行,注入数据会把该分组的位置参数拉向抢跑值,几轮之后同样幅度
     的抢跑就不再异常。这正是原专利"无条件 EWMA 更新"的结构性弱点。
+
+    Q3: an attacker keeps injecting early-reporting data; compare the baseline drift with and without the gate.
+
+    The attacker does not need a single message to go unseen; the attacker needs to **feed its own behaviour into the baseline** — if the online update runs unconditionally, the injected data pulls that group's location toward the early-reporting value, and after a few rounds the same early-reporting amount is no longer anomalous. That is the structural weakness of the original patent's "unconditional EWMA update".
     """
     out = {}
     for gated in (True, False):
@@ -98,6 +166,7 @@ def poisoning(live, model, seed: int, rho: float = 0.30, n_inject: int = 200):
         det.cfg.online_update = True
         det.cfg.gated_update = gated        # 其余配置完全相同
         # 找一个样本最多且信息量足的分组做靶子
+        # pick the group with the most samples and enough information as the target
         key = max((k for k, m in det.timing.items() if m.informative),
                   key=lambda k: det.timing[k].n)
         m = det.timing[key]
@@ -122,7 +191,10 @@ def poisoning(live, model, seed: int, rho: float = 0.30, n_inject: int = 200):
 
 
 def _clone_faster(a, rho: float):
-    """抢跑 rho:把结束时刻提前。duration_s 是派生属性,只能改时间戳。"""
+    """抢跑 rho:把结束时刻提前。duration_s 是派生属性,只能改时间戳。
+
+    Early-reporting amount rho: move the end time earlier. duration_s is a derived attribute, so only the timestamps can be changed.
+    """
     import copy
     from datetime import timedelta
     b = copy.copy(a)
@@ -175,7 +247,19 @@ def main() -> int:
           f"   p99 {np.percentile(us, 99):.1f} us   n={len(us)}")
     print(f"  等效吞吐 {1e6 / np.median(us):,.0f} 消息/秒(单核)")
     print("  O(1) 由复杂度论证给出,此处只提供常数因子;未做硬件平台实测。")
+    scale = _scale_m(det, test, rng)
+    print("  M 扩展(复制设备链):")
+    for row in scale:
+        print(f"    M={row['M']:<4} 中位 {row['median_us']:.1f} us  "
+              f"CUSUM 状态 {row['n_seq']}")
     print()
+    archive.dump(archive.E8_PATH, {
+        "latency_us": [float(x) for x in us],
+        "scale": scale,
+        "median_us": float(np.median(us)),
+        "p95_us": float(np.percentile(us, 95)),
+        "p99_us": float(np.percentile(us, 99)),
+    })
 
     print("=== Q3 门控更新的抗投毒作用 ===")
     for lbl, r in poisoning(live, model, seed=0).items():

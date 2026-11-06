@@ -51,26 +51,28 @@ def main() -> None:
             for b in budgets
         ]
 
-    fig, axes = plt.subplots(1, 2, figsize=(7.0, 2.6))
+    fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.75))
     ax = axes[0]
     ax.plot(r0_t, r0_c, "s--", color="#c45c26", label="R0+")
     for b, t, c in zip(budgets, r0_t, r0_c):
-        ax.annotate(f"{b:g}s", (t, c), textcoords="offset points", xytext=(4, 2), fontsize=7)
-    ax.scatter([r2_t_mean], [r2_c_mean], marker="o", s=45, color="#1f4e79", zorder=3, label="STRC")
-    ax.set_xlabel("wall time (ms)")
+        ax.annotate(f"{b:g}s", (t, c), textcoords="offset points",
+                    xytext=(8, 7), fontsize=7)
+    ax.scatter([r2_t_mean], [r2_c_mean], marker="o", s=45, color="#1f4e79", zorder=3, label="R2 (STRC)")
+    ax.set_xlabel("runtime (ms)")
     ax.set_ylabel(r"$C_{\max}$")
     ax.set_xscale("log")
-    ax.legend(loc="best")
-    ax.set_title(r"Time--makespan trade-off")
+    ax.set_xlim(0.5, 5000)
+    ax.legend(loc="upper right")
+    ax.set_title("Runtime–makespan trade-off")
 
     ax = axes[1]
     ax.plot(budgets, r0_chg, "s--", color="#c45c26", label="R0+")
-    ax.axhline(r2_chg_mean, color="#1f4e79", linestyle="-", label="STRC")
+    ax.axhline(r2_chg_mean, color="#1f4e79", linestyle="-", label="R2 (STRC)")
     ax.set_xlabel("R0+ budget (s)")
-    ax.set_ylabel("fraction of reservations changed")
-    ax.set_ylim(0, 1.05)
-    ax.legend(loc="best")
-    ax.set_title("Schedule stability")
+    ax.set_ylabel("share of occupancies rewritten")
+    ax.set_ylim(0, 1.08)
+    ax.legend(loc="center right")
+    ax.set_title("Rewrite fraction")
 
     fig.tight_layout()
     fig.savefig(OUT + ".pdf")

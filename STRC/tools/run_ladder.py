@@ -3,6 +3,12 @@
 用法:
     py -m tools.run_ladder --budget-sec 1
     py -m tools.run_ladder --arms R1,R2
+
+Batch run of the four-level repair ladder (R0 / R0+ / R1 / R2).
+
+Usage:
+    py -m tools.run_ladder --budget-sec 1
+    py -m tools.run_ladder --arms R1,R2
 """
 from __future__ import annotations
 

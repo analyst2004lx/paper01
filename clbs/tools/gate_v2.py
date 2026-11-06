@@ -14,6 +14,17 @@
 
 用法:
     py tools/gate_v2.py --gen 30 --seeds 42 7 2024 3 11
+
+Gate test for neighborhood improvements: a paired comparison, at a fixed generation count, against "no local search at all".
+
+The criterion is not "better than the first version" but "finally worth doing". The reference must be nofeedback (evaluation loop closed, no local search): under a fixed generation count, with local search free, the original neighborhood is -0.28% versus it (p=0.68, 40 pairs) — even gifted compute buys no gain. If a change cannot flip that gap positive, further tuning only decorates a neighborhood with no signal.
+
+The three changes are added separately, not stacked: a previous bundled test was uniformly worse, but that does not say whether all three are useless or one is harmful and masks the other two. Item-by-item contrasts are what make attribution possible.
+
+Same generation count (rather than same wall-clock) is deliberate: it charges local-search decode cost as zero, the most lenient protocol for the change. If it fails this gate, same wall-clock will only be worse.
+
+Usage:
+    py tools/gate_v2.py --gen 30 --seeds 42 7 2024 3 11
 """
 from __future__ import annotations
 
@@ -42,6 +53,10 @@ EXT_DIR = os.path.join(HERE, "input", "ext")
 # (档位名, use_ls, 邻域改进开关)
 # 三项改动分开测:捆绑版一致变差,但那说明不了是哪一项有害,也说明不了另两项
 # 是否其实可用。每项单独对照初版,才谈得上归因。
+# (arm name, use_ls, neighborhood-improvement flags)
+# Test the three changes separately: the bundled version was uniformly worse,
+# which does not say which item is harmful or whether the other two are usable.
+# Attribution requires each item compared alone against the original.
 CONFIGS = [
     ("nofeedback", False, {}),
     ("base", True, {}),

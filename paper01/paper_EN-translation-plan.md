@@ -216,6 +216,35 @@
 
 每块译完自检：专名是否落在本表；宏是否仍在；有无把「组」译成 cell；有无把试算升格成机制名。
 
+## 5b. 2026-10-21 增补（中文稿本轮改名；与上表冲突时以本节为准）
+
+| 中文 | 英文（锁定） | 备注 |
+|---|---|---|
+| 脊式布局（原「哑铃」） | spine layout | 首次：a main corridor (the spine) runs through the arm area, each arm hangs off it on its own branch corridor；后文 the spine layout / the three spine instances。**dumbbell 一律不再出现** |
+| 主干走廊（脊） / 支线 | main corridor (the spine) / branch corridor | |
+| 上下料点 $v_0$（原 LU） | the load/unload point $v_0$ | 首次全称，之后多用 $v_0$；不写 LU |
+| 附加代价（原「加价/价格」） | surcharge | 首次：an extra cost on occupied corridor--time slots (hereafter, surcharge)；不写 price/pricing（「影子价格」照译 shadow price） |
+| 代价系数 $\theta$ | surcharge coefficient $\theta$ | 不写 pricing strength |
+| 待料 / 待臂 | waiting for the workpiece / waiting for the arm | 算法里的 `bind`、`arrive`、`machine` 原样保留 |
+| 组（算例） | instance | 「三组脊式算例」= the three spine instances |
+| 水平（因子取值） | level | |
+| 配置（B0…B2） | configuration | |
+| 设置（加速开/关） | setting | 「关闭、开启两种设置」= the off and on settings |
+| 走廊排他（表 1 列名） | corridor exclusivity | 列值 是/否 = yes/no |
+| 排产评价所用运输时长 | transport times used to evaluate schedules | 列值：畅通估计 = unimpeded estimate；路由实算 = routed (incl. yielding) |
+| 研究重点 | research focus | |
+| 实验批次一览（表 tab:batches） | experiment batches | |
+| 主效应 / 次效应 | the larger effect / a much smaller effect | 同 §2.3 |
+| 文化基因算法 | memetic algorithm | |
+| 试算 | trial query | 不写 probe |
+| 式~\eqref{x} | Eq.~\eqref{x}（句首 Equation~\eqref{x}） | 区间：Eqs.~\eqref{a}--\eqref{b} |
+| 第~\ref{x}~节 | Section~\ref{x} | |
+
+本轮新章节标题：
+- 另两种层间接口：附加代价与让行记录 → Two further inter-layer interfaces: surcharges and yield records
+- 端到端与复合（段落） → End to end, and how the two effects combine
+- 引理 lem:label 标题「每个节点只需保留最早到达标签」 → One earliest-arrival label per node suffices
+
 ## 6. 进度（2026-09-03）
 
 - [x] 专名表冻结

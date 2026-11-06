@@ -1,4 +1,7 @@
-"""算例数据模型与载入(规格文档 3.1 / 建模文档 H 节)。"""
+"""算例数据模型与载入(规格文档 3.1 / 建模文档 H 节)。
+
+Instance data model and loading (specification section 3.1 / modeling document section H).
+"""
 from __future__ import annotations
 
 import json
@@ -7,17 +10,19 @@ import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
-OpKey = Tuple[int, int]  # (job, op_index),op_index 从 1 起
+OpKey = Tuple[int, int]  # (job, op_index),op_index 从 1 起 / (job, op_index); op_index starts at 1
 
 
 @dataclass
 class Instance:
     name: str
     delta_return: int                       # 1=成品回运计入 makespan;0=不回运变体
+    # 1 = finished-goods return haul counts in makespan; 0 = the no-return variant
     job_ids: List[int]
-    num_ops: Dict[int, int]                 # job -> 实工序数 n(j)
-    machine_node: Dict[int, str]            # machine -> 取放节点
+    num_ops: Dict[int, int]                 # job -> 实工序数 n(j) / job -> number of real operations n(j)
+    machine_node: Dict[int, str]            # machine -> 取放节点 / machine -> pickup/dropoff node
     proc_time: Dict[OpKey, Dict[int, float]]  # (j,i) -> {m: t^P},缺失即不在 Ω 内
+    # (j,i) -> {m: t^P}; a missing entry is outside Ω
     num_agvs: int
     lu_node: str
     nodes: List[str]
@@ -26,18 +31,29 @@ class Instance:
     # 仅用于公开基准的退化对标:文献只发布一张位置对–时长矩阵,而该矩阵可能是
     # 有向的、甚至不满足三角不等式(实测 HF 的 3-M / 7-M 两个随机布局即如此),
     # 这两种情形都无法由任何"无向走廊图 + 最短路"复现。给定矩阵可逐字复现文献模型。
+    # Pairwise travel-time matrix among pickup/dropoff points, given directly and bypassing shortest-path computation (spec 12.4, item 2).
+    # Used only for the degenerate benchmark on public instances: the literature publishes one location-pair duration matrix, which may be
+    # directed or may violate the triangle inequality (the two random HF layouts 3-M / 7-M do, as measured).
+    # Neither case can be reproduced by any "undirected corridor graph + shortest paths". The given matrix reproduces the published model verbatim.
     ideal_dist: Optional[Dict[str, Dict[str, float]]] = None
 
     # ---- 派生量 ----
+    # Derived quantities
     def eligible(self, j: int, i: int) -> List[int]:
-        """工序 O_ji 的可用机器集合 Ω_ji。"""
+        """工序 O_ji 的可用机器集合 Ω_ji。
+
+        Eligible machine set Ω_ji of operation O_ji.
+        """
         return sorted(self.proc_time[(j, i)].keys())
 
     def real_ops(self) -> List[OpKey]:
         return [(j, i) for j in self.job_ids for i in range(1, self.num_ops[j] + 1)]
 
     def os_job_counts(self) -> Dict[int, int]:
-        """OS 段中每个工件出现的次数(δ_return=1 时含回运伪工序,规格 6.1)。"""
+        """OS 段中每个工件出现的次数(δ_return=1 时含回运伪工序,规格 6.1)。
+
+        How many times each job appears in the OS segment (includes the return-haul pseudo-operation when δ_return=1; spec 6.1).
+        """
         extra = 1 if self.delta_return else 0
         return {j: self.num_ops[j] + extra for j in self.job_ids}
 
@@ -102,17 +118,23 @@ def feature_params(inst: Instance, ideal_dist: Dict[str, Dict[str, float]],
 
     传入 net(Network)时附加结构指标 funnel_share / lu_min_cut(规格 12.3):
     用于刻画"决策无关拥堵"占比,是拥堵度因子必须与之并列报告的量。
+
+    Instance feature parameters (modeling document H, section 5): T̄t/T̄p, heterogeneity, flexibility, and NA/NM.
+
+    When net (a Network) is passed in, structural indicators funnel_share / lu_min_cut are added (spec 12.3). They describe the share of decision-independent congestion, which must be reported alongside the congestion factor.
     """
-    # 平均加工时间(全部行内非空项)
+    # 平均加工时间(全部行内非空项) / Mean processing time (all nonempty in-row entries)
     all_times = [t for row in inst.proc_time.values() for t in row.values()]
     tp_bar = sum(all_times) / len(all_times)
 
     # 取放点(机器节点 + LU)两两平均最短路时间
+    # Mean pairwise shortest-path time among pickup/dropoff points (machine nodes + LU)
     points = sorted(set(inst.machine_node.values()) | {inst.lu_node})
     dists = [ideal_dist[a][b] for a in points for b in points if a != b]
     tt_bar = sum(dists) / len(dists) if dists else 0.0
 
     # 异构度:各行(工序)非空项变异系数的平均值
+    # Heterogeneity: mean coefficient of variation of nonempty entries in each row (operation)
     cvs = []
     for row in inst.proc_time.values():
         vals = list(row.values())
@@ -124,7 +146,7 @@ def feature_params(inst: Instance, ideal_dist: Dict[str, Dict[str, float]],
             cvs.append(0.0)
     heterogeneity = sum(cvs) / len(cvs)
 
-    # 柔性度:平均 |Ω| / NM
+    # 柔性度:平均 |Ω| / NM / Flexibility: mean |Ω| / NM
     flex = sum(len(row) for row in inst.proc_time.values()) / len(inst.proc_time) / inst.num_machines
 
     out = {
@@ -157,6 +179,16 @@ def simple_lower_bound(inst: Instance, net) -> dict:
 
     三者互不支配:1 抓最长工件,2 抓总负载,3 抓路网咽喉。**这不是紧下界**,
     只用于给出"还有多少空间"的量级判断,以及回归时防止出现不可能的解。
+
+    A zero-cost composite lower bound on makespan (spec F3 / a cheap first version of the priority-2 item in 13.6).
+
+    Each of the three components is a valid relaxation; the bound is their maximum:
+
+    1. `job_chain`  per job: shortest trip to deliver the first operation + the sum of each operation's minimum processing time inside its Ω + the shortest finished-goods return trip. Changeover travel (time >= 0) and all queueing are relaxed away;
+    2. `machine_load`  total processing load shared across machines: sum_op min_m t^P / NM. Precedence and travel are relaxed away;
+    3. `lu_cut`    the LU-funnel throughput bound (see Network.lu_cut_bound).
+
+    None dominates the others: (1) catches the longest job, (2) the total load, and (3) the road-network bottleneck. This is not a tight lower bound. It only indicates the order of magnitude of remaining room, and it guards regression tests against impossible solutions.
     """
     lu = inst.lu_node
     dist = net.ideal_dist

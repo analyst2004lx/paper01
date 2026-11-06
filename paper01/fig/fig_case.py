@@ -23,7 +23,7 @@ import fig_case_gantt as gantt  # noqa: E402
 
 STRINGS = {
     "title_b0": "B0  open loop, rule dispatch",
-    "title_b2": "B2  closed loop, reservation-aware dispatch (proposed)",
+    "title_b2": "B2  closed loop, reservation-table-aware dispatching (proposed)",
     "xlabel": "time",
     "ylabel": "critical-chain composition (time units)",
     "xtick_b0": "B0\nopen loop",
@@ -48,7 +48,6 @@ def _draw_bars(ax, arms, kinds, strings):
     ax.set_ylim(0, 1.55 * stack_max)
     for x, arm in enumerate(order):
         bottom = 0.0
-        slices = []
         stack = sum(comps[arm].values())
         for k, label, colour in kinds:
             v = comps[arm][k]
@@ -57,9 +56,11 @@ def _draw_bars(ax, arms, kinds, strings):
             ax.bar(x, v, bottom=bottom, width=0.55, color=colour,
                    edgecolor="white", linewidth=0.6,
                    label=label if x == 0 else None, zorder=3)
-            slices.append((bottom, v, colour))
+            if v >= 0.06 * stack:
+                ax.text(x, bottom + v / 2, "%.0f" % v, ha="center",
+                        va="center", fontsize=6.2, color="white",
+                        fontweight="bold", zorder=4)
             bottom += v
-        chain._label_slices(ax, x, slices, stack)
     d_corr = comps["B0"]["corridor"] - comps["B2"]["corridor"]
     d_mk = arms["B0"]["makespan"] - arms["B2"]["makespan"]
     ax.set_xticks(range(len(order)))
@@ -86,11 +87,8 @@ def render(strings, stem):
     fig, axes = plt.subplots(
         3, 1, figsize=(FULL, 6.6),
         gridspec_kw={"height_ratios": [2.15, 2.15, 1.45]})
-    gantt_kw = dict(arm_label=strings["arm_label"],
-                    agv_label=strings["agv_label"],
-                    yield_suffix=strings["yield_suffix"])
-    gantt.draw(axes[0], tt["B0"], strings["title_b0"], xmax, **gantt_kw)
-    gantt.draw(axes[1], tt["B2"], strings["title_b2"], xmax, **gantt_kw)
+    gantt.draw(axes[0], tt["B0"], strings["title_b0"], xmax)
+    gantt.draw(axes[1], tt["B2"], strings["title_b2"], xmax)
     axes[1].set_xlabel(strings["xlabel"])
     _draw_bars(axes[2], arms, kinds, strings)
 

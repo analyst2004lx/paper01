@@ -1,32 +1,28 @@
 # Paper figures for paper03
 
-## Build
+Each `fig_*.pdf` is produced by the same-name Python script.
 
 ```powershell
 cd paper03\Latex\fig
+# optional: refresh data/plot_data.json
 py export_data.py
-py plot_all.py
-.\build_tikz.ps1
+# conceptual
+py fig_system.py
+py fig_attack_tree.py
+py fig_architecture.py
+py fig_budget_chain.py
+py fig_protocol.py
+# experiments
+py fig_tier1.py
+py fig_witness.py
+py fig_ablation.py
+py fig_heartbeat.py
+py fig_budget_bw.py
+py fig_loss_sweep.py
+py fig_collusion.py
+py fig_coverage.py
+# Chinese system figure (开题)
+py fig_system_CN.py
 ```
 
-Or: `.\build_all.ps1`
-
-## Outputs cited in `paper03.tex`
-
-| File | Role |
-| --- | --- |
-| `fig_system.pdf` | System + message loop |
-| `fig_attack_tree.pdf` | P1–P4 decision tree |
-| `fig_architecture.pdf` | M1–M7 pipeline |
-| `fig_budget_chain.pdf` | Hazard→budget→BW |
-| `fig_protocol.pdf` | Dual-deadline + heartbeat timeline |
-| `fig_tier1.pdf` | Tier-1 structural zero |
-| `fig_witness.pdf` | Tier-2 witness selection |
-| `fig_ablation.pdf` | Coverage / ablation heatmap |
-| `fig_heartbeat.pdf` | H1 equal-bandwidth latency |
-| `fig_budget_bw.pdf` | Silence BW vs PBFT |
-| `fig_loss_sweep.pdf` | Loss sweep |
-| `fig_collusion.pdf` | Collusion $k$ histogram |
-| `fig_coverage.pdf` | Oracle gap (U1) |
-
-Sources: `tikz_*.tex` (concept), `export_data.py` + `plot_all.py` (experiments), `data/`.
+Shared style/data helpers: `_style.py`. Data refresh: `export_data.py` → `data/`.

@@ -10,7 +10,7 @@ for inst in ('example_3x3x2','congested_8x4x4'):
         ref=st.mean(float(r['ref_makespan']) for r in g(inst,mode,2.0))
         r2=st.mean(float(r['R2_makespan']) for r in g(inst,mode,2.0))
         print('  ref Cmax %.1f   R2 Cmax %.1f'%(ref,r2))
-        # floor = 最小的未兑现预算格(gens=1)
+        # floor = 最小的未兑现预算格(gens=1) / floor = smallest budget cell that was not honored (gens=1)
         fl=[r for r in rows if r['instance']==inst and r['baseline_mode']==mode and float(r['budget_sec'])==0.005]
         f0=st.mean(float(r['R0_makespan']) for r in fl)
         fw=st.mean(float(r['R0_wall_ms']) for r in fl)

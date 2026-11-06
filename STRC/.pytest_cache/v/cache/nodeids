@@ -1,6 +1,15 @@
 [
+  "tests/test_smoke.py::TestSmoke::test_abutting_yield_closes_known_leak",
+  "tests/test_smoke.py::TestSmoke::test_agv_breakdown_swaps_vehicle",
   "tests/test_smoke.py::TestSmoke::test_clbs_bridge_loads_instance",
   "tests/test_smoke.py::TestSmoke::test_e1_and_repair_corridor",
   "tests/test_smoke.py::TestSmoke::test_modules_import",
-  "tests/test_smoke.py::TestSmoke::test_r0_under_block_smoke"
+  "tests/test_smoke.py::TestSmoke::test_piecewise_tau_only_scales_overlap",
+  "tests/test_smoke.py::TestSmoke::test_prefix_decode_keeps_demoted_empty",
+  "tests/test_smoke.py::TestSmoke::test_prefix_decode_keeps_history",
+  "tests/test_smoke.py::TestSmoke::test_r0_under_block_smoke",
+  "tests/test_smoke.py::TestSmoke::test_ra_failure_hard_cells",
+  "tests/test_smoke.py::TestSmoke::test_ra_failure_reassigns_machine",
+  "tests/test_smoke.py::TestSmoke::test_redecode_respects_a2",
+  "tests/test_smoke.py::TestSmoke::test_slowdown_is_not_a_block"
 ]

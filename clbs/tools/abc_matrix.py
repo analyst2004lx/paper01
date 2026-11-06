@@ -22,6 +22,23 @@
 运行(clbs/ 目录下):
   py -u -m tools.abc_matrix --probe                    # 先看各格争用强度,秒级
   py -u -m tools.abc_matrix [--budget 90] [--seeds a,b,c,d]
+
+Orthogonal sweep of parameters A/B/C: in which parameter region does closed-loop dispatch gain appear?
+
+Why sweep only dispatch. Of the three contributions, only reservation-table probe dispatch was shown to have a net gain (after the cost reduction, high-contention instances, same wall-clock -4.01%, 12 wins 2 losses, p=0.0372; see tools/dispatch_ab.py). Pricing plus multi-label routing is a controlled negative result (+0.47%, p=0.70; see tools/price_matrix.py). Conflict-certificate-guided reassignment has a real opportunity (converged-phase oracle 17.4%), but a cheap score captures only about 26–29% of the gap from random to the oracle, and truly decoding every candidate is 2.49% worse under the same wall-clock. So the "parameter region" question is meaningful only for dispatch.
+
+Sweep design. Each family moves one factor; the rest stay at one base point (J12 / M8 / tt=4.0 / funnel / A12 / F0.6), so within-family differences can be attributed:
+  A layout     funnel < high < mid < low < scatter, more exits and lanes, then a grid and a staggered grid
+  B fleet ratio  NA/NM = 0.5 / 1.0 / 1.5 / 2.0
+  C flexibility  F = 0.3 / 0.6 / 1.0 (partial flexibility to full flexibility)
+
+Scale is J12/M8 rather than the main benchmark J8/M4: the latter's contention is only 2–14%, which does not open a region, and with 4 arms each reassignment case averages only 1.2 candidate machines, so the method has nothing to work with.
+
+Budget trap. Under the previous 20-second budget the dispatch arm on high-contention cells reached only 8–16 generations; a pop=60 GA had not left random initialization, and the loss was a budget artifact — at 90 seconds it overtakes. This sweep uses 90 seconds and **reports generations cell by cell**. A dispatch arm under 40 generations is marked budget-starved, and its data must not support a conclusion about the parameter region.
+
+Run (from the clbs/ directory):
+  py -u -m tools.abc_matrix --probe                    # contention of each cell first, seconds
+  py -u -m tools.abc_matrix [--budget 90] [--seeds a,b,c,d]
 """
 from __future__ import annotations
 
@@ -44,6 +61,7 @@ from tools.price_matrix import instance_contention
 BASE = dict(jobs=12, nm=8, na=12, flex=0.6, tt=4.0, tag="funnel")
 
 # (族, 展示名, 覆盖项)。基点 funnel/A12/F0.6 在三族中共用,只跑一次。
+# (family, display name, overrides). Base point funnel/A12/F0.6 is shared by all three families and run once.
 CASES: List[dict] = [
     dict(fam="A 布局", name="A funnel",  tag="funnel"),
     dict(fam="A 布局", name="A high",    tag="high"),
@@ -58,6 +76,7 @@ CASES: List[dict] = [
 ]
 ARMS = [("规则派车", "rule"), ("试探派车", "exact")]
 MIN_GENS = 40          # 派车档低于此代数即视为预算饥饿,数据不可用
+                       # a dispatch arm below this generation count is budget-starved; data unusable
 
 
 def build(case: dict):

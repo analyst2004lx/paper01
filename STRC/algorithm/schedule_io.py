@@ -1,4 +1,7 @@
-"""从 clbs DecodeResult 提取预约列表,并构造带染色体的基线可行排程。"""
+"""从 clbs DecodeResult 提取预约列表,并构造带染色体的基线可行排程。
+
+Extract the reservation list from a clbs DecodeResult, and build a feasible baseline schedule that carries its chromosome.
+"""
 from __future__ import annotations
 
 import json
@@ -57,7 +60,10 @@ def build_baseline(
     mode: str = "heuristic",
     budget_sec: float = 5.0,
 ) -> ScheduleBundle:
-    """构造冲突自由的可行基线排程(含染色体,供局部重放)。"""
+    """构造冲突自由的可行基线排程(含染色体,供局部重放)。
+
+    Build a conflict-free feasible baseline schedule (chromosome included, for local replay).
+    """
     if mode == "heuristic":
         rng = random.Random(seed)
         ma = _clbs_ga.ma_min_time(inst)

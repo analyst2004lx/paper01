@@ -16,6 +16,19 @@
     报出来，否则会显得在夸大第一档的无能。
 
 用法(在 paper03/tessera/ 下):  py -m tools.tier1_diag
+
+Tier-1 baselines: the **structural 0** of single-observer methods on task-state falsification.
+
+This tier is a theorem, not a race, so it is reported differently: not by comparing magnitudes, but by turning the provable claim "the single-observer family cannot detect this by construction" into a reproducible measurement.
+
+To give that 0 weight, every baseline is **given the strongest implementation it can have**: thresholds are calibrated on a pure benign stream to the tightest point that does not false-alarm, conformance judges the full process-model language (including same-machine sequential steps and material-flow continuation), and the watchdog uses the same 260 s dispatch-queue allowance as this paper. After all of that it is still 0.
+
+Two contrast conventions, both required:
+
+  - **P1 (naive falsification, no heartbeat)** and **P3 (skilled falsification with on-time preimage disclosure)**: they look identical to a single observer, so tier 1's numbers must match — if they differ, the implementation leaked information it should not have. That is a self-check.
+  - **P2 (total silence)**: a single observer **can** find it; a watchdog is enough. This paper does not claim that point and reports it as is, or tier 1's inability would look exaggerated.
+
+Usage (from paper03/tessera/):  py -m tools.tier1_diag
 """
 from __future__ import annotations
 
@@ -41,7 +54,10 @@ def load(xes, bpmn):
 
 
 def run(det, benign, streams) -> dict:
-    """标定一次，然后在各攻击流上评测。分母是伪造声明数。"""
+    """标定一次，然后在各攻击流上评测。分母是伪造声明数。
+
+    Calibrate once, then evaluate on each attack stream. The denominator is the number of forged statements.
+    """
     det.calibrate(benign)
     fa = det.accuse(benign)
     out = {"far": len(fa) / max(len(benign), 1), "n_fa": len(fa)}
@@ -70,6 +86,7 @@ def main() -> int:
             explicit_refutation=True))
 
     # 本文的误报率先测出来，作为 R0 的等告警预算。
+    # Measure this paper's false-alarm rate first; it is R0's equal-alarm budget.
     ours_p1 = corroborate.replay(streams[attacks.P1], g, refute=True)
     prim = {id(r) for r in streams[attacks.P1]
             if r.forged and not r.accomplice}
@@ -77,6 +94,7 @@ def main() -> int:
                / max(len(prim), 1))
     bp = corroborate.replay(benign, g)
     # 与 `detect_diag` / 断言 D2 / `_bl` 同口径：只计声明已被看到的证据。
+    # Same convention as `detect_diag` / assertion D2 / `_bl`: count only evidence whose statement was seen.
     ours_far = (len([e for e in bp.evidence if e.claim_seen])
                 / max(len(benign), 1))
 

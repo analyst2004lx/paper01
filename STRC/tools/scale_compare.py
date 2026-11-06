@@ -7,6 +7,16 @@
 用法(在 STRC/ 下):
     py -m tools.scale_compare
     py -m tools.scale_compare --scales 0.1,0.25,0.5,0.75,1.0 --budget-sec 2
+
+Standalone experiment: paper01 (R0+) versus paper04 (STRC) at a disturbed-task ratio φ ∈ (0,1].
+
+Results are written only to experiments/scale_compare/, and are not mixed into the e1–e5 tables.
+
+Protocol: experiments/scale_compare/README.md.
+
+Usage (from STRC/):
+    py -m tools.scale_compare
+    py -m tools.scale_compare --scales 0.1,0.25,0.5,0.75,1.0 --budget-sec 2
 """
 from __future__ import annotations
 
@@ -53,7 +63,10 @@ def _op_key_from_task(task: str) -> OpKey | None:
 
 
 def _future_ops_by_reservation(reservations, t_now: float) -> List[OpKey]:
-    """仍有未来预约的工序,按该工序最早未来预约时刻排序。"""
+    """仍有未来预约的工序,按该工序最早未来预约时刻排序。
+
+Operations that still have a future reservation, sorted by that operation's earliest future reservation time.
+"""
     best: Dict[OpKey, float] = {}
     for r in reservations:
         if r.t_end <= t_now:
@@ -66,7 +79,10 @@ def _future_ops_by_reservation(reservations, t_now: float) -> List[OpKey]:
 
 
 def _reservations_of_ops(reservations, op_set: Set[OpKey], *, t_now: float):
-    """只取受扰工序在 t_now 之后仍有效的预约(作微阻断种子)。"""
+    """只取受扰工序在 t_now 之后仍有效的预约(作微阻断种子)。
+
+Take only reservations of disturbed operations that are still active after t_now (seeds of the micro-blockages).
+"""
     out = []
     for r in reservations:
         if r.t_end <= t_now:
@@ -78,7 +94,10 @@ def _reservations_of_ops(reservations, op_set: Set[OpKey], *, t_now: float):
 
 
 def _make_dist(t_now: float, seed_res) -> "Disturbance":
-    """逐条微阻断(不合并),避免合并后误伤未选中工序的预约。"""
+    """逐条微阻断(不合并),避免合并后误伤未选中工序的预约。
+
+One micro-blockage per reservation (do not merge), so merging does not hit reservations of operations that were not selected.
+"""
     from algorithm.disturbance import Disturbance
     blocks = [(r.corridor, float(r.t_start), float(r.t_end)) for r in seed_res]
     if not blocks:
@@ -96,7 +115,10 @@ def _make_dist(t_now: float, seed_res) -> "Disturbance":
 
 
 def _release_covering_blocks(reservations, blocks, t_now: float, horizon: float, chains):
-    """种子=与任一微阻断重叠的预约,再取时空闭包(保证外侧可冻结)。"""
+    """种子=与任一微阻断重叠的预约,再取时空闭包(保证外侧可冻结)。
+
+Seeds = reservations overlapping any micro-blockage; then take the spatiotemporal closure (so the outside can be frozen).
+"""
     from algorithm.closure import spatiotemporal_closure
     seeds = []
     for r in reservations:
@@ -152,14 +174,14 @@ def main() -> int:
                 print(f"  seed={seed} phi={phi}: no reservations, skip")
                 continue
             dist = _make_dist(t_now, seed_res)
-            # paper04: 所有与微阻断重叠的预约作种子 + 时空闭包
+            # paper04: 所有与微阻断重叠的预约作种子 + 时空闭包 / paper04: every reservation overlapping a micro-blockage is a seed, plus the spatiotemporal closure
             closure = _release_covering_blocks(
                 bundle.reservations, dist.extra["blocks"],
                 t_now, bundle.makespan + 1.0, chains,
             )
             rep4 = repair_with_scope_escalation(
                 inst, net, bundle, dist, closure.closed)
-            # paper01: 热启动 GA
+            # paper01: 热启动 GA / paper01: warm-start GA
             rep1 = resolve_r0(
                 inst, net, bundle, dist,
                 budget_sec=args.budget_sec, seed=seed, hot=True, pop=args.pop,
@@ -221,7 +243,7 @@ def main() -> int:
         for row in rows:
             w.writerow(row)
 
-    # 按 φ 聚合均值表
+    # 按 φ 聚合均值表 / Mean table aggregated by φ
     by_phi: Dict[float, List[dict]] = defaultdict(list)
     for row in rows:
         by_phi[row["phi"]].append(row)

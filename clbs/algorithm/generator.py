@@ -16,6 +16,16 @@
 3.1 实测修正、13.6 优先级 1)。把 `lu_exits` 与 `mid_lanes` 分开扫,才能把
 "决策相关拥堵"与"决策无关拥堵"的效应分离——这是 `high` 与 `funnel` 两档
 只差 LU 容量的受控对比的用意。
+
+Controlled generator of extended instances (spec 12.3).
+
+The design goal is that every cell of the "congestion × heterogeneity" two-factor experiment changes only one thing:
+
+- Road network: templated layouts. Congestion is controlled by two capacity knobs — `lu_exits` (number of LU exits) and `mid_lanes` (number of parallel mid-segment lanes). Both knobs change capacity only, not distance: whatever their values, v0 to the near hub is always 2 time units, and the near hub to the far hub is always `mid_time`. Under the same layout, instances of different capacity therefore share the identical ideal shortest-path matrix t*, and congestion is the only variable.
+- Heterogeneity H: draw random perturbations, standardize them, then scale by H, so the population coefficient of variation of each row (operation) equals H exactly before rounding. At H=0 the same operation takes the same time on every machine, which degenerates to a "flexible but zero-heterogeneity" control (the synthetic counterpart of the Deroussi arm in spec 12.1).
+- Flexibility F: randomized rounding toward the target mean |Ω| = F*NM, always with |Ω| >= 2 (B1).
+
+Why control the LU exits separately: the LU-exit corridors carry every job's first delivery and finished-goods return haul. Their congestion does not depend on machine assignment. It only raises the baseline delay of every solution and does not create a difference that reassignment or stagger can exploit (measured correction in spec 3.1; priority 1 in 13.6). Sweeping `lu_exits` and `mid_lanes` separately is what separates "decision-dependent congestion" from "decision-independent congestion". That is the point of the controlled comparison in which the `high` and `funnel` arms differ only in LU capacity.
 """
 from __future__ import annotations
 
@@ -25,37 +35,54 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
 # --------------------------------------------------------------------------
-# 规格
+# 规格 / Specification
 # --------------------------------------------------------------------------
 
 
 @dataclass
 class InstanceSpec:
-    """一个扩展算例的完整生成参数(随算例落盘,满足 F1 可复现)。"""
+    """一个扩展算例的完整生成参数(随算例落盘,满足 F1 可复现)。
+
+    Full generation parameters of an extended instance (stored with the instance, so F1 reproducibility holds).
+    """
     num_jobs: int
     num_machines: int
     num_agvs: int
     ops_per_job: int
     layout: str = "dumbbell"          # dumbbell | grid | mesh | pubgrid
     lu_exits: int = 2                 # LU 出口条数 = 漏斗宽度(容量旋钮)
+    # Number of LU exits = funnel width (capacity knob)
     mid_lanes: int = 1                # 中段并行通道数(容量旋钮)
+    # Number of parallel mid-segment lanes (capacity knob)
     mid_time: float = 6.0             # 中段单程时间(拉大则远端更贵)
+    # One-way mid-segment time (a larger value makes the far end more expensive)
     far_frac: float = 0.5             # 远端 RA 占比
+    # Share of robotic arms placed at the far end
     spur_time: float = 2.0            # 枢纽到 RA 的支线时间
+    # Spur time from a hub to a robotic arm
     grid_rows: int = 3                # layout=grid 时的网格规模
+    # Grid size when layout=grid
     grid_cols: int = 3
     grid_time: float = 3.0
     heterogeneity: float = 0.3        # 目标 H(行内变异系数)
+    # Target H (within-row coefficient of variation)
     flexibility: float = 0.6          # 目标 F(平均 |Ω| / NM)
+    # Target F (mean |Ω| / NM)
     proc_lo: float = 8.0              # 工序名义难度区间(标定前的相对尺度)
+    # Nominal operation-difficulty range (relative scale before calibration)
     proc_hi: float = 24.0
     tt_tp_target: Optional[float] = 1.0   # 目标 T̄t/T̄p;None = 不标定
+    # Target T̄t/T̄p; None = do not calibrate
     delta_return: int = 1
     seed: int = 0
     tag: str = ""                     # 拥堵度档位名,仅用于命名与追溯
+    # Congestion-level name, used only for naming and traceability
     # layout="pubgrid" 时使用:拓扑取自公开数据文件而非本文设计,见 PUB_LAYOUTS。
     # 节点号沿用原文件的行主序 1 基编号 n = (r-1)*grid_cols + c。
+    # Used when layout="pubgrid": the topology is taken from a public data file, not designed in this paper; see PUB_LAYOUTS.
+    # Node ids keep the source file's row-major 1-based numbering n = (r-1)*grid_cols + c.
     pub_source: str = ""              # 来源标签(非空即表示布局非本文设计)
+    # Source label (nonempty means the layout was not designed in this paper)
     grid_lu_node: int = 0
     grid_machine_nodes: List[int] = field(default_factory=list)
     grid_removed_edges: List[List[int]] = field(default_factory=list)
@@ -64,8 +91,12 @@ class InstanceSpec:
         return f"S{self.num_jobs}x{self.num_machines}x{self.num_agvs}"
 
     def name(self) -> str:
-        """规格 12.3 的命名规则: <基础>-L<布局>-H<异构>-F<柔性>-A<AGV>[-s<种子>]。"""
+        """规格 12.3 的命名规则: <基础>-L<布局>-H<异构>-F<柔性>-A<AGV>[-s<种子>]。
+
+        Naming rule of spec 12.3: <base>-L<layout>-H<heterogeneity>-F<flexibility>-A<AGV>[-s<seed>].
+        """
         # 外部布局直接用来源标签作布局段(它自带来源名,再冠一个 L 只会变成 LLyuL4)。
+        # An external layout uses its source label as the layout segment (the label already carries the source name; prefixing another L would yield LLyuL4).
         if self.pub_source:
             layout = self.pub_source
         else:
@@ -75,7 +106,7 @@ class InstanceSpec:
 
 
 # --------------------------------------------------------------------------
-# 路网模板
+# 路网模板 / Road-network templates
 # --------------------------------------------------------------------------
 
 
@@ -85,11 +116,16 @@ def _dumbbell(spec: InstanceSpec) -> Tuple[List[str], List[dict], List[str]]:
     并行通道必须经由**互不相同的中间节点**实现:走廊的预约资源按端点对归并
     (network.corridor_id),同端点对的重复边会塌缩成同一个独占资源、达不到扩容
     效果。故每条通道插一个中间节点,并令两跳时间之和保持恒定。
+
+    Dumbbell layout: LU --(lu_exits parallel lanes)--> near hub --(mid_lanes parallel lanes)--> far hub.
+
+    Parallel lanes must pass through distinct intermediate nodes. Corridor reservation resources are merged by endpoint pair (network.corridor_id), so duplicate edges on the same endpoint pair collapse into one exclusive resource and do not add capacity. Each lane therefore inserts an intermediate node, and the sum of the two hop times is held constant.
     """
     nodes = ["v0", "h1", "h2"]
     corridors: List[dict] = []
 
     # LU -> 近端枢纽:k 条两跳通道,单程恒为 2
+    # LU -> near hub: k two-hop lanes, one-way time fixed at 2
     for i in range(1, spec.lu_exits + 1):
         e = f"e{i}"
         nodes.append(e)
@@ -97,6 +133,7 @@ def _dumbbell(spec: InstanceSpec) -> Tuple[List[str], List[dict], List[str]]:
         corridors.append({"u": e, "v": "h1", "time": 1})
 
     # 近端 -> 远端:k 条两跳通道,单程恒为 mid_time
+    # Near hub -> far hub: k two-hop lanes, one-way time fixed at mid_time
     half = spec.mid_time / 2.0
     for i in range(1, spec.mid_lanes + 1):
         g = f"g{i}"
@@ -117,7 +154,10 @@ def _dumbbell(spec: InstanceSpec) -> Tuple[List[str], List[dict], List[str]]:
 
 
 def _grid(spec: InstanceSpec) -> Tuple[List[str], List[dict], List[str]]:
-    """网格布局:路径冗余度高,作为低拥堵对照。LU 置于角点,RA 尽量分散。"""
+    """网格布局:路径冗余度高,作为低拥堵对照。LU 置于角点,RA 尽量分散。
+
+    Grid layout: high path redundancy, used as the low-congestion control. The LU sits at a corner, and robotic arms are spread out.
+    """
     rows, cols = spec.grid_rows, spec.grid_cols
     if rows * cols < spec.num_machines + 1:
         raise ValueError(f"网格 {rows}x{cols} 容纳不下 {spec.num_machines} 台 RA 与 LU")
@@ -136,6 +176,7 @@ def _grid(spec: InstanceSpec) -> Tuple[List[str], List[dict], List[str]]:
                 corridors.append({"u": gid(r, c), "v": gid(r + 1, c),
                                   "time": spec.grid_time})
     # LU 占角点;RA 按到 LU 的曼哈顿距离降序取,保证分散且远近有别
+    # The LU takes a corner. Robotic arms are taken in descending Manhattan distance from the LU, so they are spread out and differ in distance.
     lu = gid(0, 0)
     rest = sorted((n for n in nodes if n != lu),
                   key=lambda n: (-(int(n[1:].split("_")[0]) + int(n.split("_")[1])), n))
@@ -163,6 +204,19 @@ def _mesh(spec: InstanceSpec) -> Tuple[List[str], List[dict], List[str]]:
     LU 仍置于角点、网格尺寸与边权也与 grid 一致,故 grid 与 mesh 之间**只差
     RA 选点**一个因素,两者之差可干净地归因给摆放方式。LU 出口容量是另一个旋钮
     (哑铃布局的 lu_exits),不在此处混入。
+
+    Staggered layout: the LU sits at the midpoint of one edge, and robotic arms are spread over the grid by farthest-point sampling.
+
+    The other two layouts make "switching robotic arm" barely change any corridor that is actually contended, so the reassignment operator has no way to relieve congestion:
+
+      dumbbell  each robotic arm hangs off a hub on its own spur, and every transport must pass LU->near hub.
+                Reassignment between two arms on the same hub changes only the spur that only that arm uses,
+                and the contended exposure does not move (43% of robotic-arm pairs are like this at M8).
+      grid      points are taken in descending distance from the LU, which in practice clusters the arms in the corner far from the LU, so the paths to them share one trunk.
+
+    This layout uses farthest-point sampling: each pick is the node farthest from the set already chosen (including the LU), so the arms spread in every direction and "changing arm" really means "changing corridor". See tools.layout_diag.
+
+    The LU is still at a corner, and the grid size and edge weights match grid, so grid and mesh differ only in how robotic arms are placed. Their gap can be attributed cleanly to placement. LU-exit capacity is another knob (lu_exits of the dumbbell layout) and is not mixed in here.
     """
     rows, cols = spec.grid_rows, spec.grid_cols
     if rows * cols < spec.num_machines + 1:
@@ -183,6 +237,7 @@ def _mesh(spec: InstanceSpec) -> Tuple[List[str], List[dict], List[str]]:
                                   "time": spec.grid_time})
 
     lu = gid(0, 0)                               # 与 grid 对齐,保证只差 RA 选点
+    # Aligned with grid, so the only difference is which robotic-arm nodes are chosen.
     chosen: List[str] = []
     for _ in range(spec.num_machines):
         anchor = [lu] + chosen
@@ -206,6 +261,12 @@ def _pubgrid(spec: InstanceSpec) -> Tuple[List[str], List[dict], List[str]]:
     节点名保留原文件的行主序 1 基编号(`g<n>`,n = (r-1)*cols + c),使生成的算例
     可以和原始 `.data` 文件逐项对账。缺边必须确实是网格四邻接边,否则说明编号口径
     与原文件不一致,此时宁可报错也不能静默生成一张错的图。
+
+    Grid layout from an external source: size, load/unload station, machine placement, and missing edges are read item by item from a public data file.
+
+    The only difference from `_grid` is how nodes are chosen. `_grid` picks machine nodes by distance to the LU, so the layout is designed in this paper. This function reads externally given node ids, so neither "where the machines sit" nor "where edges are missing" is decided here. That is why it exists (see PUB_LAYOUTS).
+
+    Node names keep the source file's row-major 1-based ids (`g<n>`, n = (r-1)*cols + c), so a generated instance can be checked item by item against the original `.data` file. A missing edge must really be a 4-adjacent grid edge; otherwise the numbering convention disagrees with the source file, and it is better to raise than to silently emit a wrong graph.
     """
     rows, cols = spec.grid_rows, spec.grid_cols
     total = rows * cols
@@ -254,7 +315,7 @@ _LAYOUTS = {"dumbbell": _dumbbell, "grid": _grid, "mesh": _mesh,
 
 
 # --------------------------------------------------------------------------
-# 加工时间(H / F 可控)
+# 加工时间(H / F 可控) / Processing times (H / F controllable)
 # --------------------------------------------------------------------------
 
 
@@ -264,7 +325,10 @@ def _pop_std(vals: List[float]) -> float:
 
 
 def _omega_size(rng: random.Random, target: float, num_machines: int) -> int:
-    """随机化取整,使 |Ω| 的期望等于 target,并夹到 [2, NM](B1)。"""
+    """随机化取整,使 |Ω| 的期望等于 target,并夹到 [2, NM](B1)。
+
+    Randomized rounding so that the expectation of |Ω| equals target, clamped to [2, NM] (B1).
+    """
     base = int(math.floor(target))
     size = base + (1 if rng.random() < target - base else 0)
     return max(2, min(num_machines, size))
@@ -278,6 +342,10 @@ def gen_proc_time(spec: InstanceSpec, rng: random.Random
     故 CV = H 与 |Ω| 无关——直接用均匀扰动的话 CV 会随 |Ω| 漂移、小 |Ω| 上
     尤其不稳,H 就失去了作为实验因子的资格。取整会带来小偏差,因此生成后
     **实测并记录**真实 H(见 build_instance 的 features 头)。
+
+    Build proc_time so that each row's population coefficient of variation equals the target H exactly before rounding.
+
+    Method: draw |Ω| independent perturbations, standardize them to zero mean and unit variance, then multiply by H to get the deviation. CV = H is then independent of |Ω|. A raw uniform perturbation would let CV drift with |Ω|, especially at small |Ω|, and H would no longer qualify as an experimental factor. Rounding introduces a small bias, so the realized H is measured and recorded after generation (see the features header in build_instance).
     """
     machines = list(range(1, spec.num_machines + 1))
     target_omega = spec.flexibility * spec.num_machines
@@ -296,6 +364,7 @@ def gen_proc_time(spec: InstanceSpec, rng: random.Random
             if sd > 0:
                 mean = sum(raw) / len(raw)
                 # 夹住标准分,防止 H 较大时出现非正的加工时间
+                # Clamp the z-score so a large H does not produce a nonpositive processing time.
                 zs = [max(-2.0, min(2.0, (r - mean) / sd)) for r in raw]
             else:
                 zs = [0.0] * size
@@ -307,13 +376,16 @@ def gen_proc_time(spec: InstanceSpec, rng: random.Random
 
 
 # --------------------------------------------------------------------------
-# 组装
+# 组装 / Assembly
 # --------------------------------------------------------------------------
 
 
 def _mean_pairwise_travel(nodes: List[str], corridors: List[dict], lu: str,
                           machine_nodes: List[str]) -> float:
-    """取放点(RA 节点 + LU)两两平均理想最短路时间,即 T̄t(与 feature_params 同口径)。"""
+    """取放点(RA 节点 + LU)两两平均理想最短路时间,即 T̄t(与 feature_params 同口径)。
+
+    Mean pairwise ideal shortest-path time among pickup/dropoff points (robotic-arm nodes + LU), i.e. T̄t (same definition as feature_params).
+    """
     from .network import Network
     net = Network(nodes, corridors, lu)
     points = sorted(set(machine_nodes) | {lu})
@@ -329,6 +401,10 @@ def _calibrate_tt_tp(proc: Dict[Tuple[int, int], Dict[int, float]],
     路网来调该比值,就会把"运输强度"和"网络结构"两件事混在一起。而缩放加工
     时间对 H(变异系数,尺度无关)与 F(|Ω| 大小)均无影响,是干净的标定杠杆。
     取整会带来漂移,故迭代若干轮。
+
+    Scale processing times in place so that T̄t/T̄p hits target.
+
+    Only processing times are scaled; the road network is not touched. T̄t is fixed by the topology and is a structural feature of each congestion level. Changing the road network to tune the ratio would mix "transport intensity" with "network structure". Scaling processing time does not affect H (a coefficient of variation, scale-free) or F (the size of |Ω|), so it is a clean calibration lever. Rounding causes drift, so the scaling is iterated for several rounds.
     """
     if target is None or target <= 0 or tt_bar <= 0:
         return
@@ -346,7 +422,10 @@ def _calibrate_tt_tp(proc: Dict[Tuple[int, int], Dict[int, float]],
 
 
 def build_instance(spec: InstanceSpec) -> dict:
-    """按 spec 生成一个 3.1 节 JSON schema 的算例字典(含自描述特征头)。"""
+    """按 spec 生成一个 3.1 节 JSON schema 的算例字典(含自描述特征头)。
+
+    Build, from spec, an instance dict in the section-3.1 JSON schema, including a self-describing feature header.
+    """
     if spec.layout not in _LAYOUTS:
         raise ValueError(f"未知布局 {spec.layout};可选 {sorted(_LAYOUTS)}")
     rng = random.Random(spec.seed)
@@ -371,6 +450,7 @@ def build_instance(spec: InstanceSpec) -> dict:
         "_spec": {k: v for k, v in spec.__dict__.items()},
     }
     measure(data)      # 生成即自描述:避免调用方漏调 measure 而落盘无特征头的算例
+    # Self-describing at generation time, so a caller cannot forget measure and store an instance with no feature header.
     return data
 
 
@@ -379,6 +459,10 @@ def measure(data: dict) -> dict:
 
     就地修改 `data` 并返回特征字典;幂等(`parse_instance` 忽略 `_` 开头的键)。
     对手写算例也可用。
+
+    Measure features and the lower bound on an instance, and write them back into the `_features` header (targets versus realized values).
+
+    Modifies `data` in place and returns the feature dict. Idempotent (`parse_instance` ignores keys that start with `_`). Also usable on hand-written instances.
     """
     from .instance import parse_instance, feature_params, simple_lower_bound
     from .network import Network
@@ -397,7 +481,7 @@ def measure(data: dict) -> dict:
 
 
 # --------------------------------------------------------------------------
-# 拥堵度档位预设
+# 拥堵度档位预设 / Congestion-level presets
 # --------------------------------------------------------------------------
 
 # 拥堵度档位。关键在于 high 与 funnel **只差 LU 出口容量**:
@@ -408,6 +492,14 @@ def measure(data: dict) -> dict:
 # 前四档存在一个盲区:mid/high/funnel 全是哑铃布局,改派换不掉争用走廊;唯一的
 # 网格布局 low 又按设计是低拥堵对照。于是"高争用"与"路径多样"在前四档里从未
 # 同时出现,而这恰是改派算子唯一可能奏效的区间。scatter 档补上这一格。
+# Congestion levels. The point is that high and funnel differ only in LU-exit capacity:
+# mid-segment contention is identical (mid_lanes=1), but funnel further collapses the LU exits into a single-point funnel.
+# If a mechanism shows a gain only on high and the gain disappears on funnel, that directly supports the diagnosis
+# that decision-independent congestion dilutes the mechanism's signal (measured correction in spec 3.1).
+#
+# The first four levels have a blind spot: mid/high/funnel are all dumbbell layouts, so reassignment cannot escape the contended corridor,
+# and the only grid layout, low, is by design the low-congestion control. "High contention" and "path diversity" therefore never
+# occur together in the first four levels, which is exactly the regime where reassignment could work. The scatter level fills that cell.
 CONGESTION_PRESETS: Dict[str, dict] = {
     "low":     {"layout": "grid", "grid_rows": 3, "grid_cols": 3, "grid_time": 3.0},
     "mid":     {"layout": "dumbbell", "lu_exits": 2, "mid_lanes": 2, "mid_time": 6.0},
@@ -431,7 +523,7 @@ def make_spec(tag: str, heterogeneity: float, flexibility: float,
 
 
 # --------------------------------------------------------------------------
-# 外部来源布局(公开数据集)
+# 外部来源布局(公开数据集) / Layouts from external sources (public datasets)
 # --------------------------------------------------------------------------
 
 # 拓扑三项——网格尺寸、装卸站与机器落位、缺边——逐项转录自
@@ -453,6 +545,25 @@ def make_spec(tag: str, heterogeneity: float, flexibility: float,
 # Liu 等(2023)的四张布局未收入:其首行带 `d` 后缀,即允许对角移动,而本项目的
 # 走廊为四邻接。接受对角移动要改的是下层路由层而不是算例,性质与 van Os 的节点
 # 容量问题相同,故排除。
+# Three topology items — grid size, load/unload station and machine placement, and missing edges — are transcribed item by item from
+# `database/raw/tjsp_toolset/data/benchmarks/lyu2019/layouts/`, the machine-readable encoding in the van Os toolset of Figures 10--15
+# in Appendix A of Lyu et al. (2019). This project borrows only those three items, to obtain topologies not designed in this paper
+# (credibility of layout provenance, not a benchmark of solution quality).
+#
+# Edge weights are not original data. Lyu published per-segment travel times for a single example instance only (Table 4 takes values
+# 1/2/3, and they are not uniform). Per-segment durations of the Appendix A test instances were never published. Edges are therefore
+# filled in as equal-weight: structurally equivalent to the van Os assumption that a single step has constant duration, and different
+# only in the scale of the time unit (the scale is absorbed by the tt_tp calibration). Instances generated this way must not be compared
+# with the reference values of Lyu or van Os; the two sides use different edge-weight conventions.
+#
+# The node order on line 2 of the source file is [loading station, m1..mk, unloading station] (see model_data.py:
+# `VEHICLE_START_LOCATIONS = MACHINE_LOCATIONS[0]  # Vehicles start at loading
+# station`). This project has a single load/unload point, so the loading station is taken as lu_node and the unloading station
+# degenerates to an ordinary grid node. That is a substantive difference from the original setting and must be stated.
+#
+# The four layouts of Liu et al. (2023) are not included: their first line carries a `d` suffix, i.e. diagonal moves are allowed,
+# whereas corridors here are 4-adjacent. Accepting diagonal moves would change the lower-level routing layer, not the instance,
+# which is the same kind of issue as van Os node capacities, so they are excluded.
 PUB_LAYOUTS: Dict[str, dict] = {
     "LyuL1": {"grid_rows": 3, "grid_cols": 3, "grid_lu_node": 1,
               "grid_machine_nodes": [2, 5, 7],
@@ -482,6 +593,10 @@ def make_pub_spec(key: str, heterogeneity: float, flexibility: float,
 
     `num_machines` 由布局决定而不接受调用方指定——外部布局的机器台数是数据的一部分,
     允许覆盖就等于把"借来的拓扑"改回"自己设计的拓扑"。
+
+    Build a spec from an external-layout key.
+
+    `num_machines` is determined by the layout and is not accepted from the caller. The machine count of an external layout is part of the data; allowing an override would turn a borrowed topology back into a topology designed here.
     """
     if key not in PUB_LAYOUTS:
         raise ValueError(f"未知外部布局 {key};可选 {sorted(PUB_LAYOUTS)}")

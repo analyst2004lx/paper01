@@ -21,6 +21,20 @@ makespan 改善,再除以桶宽,得到"每单位占用时长的边际代价"(无
 两者的关系在实验中可直接检验(`price_agreement`):代理价与定义式价格的秩相关
 若足够高,则代理价可安全替代;这是把启发式信号升格为"有理论依据的近似"所需的
 证据,也是与"lam * 累计等待"这类无参照启发式的本质区别。
+
+Shadow-price estimates for corridor-time slots (spec 5.5).
+
+Note: the price-coordination mechanism driven by this module was found to be systematically harmful on this problem. `theta` defaults to 0, so the default execution path never calls these estimators. The implementation is kept so the paper can report the negative result faithfully (spec 13.2 data, 13.3 mechanism).
+
+Definition of price pi(c,b): the makespan improvement obtained by relaxing the travel capacity of corridor c in time bucket b by one unit, divided by the bucket width, i.e. the marginal cost per unit of occupation time (a dimensionless ratio).
+
+Two estimators are provided; accuracy and cost complement each other:
+
+1. `finite_difference_prices` — the definitional estimate. Freeze the upper-level decisions (machine assignment, operation sequence, dispatch sequence), temporarily add 1 to a candidate slot's capacity, re-solve once, and measure the makespan improvement directly. It assumes no convexity and needs no LP solver; it is the reference version when this paper reports prices. The cost is one re-solve per candidate slot.
+
+2. `surrogate_prices` — a cheap surrogate. A first-order approximation from critical-chain-weighted actual yield-wait, available from a single decode, refreshed by the GA each generation.
+
+Their relationship can be checked directly in experiments (`price_agreement`): if the rank correlation between the surrogate and the definitional price is high enough, the surrogate may safely stand in. That is the evidence needed to promote a heuristic signal to a "theoretically grounded approximation", and it is the essential difference from an unreferenced heuristic such as "lam * cumulative wait".
 """
 from __future__ import annotations
 
@@ -31,11 +45,15 @@ from .network import BucketKey, Network, PriceTable
 from .stats import spearman
 
 # 非关键链上的让行等待在代理价中的折扣系数
+# Discount on yield-wait off the critical chain when forming the surrogate price.
 OFF_CRITICAL_WEIGHT = 0.25
 
 
 def default_bucket_width(inst: Instance) -> float:
-    """默认桶宽 = 平均加工时间,使时段分辨率与工序时间尺度对齐。"""
+    """默认桶宽 = 平均加工时间,使时段分辨率与工序时间尺度对齐。
+
+    Default bucket width = mean processing time, so the time resolution matches the operation time scale.
+    """
     times = [t for row in inst.proc_time.values() for t in row.values()]
     if not times:
         return 1.0
@@ -45,7 +63,10 @@ def default_bucket_width(inst: Instance) -> float:
 def slot_weights(result, bucket_width: float,
                  critical_slots: Optional[Sequence[BucketKey]] = None
                  ) -> Dict[BucketKey, float]:
-    """按走廊-时段汇总"关键性加权的让行等待",作为价格与候选槽位的排序依据。"""
+    """按走廊-时段汇总"关键性加权的让行等待",作为价格与候选槽位的排序依据。
+
+    Aggregate criticality-weighted yield-wait by corridor-time slot, used to rank prices and candidate slots.
+    """
     crit = set(critical_slots or ())
     acc: Dict[BucketKey, float] = {}
     for tr in result.transports:
@@ -66,6 +87,10 @@ def surrogate_prices(inst: Instance, result, bucket_width: float,
 
     截断到 top_k 有两个作用:抑制噪声(大量微小等待不构成瓶颈),以及把多标签
     路由的搜索开销限制在真正拥挤的少数时空槽位上。
+
+    Surrogate price: pi(c,b) = criticality-weighted yield-wait / bucket width, keeping only the top_k highest-weight slots.
+
+    Truncation to top_k does two things: it suppresses noise (many tiny waits are not bottlenecks), and it confines the search cost of multi-label routing to the few space-time slots that are actually congested.
     """
     pt = PriceTable(bucket_width)
     acc = slot_weights(result, bucket_width, critical_slots)
@@ -91,6 +116,14 @@ def finite_difference_prices(inst: Instance, net: Network, ma: Dict[OpKey, int],
       把"容量放宽"与"路由准则改变"两种效应混在一起。
 
     返回 (价格表, 原始改善量)。
+
+    Definitional shadow price: for each slot, raise capacity from 1 to 2, re-solve once, and measure the makespan improvement.
+
+    Two things must change only one factor, or the difference is not interpretable:
+    - upper-level decisions (machine assignment, operation sequence, dispatch sequence) are all frozen, so any improvement can come only from that corridor-time slot;
+    - the probe decode and the baseline decode use the same routing policy (the same price table and theta), otherwise the difference mixes "capacity relaxed" with "routing criterion changed".
+
+    Returns (price table, raw improvements).
     """
     pt = PriceTable(bucket_width)
     deltas: Dict[BucketKey, float] = {}
@@ -120,13 +153,20 @@ def candidate_slots(result, bucket_width: float, top_k: int,
 
     只探测"确实发生过让行"的槽位——从未阻塞过任何车的槽位其边际价值必为 0,
     无需花一次重解去确认。
+
+    Candidate slots for finite differences: the top_k by criticality-weighted wait, descending.
+
+    Probe only slots where a yield actually occurred — a slot that never blocked any vehicle has marginal value 0, and does not need a re-solve to confirm that.
     """
     acc = slot_weights(result, bucket_width, critical_slots)
     return [k for k, _w in sorted(acc.items(), key=lambda kv: (-kv[1], kv[0]))[:top_k]]
 
 
 def price_agreement(surrogate: PriceTable, exact: PriceTable) -> Optional[float]:
-    """代理价与定义式价格在共同槽位上的 Spearman 秩相关(样本 < 3 时返回 None)。"""
+    """代理价与定义式价格在共同槽位上的 Spearman 秩相关(样本 < 3 时返回 None)。
+
+    Spearman rank correlation of the surrogate and the definitional price on shared slots (None if the sample size is under 3).
+    """
     keys = sorted({k for k, _ in surrogate.items()} | {k for k, _ in exact.items()})
     if len(keys) < 3:
         return None

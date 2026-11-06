@@ -2,7 +2,7 @@
 
 放位意图(正文 §6 案例小节):
   在 E1/E3 统计之后,用一例把「任务图空、闭包非空、闭包内改/外侧尽量冻」落到时间轴。
-  上图=扰动前原排程(标闭包工序);下图=STRC 第 1 级修复后。
+  上图=扰动前原排程(标闭包工序);下图=STRC 单遍改路后。
 
 用法:
   py paper04/figures/fig_strc_case.py
@@ -48,39 +48,39 @@ def _draw_panel(ax, result, closed_ops, *, t_now, block, title, show_legend=Fals
         y = ymap[rec.machine]
         dur = max(1e-6, rec.finish - rec.start)
         ax.barh(y, dur, left=rec.start, height=0.55,
-                color=colors[in_cl], edgecolor="#222", linewidth=0.6,
+                color=colors[in_cl], edgecolor="#222222", linewidth=0.6,
                 alpha=0.92, zorder=2)
         if dur >= 3.5:
-            ax.text(rec.start + dur / 2, y, f"J{rec.job}-{rec.i}",
+            ax.text(rec.start + dur / 2, y, f"$O_{{{rec.job}{rec.i}}}$",
                     ha="center", va="center", fontsize=6.5,
-                    color="white" if in_cl else "#222", zorder=3)
+                    color="white" if in_cl else "#222222", zorder=3)
 
     # t_now
     ax.axvline(t_now, color="#8b1e1e", ls="--", lw=1.0, zorder=4)
-    ax.text(t_now, len(machines) - 0.15, r"$t_{\mathrm{now}}$",
+    ax.text(t_now + 1.2, len(machines) - 0.42, r"$t_{\mathrm{now}}$",
             ha="left", va="bottom", fontsize=7, color="#8b1e1e")
 
     # block window as translucent band
     cid, t0, t1 = block
     ax.axvspan(t0, t1, color="#e8a0a0", alpha=0.35, zorder=0)
-    ax.text((t0 + t1) / 2, -0.85, f"block on {cid}",
+    ax.text((t0 + t1) / 2, -0.95, f"blocked corridor {cid.replace('|', '–')}",
             ha="center", va="top", fontsize=6.5, color="#8b1e1e")
 
     ax.set_yticks(list(ymap.values()))
     ax.set_yticklabels([f"M{m}" for m in machines], fontsize=8)
     ax.set_xlabel("time", fontsize=8)
     ax.set_title(title, fontsize=9)
-    ax.set_ylim(-1.1, len(machines) - 0.2)
+    ax.set_ylim(-1.25, len(machines) + 0.05)
     xmax = max(rec.finish for rec in ops) * 1.05
     ax.set_xlim(0, xmax)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     if show_legend:
         ax.legend(handles=[
-            Patch(facecolor="#1f4e79", edgecolor="#222", label="op in Cl (released)"),
-            Patch(facecolor="#b0b8c0", edgecolor="#222", label="op outside (frozen)"),
-            Patch(facecolor="#e8a0a0", alpha=0.5, label="corridor block window"),
-        ], loc="upper right", fontsize=6.5, frameon=False)
+            Patch(facecolor="#1f4e79", edgecolor="#222222", label="operation in impact set (rerouted)"),
+            Patch(facecolor="#b0b8c0", edgecolor="#222222", label="operation outside impact set (kept as planned)"),
+            Patch(facecolor="#e8a0a0", alpha=0.5, label="blockage window"),
+        ], loc="lower right", fontsize=6.5, frameon=False)
 
 
 def main() -> None:
@@ -113,21 +113,21 @@ def main() -> None:
         axes[0], bundle.result, closed_ops,
         t_now=t_now, block=block,
         title=(f"(a) Before repair  $C_{{\\max}}={bundle.makespan:.0f}$  "
-               f"|Seeds|={len(seeds)}  |Cl|={closure.size}"),
+               f"{len(seeds)} seed occupancies, impact set of {closure.size}"),
         show_legend=True,
     )
     _draw_panel(
         axes[1], rep.result, closed_ops,
         t_now=t_now, block=block,
-        title=(f"(b) After STRC level-1  $C_{{\\max}}={rep.makespan:.0f}$  "
-               f"wall={rep.wall_ms:.1f} ms"),
+        title=(f"(b) After single-pass rerouting within the impact set  $C_{{\\max}}={rep.makespan:.0f}$  "
+               f"runtime {rep.wall_ms:.1f} ms"),
         show_legend=False,
     )
     # annotate T_impact empty
     axes[0].text(
-        0.01, 0.98,
-        r"$T_{\mathrm{impact}}=\varnothing$ (task graph); repair uses Cl",
-        transform=axes[0].transAxes, ha="left", va="top", fontsize=7,
+        0.99, 0.97,
+        "Scope on the operation-precedence graph: empty",
+        transform=axes[0].transAxes, ha="right", va="top", fontsize=7,
         color="#1f4e79",
         bbox=dict(boxstyle="round,pad=0.2", fc="#e8eef5", ec="#1f4e79", lw=0.7),
     )

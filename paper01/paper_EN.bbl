@@ -79,19 +79,6 @@
 \href{https://doi.org/10.1016/j.ejor.2021.01.019}{doi:\nolinkurl{10.1016/j.ejor.2021.01.019}}
 
 
-\bibitem[Fu et~al\mbox{.}(2025)]%
-        {fu2025integrated}
-\bibfield{author}{\bibinfo{person}{Jie Fu}, \bibinfo{person}{Bin Yang},
-  \bibinfo{person}{Zhixing Chang}, \bibinfo{person}{Yuanrong Zhang},
-  \bibinfo{person}{Jiarui Wang}, \bibinfo{person}{Xiaotong Wang}, {and}
-  \bibinfo{person}{Lei Wang}.} \bibinfo{year}{2025}\natexlab{}.
-\newblock \showarticletitle{Integrated Production--Logistics Scheduling in
-  Flexible Assembly Shops Using an Improved Genetic Algorithm}.
-\newblock \bibinfo{journal}{\emph{Machines}} \bibinfo{volume}{13},
-  \bibinfo{number}{12} (\bibinfo{year}{2025}), \bibinfo{pages}{1090}.
-\newblock
-
-
 \bibitem[Gao et~al\mbox{.}(2023)]%
         {gao2023mapf}
 \bibfield{author}{\bibinfo{person}{Jianqi Gao}, \bibinfo{person}{Yanjie Li},
@@ -129,6 +116,21 @@
   \bibinfo{pages}{463--502}.
 \newblock
 \href{https://doi.org/10.1007/s10898-021-00992-6}{doi:\nolinkurl{10.1007/s10898-021-00992-6}}
+
+
+\bibitem[Jafarian-Moghaddam et~al\mbox{.}(2026)]%
+        {jafarian2026integrated}
+\bibfield{author}{\bibinfo{person}{Ahmad~Reza Jafarian-Moghaddam},
+  \bibinfo{person}{Ali Esmailpoor~Sanjabi}, {and} \bibinfo{person}{Elham
+  Mortazavi~Moghaddam}.} \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{Integrated tri-objective scheduling and internal
+  logistics optimization in {U}-shaped flexible flow shops: a mathematical
+  model and metaheuristic framework}.
+\newblock \bibinfo{journal}{\emph{International Journal of Systems Science:
+  Operations \& Logistics}} \bibinfo{volume}{13}, \bibinfo{number}{1}
+  (\bibinfo{year}{2026}), \bibinfo{pages}{2714000}.
+\newblock
+\href{https://doi.org/10.1080/23302674.2026.2714000}{doi:\nolinkurl{10.1080/23302674.2026.2714000}}
 
 
 \bibitem[Kasaura et~al\mbox{.}(2022)]%
@@ -338,19 +340,6 @@
 \href{https://doi.org/10.1631/FITEE.2300795}{doi:\nolinkurl{10.1631/FITEE.2300795}}
 
 
-\bibitem[Xiong et~al\mbox{.}(2022)]%
-        {xiong2024dynamic}
-\bibfield{author}{\bibinfo{person}{Hao Xiong}, \bibinfo{person}{Shiqing Shi},
-  \bibinfo{person}{Dongxu Ren}, {and} \bibinfo{person}{Jialong Hu}.}
-  \bibinfo{year}{2022}\natexlab{}.
-\newblock \showarticletitle{Dynamic Scheduling for Flexible Job Shop with New
-  Job Insertions by Deep Reinforcement Learning}.
-\newblock \bibinfo{journal}{\emph{Applied Soft Computing}}
-  \bibinfo{volume}{127} (\bibinfo{year}{2022}), \bibinfo{pages}{109360}.
-\newblock
-\href{https://doi.org/10.1016/j.asoc.2022.109360}{doi:\nolinkurl{10.1016/j.asoc.2022.109360}}
-
-
 \bibitem[Zhang et~al\mbox{.}(2024b)]%
         {zhang2024memetic}
 \bibfield{author}{\bibinfo{person}{Fayong Zhang}, \bibinfo{person}{Rui Li},
@@ -373,6 +362,21 @@
   Thirty-Third International Joint Conference on Artificial Intelligence
   (IJCAI)}}.
 \newblock
+\href{https://doi.org/10.48550/arXiv.2402.01446}{doi:\nolinkurl{10.48550/arXiv.2402.01446}}
+
+
+\bibitem[Zhao and Fu(2026)]%
+        {zhao2026deep}
+\bibfield{author}{\bibinfo{person}{Fuqing Zhao} {and} \bibinfo{person}{Zongsi
+  Fu}.} \bibinfo{year}{2026}\natexlab{}.
+\newblock \showarticletitle{A deep reinforcement learning algorithm with
+  heterogeneous graph and hierarchical attention mechanism for dynamic flexible
+  job shop scheduling problem}.
+\newblock \bibinfo{journal}{\emph{Engineering Applications of Artificial
+  Intelligence}}  \bibinfo{volume}{183} (\bibinfo{year}{2026}),
+  \bibinfo{pages}{116192}.
+\newblock
+\href{https://doi.org/10.1016/j.engappai.2026.116192}{doi:\nolinkurl{10.1016/j.engappai.2026.116192}}
 
 
 \end{thebibliography}

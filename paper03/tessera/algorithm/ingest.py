@@ -19,6 +19,33 @@
     inProgress  -> t_start  操作开始
     complete    -> t_end    操作结束(取 inProgress 事件的 operation_end_time,
                             缺失时回落到 success/failure 事件的时间戳)
+
+XES event-stream parsing and chain splitting.
+
+Carried over and frozen from `paper02/slid/algorithm/ingest.py`. The
+constraints below are paper02's measurements on **the same log**, not this
+paper's results. Read section 3 of paper02's `README.md` before changing them:
+
+  - Chain granularity must be **(device, case)**. A device-global timeline
+    puts adjacent operations in different cases, while the reference model's
+    reachability is inside a workflow and does not apply across a case
+    boundary — that once produced a false report that "only 48.6% of
+    transitions lie in F"; splitting by case gives 100.0% (953/953).
+  - **Devices on this line are stateless service endpoints**: 65.1% of the
+    2,109 (device, case) chains have length 1, and 3,062 activities yield
+    only 953 transitions. There is no intra-device state machine at this
+    granularity. For TESSERA the observation unit is a "task handover event",
+    not an "intra-device state transition", which matches coupled
+    corroboration. This module keeps `split_chains` for cross-checking;
+    corroboration does not depend on it.
+  - Time must be the receiver-side timestamp, never a timestamp carried in
+    the message (the latter is attacker-controlled).
+
+Each activity has three lifecycle events and therefore three times:
+    assigned    -> t_cmd    command enters the device queue (ledger dispatch time)
+    inProgress  -> t_start  operation starts
+    complete    -> t_end    operation ends (operation_end_time of inProgress;
+                            if missing, fall back to the success/failure timestamp)
 """
 from __future__ import annotations
 
@@ -34,16 +61,19 @@ XES = "{http://www.xes-standard.org/}"
 
 @dataclass
 class Activity:
-    """一次活动实例,即协议的一个观测单元。"""
+    """一次活动实例,即协议的一个观测单元。
+
+    One activity instance, the protocol's observation unit.
+    """
     case: str
     event_id: str
     device: str                      # org:resource
-    op: str                          # concept:name,如 /vgr/pick_up_and_transport
+    op: str                          # concept:name,如 /vgr/pick_up_and_transport / e.g. /vgr/pick_up_and_transport
     workflow: str | None = None      # process_model_id
     t_cmd: datetime | None = None    # assigned
     t_start: datetime | None = None  # inProgress
     t_end: datetime | None = None    # operation_end_time of inProgress
-    t_done: datetime | None = None   # success / failure 事件时间戳
+    t_done: datetime | None = None   # success / failure 事件时间戳 / success / failure event timestamp
     start_pos: str | None = None     # parameter_start_position
     end_pos: str | None = None       # parameter_end_position
     planned_s: float | None = None   # planned_operation_time
@@ -52,7 +82,10 @@ class Activity:
 
     @property
     def order(self) -> int:
-        """同一时刻的稳定排序键(event_id 在 Trier 中是递增整数)。"""
+        """同一时刻的稳定排序键(event_id 在 Trier 中是递增整数)。
+
+        Stable sort key for equal timestamps (event_id is an increasing integer in Trier).
+        """
         return int(self.event_id) if self.event_id.isdigit() else 0
 
     @property
@@ -64,7 +97,10 @@ class Activity:
 
     @property
     def t_consume(self) -> datetime | None:
-        """令牌消耗时刻(操作开始)。互证语义下即"我从某位置取走工件"。"""
+        """令牌消耗时刻(操作开始)。互证语义下即"我从某位置取走工件"。
+
+        Token-consumption time (operation start). Under corroboration: "I picked the part up from a position."
+        """
         return self.t_start or self.t_cmd
 
     @property
@@ -73,6 +109,12 @@ class Activity:
 
         与 t_consume 分离是必须的:同时消耗产出会把并发活动误判为乱序
         (paper02 v3 -> v4 的修正)。
+
+        Token-production time (operation end). Under corroboration: "I placed the part at a position."
+
+        Separating this from t_consume is required: producing and consuming at
+        the same instant mislabels concurrent activities as out of order
+        (the paper02 v3 -> v4 fix).
         """
         return self.t_end or self.t_done or self.t_consume
 
@@ -88,7 +130,10 @@ class Activity:
 
 
 def _parse_planned(s: str | None) -> float | None:
-    """`planned_operation_time` 形如 '0 days 00:00:52'。"""
+    """`planned_operation_time` 形如 '0 days 00:00:52'。
+
+    `planned_operation_time` looks like '0 days 00:00:52'.
+    """
     if not s:
         return None
     try:
@@ -122,6 +167,14 @@ def read_xes(path: str, member: str | None = None) -> list[Activity]:
 
     不要解压整包:含 IoT 传感器数据的子过程日志解压后达数十 GB,而任务级
     互证只需要主日志(约 11 MB)。传感层互证是待决项,见 `../../database/README.md`。
+
+    Read the main XES log. When `member` is set or `path` is a zip, stream
+    from inside the archive.
+
+    Do not unpack the whole archive: subprocess logs that include IoT sensor
+    data expand to tens of GB, while task-level corroboration needs only the
+    main log (~11 MB). Sensor-layer corroboration is still open; see
+    `../../database/README.md`.
     """
     if member or path.lower().endswith(".zip"):
         with zipfile.ZipFile(path) as zf:
@@ -176,6 +229,13 @@ def valid(acts: Iterable[Activity], *, drop_failure: bool = True
     `drop_failure=True` 是**离线建模**口径(paper02 实测 3,157 -> 3,062)。
     在线检测不得丢弃 failure:它本身就是需要解释的信号,且 P1 谎报完成攻击
     的一种形态正是把 failure 改写成 success。
+
+    Activities the protocol actually consumes: a device, an operation, and a start time.
+
+    `drop_failure=True` is the **offline modeling** convention (paper02 measured
+    3,157 -> 3,062). Online detection must not drop failure: it is itself a
+    signal that needs explaining, and one form of the P1 falsified-completion
+    attack rewrites failure as success.
     """
     out = [a for a in acts if a.device and a.op and a.t_consume is not None]
     if drop_failure:
@@ -185,7 +245,10 @@ def valid(acts: Iterable[Activity], *, drop_failure: bool = True
 
 def split_chains(acts: Iterable[Activity]
                  ) -> dict[tuple[str, str], list[Activity]]:
-    """按 (设备, case) 切链,链内按操作开始时刻升序。仅供与 paper02 对数。"""
+    """按 (设备, case) 切链,链内按操作开始时刻升序。仅供与 paper02 对数。
+
+    Split chains by (device, case), ordered by operation start. For cross-checking paper02 only.
+    """
     chains: dict[tuple[str, str], list[Activity]] = {}
     for a in acts:
         chains.setdefault((a.device, a.case), []).append(a)
@@ -197,6 +260,10 @@ def split_chains(acts: Iterable[Activity]
 def case_chains(acts: Iterable[Activity]) -> dict[str, list[Activity]]:
     """按 case 切链。互证的作用域是 case:位置是跨 case 共享的物理地点,
     跨 case 取对手方会把并发工件混为一谈(paper02 互锁通道 LATE 类违反的成因)。
+
+    Split chains by case. Corroboration is scoped to a case: a position is a
+    physical place shared across cases, and taking a counterpart across cases
+    mixes concurrent parts (the cause of LATE violations on paper02's interlock channel).
     """
     chains: dict[str, list[Activity]] = {}
     for a in acts:
@@ -207,7 +274,10 @@ def case_chains(acts: Iterable[Activity]) -> dict[str, list[Activity]]:
 
 
 def stream(acts: Sequence[Activity]) -> Iterator[Activity]:
-    """按接收时刻回放为在线消息流,供协议逐条消费。"""
+    """按接收时刻回放为在线消息流,供协议逐条消费。
+
+    Replay by receive time as an online message stream for the protocol to consume one by one.
+    """
     yield from sorted(acts, key=lambda a: (a.t_consume, a.order))
 
 

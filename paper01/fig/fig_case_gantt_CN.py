@@ -15,7 +15,7 @@ use_cjk()
 
 C_OP, C_LOADED, C_EMPTY = src.C_OP, src.C_LOADED, src.C_EMPTY
 C_YIELD, C_IDLE = src.C_YIELD, src.C_IDLE
-C_LABEL = src.C_LABEL
+C_LABEL = "white"
 
 
 def draw(ax, tt, title, xmax):

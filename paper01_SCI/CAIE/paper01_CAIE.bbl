@@ -1,0 +1,262 @@
+\begin{thebibliography}{25}
+\expandafter\ifx\csname natexlab\endcsname\relax\def\natexlab#1{#1}\fi
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\href}[2]{#2}
+\providecommand{\path}[1]{#1}
+\providecommand{\DOIprefix}{doi:}
+\providecommand{\ArXivprefix}{arXiv:}
+\providecommand{\URLprefix}{URL: }
+\providecommand{\Pubmedprefix}{pmid:}
+\providecommand{\doi}[1]{\href{http://dx.doi.org/#1}{\path{#1}}}
+\providecommand{\Pubmed}[1]{\href{pmid:#1}{\path{#1}}}
+\providecommand{\bibinfo}[2]{#2}
+\ifx\xfnm\relax \def\xfnm[#1]{\unskip,\space#1}\fi
+%Type = Article
+\bibitem[{Dauz{\`e}re-P{\'e}r{\`e}s et~al.(2024)Dauz{\`e}re-P{\'e}r{\`e}s,
+  Ding, Shen and Tamssaouet}]{dauzereperes2024fjsp}
+\bibinfo{author}{Dauz{\`e}re-P{\'e}r{\`e}s, S.}, \bibinfo{author}{Ding, J.},
+  \bibinfo{author}{Shen, L.}, \bibinfo{author}{Tamssaouet, K.},
+  \bibinfo{year}{2024}.
+\newblock \bibinfo{title}{The flexible job shop scheduling problem: A review}.
+\newblock \bibinfo{journal}{European Journal of Operational Research}
+  \bibinfo{volume}{314}, \bibinfo{pages}{409--432}.
+\newblock \DOIprefix\doi{10.1016/j.ejor.2023.05.017}.
+%Type = Article
+\bibitem[{Fattahi et~al.(2007)Fattahi, Saidi~Mehrabad and
+  Jolai}]{fattahi2007mathematical}
+\bibinfo{author}{Fattahi, P.}, \bibinfo{author}{Saidi~Mehrabad, M.},
+  \bibinfo{author}{Jolai, F.}, \bibinfo{year}{2007}.
+\newblock \bibinfo{title}{Mathematical modeling and heuristic approaches to
+  flexible job shop scheduling problems}.
+\newblock \bibinfo{journal}{Journal of Intelligent Manufacturing}
+  \bibinfo{volume}{18}, \bibinfo{pages}{331--342}.
+\newblock \DOIprefix\doi{10.1007/s10845-007-0026-8}.
+%Type = Article
+\bibitem[{Fragapane et~al.(2021)Fragapane, de~Koster, Sgarbossa and
+  Strandhagen}]{fragapane2021planning}
+\bibinfo{author}{Fragapane, G.}, \bibinfo{author}{de~Koster, R.},
+  \bibinfo{author}{Sgarbossa, F.}, \bibinfo{author}{Strandhagen, J.O.},
+  \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{Planning and control of autonomous mobile robots for
+  intralogistics: Literature review and research agenda}.
+\newblock \bibinfo{journal}{European Journal of Operational Research}
+  \bibinfo{volume}{294}, \bibinfo{pages}{405--426}.
+\newblock \DOIprefix\doi{10.1016/j.ejor.2021.01.019}.
+%Type = Article
+\bibitem[{Gao et~al.(2023)Gao, Li, Li, Yan, Lin and Wu}]{gao2023mapf}
+\bibinfo{author}{Gao, J.}, \bibinfo{author}{Li, Y.}, \bibinfo{author}{Li, X.},
+  \bibinfo{author}{Yan, K.}, \bibinfo{author}{Lin, K.}, \bibinfo{author}{Wu,
+  X.}, \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{A review of graph-based multi-agent pathfinding
+  solvers: From classical to beyond classical}.
+\newblock \bibinfo{journal}{Knowledge-Based Systems} \bibinfo{volume}{283},
+  \bibinfo{pages}{111121}.
+\newblock \DOIprefix\doi{10.1016/j.knosys.2023.111121}.
+%Type = Article
+\bibitem[{Gui et~al.(2023)Gui, Tang, Zhu, Zhang and Zhang}]{gui2023dynamic}
+\bibinfo{author}{Gui, Y.}, \bibinfo{author}{Tang, D.}, \bibinfo{author}{Zhu,
+  H.}, \bibinfo{author}{Zhang, Y.}, \bibinfo{author}{Zhang, Z.},
+  \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{Dynamic scheduling for flexible job shop using a deep
+  reinforcement learning approach}.
+\newblock \bibinfo{journal}{Computers \& Industrial Engineering}
+  \bibinfo{volume}{180}, \bibinfo{pages}{109255}.
+\newblock \DOIprefix\doi{10.1016/j.cie.2023.109255}.
+%Type = Article
+\bibitem[{Homayouni and Fontes(2021)}]{homayouni2021production}
+\bibinfo{author}{Homayouni, S.M.}, \bibinfo{author}{Fontes, D.B.M.M.},
+  \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{Production and transport scheduling in flexible job
+  shop manufacturing systems}.
+\newblock \bibinfo{journal}{Journal of Global Optimization}
+  \bibinfo{volume}{79}, \bibinfo{pages}{463--502}.
+\newblock \DOIprefix\doi{10.1007/s10898-021-00992-6}.
+%Type = Article
+\bibitem[{Jafarian-Moghaddam et~al.(2026)Jafarian-Moghaddam, Esmailpoor~Sanjabi
+  and Mortazavi~Moghaddam}]{jafarian2026integrated}
+\bibinfo{author}{Jafarian-Moghaddam, A.R.},
+  \bibinfo{author}{Esmailpoor~Sanjabi, A.},
+  \bibinfo{author}{Mortazavi~Moghaddam, E.}, \bibinfo{year}{2026}.
+\newblock \bibinfo{title}{Integrated tri-objective scheduling and internal
+  logistics optimization in {U}-shaped flexible flow shops: a mathematical
+  model and metaheuristic framework}.
+\newblock \bibinfo{journal}{International Journal of Systems Science:
+  Operations \& Logistics} \bibinfo{volume}{13}, \bibinfo{pages}{2714000}.
+\newblock \DOIprefix\doi{10.1080/23302674.2026.2714000}.
+%Type = Article
+\bibitem[{Kasaura et~al.(2022)Kasaura, Nishimura and
+  Yonetani}]{kasaura2022sipp}
+\bibinfo{author}{Kasaura, K.}, \bibinfo{author}{Nishimura, M.},
+  \bibinfo{author}{Yonetani, R.}, \bibinfo{year}{2022}.
+\newblock \bibinfo{title}{Prioritized safe interval path planning for
+  multi-agent pathfinding with continuous time on {2D} roadmaps}.
+\newblock \bibinfo{journal}{{IEEE} Robotics and Automation Letters}
+  \bibinfo{volume}{7}, \bibinfo{pages}{10494--10501}.
+\newblock \DOIprefix\doi{10.1109/LRA.2022.3187265}.
+%Type = Article
+\bibitem[{Kim and Kim(2026)}]{kim2026congestion}
+\bibinfo{author}{Kim, J.}, \bibinfo{author}{Kim, J.}, \bibinfo{year}{2026}.
+\newblock \bibinfo{title}{Congestion-aware scheduling for large fleets of
+  {AGVs} using discrete event simulation}.
+\newblock \bibinfo{journal}{Electronics} \bibinfo{volume}{15},
+  \bibinfo{pages}{139}.
+\newblock \DOIprefix\doi{10.3390/electronics15010139}.
+%Type = Article
+\bibitem[{Li et~al.(2026)Li, Mao, Wu, Zhou, Qian and Du}]{li2026framework}
+\bibinfo{author}{Li, R.}, \bibinfo{author}{Mao, J.}, \bibinfo{author}{Wu, X.},
+  \bibinfo{author}{Zhou, W.}, \bibinfo{author}{Qian, C.}, \bibinfo{author}{Du,
+  H.}, \bibinfo{year}{2026}.
+\newblock \bibinfo{title}{A new framework for job shop integrated scheduling
+  and vehicle path planning problem}.
+\newblock \bibinfo{journal}{Sensors} \bibinfo{volume}{26},
+  \bibinfo{pages}{543}.
+\newblock \DOIprefix\doi{10.3390/s26020543}.
+%Type = Article
+\bibitem[{Lim and Moon(2023)}]{lim2023twophase}
+\bibinfo{author}{Lim, C.H.}, \bibinfo{author}{Moon, S.K.},
+  \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{A two-phase iterative mathematical programming-based
+  heuristic for a flexible job shop scheduling problem with transportation}.
+\newblock \bibinfo{journal}{Applied Sciences} \bibinfo{volume}{13},
+  \bibinfo{pages}{5215}.
+\newblock \DOIprefix\doi{10.3390/app13085215}.
+%Type = Article
+\bibitem[{Lu et~al.(2022)Lu, Guo, Song and Li}]{lu2022agv}
+\bibinfo{author}{Lu, W.}, \bibinfo{author}{Guo, S.}, \bibinfo{author}{Song,
+  T.}, \bibinfo{author}{Li, Y.}, \bibinfo{year}{2022}.
+\newblock \bibinfo{title}{Analysis of multi-{AGVs} management system and key
+  issues: A review}.
+\newblock \bibinfo{journal}{Computer Modeling in Engineering \& Sciences}
+  \bibinfo{volume}{131}, \bibinfo{pages}{1197--1227}.
+\newblock \DOIprefix\doi{10.32604/cmes.2022.019770}.
+%Type = Article
+\bibitem[{Lyu et~al.(2019)Lyu, Song, He, Lei and Guo}]{lyu2019approach}
+\bibinfo{author}{Lyu, X.}, \bibinfo{author}{Song, Y.}, \bibinfo{author}{He,
+  C.}, \bibinfo{author}{Lei, Q.}, \bibinfo{author}{Guo, W.},
+  \bibinfo{year}{2019}.
+\newblock \bibinfo{title}{Approach to integrated scheduling problems
+  considering optimal number of automated guided vehicles and conflict-free
+  routing in flexible manufacturing systems}.
+\newblock \bibinfo{journal}{IEEE Access} \bibinfo{volume}{7},
+  \bibinfo{pages}{74909--74924}.
+\newblock \DOIprefix\doi{10.1109/ACCESS.2019.2919109}.
+%Type = Article
+\bibitem[{Meng et~al.(2025)Meng, Cheng, Zhang, Gao, Zhang and Ren}]{meng2025cp}
+\bibinfo{author}{Meng, L.}, \bibinfo{author}{Cheng, W.},
+  \bibinfo{author}{Zhang, C.}, \bibinfo{author}{Gao, K.},
+  \bibinfo{author}{Zhang, B.}, \bibinfo{author}{Ren, Y.}, \bibinfo{year}{2025}.
+\newblock \bibinfo{title}{Novel {CP} models and {CP}-assisted meta-heuristic
+  algorithm for flexible job shop scheduling benchmark problem with
+  multi-{AGV}}.
+\newblock \bibinfo{journal}{IEEE Transactions on Systems, Man, and Cybernetics:
+  Systems} \bibinfo{volume}{55}, \bibinfo{pages}{8455--8468}.
+\newblock \DOIprefix\doi{10.1109/TSMC.2025.3604355}.
+%Type = Article
+\bibitem[{van Os and Basten(2026)}]{vanos2026exact}
+\bibinfo{author}{van Os, R.W.M.}, \bibinfo{author}{Basten, T.},
+  \bibinfo{year}{2026}.
+\newblock \bibinfo{title}{An exact decomposition-based approach to the
+  conflict-free-transportation-constrained flexible job-shop scheduling
+  problem}.
+\newblock \bibinfo{journal}{Computers \& Operations Research}
+  \bibinfo{volume}{187}, \bibinfo{pages}{107342}.
+\newblock \DOIprefix\doi{10.1016/j.cor.2025.107342}.
+%Type = Article
+\bibitem[{Otala et~al.(2021)Otala, Minard, Madraki and
+  Mousavian}]{otala2021graph}
+\bibinfo{author}{Otala, J.}, \bibinfo{author}{Minard, A.},
+  \bibinfo{author}{Madraki, G.}, \bibinfo{author}{Mousavian, S.},
+  \bibinfo{year}{2021}.
+\newblock \bibinfo{title}{Graph-based modeling in shop scheduling problems:
+  Review and extensions}.
+\newblock \bibinfo{journal}{Applied Sciences} \bibinfo{volume}{11},
+  \bibinfo{pages}{4741}.
+\newblock \DOIprefix\doi{10.3390/app11114741}.
+%Type = Article
+\bibitem[{Qin et~al.(2026)Qin, Xiang, Han, Wang, Li and Pan}]{qin2026knowledge}
+\bibinfo{author}{Qin, H.}, \bibinfo{author}{Xiang, Y.}, \bibinfo{author}{Han,
+  Y.}, \bibinfo{author}{Wang, Y.}, \bibinfo{author}{Li, J.},
+  \bibinfo{author}{Pan, Q.}, \bibinfo{year}{2026}.
+\newblock \bibinfo{title}{A knowledge region selection enhanced
+  quality-diversity algorithm for real-world flexible job shop scheduling with
+  automated guided vehicles transportation}.
+\newblock \bibinfo{journal}{Engineering Applications of Artificial
+  Intelligence} \bibinfo{volume}{164}, \bibinfo{pages}{113352}.
+\newblock \DOIprefix\doi{10.1016/j.engappai.2025.113352}.
+%Type = Article
+\bibitem[{Rahimikelarijani et~al.(2020)Rahimikelarijani, Fazlollahtabar and
+  Nayeri}]{rahimikelarijani2020tandem}
+\bibinfo{author}{Rahimikelarijani, B.}, \bibinfo{author}{Fazlollahtabar, H.},
+  \bibinfo{author}{Nayeri, S.}, \bibinfo{year}{2020}.
+\newblock \bibinfo{title}{Multi-objective multi-load tandem autonomous guided
+  vehicle for robust workload balance and material handling optimization}.
+\newblock \bibinfo{journal}{{SN} Applied Sciences} \bibinfo{volume}{2},
+  \bibinfo{pages}{1032}.
+\newblock \DOIprefix\doi{10.1007/s42452-020-3002-y}.
+%Type = Article
+\bibitem[{Suh and Choi(2022)}]{suh2022spine}
+\bibinfo{author}{Suh, Y.J.}, \bibinfo{author}{Choi, J.Y.},
+  \bibinfo{year}{2022}.
+\newblock \bibinfo{title}{Efficient {Fab} facility layout with spine structure
+  using genetic algorithm under various material-handling considerations}.
+\newblock \bibinfo{journal}{International Journal of Production Research}
+  \bibinfo{volume}{60}, \bibinfo{pages}{2816--2829}.
+\newblock \DOIprefix\doi{10.1080/00207543.2021.1904159}.
+%Type = Article
+\bibitem[{Sun et~al.(2023)Sun, Xu, Yan, Liu and Zhang}]{sun2023integrated}
+\bibinfo{author}{Sun, J.}, \bibinfo{author}{Xu, Z.}, \bibinfo{author}{Yan, Z.},
+  \bibinfo{author}{Liu, L.}, \bibinfo{author}{Zhang, Y.}, \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{An approach to integrated scheduling of flexible
+  job-shop considering conflict-free routing problems}.
+\newblock \bibinfo{journal}{Sensors} \bibinfo{volume}{23},
+  \bibinfo{pages}{4526}.
+\newblock \DOIprefix\doi{10.3390/s23094526}.
+%Type = Article
+\bibitem[{Tamssaouet and
+  Dauz{\`e}re-P{\'e}r{\`e}s(2023)}]{tamssaouet2023neighborhood}
+\bibinfo{author}{Tamssaouet, K.}, \bibinfo{author}{Dauz{\`e}re-P{\'e}r{\`e}s,
+  S.}, \bibinfo{year}{2023}.
+\newblock \bibinfo{title}{A general efficient neighborhood structure framework
+  for the job-shop and flexible job-shop scheduling problems}.
+\newblock \bibinfo{journal}{European Journal of Operational Research}
+  \bibinfo{volume}{311}, \bibinfo{pages}{455--471}.
+\newblock \DOIprefix\doi{10.1016/j.ejor.2023.05.018}.
+%Type = Article
+\bibitem[{Xin et~al.(2025)Xin, Lu, Wang and Deng}]{xin2025review}
+\bibinfo{author}{Xin, B.}, \bibinfo{author}{Lu, S.}, \bibinfo{author}{Wang,
+  Q.}, \bibinfo{author}{Deng, F.}, \bibinfo{year}{2025}.
+\newblock \bibinfo{title}{A review of flexible job shop scheduling problems
+  considering transportation vehicles}.
+\newblock \bibinfo{journal}{Frontiers of Information Technology \& Electronic
+  Engineering} \bibinfo{volume}{26}, \bibinfo{pages}{332--353}.
+\newblock \DOIprefix\doi{10.1631/FITEE.2300795}.
+%Type = Article
+\bibitem[{Zhang et~al.(2024a)Zhang, Li and Gong}]{zhang2024memetic}
+\bibinfo{author}{Zhang, F.}, \bibinfo{author}{Li, R.}, \bibinfo{author}{Gong,
+  W.}, \bibinfo{year}{2024}a.
+\newblock \bibinfo{title}{Deep reinforcement learning-based memetic algorithm
+  for energy-aware flexible job shop scheduling with multi-{AGV}}.
+\newblock \bibinfo{journal}{Computers \& Industrial Engineering}
+  \bibinfo{volume}{189}, \bibinfo{pages}{109917}.
+\newblock \DOIprefix\doi{10.1016/j.cie.2024.109917}.
+%Type = Inproceedings
+\bibitem[{Zhang et~al.(2024b)Zhang, Jiang, Bhatt, Nikolaidis and
+  Li}]{zhang2024guidance}
+\bibinfo{author}{Zhang, Y.}, \bibinfo{author}{Jiang, H.},
+  \bibinfo{author}{Bhatt, V.}, \bibinfo{author}{Nikolaidis, S.},
+  \bibinfo{author}{Li, J.}, \bibinfo{year}{2024}b.
+\newblock \bibinfo{title}{Guidance graph optimization for lifelong multi-agent
+  path finding}, in: \bibinfo{booktitle}{Proceedings of the Thirty-Third
+  International Joint Conference on Artificial Intelligence (IJCAI)}.
+\newblock \DOIprefix\doi{10.48550/arXiv.2402.01446}.
+%Type = Article
+\bibitem[{Zhao and Fu(2026)}]{zhao2026deep}
+\bibinfo{author}{Zhao, F.}, \bibinfo{author}{Fu, Z.}, \bibinfo{year}{2026}.
+\newblock \bibinfo{title}{A deep reinforcement learning algorithm with
+  heterogeneous graph and hierarchical attention mechanism for dynamic flexible
+  job shop scheduling problem}.
+\newblock \bibinfo{journal}{Engineering Applications of Artificial
+  Intelligence} \bibinfo{volume}{183}, \bibinfo{pages}{116192}.
+\newblock \DOIprefix\doi{10.1016/j.engappai.2026.116192}.
+
+\end{thebibliography}

@@ -1,0 +1,33 @@
+{
+  "e1": {
+    "alpha": 0.01,
+    "rho": 0.3,
+    "rates": [
+      0.05,
+      0.1,
+      0.2,
+      0.4
+    ],
+    "primary_rate": 0.2,
+    "seeds": 3,
+    "budget": 10,
+    "n_train": 1951,
+    "n_calib": 603,
+    "n_test": 508,
+    "keep_paths": [
+      "硬层",
+      "时序",
+      "结构"
+    ]
+  },
+  "files": [
+    "C:\\Users\\analy\\Desktop\\AI_Folder\\paper02\\slid\\experiments\\main_table.csv",
+    "C:\\Users\\analy\\Desktop\\AI_Folder\\paper02\\slid\\experiments\\arl0.csv",
+    "C:\\Users\\analy\\Desktop\\AI_Folder\\paper02\\slid\\experiments\\delay.csv",
+    "C:\\Users\\analy\\Desktop\\AI_Folder\\paper02\\slid\\experiments\\e5_sigma.csv",
+    "C:\\Users\\analy\\Desktop\\AI_Folder\\paper02\\slid\\experiments\\e6_transfer.csv",
+    "C:\\Users\\analy\\Desktop\\AI_Folder\\paper02\\slid\\experiments\\robust.csv",
+    "C:\\Users\\analy\\Desktop\\AI_Folder\\paper02\\slid\\experiments\\cost.csv"
+  ],
+  "note": "CSV 由存档汇总,与 paper02_CN.tex 表内数字同源。"
+}
