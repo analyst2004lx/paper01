@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 <#
 .SYNOPSIS
   Daytime sync between a GitHub repo and a local folder.
@@ -62,16 +62,20 @@ $Config = @{
         'Thumbs.db'
         '.DS_Store'
     )
-    # Optional list file: <Ignore>...</Ignore> skip sync; <Delete>...</Delete> remove from GitHub.
-    # If a path is in both, Ignore wins. Missing paths are skipped.
+    # Optional list file: <Ignore> skip; <Delete> remove from GitHub; <Rename> old:new.
+    # If a path is in both Ignore and Delete, Ignore wins. Missing paths are skipped.
+    # Rename is applied by Apply-SyncGitHubRename.ps1 (called below).
     IgnoreDeleteListFile = (Join-Path $PSScriptRoot 'Sync-GitHub-Ignore_and_Delete.txt')
     GitPath       = ''
     # GitHub fetch: idle timeout (no pack growth) vs absolute cap.
     # Slow WireGuard still counts as progress, so do not kill a growing download.
+    # Idle is measured on THIS run's tmp_pack only (stale leftover packs are ignored).
     FetchRetries     = 5
     FetchRetrySec    = 6
-    FetchTimeoutSec  = 90
-    FetchMaxSec      = 600
+    FetchTimeoutSec  = 180
+    # Absolute cap. Idle timeout still kills a hung transfer; this only
+    # stops a slow-but-moving pack (WireGuard often sits around 50-100 KB/s).
+    FetchMaxSec      = 1800
 }
 # =============================================================
 
@@ -192,14 +196,18 @@ function Invoke-Git {
         [int]$TimeoutSec = 0,
         [int]$MaxSec = 0,
         [string]$ProgressDir = '',
-        [string]$ProgressFilter = 'tmp_pack*'
+        [string]$ProgressFilter = 'tmp_pack*',
+        $ProgressSince = $null
     )
 
     function Get-ProgressBytes {
         if ([string]::IsNullOrWhiteSpace($ProgressDir) -or -not (Test-Path -LiteralPath $ProgressDir)) { return [int64]0 }
         $sum = [int64]0
         Get-ChildItem -LiteralPath $ProgressDir -Filter $ProgressFilter -Force -ErrorAction SilentlyContinue |
-            ForEach-Object { $sum += [int64]$_.Length }
+            ForEach-Object {
+                if ($null -ne $ProgressSince -and $_.LastWriteTime -lt $ProgressSince.AddSeconds(-2)) { return }
+                $sum += [int64]$_.Length
+            }
         return $sum
     }
     $git = $script:GitExe
@@ -247,6 +255,7 @@ function Invoke-Git {
 
         $sw = [System.Diagnostics.Stopwatch]::StartNew()
         $lastBeat = 0
+        if ($null -eq $ProgressSince) { $ProgressSince = Get-Date }
         $lastBytes = Get-ProgressBytes
         $lastProgressSec = 0
         $watchProgress = -not [string]::IsNullOrWhiteSpace($ProgressDir)
@@ -555,10 +564,19 @@ try {
         param([string]$RepoRoot, [int]$MinAgeSec = 60)
         $gitMeta = Join-Path $RepoRoot '.git'
         if (-not (Test-Path -LiteralPath $gitMeta)) { return }
-        $gitRunning = @(Get-Process -Name 'git','git-remote-https','git-remote-http' -ErrorAction SilentlyContinue)
-        if ($gitRunning.Count -gt 0) {
-            Write-Log ('Other git process running (PIDs: {0}); leave lock files alone.' -f `
-                (($gitRunning | ForEach-Object { $_.Id }) -join ',')) -Level WARN
+        # Cursor and other tools constantly run `git status` in this repo.
+        # Only a fetch/merge/rebase/commit should block lock cleanup.
+        $repoMark = $RepoRoot.TrimEnd('\')
+        $blocking = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+            Where-Object {
+                $_.Name -match '^(git|git-remote-https|git-remote-http)(\.exe)?$' -and
+                $_.CommandLine -and
+                ($_.CommandLine -like ('*{0}*' -f $repoMark)) -and
+                ($_.CommandLine -match '\s(fetch|pull|clone|merge|rebase|commit|gc|index-pack|unpack-objects|receive-pack)\b')
+            })
+        if ($blocking.Count -gt 0) {
+            Write-Log ('Git write still running in this repo (PIDs: {0}); leave lock files alone.' -f `
+                (($blocking | ForEach-Object { $_.ProcessId }) -join ',')) -Level WARN
             return
         }
         $locks = @(Get-ChildItem -LiteralPath $gitMeta -Filter '*.lock' -Force -ErrorAction SilentlyContinue)
@@ -578,6 +596,20 @@ try {
                 Write-Log ('Removed stale lock: {0} (age {1:N0}s)' -f $lk.Name, $age) -Level WARN
             } catch {
                 Write-Log ('Cannot remove lock {0}: {1}' -f $lk.Name, $_.Exception.Message) -Level WARN
+            }
+        }
+        # Leftover tmp_pack from killed fetches inflate "pack=XX MB" and confuse idle detection
+        $packDir = Join-Path $gitMeta 'objects\pack'
+        if (Test-Path -LiteralPath $packDir) {
+            foreach ($tp in @(Get-ChildItem -LiteralPath $packDir -Filter 'tmp_pack*' -Force -ErrorAction SilentlyContinue)) {
+                $age = ((Get-Date) - $tp.LastWriteTime).TotalSeconds
+                if ($age -lt [Math]::Max(5, $MinAgeSec)) { continue }
+                try {
+                    Remove-Item -LiteralPath $tp.FullName -Force -ErrorAction Stop
+                    Write-Log ('Removed stale tmp pack: {0} ({1:N1} MB, age {2:N0}s)' -f $tp.Name, ($tp.Length / 1MB), $age) -Level WARN
+                } catch {
+                    Write-Log ('Cannot remove tmp pack {0}: {1}' -f $tp.Name, $_.Exception.Message) -Level WARN
+                }
             }
         }
     }
@@ -678,37 +710,62 @@ try {
         Write-Log ('preflight failed (exit={0}): {1}' -f $preflight.ExitCode, $preflight.Output) -Level WARN
         Write-Log 'GitHub may be slow or blocked; fetch will still be attempted.' -Level WARN
     }
+    $fetchBranch = $Config.Branch
+    if ([string]::IsNullOrWhiteSpace($fetchBranch)) { $fetchBranch = 'main' }
     $fetchOk = $false
+    # If GitHub tip already matches local origin/<branch>, skip pack download
+    # (avoids a multi-minute stalled fetch when there is nothing new).
+    if ($preflight.ExitCode -eq 0 -and -not [string]::IsNullOrWhiteSpace($preflight.Output)) {
+        $wantRef = 'refs/heads/' + $fetchBranch
+        $remoteTip = $null
+        foreach ($line in ($preflight.Output -split "`r?`n")) {
+            if ($line -match '^([0-9a-f]{40})\s+(\S+)$' -and $Matches[2] -eq $wantRef) {
+                $remoteTip = $Matches[1]
+                break
+            }
+        }
+        if ($remoteTip) {
+            $localTip = Invoke-Git -GitArgs @('rev-parse', '--verify', ('origin/{0}' -f $fetchBranch)) -AllowFail
+            if ($localTip.ExitCode -eq 0) {
+                $localSha = $localTip.Output.Trim()
+                Write-Log ('preflight tip: remote {0}={1}; local origin/{0}={2}' -f $fetchBranch, $remoteTip.Substring(0, 8), $localSha.Substring(0, [Math]::Min(8, $localSha.Length)))
+                if ($localSha -eq $remoteTip) {
+                    Write-Log 'origin already at GitHub tip; skip fetch pack download'
+                    $fetchOk = $true
+                }
+            }
+        }
+    }
     $fetch = $null
     $maxTry = [Math]::Max(1, [int]$Config.FetchRetries)
     $fetchIdle = [Math]::Max(30, [int]$Config.FetchTimeoutSec)
     $fetchMax = [Math]::Max($fetchIdle, [int]$Config.FetchMaxSec)
     $packDir = Join-Path $Config.LocalFolder '.git\objects\pack'
-    $fetchBranch = $Config.Branch
-    if ([string]::IsNullOrWhiteSpace($fetchBranch)) { $fetchBranch = 'main' }
-    for ($i = 1; $i -le $maxTry; $i++) {
-        Write-Log ('fetch attempt {0}/{1} (idle={2}s, max={3}s, ref={4})...' -f $i, $maxTry, $fetchIdle, $fetchMax, $fetchBranch)
-        if ($i -le 2) {
-            # Single branch + no tags: smaller pack than `fetch origin --prune`
-            $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', 'origin', $fetchBranch)
-        } else {
-            Write-Log 'Using shallow fetch fallback (depth=1; smaller download)...' -Level WARN
-            $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', '--depth', '1', 'origin', $fetchBranch)
-        }
-        $fetch = Invoke-Git -GitArgs $fetchArgs -AllowFail -HeartbeatSec 15 `
-            -TimeoutSec $fetchIdle -MaxSec $fetchMax -ProgressDir $packDir
-        if ($fetch.ExitCode -eq 0) {
-            $fetchOk = $true
-            Write-Log ('fetch ok on attempt {0}' -f $i)
-            break
-        }
-        Write-Log ('fetch attempt {0} failed (exit={1}): {2}' -f $i, $fetch.ExitCode, $fetch.Output) -Level WARN
-        # Clear locks left by killed/stalled fetch
+    if (-not $fetchOk) {
         Clear-StaleGitLocks -RepoRoot $Config.LocalFolder -MinAgeSec 0
-        if ($i -lt $maxTry) {
-            $wait = [int]$Config.FetchRetrySec * $i
-            Write-Log ('Wait {0}s then retry (WireGuard/VPN recommended)...' -f $wait) -Level WARN
-            Start-Sleep -Seconds $wait
+        for ($i = 1; $i -le $maxTry; $i++) {
+            Write-Log ('fetch attempt {0}/{1} (idle={2}s, max={3}s, ref={4})...' -f $i, $maxTry, $fetchIdle, $fetchMax, $fetchBranch)
+            # Do not use --depth 1 here. On an existing full repo it truncates history
+            # and leaves .git/shallow.lock if the download is killed.
+            $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', 'origin', $fetchBranch)
+            if ($i -gt 2) {
+                Write-Log 'Retrying full fetch (shallow fetch disabled; it would truncate local history)...' -Level WARN
+            }
+            $fetch = Invoke-Git -GitArgs $fetchArgs -AllowFail -HeartbeatSec 15 `
+                -TimeoutSec $fetchIdle -MaxSec $fetchMax -ProgressDir $packDir
+            if ($fetch.ExitCode -eq 0) {
+                $fetchOk = $true
+                Write-Log ('fetch ok on attempt {0}' -f $i)
+                break
+            }
+            Write-Log ('fetch attempt {0} failed (exit={1}): {2}' -f $i, $fetch.ExitCode, $fetch.Output) -Level WARN
+            # Clear locks / leftover tmp_pack left by killed/stalled fetch
+            Clear-StaleGitLocks -RepoRoot $Config.LocalFolder -MinAgeSec 0
+            if ($i -lt $maxTry) {
+                $wait = [int]$Config.FetchRetrySec * $i
+                Write-Log ('Wait {0}s then retry (WireGuard/VPN recommended)...' -f $wait) -Level WARN
+                Start-Sleep -Seconds $wait
+            }
         }
     }
     if (-not $fetchOk) {
@@ -909,6 +966,19 @@ try {
     $remoteFilesAll = @($remoteHashMap.Keys)
     Write-Log ('Remote file count (raw): {0}' -f $remoteFilesAll.Count)
 
+    # <Rename> lives in its own script so Ignore/Delete below stay unchanged.
+    # It must run here: after the remote tree is known, and before this script
+    # would otherwise pull the old path back and push the new path as a new file.
+    $renameScript = Join-Path $PSScriptRoot 'Apply-SyncGitHubRename.ps1'
+    if (Test-Path -LiteralPath $renameScript -PathType Leaf) {
+        . $renameScript
+        Invoke-SyncGitHubRename -LocalFolder $Config.LocalFolder -ListFile $Config.IgnoreDeleteListFile -RemoteRef $remoteRef -RemoteHashMap $remoteHashMap -GitExe $script:GitExe
+        $remoteFilesAll = @($remoteHashMap.Keys)
+        $listInfo = Read-IgnoreDeleteList -ListFile $Config.IgnoreDeleteListFile
+        $script:ListIgnorePaths = @($listInfo.Ignore)
+        $script:ListDeletePaths = @($listInfo.Delete)
+    }
+
     # Apply <Delete> list: remove matching paths from GitHub index (Ignore wins).
     # Missing remote paths are skipped. Use --cached so a still-present local copy is kept.
     $deleteRmCount = 0
@@ -996,9 +1066,26 @@ try {
     $errorCount = 0
     $conflictPaths = New-Object 'System.Collections.Generic.List[string]'
 
+    # The Ignore/Rename list is not a normal synced document. Comparing it here
+    # checks it out or marks a conflict, then the later commit touches it again
+    # even when the text is unchanged. Leave it for the single content check
+    # before merge/push.
+    $script:ListFileRelGit = $null
+    try {
+        $listFullEarly = [System.IO.Path]::GetFullPath($Config.IgnoreDeleteListFile)
+        $rootFullEarly = [System.IO.Path]::GetFullPath($Config.LocalFolder).TrimEnd('\')
+        if ($listFullEarly.StartsWith($rootFullEarly + '\', [StringComparison]::OrdinalIgnoreCase)) {
+            $script:ListFileRelGit = $listFullEarly.Substring($rootFullEarly.Length).TrimStart('\').Replace('\', '/')
+        }
+    } catch {}
+
     foreach ($relRaw in $all) {
         try {
             $rel = ConvertFrom-GitQuotedPath $relRaw
+            if ($script:ListFileRelGit -and
+                [string]::Equals($rel, $script:ListFileRelGit, [StringComparison]::OrdinalIgnoreCase)) {
+                continue
+            }
             if (Test-IgnoredPath $rel) { continue }
             if (-not (Test-SafeRelativePath -RelativePath ($rel -replace '/', '\'))) {
                 Write-Log ('Skip unsafe path: {0}' -f $rel) -Level WARN
@@ -1194,6 +1281,36 @@ try {
             Write-Log 'Skip push: local history still unrelated to remote.' -Level ERROR
             $pushOk = $false
         } else {
+            # Commit the list only when its text differs. A timestamp or
+            # CRLF-only touch must not create another commit.
+            $listRelGit = $script:ListFileRelGit
+            if ($listRelGit) {
+                $listDiff = Invoke-Git -GitArgs @('diff', '--quiet', '--ignore-cr-at-eol', 'HEAD', '--', $listRelGit) -AllowFail
+                if ($listDiff.ExitCode -eq 0) {
+                    [void](Invoke-Git -GitArgs @('update-index', '--refresh', '--', $listRelGit) -AllowFail)
+                } else {
+                    Write-Log ('Ignore/Rename list text changed; committing before merge/push: {0}' -f $listRelGit) -Level WARN
+                    $listAdd = Invoke-Git -GitArgs @('add', '-f', '--', $listRelGit) -AllowFail
+                    if ($listAdd.ExitCode -ne 0) {
+                        Write-Log ('Could not stage list file: {0}' -f $listAdd.Output) -Level WARN
+                    } else {
+                        $listCached = Invoke-Git -GitArgs @('diff', '--cached', '--quiet', '--ignore-cr-at-eol', '--', $listRelGit) -AllowFail
+                        if ($listCached.ExitCode -eq 0) {
+                            [void](Invoke-Git -GitArgs @('reset', '-q', 'HEAD', '--', $listRelGit) -AllowFail)
+                            Write-Log 'Ignore/Rename list matched HEAD after line-ending normalize; not committed.'
+                        } else {
+                            $listMsg = '{0} list {1:yyyy-MM-dd HH:mm:ss}' -f $Config.CommitPrefix, (Get-Date)
+                            $listCommit = Invoke-Git -GitArgs @('commit', '-m', $listMsg, '--', $listRelGit) -AllowFail -WithCommitIdentity
+                            if ($listCommit.ExitCode -ne 0) {
+                                Write-Log ('List commit failed: {0}' -f $listCommit.Output) -Level WARN
+                            } else {
+                                Write-Log ('committed list: {0}' -f $listMsg)
+                            }
+                        }
+                    }
+                }
+            }
+
             $ahead = Invoke-Git -GitArgs @('rev-list', '--count', ('{0}..HEAD' -f $remoteRef)) -AllowFail
             $behind = Invoke-Git -GitArgs @('rev-list', '--count', ('HEAD..{0}' -f $remoteRef)) -AllowFail
             $aheadN = 0
@@ -1203,14 +1320,49 @@ try {
 
             if ($behindN -gt 0) {
                 Write-Log ('Remote ahead by {0} commit(s); merging {1} before push...' -f $behindN, $remoteRef) -Level WARN
+
+                # Dirty tracked files block merge ("would be overwritten"). Stash them first.
+                # git status porcelain uses a leading space for unstaged edits (" M path").
+                # Invoke-Git trims that space, so do not require the second column to be a letter.
+                $dirty = Invoke-Git -GitArgs @('status', '--porcelain', '-uno') -AllowFail
+                $didStash = $false
+                if ($dirty.ExitCode -eq 0 -and -not [string]::IsNullOrWhiteSpace($dirty.Output)) {
+                    $stashMsg = 'auto-sync pre-merge stash {0:yyyy-MM-dd HH:mm:ss}' -f (Get-Date)
+                    Write-Log 'Working tree has uncommitted tracked changes; stashing before merge...' -Level WARN
+                    $stash = Invoke-Git -GitArgs @('stash', 'push', '-u', '-m', $stashMsg) -AllowFail
+                    # Prefer tracked-only stash if -u unsupported / fails
+                    if ($stash.ExitCode -ne 0) {
+                        $stash = Invoke-Git -GitArgs @('stash', 'push', '-m', $stashMsg) -AllowFail
+                    }
+                    if ($stash.ExitCode -eq 0 -and ($stash.Output -notmatch 'No local changes to save')) {
+                        $didStash = $true
+                        Write-Log 'stash ok'
+                    } else {
+                        Write-Log ('stash skipped/failed: {0}' -f $stash.Output) -Level WARN
+                    }
+                }
+
                 $merge = Invoke-Git -GitArgs @('merge', '--no-edit', $remoteRef) -AllowFail -WithCommitIdentity
                 if ($merge.ExitCode -ne 0) {
                     Write-Log ('merge failed: {0}' -f $merge.Output) -Level ERROR
                     Write-Log 'Resolve conflicts manually, then re-run the script.' -Level ERROR
+                    if ($didStash) {
+                        Write-Log 'Attempting to restore stashed local changes...' -Level WARN
+                        [void](Invoke-Git -GitArgs @('stash', 'pop') -AllowFail)
+                    }
                     $pushOk = $false
                 } else {
                     Write-Log 'merge ok'
                     $aheadN = 1
+                    if ($didStash) {
+                        $pop = Invoke-Git -GitArgs @('stash', 'pop') -AllowFail
+                        if ($pop.ExitCode -ne 0) {
+                            Write-Log ('stash pop had conflicts/issues (stash kept): {0}' -f $pop.Output) -Level WARN
+                            Write-Log 'Inspect with: git stash list / git status' -Level WARN
+                        } else {
+                            Write-Log 'stash pop ok (local uncommitted changes restored)'
+                        }
+                    }
                 }
             }
 
