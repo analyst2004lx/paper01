@@ -33,13 +33,13 @@ STRINGS_CN = {
     ),
     "assign_ylim_lo": -1.70,
     "assign_y": -1.08,
-    "title_b": "(b) 同一对指派的整例 $C_{\\max}$：常数矩阵与无冲突路由",
+    "title_b": "(b) 同一对指派的整例 $C_{\\max}$：常数矩阵与无冲突路径规划",
     "group_ideal": "常数运输时间\n矩阵",
-    "group_routed": "无冲突路由",
+    "group_routed": "无冲突路径规划",
     "chosen": "选中",
     "reversal": (
         "优劣对调（柱高是含三个背景工件的整例 $C_{{\\max}}$）\n"
-        "常数矩阵选 M{a}（快速机器）；无冲突路由选 M{b}（慢速机器）"
+        "常数矩阵选 M{a}（快速机器）；无冲突路径规划选 M{b}（慢速机器）"
     ),
     "ylabel": "整例完工时间 $C_{\\max}$",
     "delta_y_mult": 1.40,

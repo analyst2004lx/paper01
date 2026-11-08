@@ -89,7 +89,7 @@ def main() -> None:
     xmax = 1.06 * max(tt[a]["makespan"] for a in ("B0", "B2"))
     fig, axes = plt.subplots(2, 1, figsize=(FULL, 5.0), sharex=True)
     draw(axes[0], tt["B0"], "OL  开环，规则派车", xmax)
-    draw(axes[1], tt["B2"], "CLBS  闭环，预约表感知派遣（本文）", xmax)
+    draw(axes[1], tt["B2"], "CLBS  路径规划内嵌评价，预约表感知派遣（本文）", xmax)
     axes[1].set_xlabel("时间")
 
     handles = [

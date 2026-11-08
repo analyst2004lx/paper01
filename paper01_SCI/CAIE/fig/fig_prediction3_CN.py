@@ -16,8 +16,8 @@ import fig_prediction3 as src  # noqa: E402
 use_cjk()
 
 EFFECTS = [
-    ("B0", "B1", "闭环\n（派车规则固定）", "#08519c", "o", "-"),
-    ("B1", "B2", "预约表感知派遣\n（闭环固定）", "#d95f02", "s", "--"),
+    ("B0", "B1", "路径规划内嵌评价\n（派车规则固定）", "#08519c", "o", "-"),
+    ("B1", "B2", "预约表感知派遣\n（路径规划内嵌评价固定）", "#d95f02", "s", "--"),
 ]
 PANELS = [
     ("A", "布局", "争用强度（%）"),
@@ -80,7 +80,7 @@ def main() -> None:
                    handlelength=1.8, framealpha=0.9)
     fig.tight_layout(rect=(0.0, 0.095, 1.0, 1.0))
     fig.text(0.995, 0.012,
-             "每组 %d 个种子，同挂钟；误差棒为种子间均值标准误；\n"
+             "每组 %d 个种子，相同运行时间；误差棒为种子间均值标准误；\n"
              "实心标记 $=$ 该组 Holm 校正后 $p<%.2f$ 显著（族为该效应的 %d 组）"
              % (len(seeds), src.ALPHA, len(cells)),
              ha="right", va="bottom", fontsize=FS_FOOT, color="#777777")

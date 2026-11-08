@@ -11,18 +11,22 @@
 
 ## 待补跑实验（作者决定后统一跑；顺序执行，不要并行）
 
-1. **机器节点容量 c 敏感性**（论文 5.3 节已留 `\TBD` 占位；§2.4 与参数表也声称"另行度量"）
+> 2026-11-08 15:00:第 1、2 条已跑完并写入论文 5.3 节(表 `tab:sens`,`tools/sens_summary.py --tex` 生成 `tab/tab_sens.tex` 与 `tab/sens_macros.tex`;数据 `output/sens_*.csv`)。第 3 条(同代数,`samegen_full*.csv`)与第 4 条(`prune_ablation.csv`,旧结果备份为 `prune_ablation_v1.csv`)运行中。
+
+1. **[已完成] 机器节点容量 c 敏感性**（论文 5.3 节已留 `\TBD` 占位；§2.4 与参数表也声称"另行度量"）
    - 算例：S11（funnel）、S21（high），c ∈ {1, 2, ∞}（c=2 可复用主批次）
    - 方法：OL、TS、AE、CLBS（敏感性只比本文与对比方法，不跑 CLBS-R）
    - 10 种子、90 s；估计 2 算例 × 2 个新 c × 4 方法 × 10 种子，约 4–5 h
    - 需新写或扩展工具：`baseline_ladder` 增加 `--capacity` 参数，或新建 `tools/capacity_sens.py`
-2. **异构度 H 在节点模型下重跑**（论文 5.3 节"异构度"段仍是旧模型 matrix 批次，带 `%% !!` 注释）
+2. **[已完成] 异构度 H 在节点模型下重跑**（论文 5.3 节"异构度"段仍是旧模型 matrix 批次，带 `%% !!` 注释）
    - 在 S11 上取 H ∈ {0, 0.15, 0.3, 0.5}，比较 OL、TS、AE、CLBS，10 种子、90 s
-3. **闭环内派遣的证据**（CLBS-R vs CLBS）：三选一待定
+3. **[已完成,同代数口径] 闭环内派遣的证据**（CLBS-R vs CLBS）：全部 10 组 × 10 种子各 30 代,CLBS −15.57%,97 胜 3 负,p<1e-4;逐组校正前 10/10 显著,Holm 后最小 p=0.058。汇总 `tools/samegen_summary.py --tex` → `tab/samegen_macros.tex`;论文 5.4、5.5、结论 (3)、局限 (2)、贡献与摘要已改写;旧图 `fig:protocols` 已删
+   - **[已完成 2026-11-08]** 加速后的解码器在 90 s 同挂钟下重跑 CLBS-R/CLBS(3 进程并行,`output/ladder_b12_g*.csv`),经 `tools/merge_b12.py` 并入 `baseline_ladder.csv`(原文件备份为 `baseline_ladder_v1.csv`)。结果:CLBS-R→CLBS −2.69%(64/34,p=0.0015,HL −3.30% [−5.50,−0.90]),由加速前的 +2.07%(不显著)翻为显著;OL→CLBS −22.21%、TS→CLBS −15.01%、AE→CLBS −29.14%。表、宏、`fig_prediction3` 已重生成,正文派遣叙事已按"开环与闭环内均显著、闭环内净收益受开销所限"改写
+   - 原三选一
    - 同代数批次正式化（`tools/samegen_check.py` 扩到 10 算例 × 10 种子）
    - 或用加速后的解码器在 90 s 下重跑 CLBS-R/CLBS
    - 或 180 s 预算重跑 CLBS-R/CLBS
-4. **降本对照重跑**（解码器已改为按下界升序试探，`tab_prune`、`\RouteCallCut*`、§4.4.4 的扫描顺序描述需更新）
+4. **[已完成] 降本对照重跑**(−6.48%,44/0;加速 2.30×;已回填 `tab_prune` 与宏。开销诊断 `ladder_diag` 已用新解码器重跑:`\CostMultAfter` 4.54、`\CostMultBefore` 10.4,`\MsOpen/\MsLoopRule/\MsLoopProbe` 手工更新为 0.74/18.5/83.9 ms;收敛图、开销图、案例图已重画;案例算例两档 C_max 不变(91.0/54.5)。旧结果备份为 `*_v1`)（解码器已改为按下界升序试探，`tab_prune`、`\RouteCallCut*`、§4.4.4 的扫描顺序描述需更新）
 5. **其余旧模型批次**：附加代价扫描（θ，节点模型下暂不支持定价）、同代数口径图 `fig_protocols`、动机算例图 `fig_motivating`；重跑或从论文中删去
    - 公开基准无需重跑：删去争用约束后与模型改造无关
 

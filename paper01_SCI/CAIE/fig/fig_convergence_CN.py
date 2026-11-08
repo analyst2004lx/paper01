@@ -14,8 +14,8 @@ import fig_convergence as src  # noqa: E402
 use_cjk()
 
 HINT = src.HINT
-CURVES = [("B1", "#6baed6", "-", "CLBS-R  闭环，规则派车"),
-          ("B2", "#08519c", "-", "CLBS  闭环，预约表感知派遣")]
+CURVES = [("B1", "#6baed6", "-", "CLBS-R  路径规划内嵌评价，规则派车"),
+          ("B2", "#08519c", "-", "CLBS  路径规划内嵌评价，预约表感知派遣")]
 LANDING = [("B0", "#525252", "X", "OL  执行后"),
            ("B0+", "#969696", "P", "TS  执行后")]
 CASE_CN = {"A funnel": "S11 算例"}
@@ -70,7 +70,7 @@ def main() -> None:
                 ha="right", va="center", fontsize=FS_ANNOT, color="#d62728",
                 fontweight="bold")
 
-    ax.set_xlabel("挂钟时间（秒）")
+    ax.set_xlabel("运行时间（秒）")
     ax.set_ylabel("迄今最好 $C_{\\max}$")
     ax.set_title("%s，%d 个种子（色带：种子间最小–最大）"
                  % (CASE_CN.get(case, case), len(seeds)), fontsize=8.5)

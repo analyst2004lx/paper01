@@ -10,28 +10,27 @@
 \newcommand{\NCases}{10}
 \newcommand{\NSeeds}{10}
 \newcommand{\NPairs}{100}
-\newcommand{\GainLoopRule}{18.12\%}
+\newcommand{\GainLoopRule}{19.66\%}
 \newcommand{\PLoopRule}{<10^{-4}}
-\newcommand{\GainLoopProbe}{9.12\%}
+\newcommand{\GainLoopProbe}{15.01\%}
 \newcommand{\PLoopProbe}{<10^{-4}}
 \newcommand{\GainProbeOpen}{8.04\%}
 \newcommand{\PProbeOpen}{<10^{-4}}
-\newcommand{\GainProbeLoop}{2.07\%}
-\newcommand{\PProbeLoop}{=0.1908}
-%%!! GainProbeLoop 涓烘(+2.07%%):鍚庤€呮洿宸?姝ｆ枃浠ャ€岄檷浣庛€嶅紩鐢ㄨ瀹忓椤绘敼鍐欍€?
-\newcommand{\GainEndToEnd}{16.79\%}
+\newcommand{\GainProbeLoop}{2.69\%}
+\newcommand{\PProbeLoop}{=0.0015}
+\newcommand{\GainEndToEnd}{22.21\%}
 \newcommand{\PEndToEnd}{<10^{-4}}
-\newcommand{\WinEndToEnd}{93}
-\newcommand{\LoseEndToEnd}{6}
-\newcommand{\GainLyu}{24.22\%}
+\newcommand{\WinEndToEnd}{98}
+\newcommand{\LoseEndToEnd}{2}
+\newcommand{\GainLyu}{29.14\%}
 \newcommand{\PLyu}{<10^{-4}}
-\newcommand{\WinLyu}{98}
-\newcommand{\LoseLyu}{2}
-\newcommand{\HLLoopRule}{18.12\%}
-\newcommand{\CILoopRule}{$[15.66\%,\ 20.56\%]$}
-\newcommand{\HLProbeLoop}{+1.69\%}
-\newcommand{\CIProbeLoop}{$[-0.39\%,\ +3.90\%]$}
-\newcommand{\GainIndepProduct}{24.7\%}
+\newcommand{\WinLyu}{99}
+\newcommand{\LoseLyu}{1}
+\newcommand{\HLLoopRule}{19.65\%}
+\newcommand{\CILoopRule}{$[17.27\%,\ 22.17\%]$}
+\newcommand{\HLProbeLoop}{3.30\%}
+\newcommand{\CIProbeLoop}{$[0.90\%,\ 5.50\%]$}
+\newcommand{\GainIndepProduct}{26.1\%}
 \newcommand{\ContentionLo}{16.2\%}
 \newcommand{\ContentionHi}{49.4\%}
 \newcommand{\ContentionAHi}{47.0\%}
@@ -40,89 +39,106 @@
 \newcommand{\LegGrid}{20.0}
 \newcommand{\CellsSigLoop}{10}
 \newcommand{\CellsSigLoopAdj}{10}
-\newcommand{\CellsSigProbe}{1}
+\newcommand{\CellsSigProbe}{3}
 \newcommand{\CellsSigProbeAdj}{0}
-\newcommand{\GainLoopStarve}{-8.2\%}
-\newcommand{\GainProbeStarve}{+0.1\%}
-\newcommand{\GainProbeFleetBase}{-3.2\%}
-\newcommand{\GainProbeFleetOne}{+6.7\%}
-\newcommand{\GainProbeFleetTwo}{+2.9\%}
-\newcommand{\GainLoopFunnel}{-19.8\%}
-\newcommand{\GainLoopHigh}{-21.9\%}
-\newcommand{\GainLoopMid}{-19.3\%}
-\newcommand{\GainLoopLow}{-19.4\%}
-\newcommand{\GainLoopScatter}{-22.4\%}
-\newcommand{\GainLoopFleetOne}{-15.7\%}
-\newcommand{\GainLoopFleetTwo}{-13.2\%}
-\newcommand{\GainLoopFlexLo}{-21.4\%}
-\newcommand{\GainLoopFlexHi}{-19.9\%}
-\newcommand{\GainProbeFlexLo}{-1.7\%}
-\newcommand{\GainProbeFlexHi}{+4.0\%}
-\newcommand{\PProbeFleetHalfRaw}{=0.9186}
-\newcommand{\PProbeFleetOneRaw}{=0.0324}
-\newcommand{\PProbeFleetBaseRaw}{=0.2619}
-\newcommand{\PProbeFleetTwoRaw}{=0.7596}
-\newcommand{\PProbeFlexLoRaw}{=0.5746}
-\newcommand{\PProbeFlexLoHolm}{=1.0000}
-\newcommand{\PProbeFlexLoBH}{=0.9186}
-\newcommand{\PProbeFlexHiRaw}{=0.4922}
+\newcommand{\GainLoopStarve}{-8.9\%}
+\newcommand{\GainProbeStarve}{-4.0\%}
+\newcommand{\GainProbeFleetBase}{-8.0\%}
+\newcommand{\GainProbeFleetOne}{+2.0\%}
+\newcommand{\GainProbeFleetTwo}{+3.7\%}
+\newcommand{\GainLoopFunnel}{-20.8\%}
+\newcommand{\GainLoopHigh}{-23.5\%}
+\newcommand{\GainLoopMid}{-20.1\%}
+\newcommand{\GainLoopLow}{-20.8\%}
+\newcommand{\GainLoopScatter}{-23.1\%}
+\newcommand{\GainLoopFleetOne}{-16.4\%}
+\newcommand{\GainLoopFleetTwo}{-16.5\%}
+\newcommand{\GainLoopFlexLo}{-23.8\%}
+\newcommand{\GainLoopFlexHi}{-22.7\%}
+\newcommand{\GainProbeFlexLo}{-8.0\%}
+\newcommand{\GainProbeFlexHi}{+0.5\%}
+\newcommand{\PProbeFleetHalfRaw}{=0.0410}
+\newcommand{\PProbeFleetOneRaw}{=0.8457}
+\newcommand{\PProbeFleetBaseRaw}{=0.0590}
+\newcommand{\PProbeFleetTwoRaw}{=0.6833}
+\newcommand{\PProbeFlexLoRaw}{=0.0165}
+\newcommand{\PProbeFlexLoHolm}{=0.1653}
+\newcommand{\PProbeFlexLoBH}{=0.1180}
+\newcommand{\PProbeFlexHiRaw}{=0.8588}
 \newcommand{\PProbeFlexHiHolm}{=1.0000}
-\newcommand{\PProbeFlexHiBH}{=0.9186}
-\newcommand{\PLoopCellMax}{=0.0313}
+\newcommand{\PProbeFlexHiBH}{=0.8588}
+\newcommand{\PLoopCellMax}{=0.0274}
+\newcommand{\ScnOLSig}{10}
+\newcommand{\ScnOLSigRaw}{10}
+\newcommand{\ScnOLWorse}{0}
+\newcommand{\ScnOLRangeA}{$-28.1\%$ 鑷?$-23.2\%$}
+\newcommand{\ScnOLRangeB}{$-28.0\%$ 鑷?$-12.4\%$}
+\newcommand{\ScnOLRangeC}{$-30.3\%$ 鑷?$-22.0\%$}
+\newcommand{\ScnTSSig}{8}
+\newcommand{\ScnTSSigRaw}{9}
+\newcommand{\ScnTSWorse}{1}
+\newcommand{\ScnTSRangeA}{$-19.5\%$ 鑷?$-15.5\%$}
+\newcommand{\ScnTSRangeB}{$-18.9\%$ 鑷?$+0.2\%$}
+\newcommand{\ScnTSRangeC}{$-18.9\%$ 鑷?$-15.4\%$}
+\newcommand{\ScnAESig}{10}
+\newcommand{\ScnAESigRaw}{10}
+\newcommand{\ScnAEWorse}{0}
+\newcommand{\ScnAERangeA}{$-34.9\%$ 鑷?$-27.7\%$}
+\newcommand{\ScnAERangeB}{$-34.9\%$ 鑷?$-12.1\%$}
+\newcommand{\ScnAERangeC}{$-38.0\%$ 鑷?$-34.9\%$}
 ==========================================================================
 
 閫愭牸鏄捐憲鎬?闂幆 B0->B1),鏃?= 10 鏍?Holm/BH 鏍℃:
-  A funnel      -19.76%  p=0.0039  Holm=0.0313  BH=0.0065  鏄捐憲
-  A high        -21.93%  p=0.0039  Holm=0.0313  BH=0.0065  鏄捐憲
-  A low         -19.36%  p=0.0019  Holm=0.0195  BH=0.0065  鏄捐憲
-  A mid         -19.31%  p=0.0039  Holm=0.0313  BH=0.0065  鏄捐憲
-  A scatter     -22.44%  p=0.0059  Holm=0.0313  BH=0.0074  鏄捐憲
-  B NA/NM 0.5    -8.18%  p=0.0039  Holm=0.0313  BH=0.0065  鏄捐憲
-  B NA/NM 1.0   -15.68%  p=0.0098  Holm=0.0313  BH=0.0098  鏄捐憲
-  B NA/NM 2.0   -13.25%  p=0.0059  Holm=0.0313  BH=0.0074  鏄捐憲
-  C F=0.3       -21.37%  p=0.0019  Holm=0.0195  BH=0.0065  鏄捐憲
-  C F=1.0       -19.92%  p=0.0091  Holm=0.0313  BH=0.0098  鏄捐憲
+  A funnel      -20.79%  p=0.0039  Holm=0.0274  BH=0.0065  鏄捐憲
+  A high        -23.52%  p=0.0039  Holm=0.0274  BH=0.0065  鏄捐憲
+  A mid         -20.12%  p=0.0039  Holm=0.0274  BH=0.0065  鏄捐憲
+  A low         -20.80%  p=0.0019  Holm=0.0195  BH=0.0065  鏄捐憲
+  A scatter     -23.08%  p=0.0019  Holm=0.0195  BH=0.0065  鏄捐憲
+  B NA/NM 0.5    -8.88%  p=0.0090  Holm=0.0274  BH=0.0098  鏄捐憲
+  B NA/NM 1.0   -16.42%  p=0.0098  Holm=0.0274  BH=0.0098  鏄捐憲
+  B NA/NM 2.0   -16.48%  p=0.0019  Holm=0.0195  BH=0.0065  鏄捐憲
+  C F=0.3       -23.77%  p=0.0059  Holm=0.0274  BH=0.0084  鏄捐憲
+  C F=1.0       -22.74%  p=0.0091  Holm=0.0274  BH=0.0098  鏄捐憲
 
 閫愭牸鏄捐憲鎬?闂幆鍐呰瘯鎺?B1->B2),鏃?= 10 鏍?Holm/BH 鏍℃:
-  A funnel       -3.17%  p=0.2619  Holm=1.0000  BH=0.8729  涓嶆樉钁?
-  A high         +9.37%  p=0.0924  Holm=0.8315  BH=0.4619  涓嶆樉钁?
-  A low          -1.07%  p=0.8783  Holm=1.0000  BH=0.9186  涓嶆樉钁?
-  A mid          +2.01%  p=0.3583  Holm=1.0000  BH=0.8958  涓嶆樉钁?
-  A scatter      +1.62%  p=0.8121  Holm=1.0000  BH=0.9186  涓嶆樉钁?
-  B NA/NM 0.5    +0.13%  p=0.9186  Holm=1.0000  BH=0.9186  涓嶆樉钁?
-  B NA/NM 1.0    +6.68%  p=0.0324  Holm=0.3236  BH=0.3236  鏍℃鍚庡け鍘绘樉钁?
-  B NA/NM 2.0    +2.87%  p=0.7596  Holm=1.0000  BH=0.9186  涓嶆樉钁?
-  C F=0.3        -1.65%  p=0.5746  Holm=1.0000  BH=0.9186  涓嶆樉钁?
-  C F=1.0        +3.95%  p=0.4922  Holm=1.0000  BH=0.9186  涓嶆樉钁?
-  !! 鏍℃鍚庣敱 1 鏍奸檷涓?0 鏍?姝ｆ枃鍑℃寜鏍艰绗﹀彿澶勫繀椤绘敼鍐欍€?
+  A funnel       -7.97%  p=0.0590  Holm=0.3686  BH=0.1180  涓嶆樉钁?
+  A high         +1.72%  p=0.4443  Holm=1.0000  BH=0.6347  涓嶆樉钁?
+  A mid          -4.94%  p=0.0412  Holm=0.3686  BH=0.1180  鏍℃鍚庡け鍘绘樉钁?
+  A low          -4.28%  p=0.1091  Holm=0.5456  BH=0.1819  涓嶆樉钁?
+  A scatter      -5.70%  p=0.0526  Holm=0.3686  BH=0.1180  涓嶆樉钁?
+  B NA/NM 0.5    -3.95%  p=0.0410  Holm=0.3686  BH=0.1180  鏍℃鍚庡け鍘绘樉钁?
+  B NA/NM 1.0    +2.03%  p=0.8457  Holm=1.0000  BH=0.8588  涓嶆樉钁?
+  B NA/NM 2.0    +3.71%  p=0.6833  Holm=1.0000  BH=0.8541  涓嶆樉钁?
+  C F=0.3        -8.05%  p=0.0165  Holm=0.1653  BH=0.1180  鏍℃鍚庡け鍘绘樉钁?
+  C F=1.0        +0.51%  p=0.8588  Holm=1.0000  BH=0.8588  涓嶆樉钁?
+  !! 鏍℃鍚庣敱 3 鏍奸檷涓?0 鏍?姝ｆ枃鍑℃寜鏍艰绗﹀彿澶勫繀椤绘敼鍐欍€?
 
 鍚堣鍙ｅ緞鐨?HL 浼腑浣嶆暟涓?95%% CI(閫愬鐩稿澧炵泭):
-  GainLoopRule   鍧囧€?-18.12%  HL -18.12%  CI [-20.56%, -15.66%]  p=0.0000  Holm=0.0000  (normal)
-  GainLoopProbe  鍧囧€? -9.12%  HL  -9.95%  CI [-12.07%,  -7.18%]  p=0.0000  Holm=0.0000  (normal)
+  GainLoopRule   鍧囧€?-19.66%  HL -19.65%  CI [-22.17%, -17.27%]  p=0.0000  Holm=0.0000  (normal)
+  GainLoopProbe  鍧囧€?-15.01%  HL -15.49%  CI [-17.86%, -13.03%]  p=0.0000  Holm=0.0000  (normal)
   GainProbeOpen  鍧囧€? -8.04%  HL  -8.59%  CI [-10.77%,  -6.32%]  p=0.0000  Holm=0.0000  (normal)
-  GainProbeLoop  鍧囧€? +2.07%  HL  +1.69%  CI [ -0.39%,  +3.90%]  p=0.1908  Holm=0.1908  (normal)
-     !! 璇ュ姣旂殑 95%% CI 璺ㄩ浂,鑰?p 鍊煎垽鏄捐憲:涓よ€呭彛寰勪笉涓€鑷?椤绘牳瀵广€?
-  GainEndToEnd   鍧囧€?-16.79%  HL -17.18%  CI [-19.48%, -14.83%]  p=0.0000  Holm=0.0000  (normal)
-  GainLyu        鍧囧€?-24.22%  HL -24.83%  CI [-26.89%, -22.66%]  p=0.0000  Holm=0.0000  (normal)
+  GainProbeLoop  鍧囧€? -2.69%  HL  -3.30%  CI [ -5.50%,  -0.90%]  p=0.0015  Holm=0.0015  (normal)
+  GainEndToEnd   鍧囧€?-22.21%  HL -22.47%  CI [-24.98%, -20.14%]  p=0.0000  Holm=0.0000  (normal)
+  GainLyu        鍧囧€?-29.14%  HL -29.79%  CI [-32.06%, -27.58%]  p=0.0000  Holm=0.0000  (normal)
 
 B 鏃?funnel 甯冨眬)瀹屾暣杞﹁噦姣旀壂鎻?B1->B2 閫愭牸:
-  N_A/N_M=0.5 (B NA/NM 0.5  ):  +0.13%  p=0.9186  [涓嶆樉钁梋
-  N_A/N_M=1.0 (B NA/NM 1.0  ):  +6.68%  p=0.0324
-  N_A/N_M=1.5 (A funnel     ):  -3.17%  p=0.2619  [涓嶆樉钁梋
-  N_A/N_M=2.0 (B NA/NM 2.0  ):  +2.87%  p=0.7596  [涓嶆樉钁梋
+  N_A/N_M=0.5 (B NA/NM 0.5  ):  -3.95%  p=0.0410
+  N_A/N_M=1.0 (B NA/NM 1.0  ):  +2.03%  p=0.8457  [涓嶆樉钁梋
+  N_A/N_M=1.5 (A funnel     ):  -7.97%  p=0.0590  [涓嶆樉钁梋
+  N_A/N_M=2.0 (B NA/NM 2.0  ):  +3.71%  p=0.6833  [涓嶆樉钁梋
   !! 绗﹀彿鍦ㄨ溅闃熺淮搴︿笂涓嶅崟璋?涓嶅緱鎶婂畠鍙欒堪涓轰竴涓崟璋冪殑閫傜敤涓婄晫銆?
-浜や簰鑷:绔埌绔?16.79% 鏈秴杩囩嫭绔嬩箻绉?24.71% 鈫?杩戝姞鎬?浜氬姞鎬?绗?5.4 鑺備笉寰楀啓姝ｄ氦浜掋€?
-\newcommand{\GainPrune}{4.74\%}
+浜や簰鑷:绔埌绔?22.21% 鏈秴杩囩嫭绔嬩箻绉?26.12% 鈫?杩戝姞鎬?浜氬姞鎬?绗?5.4 鑺備笉寰楀啓姝ｄ氦浜掋€?
+\newcommand{\GainPrune}{6.48\%}
 \newcommand{\PPrune}{<10^{-4}}
-\newcommand{\WinPrune}{38}
+\newcommand{\WinPrune}{44}
 \newcommand{\LosePrune}{0}
-\newcommand{\EvalRatioPrune}{1.64}
-\newcommand{\SpeedupProbe}{1.68}
-\newcommand{\RouteCallCut}{43.4\%}
-\newcommand{\RouteCallCutLo}{36.5\%}
-\newcommand{\RouteCallCutHi}{58.5\%}
+\newcommand{\EvalRatioPrune}{2.43}
+\newcommand{\SpeedupProbe}{2.30}
+\newcommand{\RouteCallCut}{57.1\%}
+\newcommand{\RouteCallCutLo}{46.4\%}
+\newcommand{\RouteCallCutHi}{74.7\%}
 %% 璺敱璋冪敤鍓婂噺:鏈€浣?B NA/NM 2.0,鏈€楂?A low
-\newcommand{\CostMultAfter}{6.27}
-\newcommand{\CostMultBefore}{10.5}
+\newcommand{\CostMultAfter}{4.54}
+\newcommand{\CostMultBefore}{10.4}
 
-宸插啓鍥?71 涓畯鍒?paper01_SCI\CAIE\paper01_CN_v2.tex
+宸插啓鍥?89 涓畯鍒?paper01_SCI\CAIE\paper01_CN_v2.tex

@@ -24,7 +24,7 @@ def main():
     fig, axes = S.plt.subplots(1, 2, figsize=(S.FULL * 0.86, 2.25),
                                sharey=True)
     panels = [
-        (axes[0], wall, "同挂钟预算", True),
+        (axes[0], wall, "相同运行时间预算", True),
         (axes[1], gen, "同评价次数", False),
     ]
 

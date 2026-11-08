@@ -108,7 +108,7 @@
 \newcommand{\NSeeds}{10}
 \newcommand{\NPairs}{100}
 % 闭环本身的价值(固定派车方式,只动"拥堵是否进入搜索目标")
-\newcommand{\GainLoopRule}{18.12\%}      % OL  -> CLBS-R ,规则派车下
+\newcommand{\GainLoopRule}{19.66\%}      % OL  -> CLBS-R ,规则派车下
 %% p 值一律是**Holm 校正后**的值,族 = 表 tab:main 的五个对比。校正对这五个对比是
 %% 惰性的(逐个与校正前相同),因为最大的那个 p 恰是最大者、乘数为 1,其余小到乘 5
 %% 仍远小于阈值。这一点本身要能从正文说出来,故此处标明口径而不是留给读者猜。
@@ -119,24 +119,24 @@
 %% !! 该处就会渲染成 "p=<10^{-4}" 而无人察觉。gen_tables_ladder.py 的 pmac() 负责
 %% !! 按数值挑选关系符,故这条约定是由生成器强制的,不靠记忆。
 \newcommand{\PLoopRule}{<10^{-4}}
-\newcommand{\GainLoopProbe}{9.12\%}     % TS -> CLBS ,试探派车下
+\newcommand{\GainLoopProbe}{15.01\%}     % TS -> CLBS ,试探派车下
 \newcommand{\PLoopProbe}{<10^{-4}}
 % 预约表感知派遣的价值(固定闭环与否,只动派车决策)
 \newcommand{\GainProbeOpen}{8.04\%}      % OL  -> TS,开环下,现已显著
 \newcommand{\PProbeOpen}{<10^{-4}}
-\newcommand{\GainProbeLoop}{2.07\%}      % CLBS-R  -> CLBS ,闭环内(被大车队两格拖低)
-\newcommand{\PProbeLoop}{=0.1908}
+\newcommand{\GainProbeLoop}{2.69\%}      % CLBS-R  -> CLBS ,路径规划内嵌评价下(被大车队两格拖低)
+\newcommand{\PProbeLoop}{=0.0015}
 % 端到端:文献结构 -> 本文
-\newcommand{\GainEndToEnd}{16.79\%}      % OL  -> CLBS
+\newcommand{\GainEndToEnd}{22.21\%}      % OL  -> CLBS
 \newcommand{\PEndToEnd}{<10^{-4}}
-\newcommand{\WinEndToEnd}{93}
-\newcommand{\LoseEndToEnd}{6}
+\newcommand{\WinEndToEnd}{98}
+\newcommand{\LoseEndToEnd}{2}
 % 编码方式:Lyu 式三段式编码(AGV 编入染色体)-> 本文,同为闭环、同路由器、同挂钟
 %% 节点模型主批次(clbs_new/output/baseline_ladder.csv,2026-11-08)回填。
-\newcommand{\GainLyu}{24.22\%}          % AE  -> CLBS
+\newcommand{\GainLyu}{29.14\%}          % AE  -> CLBS
 \newcommand{\PLyu}{<10^{-4}}
-\newcommand{\WinLyu}{98}
-\newcommand{\LoseLyu}{2}
+\newcommand{\WinLyu}{99}
+\newcommand{\LoseLyu}{1}
 %% ---- 效应量:Hodges--Lehmann 伪中位数与 95% 分布无关置信区间 ----
 %% 上面那些 Gain 宏是"逐对相对增益在配对上的均值",它没有精度陈述,且与旁边的
 %% Wilcoxon p 值不同源(后者用秩)。HL 伪中位数正是符号秩检验对应的点估计,其区间
@@ -144,12 +144,12 @@
 %% 的 hodges_lehmann_ci 按 Hollander--Wolfe 口径给出($n=100$ 走正态近似)。
 %% 两个宏都取绝对值(下降为正向),区间端点已按幅度从小到大排好,故正文直接引用。
 %% 只为正文实际引用的两个对比供给:主效应与承重机制。
-\newcommand{\HLLoopRule}{18.12\%}
-\newcommand{\CILoopRule}{$[15.66\%,\ 20.56\%]$}
-\newcommand{\HLProbeLoop}{+1.69\%}
-\newcommand{\CIProbeLoop}{$[-0.39\%,\ +3.90\%]$}
+\newcommand{\HLLoopRule}{19.65\%}
+\newcommand{\CILoopRule}{$[17.27\%,\ 22.17\%]$}
+\newcommand{\HLProbeLoop}{3.30\%}
+\newcommand{\CIProbeLoop}{$[0.90\%,\ 5.50\%]$}
 % 若两机制彼此独立,端到端应有此值。实测略低:未检出正交互,近加性/略亚加性。
-\newcommand{\GainIndepProduct}{24.7\%}
+\newcommand{\GainIndepProduct}{26.1\%}
 %% 十格中各自单独达到显著的格数。第 5.5 小节逐格读符号时必须带上它,而"逐格"就是
 %% 在一个十格的族上做十次检验,故必须按族校正:不校正时"至少一格显著"在全零假设下
 %% 的概率远高于名义的 5%。族的定义 = 一个效应的十个格(两个效应各自成族;把二十次
@@ -165,7 +165,7 @@
 %% !! 上一版按未校正的 2/10 写出了"柔性族是唯一能作结论的一族",该叙述已撤回。
 \newcommand{\CellsSigLoop}{10}
 \newcommand{\CellsSigLoopAdj}{10}
-\newcommand{\CellsSigProbe}{1}
+\newcommand{\CellsSigProbe}{3}
 \newcommand{\CellsSigProbeAdj}{0}
 %% ---- 车机比族(funnel 布局)的完整四点扫描,B1->B2 ----
 %% !! 这四格无一显著(p = 0.4121 / 0.2011 / 0.1386 / 0.3313),且符号交替:
@@ -179,60 +179,64 @@
 %% 直接写 \GainProbeFleetOne{} 即可,前面不要再加减号。这与上面那些合计口径的宏
 %% (\GainLoopRule 等,取绝对值、由行文承担方向)相反,故此处逐个注明,避免写出 "--2.0%"。
 %% \GainProbeStarve 是唯一的例外:它在正文里以 $-\GainProbeStarve$ 的形式出现。
-\newcommand{\GainLoopStarve}{-8.2\%}     % B NA/NM 0.5, OL->CLBS-R(该格闭环亦不显著)
-\newcommand{\GainProbeStarve}{+0.1\%}     % B NA/NM 0.5, CLBS-R->CLBS,收益向(不显著;无符号)
-\newcommand{\GainProbeFleetBase}{-3.2\%} % A funnel(N_A/N_M=1.5),CLBS-R->CLBS(不显著)
-\newcommand{\GainProbeFleetOne}{+6.7\%}  % B NA/NM 1.0, CLBS-R->CLBS(不显著)
-\newcommand{\GainProbeFleetTwo}{+2.9\%}  % B NA/NM 2.0, CLBS-R->CLBS(不显著)
+\newcommand{\GainLoopStarve}{-8.9\%}     % B NA/NM 0.5, OL->CLBS-R(该格路径规划内嵌评价亦不显著)
+\newcommand{\GainProbeStarve}{-4.0\%}     % B NA/NM 0.5, CLBS-R->CLBS,收益向(不显著;无符号)
+\newcommand{\GainProbeFleetBase}{-8.0\%} % A funnel(N_A/N_M=1.5),CLBS-R->CLBS(不显著)
+\newcommand{\GainProbeFleetOne}{+2.0\%}  % B NA/NM 1.0, CLBS-R->CLBS(不显著)
+\newcommand{\GainProbeFleetTwo}{+3.7\%}  % B NA/NM 2.0, CLBS-R->CLBS(不显著)
 %% ---- 第 5.5 小节逐族朗读时引用的其余逐格读数 ----
 %% 这些数与表 tab_bytag 逐格同源(同一个 cell_gain / cell_p),此前是正文里仅存的一批
 %% 手打百分数。它们与表重复,而重复正是宏块要防的那件事:重跑一次表会自动更新,句子
 %% 不会。同上,逐格宏一律自带正负号,正文引用时前面不加减号。
-\newcommand{\GainLoopFunnel}{-19.8\%}    % A funnel , OL->CLBS-R
-\newcommand{\GainLoopHigh}{-21.9\%}      % A high
-\newcommand{\GainLoopMid}{-19.3\%}       % A mid
-\newcommand{\GainLoopLow}{-19.4\%}       % A low
-\newcommand{\GainLoopScatter}{-22.4\%}    % A scatter
-\newcommand{\GainLoopFleetOne}{-15.7\%}  % B NA/NM 1.0
-\newcommand{\GainLoopFleetTwo}{-13.2\%}  % B NA/NM 2.0
-\newcommand{\GainLoopFlexLo}{-21.4\%}    % C F=0.3
-\newcommand{\GainLoopFlexHi}{-19.9\%}    % C F=1.0
-\newcommand{\GainProbeFlexLo}{-1.7\%}    % C F=0.3 , CLBS-R->CLBS(十格中量级最大)
-\newcommand{\GainProbeFlexHi}{+4.0\%}    % C F=1.0 , CLBS-R->CLBS(次之)
+\newcommand{\GainLoopFunnel}{-20.8\%}    % A funnel , OL->CLBS-R
+\newcommand{\GainLoopHigh}{-23.5\%}      % A high
+\newcommand{\GainLoopMid}{-20.1\%}       % A mid
+\newcommand{\GainLoopLow}{-20.8\%}       % A low
+\newcommand{\GainLoopScatter}{-23.1\%}    % A scatter
+\newcommand{\GainLoopFleetOne}{-16.4\%}  % B NA/NM 1.0
+\newcommand{\GainLoopFleetTwo}{-16.5\%}  % B NA/NM 2.0
+\newcommand{\GainLoopFlexLo}{-23.8\%}    % C F=0.3
+\newcommand{\GainLoopFlexHi}{-22.7\%}    % C F=1.0
+\newcommand{\GainProbeFlexLo}{-8.0\%}    % C F=0.3 , CLBS-R->CLBS(十格中量级最大)
+\newcommand{\GainProbeFlexHi}{+0.5\%}    % C F=1.0 , CLBS-R->CLBS(次之)
 %% 车机比四格的 p **未经校正**,正文亦如此声明:那里要说的正是"即便不校正也远不达阈值"。
-\newcommand{\PProbeFleetHalfRaw}{=0.9186}
-\newcommand{\PProbeFleetOneRaw}{=0.0324}
-\newcommand{\PProbeFleetBaseRaw}{=0.2619}
-\newcommand{\PProbeFleetTwoRaw}{=0.7596}
+\newcommand{\PProbeFleetHalfRaw}{=0.0410}
+\newcommand{\PProbeFleetOneRaw}{=0.8457}
+\newcommand{\PProbeFleetBaseRaw}{=0.0590}
+\newcommand{\PProbeFleetTwoRaw}{=0.6833}
 %% 柔性族是校正唯一改变结论的一族,故三档读数齐备,正文把这一步移动完整写出。
-\newcommand{\PProbeFlexLoRaw}{=0.5746}
-\newcommand{\PProbeFlexLoHolm}{=1.0000}
-\newcommand{\PProbeFlexLoBH}{=0.9186}
-\newcommand{\PProbeFlexHiRaw}{=0.4922}
+\newcommand{\PProbeFlexLoRaw}{=0.0165}
+\newcommand{\PProbeFlexLoHolm}{=0.1653}
+\newcommand{\PProbeFlexLoBH}{=0.1180}
+\newcommand{\PProbeFlexHiRaw}{=0.8588}
 \newcommand{\PProbeFlexHiHolm}{=1.0000}
-\newcommand{\PProbeFlexHiBH}{=0.9186}
+\newcommand{\PProbeFlexHiBH}{=0.8588}
 %% 闭环那一族里校正后仍显著、但 p 最大的那一格。引用它是为了说明该族的结论不取决于
 %% 校不校正。
-\newcommand{\PLoopCellMax}{=0.0313}
+\newcommand{\PLoopCellMax}{=0.0274}
 %% ---- 敏感性分析(第 5.3 节):CLBS 相对 OL/TS/AE 逐组,Holm 族为一个对比的十组 ----
-\newcommand{\ScnOLSig}{1}
+\newcommand{\ScnOLSig}{10}
 \newcommand{\ScnOLSigRaw}{10}
 \newcommand{\ScnOLWorse}{0}
-\newcommand{\ScnOLRangeA}{$-22.3\%$ 至 $-15.9\%$}
-\newcommand{\ScnOLRangeB}{$-22.3\%$ 至 $-8.0\%$}
-\newcommand{\ScnOLRangeC}{$-23.2\%$ 至 $-16.7\%$}
-\newcommand{\ScnTSSig}{0}
-\newcommand{\ScnTSSigRaw}{8}
+\newcommand{\ScnOLRangeA}{$-28.1\%$ 至 $-23.2\%$}
+\newcommand{\ScnOLRangeB}{$-28.0\%$ 至 $-12.4\%$}
+\newcommand{\ScnOLRangeC}{$-30.3\%$ 至 $-22.0\%$}
+\newcommand{\ScnTSSig}{8}
+\newcommand{\ScnTSSigRaw}{9}
 \newcommand{\ScnTSWorse}{1}
-\newcommand{\ScnTSRangeA}{$-13.0\%$ 至 $-9.0\%$}
-\newcommand{\ScnTSRangeB}{$-13.0\%$ 至 $+3.6\%$}
-\newcommand{\ScnTSRangeC}{$-13.0\%$ 至 $-9.5\%$}
+\newcommand{\ScnTSRangeA}{$-19.5\%$ 至 $-15.5\%$}
+\newcommand{\ScnTSRangeB}{$-18.9\%$ 至 $+0.2\%$}
+\newcommand{\ScnTSRangeC}{$-18.9\%$ 至 $-15.4\%$}
 \newcommand{\ScnAESig}{10}
 \newcommand{\ScnAESigRaw}{10}
 \newcommand{\ScnAEWorse}{0}
-\newcommand{\ScnAERangeA}{$-30.4\%$ 至 $-21.4\%$}
-\newcommand{\ScnAERangeB}{$-30.4\%$ 至 $-7.7\%$}
-\newcommand{\ScnAERangeC}{$-31.9\%$ 至 $-30.4\%$}
+\newcommand{\ScnAERangeA}{$-34.9\%$ 至 $-27.7\%$}
+\newcommand{\ScnAERangeB}{$-34.9\%$ 至 $-12.1\%$}
+\newcommand{\ScnAERangeC}{$-38.0\%$ 至 $-34.9\%$}
+%% 机器节点容量 c 与异构度 H 敏感性批次的宏(\Sens*),由 clbs_new/tools/sens_summary.py --tex 生成
+\input{tab/sens_macros.tex}
+%% 同代数对照(CLBS-R vs CLBS,全部 10 组 x 10 种子,各 30 代)的宏(\SameGen*),由 clbs_new/tools/samegen_summary.py --tex 生成
+\input{tab/samegen_macros.tex}
 % 争用强度区间(10 格 contention 列的 min/max)
 \newcommand{\ContentionLo}{16.2\%}
 \newcommand{\ContentionHi}{49.4\%}
@@ -275,22 +279,22 @@
 %% 等价性自检 6x6 染色体逐位一致;路由调用合计 19448/36940 → 减少 47.4%
 %% (逐格 42.2%~61.2%;A low 最高、B NA/NM 2.0 最低)。这两个端点也由宏供给,
 %% 因为第 4.5 与 5.7 两处都要引用,写死过一次就会有一处忘记跟着改。
-\newcommand{\RouteCallCutLo}{36.5\%}     % 车队最大一格(B NA/NM 2.0)
-\newcommand{\RouteCallCutHi}{58.5\%}     % 最不拥堵一格(A low)
+\newcommand{\RouteCallCutLo}{46.4\%}     % 车队最大一格(B NA/NM 2.0)
+\newcommand{\RouteCallCutHi}{74.7\%}     % 最不拥堵一格(A low)
 %% \SpeedupProbe = 关档/开档的 ms_per_eval 之比(2.33x);同预算评价次数比 2.23x。
 %% \GainPrune = 关→开的配对相对增益(只来自算力)。
 %% CostMultAfter = ladder_cost 中 B2/B1 的 ms_per_eval 之比(闭环内:试探+剪枝 vs 规则)。
 %% CostMultBefore = After x SpeedupProbe,即关剪枝时相对规则派车的倍数(与 prune 加速衔接)。
 %% 数据:ladder_cost.csv(3 算例 x 3 种子);B2 均值 14.15 ms,B1 均值 2.70 ms。
-\newcommand{\SpeedupProbe}{1.68}
-\newcommand{\RouteCallCut}{43.4\%}
-\newcommand{\GainPrune}{4.74\%}
+\newcommand{\SpeedupProbe}{2.30}
+\newcommand{\RouteCallCut}{57.1\%}
+\newcommand{\GainPrune}{6.48\%}
 \newcommand{\PPrune}{<10^{-4}}
-\newcommand{\WinPrune}{38}
+\newcommand{\WinPrune}{44}
 \newcommand{\LosePrune}{0}
-\newcommand{\EvalRatioPrune}{1.64}
-\newcommand{\CostMultBefore}{10.5}
-\newcommand{\CostMultAfter}{6.27}
+\newcommand{\EvalRatioPrune}{2.43}
+\newcommand{\CostMultBefore}{10.4}
+\newcommand{\CostMultAfter}{4.54}
 
 %% ---- 单次评价的绝对成本(第 4.8 节)----
 %% 数据来源:clbs/tools/eval_cost.py(2026-08-16),它从 output/ladder_cost.csv 与
@@ -300,9 +304,11 @@
 %% 不与 \MsOpen 直接相除——跨批次的绝对毫秒数不可比。
 %% 原正文手打 0.39 / 15.4 / 77.9 三个数,其中 15.4 与 77.9 实为定价批次的读数,
 %% 被当成阶梯批次引用;同一份 ladder_cost.csv 算出的 B2 是 14.15 ms,两处矛盾。
-\newcommand{\MsOpen}{0.38}
-\newcommand{\MsLoopRule}{2.70}
-\newcommand{\MsLoopProbe}{14.2}
+%% 2026-11-08 按 clbs_new/output/ladder_cost.csv(新解码器,3 算例 x 3 种子,算术均值)手工更新
+\newcommand{\MsOpen}{0.74}
+\newcommand{\MsLoopRule}{18.5}
+\newcommand{\MsLoopProbe}{83.9}
+\newcommand{\MsLoopOverOpen}{113}
 \newcommand{\MsPriced}{72.9}
 \newcommand{\MsPricedRef}{15.05}         % 定价扫描批次内 theta=0 的读数,\MsPriced 的比较基数
 
@@ -315,7 +321,7 @@
 %% 已从 summary.json 的 mechanism_gain / integration_gain 聚合核实:
 \newcommand{\MatrixCells}{16}
 \newcommand{\MatrixRuns}{1280}
-\newcommand{\GainIntegMatrix}{5.52\%}    % 两阶段 -> 闭环,16 格均值
+\newcommand{\GainIntegMatrix}{5.52\%}    % 两阶段 -> 路径规划内嵌评价,16 格均值
 \newcommand{\SigIntegMatrix}{11}         % 16 格中显著的格数
 \newcommand{\GainIntegMatrixLo}{0.28\%}
 \newcommand{\GainIntegMatrixHi}{9.28\%}
@@ -490,10 +496,12 @@
 %%  3. "路由内嵌评价"对应英文 Routing-in-the-Loop Evaluation,指适应度取自下层真实
 %%     无冲突路由之后的完工时间(第 4.1 小节的评价通路),不是"对路由本身做评价"。
 %%
+%% 现标题改为"基于...的...调度"体例,落点为"调度";"路由"统一改称"路径规划"
+%% ("路径规划内嵌评价"即旧称"路由内嵌评价"/"闭环")。上面 1--3 条针对旧标题。
 %% 对应英文题名(投英文刊时使用):
-%% A Closed-Loop Bilevel Framework with Routing-in-the-Loop Evaluation
-%% for Flexible Job Shop Scheduling and Conflict-Free AGV Routing
-\title[路由内嵌评价闭环双层框架]{柔性作业车间调度与 AGV 无冲突路由的路由内嵌评价闭环双层框架}
+%% Integrated scheduling of flexible job shops and conflict-free AGV routing
+%% with routing-embedded evaluation
+\title[基于路径规划内嵌评价的柔性作业车间集成调度]{基于路径规划内嵌评价的柔性作业车间机器与多 AGV 无冲突集成调度}
 
 
 %% 摘要中的每个百分数都通过导言区的宏引用,数据口径与复现命令见那里的说明。
@@ -503,12 +511,12 @@
 现有方法或在排产完成后才消解 AGV 冲突，无法据此调整机器指派；或虽在解码中嵌入路径规划，却把 AGV 编入染色体随机搜索，也未在相同算力下与开环排产比较完工时间。
 
 为此，本文提出一种闭环双层框架：上层用文化基因算法搜索机器指派与工序顺序，解码器按工序顺序逐个生成运输任务，下层为每个任务选定 AGV，并用安全区间搜索在走廊与节点预约表上为其规划无冲突路径。框架包含两项关键技术：
-(1) \emph{路由内嵌评价}，即每个候选解都以完成无冲突路由后的完工时间作为适应度，让行等待因此直接进入搜索目标；
+(1) \emph{路径规划内嵌评价}，即每个候选解都以完成无冲突路径规划后的完工时间作为适应度，让行等待因此直接进入搜索目标；
 (2) \emph{预约表感知派遣}，即为每个运输任务在预约表上试算各 AGV 的实际送达时刻，选最早者，并以下界剪枝与胜者路径复用两项加速降低试算开销，二者可证明不改变所选 AGV 与时间表。
 
-在 \NCases{} 组争用强度可控的算例上（争用强度 \ContentionLo{}--\ContentionHi{}），以经无冲突路由执行后可实现的完工时间 $C_{\max}$ 为指标，在相同挂钟时间预算下、每组 \NSeeds{} 个随机种子做配对检验。
+在 \NCases{} 组争用强度可控的算例上（争用强度 \ContentionLo{}--\ContentionHi{}），以经无冲突路径规划执行后可实现的完工时间 $C_{\max}$ 为指标，在相同运行时间预算下、每组 \NSeeds{} 个随机种子做配对检验。
 相对搜索时不计冲突的开环方法，本文方法使 $C_{\max}$ 降低 \GainEndToEnd{}（\WinEndToEnd{} 胜 \LoseEndToEnd{} 负）；相对先排产、后处理车辆的两阶段方法降低 \GainLoopProbe{}；相对把 AGV 编入染色体的三段式编码降低 \GainLyu{}。
-消融表明，降幅主要来自路由内嵌评价（\GainLoopRule{}，\NCases{} 组中 \CellsSigLoopAdj{} 组经多重比较校正后显著）；预约表感知派遣在开环下降低 \GainProbeOpen{}，在闭环内与规则派车无显著差异。
+消融表明，降幅主要来自路径规划内嵌评价（\GainLoopRule{}，\NCases{} 组中 \CellsSigLoopAdj{} 组经多重比较校正后显著）；预约表感知派遣在开环下降低 \GainProbeOpen{}；采用路径规划内嵌评价时，相同代数下降低 \SameGenGainAbs{}，但其单次评价开销更高，相同运行时间下只降低 \GainProbeLoop{}。
 \end{abstract}
 
 %%
@@ -531,7 +539,7 @@
 %%
 %% Keywords. The author(s) should pick words that accurately describe
 %% the work being presented. Separate the keywords with commas.
-\keywords{柔性作业车间调度，无冲突路由，闭环双层框架，路由内嵌评价，预约表感知的车辆派遣}
+\keywords{柔性作业车间调度，无冲突路径规划，闭环双层框架，路径规划内嵌评价，预约表感知的车辆派遣}
 
 %% ===================== 作者与单位 =====================
 %% acmart 没有作者块会在编译时报 "No author given" 并把页眉留空。
@@ -588,7 +596,7 @@
 AGV 较少、彼此很少相遇时，这一假设是合理的。但在实际车间中，多辆 AGV 共用少量单车道走廊；AGV 增多后，车辆之间的相互阻塞会成为延误的主要来源~\cite{kim2026congestion,hardai2025matrix}。
 
 本文把车间路网抽象为图：节点为毛坯库、成品库、机器所在位置与路口，边为单车道走廊。为避免碰撞与迎面死锁，一条走廊同一时刻只允许一辆 AGV 通行，一个路口同一时刻也只容一辆 AGV；机器旁设一个交接位与若干待命位，库区则容量不限。AGV 因前方走廊或节点被占而停下等待，本文称这段等待为\emph{让行等待}。
-于是，一次运输的耗时等于沿最短路行驶的时间，加上让行等待或绕行多出的时间；后者由各 AGV 的路径与通行次序共同决定。本文把为 AGV 规划无冲突路径称为\emph{路由}。
+于是，一次运输的耗时等于沿最短路行驶的时间，加上让行等待或绕行多出的时间；后者由各 AGV 的路径与通行次序共同决定。本文把为 AGV 规划无冲突路径简称为\emph{路径规划}。
 由于让行，一个工件的运输还会推迟其他工件的运输与加工。
 
 机器柔性使调度可以从源头减轻这种延误：改变工序的加工机器，也就改变了运输的目的地。
@@ -599,18 +607,18 @@ AGV 较少、彼此很少相遇时，这一假设是合理的。但在实际车�
 若路上没有其他 AGV，J1 选 M1 的往返用时为 $8+3+8=19$，选 M2 为 $3+14+3=20$，M1 以最小差距占优（图~\ref{fig:motivating}(a) 底部）。
 图~\ref{fig:motivating}(b) 比较整例的完工时间 $C_{\max}$；两种评价方式下机器指派与工序顺序完全相同，只是运输时间的算法不同。
 按常数运输时间评价，选 M1 与选 M2 的 $C_{\max}$ 分别为 $41$ 与 $54$，应选 M1。
-按无冲突路由评价，选 M1 时 J1 往返均占用干道，背景工件 J2 在干道入口让行等待 $17$ 个时间单位，此后 J2--J4 只能依次通过干道，$C_{\max}$ 升至 $95$；选 M2 时 J1 不占用干道，$C_{\max}$ 为 $60$，应选 M2。
+按无冲突路径规划评价，选 M1 时 J1 往返均占用干道，背景工件 J2 在干道入口让行等待 $17$ 个时间单位，此后 J2--J4 只能依次通过干道，$C_{\max}$ 升至 $95$；选 M2 时 J1 不占用干道，$C_{\max}$ 为 $60$，应选 M2。
 可见，常数运输时间下的最优指派，在实际走廊上反而更差。
 
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{fig/fig_motivating_CN.pdf}
-\Description{两幅。左图是小型车间网络：通往快速机器的唯一通路经过排他干道，慢速机器挂在自有支路上，底部写出焦点工件的畅通往返时间 19 对 20。右图是同一对指派的整例完工时间：常数矩阵下快速机器以 41 对 54 胜出，无冲突路由下变为 95 对 60、慢速机器胜出。}
+\Description{两幅。左图是小型车间网络：通往快速机器的唯一通路经过排他干道，慢速机器挂在自有支路上，底部写出焦点工件的畅通往返时间 19 对 20。右图是同一对指派的整例完工时间：常数矩阵下快速机器以 41 对 54 胜出，无冲突路径规划下变为 95 对 60、慢速机器胜出。}
 \caption{动机算例：同一指派决策在两种评价下给出相反的选择。
 (a) 通往快速机器 M1 的唯一通路是排他干道（$\tau=6$），慢速机器 M2 位于不经过干道的支路上；三个只能在 M3 上加工的工件反复穿越干道。
 底部为焦点工件 J1 的畅通往返时间（M1：$19$；M2：$20$）。
 (b) 柱高为整例完工时间 $C_{\max}$（$4$ 个工件、$2$ 辆 AGV，与正文相同的解码器）。
-按常数运输时间评价为 $41$ 对 $54$，选快速机器；按无冲突路由评价为 $95$ 对 $60$，选慢速机器。
+按常数运输时间评价为 $41$ 对 $54$，选快速机器；按无冲突路径规划评价为 $95$ 对 $60$，选慢速机器。
 时间均为无量纲时间单位。在围绕该算例的 $1200$ 组参数中，有 $205$ 组（$17\%$）出现这种反转。}
 \label{fig:motivating}
 %% 由 fig/fig_motivating_CN.py 从 clbs/output/motivating.json 生成,后者由
@@ -625,11 +633,11 @@ AGV 较少、彼此很少相遇时，这一假设是合理的。但在实际车�
 
 \textbf{(1) 运输时间按常数处理。} 带运输时间的柔性作业车间调度以常数矩阵表示运输~\cite{xin2025review,meng2025cp,qin2026knowledge}。这样排出的计划在单车道走廊上执行时会因让行而延误，常数矩阵下更优的指派实际可能更差（图~\ref{fig:motivating}）。
 
-\textbf{(2) 路由与排产相互割裂。} 无冲突路径规划与派车的研究~\cite{gao2023mapf,zhang2024guidance,kim2026congestion}把运输任务视为给定，只能被动避让。两阶段方法先排产、后消解冲突~\cite{sun2023integrated}，或把路由得到的运输时间回传一次而不修改指派~\cite{li2026framework}。它们都无法通过改派机器从源头减少争用。
+\textbf{(2) 路径规划与排产相互割裂。} 无冲突路径规划与派车的研究~\cite{gao2023mapf,zhang2024guidance,kim2026congestion}把运输任务视为给定，只能被动避让。两阶段方法先排产、后消解冲突~\cite{sun2023integrated}，或把路径规划得到的运输时间回传一次而不修改指派~\cite{li2026framework}。它们都无法通过改派机器从源头减少争用。
 
 \textbf{(3) 联合优化未在相同算力下比较完工时间。} van Os 与 Basten~\cite{vanos2026exact}以基于逻辑的 Benders 分解求至可证最优，但只适用于小规模算例。
-Lyu 等~\cite{lyu2019approach}与贺长征等~\cite{he2019integrated}在遗传算法的解码中嵌入时间窗 Dijkstra，使每个候选解都按路由后的完工时间评价；但二者把 AGV 编入染色体随机搜索，冲突按局部规则消解，也未与开环排产对比，未报告嵌入路由的计算代价。
-嵌入路由会使单次评价开销增加一个数量级以上，在固定算力下可完成的评价次数随之减少。因此，这样做能否降低完工时间，必须在相同算力下度量。
+Lyu 等~\cite{lyu2019approach}与贺长征等~\cite{he2019integrated}在遗传算法的解码中嵌入时间窗 Dijkstra，使每个候选解都按规划路径后的完工时间评价；但二者把 AGV 编入染色体随机搜索，冲突按局部规则消解，也未与开环排产对比，未报告嵌入路径规划的计算代价。
+嵌入路径规划会使单次评价开销增加一个数量级以上，在固定算力下可完成的评价次数随之减少。因此，这样做能否降低完工时间，必须在相同算力下度量。
 
 本文聚焦于上述工作未专门研究的一类车间：运输耗时超过加工（$\bar{T}_t/\bar{T}_p\approx4.0$，常用公开算例最高仅 \PubTtTpHi{}），拥堵集中在少数共享走廊上。
 走廊排他与 AGV 相互阻塞在实际车间中已有报道：在以 AGV 连接分散工作站的矩阵式生产车间中，AGV 须先获得相邻路口间走廊的通行许可，以免相向行驶；AGV 增加到一定数量后，完工时间不再缩短，等待时间却持续上升~\cite{hardai2025matrix}。
@@ -637,21 +645,21 @@ Lyu 等~\cite{lyu2019approach}与贺长征等~\cite{he2019integrated}在遗传�
 
 \subsection{本文的主要思想与贡献}
 
-本文的主要思想是：让无冲突路由的结果直接参与排产决策，以降低实际可实现的完工时间 $C_{\max}$；由此增加的计算开销以两项加速压低，使这一降幅在相同算力下仍然成立。
-为此，本文提出闭环双层框架（第~\ref{sec:Chapter_IV}~节）：上层用文化基因算法搜索机器指派与工序顺序；解码器按工序顺序逐个生成运输任务；下层为每个任务选定 AGV，并用安全区间搜索在走廊与节点预约表上为其规划无冲突路径。路由结果以两种方式进入决策：
+本文的主要思想是：让无冲突路径规划的结果直接参与排产决策，以降低实际可实现的完工时间 $C_{\max}$；由此增加的计算开销以两项加速压低，使这一降幅在相同算力下仍然成立。
+为此，本文提出闭环双层框架（第~\ref{sec:Chapter_IV}~节）：上层用文化基因算法搜索机器指派与工序顺序；解码器按工序顺序逐个生成运输任务；下层为每个任务选定 AGV，并用安全区间搜索在走廊与节点预约表上为其规划无冲突路径。路径规划结果以两种方式进入决策：
 \begin{itemize}[leftmargin=*,topsep=2pt,itemsep=1pt]
-  \item \emph{路由内嵌评价}：每个候选解的适应度取为完成全部无冲突路由后的完工时间，让行等待因此直接进入搜索目标；
+  \item \emph{路径规划内嵌评价}：每个候选解的适应度取为完成全部无冲突路径规划后的完工时间，让行等待因此直接进入搜索目标；
   \item \emph{预约表感知派遣}：为每个运输任务在当前预约表上试算各 AGV 的送达时刻，选实际最早者，而非按畅通行驶时间估计选车。
 \end{itemize}
-下文把采用路由内嵌评价的方法称为\emph{闭环}，把搜索时不计冲突、只在执行时路由的方法称为\emph{开环}。
+下文把搜索时不计冲突、只在执行时规划路径的方法称为\emph{开环}。
 
 本文的主要贡献如下：
 \begin{enumerate}[leftmargin=*]
-\item \textbf{问题与算例。} 研究走廊排他条件下柔性作业车间调度与 AGV 无冲突路由的一体化问题，构造争用强度可控的算例族，用于考察快、慢机器之间的改派权衡。
+\item \textbf{问题与算例。} 研究走廊排他条件下柔性作业车间调度与 AGV 无冲突路径规划的一体化问题，构造争用强度可控的算例族，用于考察快、慢机器之间的改派权衡。
 
-\item \textbf{方法。} 提出闭环双层框架，以路由内嵌评价与预约表感知派遣两项技术让路由结果进入排产；证明任意染色体都可解码为无冲突、无死锁的时间表，搜索中无需修复算子；以下界剪枝与胜者路径复用两项加速减少选车时的轨迹规划次数，使上层在相同挂钟时间内完成更多代搜索。
+\item \textbf{方法。} 提出闭环双层框架，以路径规划内嵌评价与预约表感知派遣两项技术让路径规划结果进入排产；证明任意染色体都可解码为无冲突、无死锁的时间表，搜索中无需修复算子；以下界剪枝与胜者路径复用两项加速减少选车时的轨迹规划次数，使上层在相同运行时间内完成更多代搜索。
 
-\item \textbf{实验验证。} 以可实现的完工时间 $C_{\max}$ 为指标，在相同挂钟时间预算下做多种子配对比较：相对开环方法、两阶段方法与把 AGV 编入染色体的三段式编码，$C_{\max}$ 分别降低 \GainEndToEnd{}、\GainLoopProbe{} 与 \GainLyu{}。消融表明路由内嵌评价是主要来源（\GainLoopRule{}）；预约表感知派遣只在开环下显著（\GainProbeOpen{}），在闭环内与规则派车无显著差异，不能替代路由内嵌评价。
+\item \textbf{实验验证。} 以可实现的完工时间 $C_{\max}$ 为指标，在相同运行时间预算下做多种子配对比较：相对开环方法、两阶段方法与把 AGV 编入染色体的三段式编码，$C_{\max}$ 分别降低 \GainEndToEnd{}、\GainLoopProbe{} 与 \GainLyu{}。消融表明路径规划内嵌评价是主要来源（\GainLoopRule{}）；预约表感知派遣在开环下降低 \GainProbeOpen{}；采用路径规划内嵌评价时，相同代数下降低 \SameGenGainAbs{}，但单次评价开销更高，相同运行时间下只降低 \GainProbeLoop{}；它不能替代路径规划内嵌评价。
 \end{enumerate}
 
 本文其余部分安排如下：第~\ref{sec:Chapter_II}~节综述相关工作；第~\ref{sec:Chapter_III}~节给出问题描述与数学模型；第~\ref{sec:Chapter_IV}~节介绍闭环双层框架；第~\ref{sec:Chapter_V}~节为实验与结果分析；第~\ref{sec:Chapter_VI}~节总结全文。全文符号汇总于表~\ref{tab:notation}。
@@ -675,29 +683,29 @@ Lyu 等~\cite{lyu2019approach}与贺长征等~\cite{he2019integrated}在遗传�
 % [ref_check: key=meng2025cp; claim="关闭 29 个此前开放的基准算例并改进 27 个最优已知解"; need=quote]
 % [ref_check: key=meng2025cp,qin2026knowledge,jafarian2026integrated; claim="三者的运输时长均取自常数矩阵,车辆之间不产生相互延误"; need=quote]
 
-\subsection{任务给定的无冲突路由与派车}
+\subsection{任务给定的无冲突路径规划与派车}
 \label{sec:rw_route}
 
-这类工作只决定 AGV 的路径与派车，运输任务的起点、终点与释放时刻由外部给定；本文下层的路由与派遣即属于这一类问题。
+这类工作只决定 AGV 的路径与派车，运输任务的起点、终点与释放时刻由外部给定；本文下层的路径规划与派遣即属于这一类问题。
 多智能体路径规划（MAPF）研究多个智能体在共享图上的无碰撞行驶，其最优求解为 NP 难~\cite{gao2023mapf}；Kasaura 等~\cite{kasaura2022sipp} 把安全区间规划推广到二维路网与连续时间。
 Zhang 等~\cite{zhang2024guidance} 针对任务持续到达的设定，离线优化一张带边权的路网，把智能体从瓶颈处引开。Kim 与 Kim~\cite{kim2026congestion} 为大规模 AGV 车队提出拥堵函数、拥堵惩罚与拥堵感知的派车规则。
 多 AGV 管理与移动机器人控制的综述~\cite{lu2022agv,fragapane2021planning} 把派遣与路径规划列为控制栈上相邻而独立的两层，空闲优先与最近车辆是常用的单属性派遣规则。
-这类工作有两点局限：一是路由器无法修改产生运输任务的机器指派；二是拥堵多用局部车辆密度或离线边权等间接指标刻画，只能说明某条走廊车辆偏多，不能指明哪次运输在何时、何处造成了让行。
+这类工作有两点局限：一是路径规划器无法修改产生运输任务的机器指派；二是拥堵多用局部车辆密度或离线边权等间接指标刻画，只能说明某条走廊车辆偏多，不能指明哪次运输在何时、何处造成了让行。
 % [ref_check: key=zhang2024guidance; claim="制导图抑制迎面运动并提升多个终身式求解器的吞吐"; need=quote]
 % [ref_check: key=zhang2024guidance,kim2026congestion; claim="两者的任务释放时刻与起终点均为外生输入,路由器不参与任务生成"; need=quote]
 % [ref_check: key=kim2026congestion; claim="其拥堵度量为局部车辆密度"; need=quote]
 % [ref_check: key=zhang2024guidance; claim="其制导图边权为离线学得而非在线更新"; need=quote]
 
-\subsection{调度与无冲突路由的一体化}
+\subsection{调度与无冲突路径规划的一体化}
 \label{sec:rw_integ}
 
-同时考虑机器指派与无冲突路由的工作较少。按路由结果如何进入排产，可分为三种。
+同时考虑机器指派与无冲突路径规划的工作较少。按路径规划结果如何进入排产，可分为三种。
 
 \textbf{(1) 精确分解。} van Os 与 Basten~\cite{vanos2026exact} 提出基于逻辑的 Benders 分解：约束规划主问题给出指派与顺序，整数规划子问题规划无冲突路径，并把冲突作为割回传。多数基准算例被求至可证最优，但该方法只适用于小规模算例。作者指出，如何更充分地利用「不可行由哪些冲突造成」的信息来指导主问题，有待研究。
 
-\textbf{(2) 先排产、后路由。} Sun 等~\cite{sun2023integrated} 先用混合遗传算法确定指派与顺序，再用时间窗 Dijkstra 依次为各运输任务规划路径；第二阶段即使发现走廊拥堵，也只能靠等待消解，无法改动第一阶段的指派。Li 等~\cite{li2026framework} 加入一次反馈，把路径层的运输时间写回时间轴，但反馈只平移开工时刻、不修改指派，且其基准中每道工序只有一台可选机器。
+\textbf{(2) 先排产、后规划路径。} Sun 等~\cite{sun2023integrated} 先用混合遗传算法确定指派与顺序，再用时间窗 Dijkstra 依次为各运输任务规划路径；第二阶段即使发现走廊拥堵，也只能靠等待消解，无法改动第一阶段的指派。Li 等~\cite{li2026framework} 加入一次反馈，把路径层的运输时间写回时间轴，但反馈只平移开工时刻、不修改指派，且其基准中每道工序只有一台可选机器。
 
-\textbf{(3) 解码内嵌路由。} Lyu 等~\cite{lyu2019approach} 与贺长征等~\cite{he2019integrated} 把时间窗 Dijkstra 嵌入遗传算法的解码，每个染色体都在无冲突路由之后计算完工时间。二者都把 AGV 编入染色体（工序、机器、AGV 三段式编码），靠交叉与变异搜索；路口、相向与节点占用等冲突按局部规则以等待或绕行消解。Lyu 等的研究重点是确定最优车队规模；贺长征等提出求解集成调度的混合遗传算法，主要在非柔性算例上与文献报告值比较。二者都未与开环排产对比，也未报告嵌入路由的计算代价，因此无法据此判断：在相同算力下，把路由嵌入评价能否降低完工时间。
+\textbf{(3) 解码内嵌路径规划。} Lyu 等~\cite{lyu2019approach} 与贺长征等~\cite{he2019integrated} 把时间窗 Dijkstra 嵌入遗传算法的解码，每个染色体都在无冲突路径规划之后计算完工时间。二者都把 AGV 编入染色体（工序、机器、AGV 三段式编码），靠交叉与变异搜索；路口、相向与节点占用等冲突按局部规则以等待或绕行消解。Lyu 等的研究重点是确定最优车队规模；贺长征等提出求解集成调度的混合遗传算法，主要在非柔性算例上与文献报告值比较。二者都未与开环排产对比，也未报告嵌入路径规划的计算代价，因此无法据此判断：在相同算力下，把路径规划嵌入评价能否降低完工时间。
 % [ref_check: key=vanos2026exact; claim="多数基准算例求至可证最优,约半数相对既有启发式改进完工时间不少于 10%"; need=quote]
 % [ref_check: key=sun2023integrated; claim="第二阶段的冲突消解不反馈修改第一阶段的排程与指派"; need=quote]
 % [ref_check: key=li2026framework; claim="其反馈内容仅为时间,且实验基准为每工序单一可选机器"; need=quote]
@@ -705,17 +713,17 @@ Zhang 等~\cite{zhang2024guidance} 针对任务持续到达的设定，离线优
 
 \subsection{小结}
 
-由表~\ref{tab:related} 可见，已有工作的差别不在于是否处理 AGV 冲突，而在于路由结果如何进入排产，以及在相同算力下能否由此降低完工时间。
-与最接近的解码内嵌路由工作~\cite{lyu2019approach,he2019integrated}相比，本文在机器异构、走廊排他与评价方式上相同（表中第 3、4、6 列），区别有三点：
+由表~\ref{tab:related} 可见，已有工作的差别不在于是否处理 AGV 冲突，而在于路径规划结果如何进入排产，以及在相同算力下能否由此降低完工时间。
+与最接近的解码内嵌路径规划工作~\cite{lyu2019approach,he2019integrated}相比，本文在机器异构、走廊排他与评价方式上相同（表中第 3、4、6 列），区别有三点：
 \begin{enumerate}[label=(\arabic*),leftmargin=*,topsep=2pt,itemsep=1pt]
-  \item \emph{研究问题不同}：本文在运输耗时超过加工、拥堵集中于少数走廊的车间中，回答把路由纳入排产能使完工时间降低多少；计算代价不作为另一项指标，而作为比较的约束，以相同挂钟时间预算对齐；
-  \item \emph{方法不同}：AGV 不编入染色体，而在解码时由下层按预约表试算选派，并以下界剪枝与胜者路径复用减少试算次数；路由在当前预约表下可证最早到达，任意解可证无冲突、无死锁；
-  \item \emph{验证方式不同}：以每次只改变一项机制的基线，在相同挂钟时间预算下对完工时间做多种子配对检验，把降幅分别归因于路由内嵌评价与预约表感知派遣；并在同一实现中复现二者的三段式编码，与本文编码直接比较完工时间。
+  \item \emph{研究问题不同}：本文在运输耗时超过加工、拥堵集中于少数走廊的车间中，回答把路径规划纳入排产能使完工时间降低多少；计算代价不作为另一项指标，而作为比较的约束，以相同运行时间预算对齐；
+  \item \emph{方法不同}：AGV 不编入染色体，而在解码时由下层按预约表试算选派，并以下界剪枝与胜者路径复用减少试算次数；路径规划在当前预约表下可证最早到达，任意解可证无冲突、无死锁；
+  \item \emph{验证方式不同}：以每次只改变一项机制的基线，在相同运行时间预算下对完工时间做多种子配对检验，把降幅分别归因于路径规划内嵌评价与预约表感知派遣；并在同一实现中复现二者的三段式编码，与本文编码直接比较完工时间。
 \end{enumerate}
-建模上，本文按节点的现场功能分别给定容量：库区不限，机器节点（一个交接位加待命位）容 $c$ 辆，路口容 $1$ 辆；上述两项工作则令机器节点与路口都只容一辆 AGV（第~\ref{sec:fjsppt}~节）。取 $c=1$ 即退化为后者在机器节点上的设定，$c$ 对调度的影响在第~\ref{sec:Chapter_V}~节单独度量。
+建模上，本文按节点的现场功能分别给定容量：库区不限，机器节点（一个交接位加待命位）容 $c$ 辆，路口容 $1$ 辆；上述两项工作则令机器节点与路口都只容一辆 AGV（第~\ref{sec:fjsppt}~节）。取 $c=1$ 即退化为后者在机器节点上的设定，$c$ 对调度的影响见第~\ref{sec:whichcongestion}~节。
 
 \begin{table}[t]
-  \caption{相关工作与本文的对照。「机器异构」：一道工序有多台可选机器且加工时间随机器而变。「走廊排他」：一条走廊任一时刻至多容一辆 AGV。「节点排他」：节点上同时停留的 AGV 数是否受限，$c$ 为机器节点容量。「排产评价所用运输时长」：上层比较候选排产时所用的运输时间，「畅通估计」为不计其他 AGV 的最短路时间，「路由实算」为完成无冲突路由后、含让行等待的时间。「同算力比较 $C_{\max}$」：是否在相同算力下、相对开环比较了把路由纳入搜索评价后的完工时间。}
+  \caption{相关工作与本文的对照。「机器异构」：一道工序有多台可选机器且加工时间随机器而变。「走廊排他」：一条走廊任一时刻至多容一辆 AGV。「节点排他」：节点上同时停留的 AGV 数是否受限，$c$ 为机器节点容量。「排产评价所用运输时长」：上层比较候选排产时所用的运输时间，「畅通估计」为不计其他 AGV 的最短路时间，「路径规划实算」为完成无冲突路径规划后、含让行等待的时间。「同算力比较 $C_{\max}$」：是否在相同算力下、相对开环比较了把路径规划纳入搜索评价后的完工时间。}
 \label{tab:related}
 %% 手工维护表:无生成脚本;任一行改动须同步 §2.3 正文。与 tab/ 下由 gen_tables_ladder.py 生成的表区分。
 \footnotesize
@@ -730,16 +738,16 @@ FJSP\_PT 元启发式 & \cite{meng2025cp,qin2026knowledge,jafarian2026integrated
   & --- & 是 & 是（每节点 $1$ 辆） & 无排产（任务外生） & 否 & 任务持续到达时的路网吞吐 \\
 拥堵感知派车 & \cite{kim2026congestion}
   & --- & 否 & 否 & 无排产（任务外生） & 否 & 大规模车队的拥堵缓解 \\
-两阶段 FJSP + 路由 & \cite{sun2023integrated}
-  & 有 & 是 & 是（每节点 $1$ 辆） & 畅通估计；排产冻结后再路由 & 否 & 先排产、后消解冲突 \\
+两阶段 FJSP + 路径规划 & \cite{sun2023integrated}
+  & 有 & 是 & 是（每节点 $1$ 辆） & 畅通估计；排产冻结后再规划路径 & 否 & 先排产、后消解冲突 \\
 强化学习调度 + PBS & \cite{li2026framework}
   & 无 & 是 & 是（每节点 $1$ 辆） & 畅通估计；事后一次修正 & 否 & 强化学习排产与多车路径的分层框架 \\
-GA 内嵌时间窗路由 & \cite{lyu2019approach,he2019integrated}
-  & 有 & 是 & 是（机器节点与路口各 $1$ 辆） & 路由实算（每个候选解）；AGV 编入染色体 & 否 & 最优车队规模~\cite{lyu2019approach}；AGV 与机器集成调度算法~\cite{he2019integrated} \\
+GA 内嵌时间窗路径规划 & \cite{lyu2019approach,he2019integrated}
+  & 有 & 是 & 是（机器节点与路口各 $1$ 辆） & 路径规划实算（每个候选解）；AGV 编入染色体 & 否 & 最优车队规模~\cite{lyu2019approach}；AGV 与机器集成调度算法~\cite{he2019integrated} \\
 精确分解（LBBD；限小规模） & \cite{vanos2026exact}
   & 有 & 否 & 是（每节点 $1$ 辆，禁止交换） & 松弛下界 + 冲突割 & 否 & 小规模可证最优 \\
 \textbf{本文} &
-  & 有 & 是 & \textbf{按类型：路口 $1$、机器 $c$、库区不限} & \textbf{路由实算（每个候选解）}；派车按预约表试算 & \textbf{是（同挂钟）} & \textbf{走廊争用下快慢机器的改派权衡；相同算力下闭环对 $C_{\max}$ 的降幅} \\
+  & 有 & 是 & \textbf{按类型：路口 $1$、机器 $c$、库区不限} & \textbf{路径规划实算（每个候选解）}；派车按预约表试算 & \textbf{是（相同运行时间）} & \textbf{走廊争用下快慢机器的改派权衡；相同算力下路径规划内嵌评价对 $C_{\max}$ 的降幅} \\
 %% [ref_check: key=sun2023integrated; claim="时间窗 Dijkstra 同时预约节点(每节点 1 辆)"; need=quote]
 %% [ref_check: key=kim2026congestion; claim="拥堵以车辆密度度量,不预约节点"; need=quote]
 %% [ref_check: key=li2026framework; claim="PBS 消解顶点冲突与交换冲突,即每节点 1 辆"; need=quote]
@@ -759,7 +767,7 @@ GA 内嵌时间窗路由 & \cite{lyu2019approach,he2019integrated}
 \item 机器指派：为每道工序 $O_{ji}$ 选择一台机器 $m\in\Omega_{ji}$；
 \item 工序排序：确定每台机器上各工序的加工顺序；
 \item AGV 指派：把由此产生的运输任务分配给 AGV，并确定每辆 AGV 的任务顺序；
-\item 路由：为每一次 AGV 行驶规划路径，要求时间与空间上无冲突，允许等待。
+\item 路径规划：为每一次 AGV 行驶规划路径，要求时间与空间上无冲突，允许等待。
 \end{enumerate}
 主要符号见表~\ref{tab:notation}。
 
@@ -799,14 +807,14 @@ $C_{\max}$ & 完工时间 \\
 
 \item \textbf{缓冲区与装卸。} 各机器存放工件的输入、输出缓冲区及两个库区的存储容量充裕，工件不会因无处存放而阻塞；AGV 与机器之间的交接时间可忽略（取 $0$），且不占用机器。
 
-\item \textbf{AGV。} $N_A$ 辆 AGV 同构、单载量，以恒定速度行驶，不建模加减速与电量；$t=0$ 时全部空载停于 $v_{\mathrm{in}}$。运输任务是一次单程搬运，共三类：从 $v_{\mathrm{in}}$ 到第一台机器；在前后两台不同的机器之间；当 $\delta_{\mathrm{ret}}=1$ 时从最后一台机器运往成品库 $v_{\mathrm{out}}$。任一 AGV 可执行任一任务，同一工件的连续搬运可由不同 AGV 接力；卸货后 AGV 留在该机器节点的待命位，直到接下一个任务，其出发时刻可由路由推迟。若机器节点的位置已被空闲 AGV 占满、又有任务要在此取货或送货，则令最早停下的空闲 AGV 驶往最近的库区腾位，本文称之为\emph{驱离}。
+\item \textbf{AGV。} $N_A$ 辆 AGV 同构、单载量，以恒定速度行驶，不建模加减速与电量；$t=0$ 时全部空载停于 $v_{\mathrm{in}}$。运输任务是一次单程搬运，共三类：从 $v_{\mathrm{in}}$ 到第一台机器；在前后两台不同的机器之间；当 $\delta_{\mathrm{ret}}=1$ 时从最后一台机器运往成品库 $v_{\mathrm{out}}$。任一 AGV 可执行任一任务，同一工件的连续搬运可由不同 AGV 接力；卸货后 AGV 留在该机器节点的待命位，直到接下一个任务，其出发时刻可由路径规划推迟。若机器节点的位置已被空闲 AGV 占满、又有任务要在此取货或送货，则令最早停下的空闲 AGV 驶往最近的库区腾位，本文称之为\emph{驱离}。
 
 \item \textbf{路网与无冲突。} 路网 $G=(V,E)$ 强连通，顶点分三类：库区 $V_S=\{v_{\mathrm{in}},v_{\mathrm{out}}\}$、机器节点 $V_M=\{\mathrm{loc}(m)\}$ 与路口 $V_J$。每条边 $e$ 是一条可双向通行的单车道走廊，通行时间 $\tau_e$ 为已知常数。走廊是\emph{排他}资源：两个方向共享同一份预约，任一时刻至多一辆 AGV 占用 $e$，从而排除迎面冲突与同向超车。占用区间取半开形式 $[t,\,t+\tau_e)$，后一辆 AGV 可恰在 $t+\tau_e$ 进入。节点按类型给定容量 $\kappa(v)$：库区不限（$\kappa=\infty$）；机器节点由一个交接位与旁侧的待命位组成，总容量 $\kappa=c$（含正在交接的车，$c\ge1$ 为超参数）；路口 $\kappa=1$。一辆 AGV 于 $\alpha$ 到达、于 $\beta$ 离开节点 $v$，则占用 $v$ 的区间为 $[\alpha,\,\beta+h)$，$h\ge0$ 为净空时距；停放的空闲 AGV 占用至其离开为止。等待只能在节点上进行，且计入该节点的占用。机器节点经一条支线接入路网，不承担过路交通。
 
 \item \textbf{不在建模范围内。} 机器与 AGV 故障、有限缓冲与阻塞、充电，以及工件动态到达（已有专门研究~\cite{gui2023dynamic,zhao2026deep}），留待后续工作（第~\ref{sec:future_work}~节第 (5) 条）。
 \end{enumerate}
 
-其中 A1、A2、A4、A5 是 FJSP\_PT 文献中的标准假设~\cite{xin2025review}。决定本文问题特征的是 A3 与 A6：A3 使机器选择成为加工时间与运输时间之间的权衡；A6 把争用表述为走廊与节点上显式的容量约束，使运输时间不再是常数，而是路由决策的结果。
+其中 A1、A2、A4、A5 是 FJSP\_PT 文献中的标准假设~\cite{xin2025review}。决定本文问题特征的是 A3 与 A6：A3 使机器选择成为加工时间与运输时间之间的权衡；A6 把争用表述为走廊与节点上显式的容量约束，使运输时间不再是常数，而是路径规划决策的结果。
 无死锁不作为假设：第~\ref{sec:upper}~节命题~\ref{prop:decodable} 基于 A4 与 A6 证明，任意指派与工序顺序都可解码为无冲突、无死锁的时间表。
 
 A6 按节点的现场功能分别给定容量，依据如下。
@@ -911,7 +919,7 @@ S_{ji}=\max\bigl(A_{ji},\ F_{\mathrm{m}(j,i)}\bigr),
 \paragraph{问题难度}
 \begin{prop}
 \label{prop:np_hard}
-由式~\eqref{eq:assign}--\eqref{eq:obj} 定义的柔性作业车间与无冲突路由一体化调度问题是强 NP 难的；且当所有工序均满足
+由式~\eqref{eq:assign}--\eqref{eq:obj} 定义的柔性作业车间与无冲突路径规划一体化调度问题是强 NP 难的；且当所有工序均满足
 $\Omega_{ji}=M$ 时依然如此。
 \end{prop}
 
@@ -927,7 +935,7 @@ $A_{ji}=C_{j,i-1}$。余下的正是取 $A_{ji}=C_{j,i-1}$ 的
 一般柔性作业车间调度本身即为强 NP 难~\cite{dauzereperes2024fjsp}。上述每个限制均为
 多项式规约，故一般问题是强 NP 难的；第二个特例同时说明完全柔性并不会使问题变容易。
 \end{proof}
-该结论由已知结果直接规约得到，列出是为说明问题难度，不是本文的贡献。规约排除了 AGV 争用，说明即使没有走廊争用，问题已是强 NP 难；固定决策 (i)--(iii) 之后，余下的路由仍是一个无冲突多智能体路由问题~\cite{gao2023mapf}。小规模算例已有精确方法~\cite{vanos2026exact}，本文面向精确分解难以求解的规模。
+该结论由已知结果直接规约得到，列出是为说明问题难度，不是本文的贡献。规约排除了 AGV 争用，说明即使没有走廊争用，问题已是强 NP 难；固定决策 (i)--(iii) 之后，余下的路径规划仍是一个无冲突多智能体路径规划问题~\cite{gao2023mapf}。小规模算例已有精确方法~\cite{vanos2026exact}，本文面向精确分解难以求解的规模。
 
 \section{闭环双层框架}
 \label{sec:Chapter_IV}
@@ -936,8 +944,8 @@ $A_{ji}=C_{j,i-1}$。余下的正是取 $A_{ji}=C_{j,i-1}$ 的
 \label{sec:overview}
 
 \paragraph{主要思想}
-第~\ref{sec:Chapter_III}~节的四组决策中，机器指派与工序排序决定运输任务的数量、去向与就绪时刻，AGV 指派与路由决定每次运输实际耗时多少。开环方法先按畅通行驶时间确定前者、再规划后者，排产时看不到让行等待。
-本文让路由结果反过来参与排产：每评价一个候选解，都先为它的全部运输任务完成无冲突路由，再以所得完工时间 $C_{\max}$ 评价它。
+第~\ref{sec:Chapter_III}~节的四组决策中，机器指派与工序排序决定运输任务的数量、去向与就绪时刻，AGV 指派与路径规划决定每次运输实际耗时多少。开环方法先按畅通行驶时间确定前者、再规划后者，排产时看不到让行等待。
+本文让路径规划结果反过来参与排产：每评价一个候选解，都先为它的全部运输任务完成无冲突路径规划，再以所得完工时间 $C_{\max}$ 评价它。
 
 \paragraph{框架组成}
 框架由上层、下层与连接二者的解码器组成（图~\ref{fig:framework}）：
@@ -946,7 +954,7 @@ $A_{ji}=C_{j,i-1}$。余下的正是取 $A_{ji}=C_{j,i-1}$ 的
   \item \emph{解码器}：上层适应度评价的一部分，按工序序列逐道工序推进，生成运输任务并交给下层，再按下层返回的送达时刻排定加工（第~\ref{sec:upper}~节）；
   \item \emph{下层}：运输任务规划器，为每个运输任务选定 AGV，并在走廊与节点预约表上为其规划无冲突轨迹（第~\ref{sec:planner}~节）。
 \end{itemize}
-上层的输出不能一次性交给下层，因而需要解码器在中间逐任务交替。上层给出的机器指派与工序序列不含任何时刻，而下层规划一个运输任务时须知道工件何时就绪；就绪时刻是前道工序的完工时刻，它又取决于下层为前一个运输任务规划出的送达时刻。因此只能逐任务推进：解码器生成一个任务，下层规划并返回送达时刻，解码器据此排定加工，得到下一个任务的就绪时刻。若改由上层先按畅通行驶时间估出全部时刻、再整体交给下层路由，便是开环方法，排产时看不到让行等待。解码在遗传算法求解调度问题时本是标准环节，它把染色体转换为带时刻的排程，故不构成第三层。
+上层的输出不能一次性交给下层，因而需要解码器在中间逐任务交替。上层给出的机器指派与工序序列不含任何时刻，而下层规划一个运输任务时须知道工件何时就绪；就绪时刻是前道工序的完工时刻，它又取决于下层为前一个运输任务规划出的送达时刻。因此只能逐任务推进：解码器生成一个任务，下层规划并返回送达时刻，解码器据此排定加工，得到下一个任务的就绪时刻。若改由上层先按畅通行驶时间估出全部时刻、再整体交给下层规划路径，便是开环方法，排产时看不到让行等待。解码在遗传算法求解调度问题时本是标准环节，它把染色体转换为带时刻的排程，故不构成第三层。
 
 \paragraph{四组决策的确定方式}
 表~\ref{tab:decisions} 列出第~\ref{sec:Chapter_III}~节四组决策分别由谁、如何确定。染色体只编码决策 (i) 与 (ii)；决策 (iii) 与 (iv) 在解码时逐任务确定，不进入染色体（理由见第~\ref{sec:encoding}~节）。各工序的开工与完工时刻由解码器按式~\eqref{eq:bind} 计算。
@@ -962,16 +970,16 @@ $A_{ji}=C_{j,i-1}$。余下的正是取 $A_{ji}=C_{j,i-1}$ 的
 (i) 机器指派 & 上层 & 由染色体的机器指派向量直接给出 \\
 (ii) 工序排序 & 上层 & 由工序序列给出：解码器按序列逐道安排，同一台机器上的工序按其在序列中的先后加工 \\
 (iii) AGV 指派 & 解码器、下层 & 运输任务由机器指派按式~\eqref{eq:tasks} 派生，解码器按工序序列逐个生成；下层为每个任务选定一辆 AGV；每辆 AGV 的任务顺序即它被选中的先后 \\
-(iv) 路由 & 下层 & 为选中的 AGV 以安全区间搜索规划整个任务的轨迹，按任务生成的次序写入预约表，后规划者避让先规划者 \\
+(iv) 路径规划 & 下层 & 为选中的 AGV 以安全区间搜索规划整个任务的轨迹，按任务生成的次序写入预约表，后规划者避让先规划者 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 \paragraph{两项关键技术}
-路由结果以两种方式进入决策，分别对应图~\ref{fig:framework} 中的两条通路：
+路径规划结果以两种方式进入决策，分别对应图~\ref{fig:framework} 中的两条通路：
 \begin{description}[leftmargin=0pt,topsep=3pt,itemsep=3pt]
-  \item[路由内嵌评价（通路 1）。]
-  每个候选解的适应度取为下层完成全部运输任务的无冲突路由之后的 $C_{\max}$，其中已含让行等待。它影响上层选择哪组机器指派与工序序列，即决策 (i)(ii)。
+  \item[路径规划内嵌评价（通路 1）。]
+  每个候选解的适应度取为下层完成全部运输任务的无冲突路径规划之后的 $C_{\max}$，其中已含让行等待。它影响上层选择哪组机器指派与工序序列，即决策 (i)(ii)。
   \item[预约表感知派遣（通路 2）。]
   下层为每个运输任务在当前预约表上试算各 AGV 的实际送达时刻，选最早者，而非按畅通行驶时间估计选车。它影响每个任务由哪辆 AGV 承运，即决策 (iii)。
 \end{description}
@@ -982,7 +990,7 @@ $A_{ji}=C_{j,i-1}$。余下的正是取 $A_{ji}=C_{j,i-1}$ 的
 \centering
 \includegraphics[width=\textwidth]{fig/fig_framework_CN.pdf}
 \caption{闭环双层框架。上层为文化基因算法，解码器属于其适应度评价；下层为运输任务规划器，由选车（预约表感知派遣）、安全区间搜索与走廊和节点预约表组成。
-通路 1（蓝）：下层为全部运输任务完成无冲突路由后，把所得时间表的完工时间作为适应度回传，每个候选解一次。
+通路 1（蓝）：下层为全部运输任务完成无冲突路径规划后，把所得时间表的完工时间作为适应度回传，每个候选解一次。
 通路 2（橙）：选车时在预约表上试算各 AGV 的实际送达时刻，回传胜者及其送达时刻，每个运输任务一次；试算本身不写入最终时间表。}
 \Description{Schematic of the closed-loop bilevel framework: an upper memetic
 search layer with its decoder, and a lower transport-task planner made of vehicle
@@ -994,7 +1002,7 @@ and its realizable delivery time once per transport task.}
 \end{figure*}
 
 \paragraph{输入与输出}
-框架的输入是一个算例与一个挂钟时间预算。算例包括各工件的工序链、各工序的可选机器与加工时间、路网（节点类型、走廊与通行时间）、机器节点容量 $c$、净空时距 $h$ 与 AGV 数 $N_A$。输出是最优染色体对应的无冲突时间表及其完工时间 $C_{\max}$：时间表给出各工序的加工机器与起止时刻，以及各 AGV 的任务序列、轨迹（走廊进出时刻与节点停留区间）和驱离记录。
+框架的输入是一个算例与一个运行时间预算。算例包括各工件的工序链、各工序的可选机器与加工时间、路网（节点类型、走廊与通行时间）、机器节点容量 $c$、净空时距 $h$ 与 AGV 数 $N_A$。输出是最优染色体对应的无冲突时间表及其完工时间 $C_{\max}$：时间表给出各工序的加工机器与起止时刻，以及各 AGV 的任务序列、轨迹（走廊进出时刻与节点停留区间）和驱离记录。
 
 \paragraph{总体流程}
 \begin{enumerate}[label={步骤\arabic*},leftmargin=3.6em,topsep=2pt,itemsep=1pt]
@@ -1002,14 +1010,14 @@ and its realizable delivery time once per transport task.}
   \item \textbf{解码与评价。} 对每个个体运行解码器（第~\ref{sec:upper}~节）；解码器每生成一个运输任务，就调用下层为其选车并规划轨迹（第~\ref{sec:planner}~节）。全部工序处理完后，以 $C_{\max}$ 作为该个体的适应度。
   \item \textbf{局部搜索。} 对排名靠前的个体，按解码时记录的让行信息改派机器或调整顺序（第~\ref{sec:ls}~节）。
   \item \textbf{遗传操作。} 经选择、交叉与变异生成下一代种群（第~\ref{sec:ga}~节）。
-  \item \textbf{终止判断。} 若挂钟时间预算用完或满足早停条件，输出最优个体的时间表；否则返回步骤2。
+  \item \textbf{终止判断。} 若运行时间预算用完或满足早停条件，输出最优个体的时间表；否则返回步骤2。
 \end{enumerate}
 
 \subsection{上层：文化基因算法}
 \label{sec:ga}
 
 \paragraph{规划对象、输入与输出}
-上层规划机器指派与工序序列，即决策 (i) 与 (ii)。输入为算例与挂钟时间预算；输出为搜索结束时的最优染色体及其解码结果（时间表与 $C_{\max}$）。上层不直接处理时刻、AGV 与路径：对一个染色体，它所知道的只有解码器返回的 $C_{\max}$ 与让行记录。
+上层规划机器指派与工序序列，即决策 (i) 与 (ii)。输入为算例与运行时间预算；输出为搜索结束时的最优染色体及其解码结果（时间表与 $C_{\max}$）。上层不直接处理时刻、AGV 与路径：对一个染色体，它所知道的只有解码器返回的 $C_{\max}$ 与让行记录。
 
 \subsubsection{染色体编码}
 \label{sec:encoding}
@@ -1032,7 +1040,7 @@ and its realizable delivery time once per transport task.}
   \item \emph{选择}：锦标赛选择，并保留少量精英。
   \item \emph{交叉}：工序序列采用保持工件内次序的顺序交叉，机器指派向量采用均匀交叉。
   \item \emph{变异}：交换工序序列中的两个位置，或把一道工序改派到另一台可选机器。
-  \item \emph{终止}：挂钟时间预算用完，或连续若干代最优解无改进。
+  \item \emph{终止}：运行时间预算用完，或连续若干代最优解无改进。
 \end{itemize}
 超参数见第~\ref{sec:impl}~节。
 
@@ -1104,7 +1112,7 @@ and its realizable delivery time once per transport task.}
 \label{sec:upper}
 
 \paragraph{作用、输入与输出}
-解码器把一个染色体转换为可执行的无冲突时间表并计算其完工时间，是路由内嵌评价的实现。输入为一个染色体（机器指派与工序序列）；输出为该染色体的时间表、$C_{\max}$，以及逐走廊的让行统计与让行记录，后两者供局部搜索与案例分析使用。
+解码器把一个染色体转换为可执行的无冲突时间表并计算其完工时间，是路径规划内嵌评价的实现。输入为一个染色体（机器指派与工序序列）；输出为该染色体的时间表、$C_{\max}$，以及逐走廊的让行统计与让行记录，后两者供局部搜索与案例分析使用。
 
 \paragraph{运行机制}
 解码器（算法~\ref{alg:decode}）自左向右扫描工序序列，维护三组状态：每台机器 $m$ 的空闲时刻 $F_m$；每个工件 $j$ 的当前节点 $\mathrm{pos}_j$ 与就绪时刻 $\mathrm{ready}_j$；每辆 AGV $k$ 的当前节点 $\mathrm{loc}_k$ 与可用时刻 $\mathrm{avail}_k$。另有一张预约表 $R$，在本次解码开始时清空，由下层逐任务写入。对每道工序 $O_{ji}$：
@@ -1146,7 +1154,7 @@ and its realizable delivery time once per transport task.}
 \end{algorithmic}
 \end{algorithm}
 
-解码具有确定性：预约按解码器生成任务的次序写入；路由的标签队列以（估计送达时刻，理想剩余行程，到达时刻，节点标识）为键、仅当新到达严格更早时才更新，驱离按停下时刻与 AGV 编号确定对象，选车按 AGV 编号升序扫描、保留首个严格更优者。
+解码具有确定性：预约按解码器生成任务的次序写入；路径搜索的标签队列以（估计送达时刻，理想剩余行程，到达时刻，节点标识）为键、仅当新到达严格更早时才更新，驱离按停下时刻与 AGV 编号确定对象，选车按 AGV 编号升序扫描、保留首个严格更优者。
 因此一个染色体总对应唯一一张时间表。第~\ref{sec:Chapter_V}~节按种子配对比较各配置，依赖这一点。
 
 \begin{prop}[任何染色体都可解码]
@@ -1164,7 +1172,7 @@ and its realizable delivery time once per transport task.}
   若本车停在某机器节点上，它的停放早已写入预约表，此后写入的占用都已计入它，故它可以一直停到 $T$。
   于是总存在如下路径：在起点等到 $T$，沿畅通最短路驶往取货点，等件后驶往目的地，并在那里停放；这条路径上的走廊与路口在 $T$ 之后都空闲，取货点与目的地有空位，库区不设上限。
   被驱离的车同理：先在原地等到 $T$，再驶往容量不限的库区。
-  路由搜索对这类路径是完备的（引理~\ref{lem:label}），因此总能返回一条轨迹；它只写入搜索时判定为空闲的时段与车位，式~\eqref{eq:excl} 与式~\eqref{eq:node} 由构造成立。
+  路径搜索对这类路径是完备的（引理~\ref{lem:label}），因此总能返回一条轨迹；它只写入搜索时判定为空闲的时段与车位，式~\eqref{eq:excl} 与式~\eqref{eq:node} 由构造成立。
   驱离只会缩短已写入的停放区间，不会使先前的占用失效。
 
   无死锁同样由构造得到：每辆车的轨迹都是写入预约表的完整时刻表，最后停在库区，或停在一个已写入预约表、此后规划的车都会避让的车位上；没有车在等待一个时间表之外的事件，因此不存在循环等待。
@@ -1227,7 +1235,7 @@ AGV 能力相同（假设 A5），差别只在当前位置、可用时刻与路�
 \label{sec:router}
 
 \textsc{PlanTask}（算法~\ref{alg:route}）为给定 AGV 一次性规划一个运输任务的完整轨迹：空载段、等件、满载段，以及送达后的停放或离场。
-节点有了容量，AGV 便不能在任意节点上任意久地等待：等待会占用该节点，而节点上的空位随时间时有时无。若像只预约走廊的模型那样每个节点只保留最早到达，搜索可能让 AGV 停在一个随后已被他车预约的路口上，或因早到后无处等待而漏掉稍晚到达才可行的路径。路由器因此采用安全区间规划（SIPP）~\cite{kasaura2022sipp}：标签 $(u,\iota,\phi,t)$ 表示 AGV 于时刻 $t$ 到达节点 $u$，此时处在 $u$ 的安全区间 $\iota$ 内，$\phi\in\{0,1\}$ 标记尚未取货或已取货。
+节点有了容量，AGV 便不能在任意节点上任意久地等待：等待会占用该节点，而节点上的空位随时间时有时无。若像只预约走廊的模型那样每个节点只保留最早到达，搜索可能让 AGV 停在一个随后已被他车预约的路口上，或因早到后无处等待而漏掉稍晚到达才可行的路径。路径规划器因此采用安全区间规划（SIPP）~\cite{kasaura2022sipp}：标签 $(u,\iota,\phi,t)$ 表示 AGV 于时刻 $t$ 到达节点 $u$，此时处在 $u$ 的安全区间 $\iota$ 内，$\phi\in\{0,1\}$ 标记尚未取货或已取货。
 在 $u$ 上可以一直等到 $\iota$ 的右端减去 $h$；考察从 $u$ 出发的走廊 $e=(u,v)$ 时，对 $v$ 的每个安全区间 $\iota'$，在两端都在安全区间内的前提下向预约表查询最早可行进入时刻 $t_{\text{in}}$，到达时刻 $t_{\text{in}}+\tau_e$ 须落在 $\iota'$ 内并在离开前留出 $h$。间隔 $t_{\text{in}}-t$ 即在 $u$ 的让行等待。
 到达取货点时，等到 $\max(t,r)$ 再把 $\phi$ 置 $1$，即式~\eqref{eq:load}。
 到达目的地时，若其安全区间延续到 $\infty$，AGV 就停放于此；否则，只有当从这里驶往最近库区的路径存在时才接受该到达，并把这段离场路径一并写入。
@@ -1289,7 +1297,7 @@ AGV 能力相同（假设 A5），差别只在当前位置、可用时刻与路�
 \subsubsection{两项加速：下界剪枝与胜者路径复用}
 \label{sec:speedup}
 
-选车使每个运输任务至多调用 $N_A$ 次轨迹规划，单次适应度评价的开销随之成倍增加；在固定的挂钟预算下，这意味着上层能完成的代数更少。而其中相当一部分调用是多余的：有些 AGV 离取货点太远或可用得太晚，即使路上畅通也不可能比已试算的 AGV 更早送达；胜者的轨迹在试算时已算出一遍，恢复预约表后又要重算一次。两项加速分别省去这两类调用，即算法~\ref{alg:dispatch} 中的剪枝判断与最后的重放。
+选车使每个运输任务至多调用 $N_A$ 次轨迹规划，单次适应度评价的开销随之成倍增加；在固定的运行时间预算下，这意味着上层能完成的代数更少。而其中相当一部分调用是多余的：有些 AGV 离取货点太远或可用得太晚，即使路上畅通也不可能比已试算的 AGV 更早送达；胜者的轨迹在试算时已算出一遍，恢复预约表后又要重算一次。两项加速分别省去这两类调用，即算法~\ref{alg:dispatch} 中的剪枝判断与最后的重放。
 
 \paragraph{下界剪枝}
 让行与节点占用只会使 AGV 更晚，驱离只移动其他 AGV，因此任何 AGV 的实际送达都不会早于畅通估计。式~\eqref{eq:rule} 因而给出实际送达时刻的下界：
@@ -1298,12 +1306,12 @@ AGV 能力相同（假设 A5），差别只在当前位置、可用时刻与路�
 \mathrm{lb}(k)=\max\bigl(\mathrm{avail}_k+t^{*}(\mathrm{loc}_k,p),\,
 r\bigr)+t^{*}(p,g)\ \le\ \mathrm{est}(k).
 \end{equation}
-它只需查表 $t^{*}$，不调用路由。若某辆 AGV 的下界已不早于当前最好的试算送达时刻，它的实际送达也不可能更早，不会被选中，于是直接跳过。被跳过的只是注定落选的 AGV，所选 AGV 与不剪枝时相同。
+它只需查表 $t^{*}$，不调用路径规划。若某辆 AGV 的下界已不早于当前最好的试算送达时刻，它的实际送达也不可能更早，不会被选中，于是直接跳过。被跳过的只是注定落选的 AGV，所选 AGV 与不剪枝时相同。
 
 \paragraph{胜者路径复用}
 每次试算都在保存的预约表状态上进行，试算后恢复；胜者的试算轨迹正是在随后正式写入时所面对的同一状态下算出的。因此不再为胜者重新调用 \textsc{PlanTask}，而是直接重放试算时记录的写入操作（含驱离）。
 
-不加速时，每个任务需要 $N_A$ 次试算再加胜者的 $1$ 次重算；加速后，试算次数取决于剪枝跳过了多少 AGV，重算被完全省去。实测的路由调用减少量见第~\ref{sec:costlaw}~节。
+不加速时，每个任务需要 $N_A$ 次试算再加胜者的 $1$ 次重算；加速后，试算次数取决于剪枝跳过了多少 AGV，重算被完全省去。实测的路径规划调用减少量见第~\ref{sec:costlaw}~节。
 
 \subsubsection{示例}
 \label{sec:planner_example}
@@ -1327,7 +1335,7 @@ A3 & M1，$5$ & $\max(5+0,8)+6=14$ & 试算 & $\mathbf{17}$ \\
 解码器处理到 O12 时生成任务：从 M1 运往 M2，就绪时刻 $8$。下层按编号依次考察三辆 AGV（表~\ref{tab:dispatch_example}）：
 \begin{itemize}[leftmargin=*,topsep=2pt,itemsep=1pt]
   \item A1 的下界为 $14$，尚无胜者，故试算：它在 $2$ 时刻到达 J，须在 J 等到 J--M1 于 $11$ 时刻空出，$13$ 时刻到 M1 装货，经 J 于 $19$ 时刻送达 M2。当前最好为 $19$。
-  \item A2 的下界 $22$ 已不早于 $19$，被剪去，不调用路由。
+  \item A2 的下界 $22$ 已不早于 $19$，被剪去，不调用路径规划。
   \item A3 的下界 $14$ 早于 $19$，故试算：它已在 M1，$8$ 时刻装货，但 J--M1 要到 $11$ 才空出，于是在 M1 等到 $11$，$13$ 时刻到 J，$17$ 时刻送达 M2，成为胜者。
 \end{itemize}
 随后直接重放 A3 的试算写入，解码器得到 $A_{12}=17$，O12 于 $\max(17,F_{\mathrm{M2}})$ 开工。若 $c=1$，M2 上已停有空闲的 A2，A3 进入前须先将其驱离至最近库区；这一步已包含在 A3 的试算之中，随重放一并写入。
@@ -1349,17 +1357,17 @@ A3 & M1，$5$ & $\max(5+0,8)+6=14$ & 试算 & $\mathbf{17}$ \\
 
 一次适应度评价处理 $N+n\delta_{\mathrm{ret}}$ 道工序，每个运输任务至多调用 $N_A$ 次轨迹规划，故每个个体的评价代价为 $O\bigl((N+n)\,N_A\,|E|\,Q^{2}\,(W+\log(|V|Q))\bigr)$；按式~\eqref{eq:rule} 选车时不含因子 $N_A$，开环评价不调用轨迹规划。
 两项加速不改变这一最坏界，只减少实际调用次数。局部搜索对每个被选中的个体至多增加 $3\times(L+2)=21$ 次解码。
-各配置的单次评价代价因此相差悬殊（实测见第~\ref{sec:costlaw}~节）；在固定预算下，单次评价越贵，可完成的评价次数越少，故第~\ref{sec:Chapter_V}~节不按相同代数，而按相同挂钟时间比较 $C_{\max}$。
+各配置的单次评价代价因此相差悬殊（实测见第~\ref{sec:costlaw}~节）；在固定预算下，单次评价越贵，可完成的评价次数越少，故第~\ref{sec:Chapter_V}~节不按相同代数，而按相同运行时间比较 $C_{\max}$。
 
 命题~\ref{prop:decodable} 与引理~\ref{lem:label} 保证的是正确性而非解的质量：每个候选解都可行，其评价与第~\ref{sec:Chapter_III}~节的冲突模型一致，确定性解码使求解过程可复现。与多数元启发式一样，解的质量没有理论界，由下一节以 $C_{\max}$ 评估。
 
 \section{实验与结果分析}
 \label{sec:Chapter_V}
 
-全部实验以同一个指标作判定：经同一无冲突路由器执行、并通过独立校验后可实现的完工时间 $C_{\max}$。计算开销不作为另一项指标，而作为比较的约束：各配置在相同挂钟时间预算下运行。实验回答四个问题：(1) 在相同挂钟预算下，本文方法的 $C_{\max}$ 是否小于对比方法，即先排产后路由的开环方法、先排产后处理车辆的两阶段方法，以及把 AGV 编入染色体的三段式编码？(2) 这一优势在哪些算例上成立，以现有种子数能否确定其范围？(3) 方法的各组成部分（路由内嵌评价、预约表感知派遣与两项加速）各起什么作用？(4) 已实现但未降低 $C_{\max}$ 的其他接口，失效原因是什么？另在公开基准上标定上层搜索本身的强弱。各问题对应的实验见表~\ref{tab:plan}。
+全部实验以同一个指标作判定：经同一无冲突路径规划器执行、并通过独立校验后可实现的完工时间 $C_{\max}$。计算开销不作为另一项指标，而作为比较的约束：各配置在相同运行时间预算下运行。实验回答四个问题：(1) 在相同运行时间预算下，本文方法的 $C_{\max}$ 是否小于对比方法，即先排产后规划路径的开环方法、先排产后处理车辆的两阶段方法，以及把 AGV 编入染色体的三段式编码？(2) 这一优势在哪些算例上成立，以现有种子数能否确定其范围？(3) 方法的各组成部分（路径规划内嵌评价、预约表感知派遣与两项加速）各起什么作用？(4) 已实现但未降低 $C_{\max}$ 的其他接口，失效原因是什么？另在公开基准上标定上层搜索本身的强弱。各问题对应的实验见表~\ref{tab:plan}。
 
 \begin{table}[t]
-\caption{实验方案。所有比较均在相同挂钟时间预算下进行，判定指标一律为经同一无冲突路由器执行后可实现的完工时间 $C_{\max}$；开销类指标只用于解释。}
+\caption{实验方案。所有比较均在相同运行时间预算下进行，判定指标一律为经同一无冲突路径规划器执行后可实现的完工时间 $C_{\max}$；开销类指标只用于解释。}
 \label{tab:plan}
 \footnotesize
 \begin{tabular}{@{}p{2.2cm}p{3.6cm}p{3.6cm}p{1.6cm}@{}}
@@ -1368,7 +1376,7 @@ A3 & M1，$5$ & $\max(5+0,8)+6=14$ & 试算 & $\mathbf{17}$ \\
 \midrule
 与对比方法比较 & CLBS 对 OL、TS、AE & $C_{\max}$ 配对相对差、胜负数、$p$ 值 & 第~\ref{sec:main}~节 \\
 敏感性分析 & 布局、AGV 配比、柔性、异构度、机器节点容量 & CLBS 相对 OL、TS、AE 的逐组 $C_{\max}$ 差 & 第~\ref{sec:whichcongestion}~节 \\
-消融：组成部分 & CLBS-R、TS 与两项加速的开关 & $C_{\max}$ 配对相对差；单次评价开销、路由调用数 & 第~\ref{sec:ablation}~节 \\
+消融：组成部分 & CLBS-R、TS 与两项加速的开关 & $C_{\max}$ 配对相对差；单次评价开销、路径规划调用数 & 第~\ref{sec:ablation}~节 \\
 其他层间接口 & 附加代价、按让行记录的局部搜索 & $C_{\max}$ 与评价开销 & 第~\ref{sec:pricing}~节 \\
 上层搜索标定 & 公开基准（删去争用约束） & 与最优已知解的间隙 & 第~\ref{sec:external}~节 \\
 \bottomrule
@@ -1385,8 +1393,8 @@ A3 & M1，$5$ & $\max(5+0,8)+6=14$ & 试算 & $\mathbf{17}$ \\
 \paragraph{公开基准}
 \label{sec:external}
 算例取 Homayouni 与 Fontes~\cite{homayouni2021production} 整理的 \PubNInst{} 个算例（源自 Fattahi 等~\cite{fattahi2007mathematical}，$2$--$12$ 个工件、$4$--$48$ 道工序、$2$--$8$ 台机器），按 Lim 与 Moon~\cite{lim2023twophase} 的设定取两辆 AGV、成品不回运（$\delta_{\mathrm{ret}}=0$）。运输时间原样采用所发布的矩阵，直接作为 $t^{*}$，不做最短路合成。参照值中，\PubNOpt{} 个算例有 MILP 证明的最优值~\cite{homayouni2021production}，其余 $4$ 个取已发表最好值~\cite{lim2023twophase}。
-删去式~\eqref{eq:excl} 与式~\eqref{eq:node} 后，本文模型精确退化为 FJSP\_PT（第~\ref{sec:fjsppt}~节），与这批算例是同一个数学问题。此时没有争用，路由内嵌评价与预约表感知派遣都不起作用，比较检验的只是上层搜索：后文各节比较的是同一实现的不同配置，差值不受实现水平影响，但需要这一步说明上层搜索本身不弱。
-结果见表~\ref{tab:external}（每个算例 \NSeeds{} 个种子）。全部 $200$ 次运行均通过校验；在有可证最优值的 \PubNOpt{} 个算例上没有任何一次低于最优值，验证了模型退化的正确性。$\PubNMatch{}/\PubNInst{}$ 个算例的最好解与参照值相同，其中 $10$ 个小型算例（\textsc{sfjst}01--10）全部命中；平均间隙 \PubGapMean{}（中位 \PubGapMed{}），间隙集中在四个最大算例（$32$--$48$ 道工序，均值 \PubGapBig{}），不超过 $24$ 道工序的 $16$ 个算例无一超过 $5.45\%$。文献对最大算例的 MILP 求解近十小时，本文每次运行只用数秒；在间隙集中的 $10$ 个 \textsc{mfjst} 算例上把挂钟提高到 \PubBudgetRatio{} 倍，平均间隙仅从 \PubGapLoBudget{} 降到 \PubGapHiBudget{}，故间隙主要反映上层搜索的能力边界，而非预算不足。
+删去式~\eqref{eq:excl} 与式~\eqref{eq:node} 后，本文模型精确退化为 FJSP\_PT（第~\ref{sec:fjsppt}~节），与这批算例是同一个数学问题。此时没有争用，路径规划内嵌评价与预约表感知派遣都不起作用，比较检验的只是上层搜索：后文各节比较的是同一实现的不同配置，差值不受实现水平影响，但需要这一步说明上层搜索本身不弱。
+结果见表~\ref{tab:external}（每个算例 \NSeeds{} 个种子）。全部 $200$ 次运行均通过校验；在有可证最优值的 \PubNOpt{} 个算例上没有任何一次低于最优值，验证了模型退化的正确性。$\PubNMatch{}/\PubNInst{}$ 个算例的最好解与参照值相同，其中 $10$ 个小型算例（\textsc{sfjst}01--10）全部命中；平均间隙 \PubGapMean{}（中位 \PubGapMed{}），间隙集中在四个最大算例（$32$--$48$ 道工序，均值 \PubGapBig{}），不超过 $24$ 道工序的 $16$ 个算例无一超过 $5.45\%$。文献对最大算例的 MILP 求解近十小时，本文每次运行只用数秒；在间隙集中的 $10$ 个 \textsc{mfjst} 算例上把运行时间预算提高到 \PubBudgetRatio{} 倍，平均间隙仅从 \PubGapLoBudget{} 降到 \PubGapHiBudget{}，故间隙主要反映上层搜索的能力边界，而非预算不足。
 
 \begin{table}[t]
 \caption{公开基准上的退化比较（删去争用约束，与文献同一问题）。「参照」列的
@@ -1423,7 +1431,7 @@ A3 & M1，$5$ & $\max(5+0,8)+6=14$ & 试算 & $\mathbf{17}$ \\
 
 \paragraph{与公开算例的对照}
 以同一特征函数计算 Homayouni 与 Fontes~\cite{homayouni2021production} 的 \PubNInst{} 个公开算例：柔性中位为 \PubFMed{}，本文基点 $0.6$ 约为其一倍半，C 族 $F=0.3$ 落在公开区间内；异构度中位仅 \PubHMed{}、最大 \PubHMax{}，无一达到本文的 $0.3$；$\bar{T}_t/\bar{T}_p$ 公开最高 \PubTtTpHi{}，本文为 $4.0$。
-$\bar{T}_t/\bar{T}_p=4.0$ 是有意设定：运输只占加工的百分之几时，AGV 争用无需单独建模。$H=0.3$ 高于文献区间，若 $H$ 会提高闭环收益，配置之间的差值将部分来自这一取值；第~\ref{sec:whichcongestion}~节用另一批横跨四个 $H$ 水平的数据检验，收益并不随 $H$ 上升。
+$\bar{T}_t/\bar{T}_p=4.0$ 是有意设定：运输只占加工的百分之几时，AGV 争用无需单独建模。$H=0.3$ 高于文献区间，若 $H$ 会提高路径规划内嵌评价的收益，配置之间的差值将部分来自这一取值；第~\ref{sec:whichcongestion}~节用另一批横跨四个 $H$ 水平的数据检验，收益并不随 $H$ 上升。
 
 \begin{table}[t]
 \caption{受控算例。全部算例共用 $12$ 工件、$36$ 道真实工序、$8$ 台加工机器、$H=0.3$、
@@ -1465,18 +1473,18 @@ C_{\max}\ \ge\ \max_{v}\ n\Bigl/\sum_{e\in \mathrm{cut}(v)}\tau_e^{-1},
 \subsubsection{对比方法与消融配置}
 \label{sec:arms}
 
-本文方法记为 \textbf{CLBS}（Closed-Loop Bilevel Scheduling；闭环 + 预约表感知派遣，第~\ref{sec:Chapter_IV}~节）。对比方法复现文献中三种流程结构，每种代表一类已有工作：
+本文方法记为 \textbf{CLBS}（Closed-Loop Bilevel Scheduling；路径规划内嵌评价 + 预约表感知派遣，第~\ref{sec:Chapter_IV}~节）。对比方法复现文献中三种流程结构，每种代表一类已有工作：
 \begin{description}[leftmargin=0pt,topsep=3pt,itemsep=3pt]
-\item[OL（Open-Loop）：开环方法（先排产、后路由）。]
-上层按畅通最短路时间搜索，搜完后经同一无冲突路由器执行；派车为空闲优先，即式~\eqref{eq:rule}。代表按常数矩阵排产、再在实际路网上执行的方法~\cite{meng2025cp,qin2026knowledge,jafarian2026integrated}，Li 等~\cite{li2026framework} 的框架亦属此类。
+\item[OL（Open-Loop）：开环方法（先排产、后规划路径）。]
+上层按畅通最短路时间搜索，搜完后经同一无冲突路径规划器执行；派车为空闲优先，即式~\eqref{eq:rule}。代表按常数矩阵排产、再在实际路网上执行的方法~\cite{meng2025cp,qin2026knowledge,jafarian2026integrated}，Li 等~\cite{li2026framework} 的框架亦属此类。
 \item[TS（Two-Stage）：两阶段方法（先排产、后处理车辆与冲突）。]
 排产同样按畅通时间确定，执行时把选车改为按预约表试算。代表先在常数矩阵上排产、再在已定排产上处理车辆与冲突的两阶段方法（如 Sun 等~\cite{sun2023integrated}），以预约表感知派遣作为其第二阶段的贪心近似。
 \item[AE（AGV-Encoded）：三段式编码（AGV 编入染色体）。]
-复现 Lyu 等~\cite{lyu2019approach} 与贺长征等~\cite{he2019integrated} 的编码方式：染色体在机器指派向量与工序序列之外，另有一条与工序序列逐位对应的 AGV 串，第 $k$ 位指定送往该位工序的运输由哪辆 AGV 承担；交叉时 AGV 基因随所在位的工序一起保位或回填，交换变异时随工序一起交换。另加一位随机改派，使 AGV 的取值不局限于初始种群的重排；这一点只会使 AE 更强。解码时按基因派车，路由、局部搜索、算例、种子与挂钟预算均与 CLBS 相同，故 $\text{AE}\to\text{CLBS}$ 只差 AGV 由编码决定还是在解码时试算决定。
+复现 Lyu 等~\cite{lyu2019approach} 与贺长征等~\cite{he2019integrated} 的编码方式：染色体在机器指派向量与工序序列之外，另有一条与工序序列逐位对应的 AGV 串，第 $k$ 位指定送往该位工序的运输由哪辆 AGV 承担；交叉时 AGV 基因随所在位的工序一起保位或回填，交换变异时随工序一起交换。另加一位随机改派，使 AGV 的取值不局限于初始种群的重排；这一点只会使 AE 更强。解码时按基因派车，路径规划、局部搜索、算例、种子与运行时间预算均与 CLBS 相同，故 $\text{AE}\to\text{CLBS}$ 只差 AGV 由编码决定还是在解码时试算决定。
 \end{description}
-三种对比方法复现的是文献的流程结构，而非其具体算法（如初始化策略与冲突消解规则）；它们与 CLBS 共用同一上层搜索、同一路由器与同一预算，差值只反映结构差异，不受实现水平影响。
+三种对比方法复现的是文献的流程结构，而非其具体算法（如初始化策略与冲突消解规则）；它们与 CLBS 共用同一上层搜索、同一路径规划器与同一预算，差值只反映结构差异，不受实现水平影响。
 
-消融另用配置 \textbf{CLBS-R}（R 表示 Rule；闭环 + 规则派车）：适应度取自无冲突路由，派车仍按式~\eqref{eq:rule}，与 CLBS 只差选车规则。OL、TS、CLBS-R、CLBS 构成按两个维度交叉的 $2\times2$ 结构（表~\ref{tab:arms}）：搜索时是否计入冲突造成的延误（开环/闭环），以及按畅通时间选车还是按预约表试算选车。只有固定一个维度、改变另一个的对比可以归因：OL$\to$CLBS-R 与 TS$\to$CLBS 度量闭环，OL$\to$TS 与 CLBS-R$\to$CLBS 度量派遣；TS$\to$CLBS-R 同时改变两个维度，\textbf{不能}用于度量闭环。
+消融另用配置 \textbf{CLBS-R}（R 表示 Rule；路径规划内嵌评价 + 规则派车）：适应度取自无冲突路径规划，派车仍按式~\eqref{eq:rule}，与 CLBS 只差选车规则。OL、TS、CLBS-R、CLBS 构成按两个维度交叉的 $2\times2$ 结构（表~\ref{tab:arms}）：搜索时是否计入冲突造成的延误（开环/路径规划内嵌评价），以及按畅通时间选车还是按预约表试算选车。只有固定一个维度、改变另一个的对比可以归因：OL$\to$CLBS-R 与 TS$\to$CLBS 度量路径规划内嵌评价，OL$\to$TS 与 CLBS-R$\to$CLBS 度量派遣；TS$\to$CLBS-R 同时改变两个维度，\textbf{不能}用于度量路径规划内嵌评价。
 
 \begin{table}[t]
 \caption{消融所用的 $2\times2$ 结构。行为搜索时是否计入冲突造成的延误，列为按畅通时间选车还是按预约表试算选车。
@@ -1487,8 +1495,8 @@ C_{\max}\ \ge\ \max_{v}\ n\Bigl/\sum_{e\in \mathrm{cut}(v)}\tau_e^{-1},
 \toprule
  & 规则派车 & 预约表感知派遣 \\
 \midrule
-开环（先排产后路由，搜索不计冲突） & OL & TS \\
-闭环（适应度取自无冲突路由） & CLBS-R & \textbf{CLBS}（本文） \\
+开环（先排产后规划路径，搜索不计冲突） & OL & TS \\
+路径规划内嵌评价（适应度取自无冲突路径规划） & CLBS-R & \textbf{CLBS}（本文） \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1499,10 +1507,10 @@ OL 的执行方式影响基线强弱。开环搜出的计划已含一套派车�
 \label{sec:protocol}
 
 \paragraph{报告可实现的完工时间}
-开环按畅通时间排出的完工时间在真实走廊上往往不可行。因此各配置的排产都经同一无冲突路由器执行，再由独立于解码器的校验器复核，比较的一律是执行后可实现的完工时间。开环自报值与可实现值之差称为乐观幅度，在\texttt{S11} 布局上尤为明显。
+开环按畅通时间排出的完工时间在真实走廊上往往不可行。因此各配置的排产都经同一无冲突路径规划器执行，再由独立于解码器的校验器复核，比较的一律是执行后可实现的完工时间。开环自报值与可实现值之差称为乐观幅度，在\texttt{S11} 布局上尤为明显。
 
-\paragraph{相同挂钟时间，而非相同代数}
-开环的单次评价只查常数矩阵 $t^{*}$，闭环要对每个候选解做无冲突路由，附加代价还需多标签搜索，单次评价开销可差约两个数量级。按相同代数比较，等于让开销高的配置多占算力。因此本文对齐挂钟时间：主批次每次运行 $90$ 秒，代数上限 $2000$ 代、早停为连续 $400$ 代无改进。代数上限从未触发；开环每次均由早停终止（用时约为预算的四分之一），闭环配置（CLBS-R、CLBS、AE）每次都用满 $90$ 秒。这一设置对基线有利：开环搜索至不再改进为止，且完成的评价次数不少于闭环规则派车（第~\ref{sec:costlaw}~节）。其余批次的算例、种子与预算见表~\ref{tab:batches}。
+\paragraph{相同运行时间，而非相同代数}
+开环的单次评价只查常数矩阵 $t^{*}$，路径规划内嵌评价要对每个候选解做无冲突路径规划，附加代价还需多标签搜索，单次评价开销可差约两个数量级。按相同代数比较，等于让开销高的配置多占算力。因此本文对齐运行时间：主批次每次运行 $90$ 秒，代数上限 $2000$ 代、早停为连续 $400$ 代无改进。代数上限从未触发；开环每次均由早停终止（用时约为预算的四分之一），采用路径规划内嵌评价的配置（CLBS-R、CLBS、AE）每次都用满 $90$ 秒。这一设置对基线有利：开环搜索至不再改进为止，且完成的评价次数不少于 CLBS-R（第~\ref{sec:costlaw}~节）。其余批次的算例、种子与预算见表~\ref{tab:batches}。
 
 \begin{table}[t]
 \caption{实验批次一览。主批次支撑表~\ref{tab:main} 与表~\ref{tab:bytag} 的全部统计结论；其余批次各回答一个具体问题，不与主批次逐组并列。
@@ -1511,15 +1519,16 @@ OL 的执行方式影响基线强弱。开环搜出的计划已含一套派车�
 \footnotesize
 \begin{tabular}{@{}p{1.7cm}p{2.3cm}p{1.9cm}cp{1.6cm}c@{}}
 \toprule
-批次 & 用途 & 算例 & 种子 & 挂钟预算 & 加速 \\
+批次 & 用途 & 算例 & 种子 & 运行时间预算 & 加速 \\
 \midrule
 主批次 & 与对比方法比较、消融（表~\ref{tab:main}、\ref{tab:bytag}，第~\ref{sec:main}、\ref{sec:ablation}~节） & 十组受控算例 & $\NSeeds$ & $90$\,s & 有 \\
 开销诊断 & 单次评价开销（图~\ref{fig:protocol}） & 三组受控算例 & $3$ & $90$\,s & 有 \\
 收敛诊断 & 收敛曲线（图~\ref{fig:convergence}） & \texttt{S11} & $3$ & $90$\,s & 有 \\
 加速开关 & 表~\ref{tab:prune} & 六组受控算例 & $10$ & $90$\,s & 关/开 \\
-预算口径 & 图~\ref{fig:protocols} & 四组 & $10$ & 同挂钟与同代数 & 无 \\
+敏感性 & $c$ 与 $H$（表~\ref{tab:sens}） & \texttt{S11}、\texttt{S21} 上共 $9$ 组 & $10$ & $90$\,s & 有 \\
+同代数对照 & 路径规划内嵌评价下派遣的每代效果（第~\ref{sec:ablation}~节） & 十组受控算例 & $10$ & 不设上限（各 $\SameGenGens$ 代） & 有 \\
 附加代价扫描 & 图~\ref{fig:theta} & 两个 $8\times4\times4$ 算例 & $10$/$5$ & $48.9$/$60.7$\,s & 无 \\
-独立算例 & 交叉核对、$H$、消融（第~\ref{sec:whichcongestion}、\ref{sec:pricing}~节） & $\MatrixCells$ 组 & $10$ & $30.2$--$72.9$\,s & 无 \\
+独立算例 & 局部搜索消融（第~\ref{sec:ablation}、\ref{sec:pricing}~节） & $\MatrixCells$ 组 & $10$ & $30.2$--$72.9$\,s & 无 \\
 公开基准 & 表~\ref{tab:external} & $\PubNInst$ 个公开算例 & $\NSeeds$ & 早停 & --- \\
 \bottomrule
 \end{tabular}
@@ -1531,7 +1540,7 @@ OL 的执行方式影响基线强弱。开环搜出的计划已含一套派车�
 \paragraph{多重比较与效应量}
 全文有二十余个检验；不校正时，「十组里至少一处显著」在全零假设下约为 $40\%$。因此按族做 Holm 校正：表~\ref{tab:main} 的六个合计对比为一族；表~\ref{tab:bytag} 中一个效应的 $\NCases$ 组为一族。Benjamini--Hochberg 一并计算，二者结论不同时在相应位置标明。
 除两处外，本文 $p$ 值均为校正后的值：一是第~\ref{sec:ablation_scn}~节 AGV 配比族派遣的四个 $p$ 值，要说明的是「不显著」，校正前已不显著者校正后必然仍不显著；二是 \MatrixCells{} 组独立数据的显著组数，它只用于印证方向与量级，不作为检验依据。
-每个合计对比另报 Hodges--Lehmann 伪中位数与 $95\%$ 分布无关置信区间，它与 Wilcoxon 检验同源。各表主用逐对相对增益的均值，便于跨表比较。两者可能不同：例如闭环内 $\text{CLBS-R}\to\text{CLBS}$ 的均值为 $+\GainProbeLoop$、伪中位数为 \HLProbeLoop{}，差额来自少数变差较多的配对。图中误差棒为均值标准误，阴影带为种子间全距。
+每个合计对比另报 Hodges--Lehmann 伪中位数与 $95\%$ 分布无关置信区间，它与 Wilcoxon 检验同源。各表主用逐对相对增益的均值，便于跨表比较。两者可能不同：例如路径规划内嵌评价下 $\text{CLBS-R}\to\text{CLBS}$ 的均值降幅为 \GainProbeLoop{}、伪中位数降幅为 \HLProbeLoop{}，差额来自少数变差较多的配对。图中误差棒为均值标准误，阴影带为种子间全距。
 
 \paragraph{正确性}
 每个解由独立校验器从时间表反推走廊占用，并与复合下界比对；未过校验或低于下界的运行单独报告，不并入均值。
@@ -1555,9 +1564,9 @@ OL 的执行方式影响基线强弱。开环搜出的计划已含一套派车�
 局部搜索作用对象 & 每代排名前 $10\%$ 的个体 \\
 每轮考察的关键工序数 $L$ & $5$ \\
 局部搜索轮数上限 & $3$ \\
-挂钟预算（主批次） & $90$\,s \\
+运行时间预算（主批次） & $90$\,s \\
 代数上限 / 早停 & $2000$ 代 / 连续 $400$ 代无改进 \\
-机器节点容量 $c$ / 净空时距 $h$ & $2$ / $0.5$（$c$ 的敏感性另行度量） \\
+机器节点容量 $c$ / 净空时距 $h$ & $2$ / $0.5$（$c$ 与 $H$ 的敏感性见第~\ref{sec:whichcongestion}~节） \\
 每组种子数 / 算例组数 & $\NSeeds$ / $\NCases$ \\
 硬件 & Intel Xeon W-1270 @ $3.40$\,GHz，单线程 \\
 实现 & 纯 Python（$\ge 3.9.6$），仅标准库 \\
@@ -1571,7 +1580,7 @@ OL 的执行方式影响基线强弱。开环搜出的计划已含一套派车�
 表~\ref{tab:main} 给出各配置在 $\NCases$ 组算例 $\times$ $\NSeeds$ 个种子、共 $\NPairs$ 个配对上的 $C_{\max}$，全部运行通过独立校验。表中 $p$ 值已按表内对比做 Holm 校正，校正不改变任何判定。正文以\emph{降幅}报告，表中以负值表示。
 
 \begin{table}[t]
-\caption{各配置在相同挂钟预算下的完工时间，以及配对比较。上半为本文方法与三种对比方法的比较，下半为只改变一个维度的消融。
+\caption{各配置在相同运行时间预算下的完工时间，以及配对比较。上半为本文方法与三种对比方法的比较，下半为只改变一个维度的消融。
 负值表示完工时间下降，即更好。$n=\NPairs$ 个按 $(\text{算例},\text{种子})$ 配对的比较，
 双侧 Wilcoxon 符号秩检验；$p$ 值已按本表六个对比做 Holm 校正
 ($^{*}p<0.05$、$^{**}p<0.01$、$^{***}p<0.001$)。HL 列为逐对相对增益的 Hodges--Lehmann
@@ -1586,8 +1595,8 @@ OL 的执行方式影响基线强弱。开环搜出的计划已含一套派车�
 \end{table}
 
 \paragraph{相对开环方法 OL}
-$\text{OL}\to\text{CLBS}$ 合计为 $-\GainEndToEnd$（$p\PEndToEnd$，$\NPairs$ 个配对中 $\WinEndToEnd$ 胜 $\LoseEndToEnd$ 负 $1$ 平），即 $C_{\max}$ 降低约六分之一。
-这一差距不能用评价次数解释，因为开环在同一预算内完成的评价次数数倍于闭环（图~\ref{fig:protocol}）。开环评价更多却更差，是因为它优化的是不含让行的代理目标，真实运输代价在计划确定之后才出现（图~\ref{fig:convergence}）。
+$\text{OL}\to\text{CLBS}$ 合计为 $-\GainEndToEnd$（$p\PEndToEnd$，$\NPairs$ 个配对中 $\WinEndToEnd$ 胜 $\LoseEndToEnd$ 负），即 $C_{\max}$ 降低约五分之一。
+这一差距不能用评价次数解释，因为开环在同一预算内完成的评价次数数倍于 CLBS-R 与 CLBS（图~\ref{fig:protocol}）。开环评价更多却更差，是因为它优化的是不含让行的代理目标，真实运输代价在计划确定之后才出现（图~\ref{fig:convergence}）。
 
 \begin{figure}[t]
 \centering
@@ -1596,8 +1605,8 @@ $\text{OL}\to\text{CLBS}$ 合计为 $-\GainEndToEnd$（$p\PEndToEnd$，$\NPairs$
 configurations, with the open-loop curve marked as a surrogate objective and its
 realizable value shown as a separate point. Each curve carries a shaded band
 giving the min-to-max range across the three seeds.}
-\caption{单个 \texttt{S11} 算例上的收敛曲线（示意，取自收敛诊断批次，见表~\ref{tab:batches}）。横轴为挂钟时间，曲线为三个种子的逐时刻均值，阴影带为种子间全距。
-实线（CLBS-R、CLBS）为可实现的完工时间；虚线为开环搜索实际优化的代理目标；叉号与十字为同一计划经无冲突路由执行后的完工时间。
+\caption{单个 \texttt{S11} 算例上的收敛曲线（示意，取自收敛诊断批次，见表~\ref{tab:batches}）。横轴为运行时间，曲线为三个种子的逐时刻均值，阴影带为种子间全距。
+实线（CLBS-R、CLBS）为可实现的完工时间；虚线为开环搜索实际优化的代理目标；叉号与十字为同一计划经无冲突路径规划执行后的完工时间。
 虚线终点与叉号之差即乐观幅度：开环并非收敛不充分，而是收敛到不可实现的代理目标。}
 \label{fig:convergence}
 %% 由 fig/fig_convergence_CN.py 生成(输出名 fig_convergence_closedloop_CN),
@@ -1611,12 +1620,12 @@ $\text{TS}\to\text{CLBS}$ 为 $-\GainLoopProbe$（$p\PLoopProbe$）。两者选�
 
 \paragraph{相对三段式编码 AE}
 \label{sec:encoding_cmp}
-同为闭环、同一路由器与同一挂钟预算下，$\text{AE}\to\text{CLBS}$ 为 $-\GainLyu$（$p\PLyu$，$\NPairs$ 个配对中 \WinLyu{} 胜 \LoseLyu{} 负）。两者的差别只在 AGV 由谁决定：AE 的 AGV 基因要靠交叉与变异逐代筛选，而一辆 AGV 是否合适取决于它在该时刻的位置、可用时刻与沿途预约，这些都由序列中更早的决策决定，父代中合适的选派在子代中未必仍然合适（第~\ref{sec:encoding}~节）；CLBS 则在解码时按当时的预约表直接选出送达最早的 AGV，搜索预算全部用于机器指派与工序顺序。
+同样采用路径规划内嵌评价、同一路径规划器与相同运行时间预算下，$\text{AE}\to\text{CLBS}$ 为 $-\GainLyu$（$p\PLyu$，$\NPairs$ 个配对中 \WinLyu{} 胜 \LoseLyu{} 负）。两者的差别只在 AGV 由谁决定：AE 的 AGV 基因要靠交叉与变异逐代筛选，而一辆 AGV 是否合适取决于它在该时刻的位置、可用时刻与沿途预约，这些都由序列中更早的决策决定，父代中合适的选派在子代中未必仍然合适（第~\ref{sec:encoding}~节）；CLBS 则在解码时按当时的预约表直接选出送达最早的 AGV，搜索预算全部用于机器指派与工序顺序。
 
 \subsection{敏感性分析}
 \label{sec:whichcongestion}
 
-本节按场景因素拆开第~\ref{sec:main}~节的合计结果，检验本文方法相对三种对比方法的优势是否随场景改变。考察的因素为受控算例的布局、AGV 配比（每台加工机器配备的 AGV 数 $N_A/N_M$）与柔性三族，另一批算例上的异构度，以及机器节点容量 $c$。表~\ref{tab:bytag} 给出逐组各方法的 $C_{\max}$ 及本文方法相对每种对比方法的逐对相对差。
+本节按场景因素拆开第~\ref{sec:main}~节的合计结果，检验本文方法相对三种对比方法的优势是否随场景改变。考察的因素为受控算例的布局、AGV 配比（每台加工机器配备的 AGV 数 $N_A/N_M$）与柔性三族（表~\ref{tab:bytag}），以及在基点附近另行变化的异构度 $H$ 与机器节点容量 $c$（表~\ref{tab:sens}）。两表均给出逐组各方法的 $C_{\max}$ 及本文方法相对每种对比方法的逐对相对差。
 
 \paragraph{单组的统计分辨率}
 逐组检验按对比做 Holm 校正，族为一个对比的 $\NCases$ 组。单组只有 $\NSeeds$ 个种子，即使十个种子全胜，双侧 Wilcoxon 检验的 $p$ 也只在千分之几的量级，经十组校正后只有全胜或近乎全胜的组能保持显著。因此逐组结果同时报告方向与校正前后的显著组数：相对 AE，$\NCases$ 组中 \ScnAESig{} 组校正后显著；相对 OL，校正前 \ScnOLSigRaw{} 组显著、校正后 \ScnOLSig{} 组；相对 TS，校正前 \ScnTSSigRaw{} 组、校正后 \ScnTSSig{} 组。三个对比在合计口径上均显著（表~\ref{tab:main}）。
@@ -1641,44 +1650,60 @@ $\NCases$ 组：$^{*}p<0.05$、$^{**}p<0.01$；$^{\dagger}$ 表示校正前显�
 
 \paragraph{AGV 配比}
 $N_A/N_M$ 取 $0.5$、$1.0$、$1.5$（基点）、$2.0$。本文方法相对 OL 为 \ScnOLRangeB{}，相对 AE 为 \ScnAERangeB{}，四组方向一致；AGV 最少的一组优势最小，此时运输资源本身是瓶颈，各方法都受限于车辆数量，排产能够改善的余地有限。
-相对 TS 为 \ScnTSRangeB{}：AGV 最多的一组（$N_A/N_M=2.0$）TS 略优，差异不显著。这是全部三十个逐组对比中唯一的反向，一个可能的解释是车辆充裕时冲突较少，两阶段方法在冻结的排产上按预约表选车已能取得大部分收益，而闭环每次评价的开销更高。
+相对 TS 为 \ScnTSRangeB{}：AGV 最多的一组（$N_A/N_M=2.0$）两者几乎相同，差异不显著。这是全部三十个逐组对比中唯一未显示本文方法更优的一组，一个可能的解释是车辆充裕时冲突较少，两阶段方法在冻结的排产上按预约表选车已能取得大部分收益，而 CLBS 每次评价的开销更高。
 
 \paragraph{柔性}
 $F$ 取 $0.3$、$0.6$（基点）、$1.0$。本文方法相对 OL 为 \ScnOLRangeC{}，相对 TS 为 \ScnTSRangeC{}，相对 AE 为 \ScnAERangeC{}，三组量级相近：在这一范围内，改派余地的多少不改变本文方法的优势。
 
+\begin{table}[t]
+\caption{机器节点容量 $c$ 与异构度 $H$ 的敏感性：逐组各方法的完工时间及本文方法相对三种对比方法的逐对相对差（每组 $n=10$ 个按种子配对的比较）。
+上块在 \texttt{S11}、\texttt{S21} 上取 $c\in\{1,2,\infty\}$（$H=0.3$），下块在 \texttt{S11} 上取 $H\in\{0,0.15,0.3,0.5\}$（$c=2$）；其余参数同基点。
+显著性标记规则同表~\ref{tab:bytag}，Holm 校正的族为一个对比在一个因素下的全部组（$c$ 为 \SensNCap{} 组，$H$ 为 \SensNHet{} 组）。
+\texttt{S11}、$c=2$、$H=0.3$ 即基点，两块共用一次运行。本批与表~\ref{tab:bytag} 种子相同，但单独运行，且同时运行的进程更多，各配置在同一运行时间内完成的代数较少；故基点上用满运行时间的 AE、CLBS 与表~\ref{tab:bytag} 不同，由早停终止的 OL、TS 与之相同。比较应在本表之内进行。}
+\label{tab:sens}
+\small
+%% 由 clbs_new/tools/sens_summary.py --tex 生成
+\input{tab/tab_sens.tex}
+\end{table}
+
 \paragraph{异构度}
-受控算例固定 $H=0.3$，异构度的影响用另一批算例核心与基线都不同的自建算例检验：$\MatrixCells$ 组 $\times$ $10$ 种子，共 $\MatrixRuns$ 次运行，基线为两阶段代理运输，在四个争用水平与四个异构度水平上交叉。闭环相对两阶段基线为 \GainIntegMatrix{}，$\MatrixCells$ 组中 \SigIntegMatrix{} 组显著（未校正），区间 \GainIntegMatrixLo{} 到 \GainIntegMatrixHi{}，与第~\ref{sec:main}~节 $\text{TS}\to\text{CLBS}$ 的方向一致。
-该批按 $H$ 分为四个水平（每个水平 $4$ 组）：$H=0$ 为 \GainIntegHZero{}，$H=0.15$（实测 \MatrixHMeasLow{}）为 \GainIntegHLow{}，$H=0.3$ 为 \GainIntegHMid{}，$H=0.5$ 为 \GainIntegHHigh{}；增益与 $H$ 的秩相关为 \RhoIntegH{}。实测 $H=\MatrixHMeasLow$ 接近公开算例中位 \PubHMed{}，其增益与 $H=0.3$ 相差不到半个百分点，因此把 $H$ 定在文献区间之上并未抬高闭环收益。每个水平只有 $4$ 组、组内散布远大于水平间差距，故只支持「收益不随 $H$ 上升」。
-这与第~\ref{sec:features}~节的分析相符：$H$ 增大时，指派越来越多由加工速度而非通行条件决定。$H=0$ 时改派不必用加工时间换通行时间，成为代价为零的避堵决策，该水平增益最高（\GainIntegHZero{}）。$H$ 使机器选择成为权衡（没有异构，第~\ref{sec:Chapter_I}~节的反转不会出现），但闭环收益来自搜索时是否计入让行，争用强弱由布局与 AGV 数量决定。
-%% !! 该批为旧模型(走廊排他、两库重合)的结果,未在节点模型下重跑(见 clbs_new/ToDoList.md)。
+$H$ 取 $0$、$0.15$、$0.3$（基点）、$0.5$，在 \texttt{S11} 上变化，其余参数同基点（表~\ref{tab:sens} 下块）。本文方法相对 OL 为 \SensOLRangeHet{}，相对 AE 为 \SensAERangeHet{}，四组均在校正后显著；相对 TS 为 \SensTSRangeHet{}，四组方向一致，但校正后均不显著。
+相对 TS 的优势在中等异构度上最大（$H=0.15$ 为 \SensTSHLow{}，$H=0.3$ 为 \SensTSHMid{}），两端较小（$H=0$ 为 \SensTSHZero{}，$H=0.5$ 为 \SensTSHHigh{}）。$H=0.5$ 处的收窄与第~\ref{sec:features}~节的分析相符：$H$ 越大，指派越多由加工速度而非通行条件决定，开环与 CLBS 选出的机器趋于一致，路径规划内嵌评价可纠正的部分随之减少。$H=0$ 处的收窄则与该节「$H=0$ 时改派是零代价的避堵决策」的预期相反；该组 $10$ 个种子中 CLBS 只胜 $4$ 个，差异不显著，本文不据此下结论。
+相对 AE 的优势随 $H$ 增大而扩大，由 $H=0$ 的 \SensAEHZero{} 到 $H=0.5$ 的 \SensAEHHigh{}。
+总之，在所考察的范围内，本文方法的优势不依赖于把 $H$ 定在某一水平；基点 $H=0.3$ 高于公开算例的中位 \PubHMed{}，但 $H=0.15$ 上相对 OL 与 TS 的相对差与基点相差不到一个百分点。
 
 \paragraph{机器节点容量}
-\TBD{机器节点容量（停靠缓冲区）$c\in\{1,2,\infty\}$ 的敏感性实验待补跑：在 \texttt{S11}、\texttt{S21} 上比较 CLBS 与 OL、TS、AE，见 clbs\_new/ToDoList.md。}
+$c$ 取 $1$、$2$（基点）、$\infty$，在 \texttt{S11} 与 \texttt{S21} 上变化（表~\ref{tab:sens} 上块）。$c$ 越小，机器节点处的排队越多，四种方法的 $C_{\max}$ 都随之上升；\texttt{S11} 上 CLBS 由 $c=\infty$ 的 $53.80$ 升至 $c=1$ 的 $82.10$。
+本文方法相对 AE 为 \SensAERangeCap{}，\SensNCap{} 组均在校正后显著；相对 OL 为 \SensOLRangeCap{}，\SensNCap{} 组中 \SensOLSigCap{} 组校正后显著，方向全部一致。相对 TS 为 \SensTSRangeCap{}，校正后均不显著。
+相对 OL 与 TS 的优势都在 $c=2$ 时最大（相对 TS：\texttt{S11} \SensTSFunnelTwo{}、\texttt{S21} \SensTSHighTwo{}），容量放宽或收紧时都收窄。$c=\infty$ 时（\SensTSFunnelInf{}、\SensTSHighInf{}）机器节点不再阻塞，冲突只剩走廊与路口，开环代理目标的偏差变小，路径规划内嵌评价可纠正的部分随之减少。$c=1$ 时（\SensTSFunnelOne{}、\SensTSHighOne{}）一个机器节点同一时刻只容一辆车，交接车与待命车相互阻挡，排队主要由节点容量本身决定，排产层面可改善的余地变小；\texttt{S21} 上 TS 略优，差异不显著。
+因此，本文方法相对两阶段方法的优势在节点容量适中时最明显；节点完全不受限时，问题接近只有走廊排他的旧有模型，节点极度紧张时，瓶颈转到节点本身。
 
 \subsection{消融：各组成部分的作用}
 \label{sec:ablation}
 
 第~\ref{sec:main}~节以 $C_{\max}$ 比较方法整体。本节借助 $2\times2$ 结构（表~\ref{tab:arms}）与加速开关，说明各组成部分分别起什么作用，以解释整体优势的来源；它不构成独立的评价指标。
 
-\subsubsection{路由内嵌评价与预约表感知派遣}
+\subsubsection{路径规划内嵌评价与预约表感知派遣}
 \label{sec:complement}
 
-\paragraph{路由内嵌评价是降幅的主要来源}
-固定选车规则、只改变搜索时是否计入冲突延误，闭环在两种派车方式下都显著更优：规则派车下 $\text{OL}\to\text{CLBS-R}$ 为 $-\GainLoopRule$（$p\PLoopRule$，伪中位数 \HLLoopRule{}，$95\%$ 置信区间 \CILoopRule{}），预约表感知派遣下 $\text{TS}\to\text{CLBS}$ 为 $-\GainLoopProbe$（$p\PLoopProbe$）。
+\paragraph{路径规划内嵌评价是降幅的主要来源}
+固定选车规则、只改变搜索时是否计入冲突延误，路径规划内嵌评价在两种派车方式下都显著更优：规则派车下 $\text{OL}\to\text{CLBS-R}$ 为 $-\GainLoopRule$（$p\PLoopRule$，伪中位数 \HLLoopRule{}，$95\%$ 置信区间 \CILoopRule{}），预约表感知派遣下 $\text{TS}\to\text{CLBS}$ 为 $-\GainLoopProbe$（$p\PLoopProbe$）。
 
-\paragraph{预约表感知派遣只在开环下显著}
-%% !! 节点模型重跑结果:闭环内派遣不显著、B2 合计均值略高于 B1。B2 是否仍作为"本文方法"待作者决定。
-固定开环或闭环、只改变选车规则。开环下 $\text{OL}\to\text{TS}$ 为 $-\GainProbeOpen$（$p\PProbeOpen$）：排产已定时，按预约表选车能明显减少执行中的冲突延误。
-闭环内 $\text{CLBS-R}\to\text{CLBS}$ 则为 $+\GainProbeLoop$（$p\PProbeLoop$），伪中位数 \HLProbeLoop{}，$95\%$ 置信区间 \CIProbeLoop{}，跨零；逐组校正后无一组显著（第~\ref{sec:ablation_scn}~节）。即在闭环内，预约表感知派遣与规则派车的 $C_{\max}$ 无可分辨的差异。
-可能的原因有两方面。其一，闭环搜索已经通过机器指派与工序顺序避开拥堵，留给选车的改进空间变小；开环下派遣的降幅（\GainProbeOpen{}）正是闭环已经取得的一部分。其二，节点模型下试算派遣的单次评价开销约为规则派车的 \CostMultAfter{} 倍（第~\ref{sec:costlaw}~节），同一挂钟内完成的评价次数少得多，抵消了逐个任务选车的改进。
+\paragraph{预约表感知派遣：开环与路径规划内嵌评价下均显著，后者的净收益受开销所限}
+%% 主批次的 CLBS-R/CLBS 两档于 2026-11-08 在两项加速(按下界升序试算)完成后重跑,经 clbs_new/tools/merge_b12.py
+%% 并入 baseline_ladder.csv;加速前的同挂钟结果为 +2.07%(p=0.19),见 output/baseline_ladder_v1.csv。
+固定是否采用路径规划内嵌评价、只改变选车规则。开环下 $\text{OL}\to\text{TS}$ 为 $-\GainProbeOpen$（$p\PProbeOpen$）：排产已定时，按预约表选车能明显减少执行中的冲突延误。
+采用路径规划内嵌评价时，相同运行时间下 $\text{CLBS-R}\to\text{CLBS}$ 为 $-\GainProbeLoop$（$p\PProbeLoop$），伪中位数降幅 \HLProbeLoop{}，$95\%$ 置信区间 \CIProbeLoop{}，不跨零；但逐组校正后无一组显著（第~\ref{sec:ablation_scn}~节）。这一降幅远小于开环下的 \GainProbeOpen{}，且依赖于两项加速：加速改进之前，同一比较为 $+2.07\%$（$p=0.19$），即派遣的收益被开销完全抵消。
+为区分派遣的每代效果与其开销，另在全部 $\SameGenNCells$ 组 $\times$ $10$ 个种子上让 CLBS-R 与 CLBS 各跑 $\SameGenGens$ 代、不设运行时间上限。相同代数下，CLBS 的 $C_{\max}$ 降低 \SameGenGainAbs{}（$p\SameGenP$，$\SameGenNPairs$ 个配对中 $\SameGenWin$ 胜 $\SameGenLose$ 负），逐组 \SameGenRange{}，方向全部一致；校正前 $\SameGenNCells$ 组中 \SameGenSigRaw{} 组显著，Holm 校正后因单组只有 $10$ 个种子，校正后的 $p$ 最小为 \SameGenHolmMin{}，略高于 $0.05$。完成 $\SameGenGens$ 代，CLBS 的平均用时为 CLBS-R 的 \SameGenTimeRatio{} 倍。
+因此，派遣在路径规划内嵌评价下明显改进了每一代的搜索；相同运行时间下只剩 \GainProbeLoop{}，是因为试算派遣的单次评价开销仍约为规则派车的 \CostMultAfter{} 倍（第~\ref{sec:costlaw}~节），同一运行时间内完成的代数少得多，每代的改进大部分被评价次数的减少抵消。
 
 \paragraph{两者的关系}
-若两项技术彼此独立，端到端降幅应为 \GainLoopRule{} 与 \GainProbeOpen{} 的复合，即 \GainIndepProduct{}；实测 \GainEndToEnd{} 明显低于此，说明二者部分重叠：派遣在开环下取得的降幅，闭环大多已经取得。反过来，派遣不能替代闭环：两阶段结构（TS）只降低 \GainProbeOpen{}，而闭环降低 \GainLoopRule{}；要获得这一降幅，让行等待必须在搜索时进入适应度。
+若两项技术彼此独立，端到端降幅应为 \GainLoopRule{} 与 \GainProbeOpen{} 的复合，即 \GainIndepProduct{}；实测 \GainEndToEnd{} 明显低于此，说明二者部分重叠：派遣在开环下取得的降幅，路径规划内嵌评价大多已经取得。反过来，派遣不能替代路径规划内嵌评价：两阶段结构（TS）只降低 \GainProbeOpen{}，而路径规划内嵌评价降低 \GainLoopRule{}；要获得这一降幅，让行等待必须在搜索时进入适应度。
 
 \subsubsection{各组成部分在不同场景下的作用}
 \label{sec:ablation_scn}
 
-图~\ref{fig:prediction3} 把闭环与派遣两个效应按第~\ref{sec:whichcongestion}~节的三族逐组展开。逐组检验按效应做 Holm 校正，族为一个效应的 $\NCases$ 组。闭环校正后 \CellsSigLoopAdj{} 组显著（校正后最大 $p\PLoopCellMax$），其趋势可以按族解读；派遣校正前只有 \CellsSigProbe{} 组显著（AGV 配比 $1.0$，且方向为 CLBS 慢于 CLBS-R，$p\PProbeFleetOneRaw$），校正后为 \CellsSigProbeAdj{} 组，其量级与单组 $\NSeeds$ 个种子能分辨的下限同阶，下文对派遣只报告方向。
+图~\ref{fig:prediction3} 把路径规划内嵌评价与派遣两个效应按第~\ref{sec:whichcongestion}~节的三族逐组展开。逐组检验按效应做 Holm 校正，族为一个效应的 $\NCases$ 组。路径规划内嵌评价校正后 \CellsSigLoopAdj{} 组显著（校正后最大 $p\PLoopCellMax$），其趋势可以按族解读；派遣在合计口径上显著（第~\ref{sec:ablation}~节），但逐组校正前只有 \CellsSigProbe{} 组显著（\texttt{S22}、$N_A/N_M=0.5$ 与 $F=0.3$，均为 CLBS 更优），校正后为 \CellsSigProbeAdj{} 组：其逐组量级只有数个百分点，与单组 $\NSeeds$ 个种子能分辨的下限同阶，下文对派遣只报告方向。
 
 \begin{figure}[t]
 \centering
@@ -1690,10 +1715,10 @@ significant, at all ten cells and roughly flat across contention, while the
 dispatch curve is hollow at every cell and its sign is mixed. Error bars
 give the standard error of the mean over the ten seeds of each cell; the
 closed-loop bars stay clear of zero.}
-\caption{闭环与派遣增益在三族上的分布。左：布局族，横轴为争用强度；中：AGV 配比 $N_A/N_M$；右：柔性。
+\caption{路径规划内嵌评价与派遣增益在三族上的分布。左：布局族，横轴为争用强度；中：AGV 配比 $N_A/N_M$；右：柔性。
 B、C 两族含共用基点（空心竖线处的 $1.5$ 与 $0.6$）。
 实心为 Holm 校正后仍显著（$p<0.05$），空心为不显著；误差棒为 $\NSeeds$ 个种子上的均值标准误。
-闭环 \CellsSigLoopAdj{} 组显著，量级在布局与柔性两族内相近；派遣校正后无一组显著，符号正负不一。}
+路径规划内嵌评价 \CellsSigLoopAdj{} 组显著，量级在布局与柔性两族内相近；派遣十组中六组为负，校正后无一组显著。}
 \label{fig:prediction3}
 %% 由 fig/fig_prediction3_CN.py 从 clbs/output/baseline_ladder.csv 生成。横轴:A 族取争用强度,
 %% B/C 族取算例名末尾的因子水平;基点 A funnel 的 (1.5, 0.6) 由脚本按 abc_matrix.BASE 显式补入。
@@ -1701,24 +1726,23 @@ B、C 两族含共用基点（空心竖线处的 $1.5$ 与 $0.6$）。
 \end{figure}
 
 \paragraph{布局}
-闭环五组均显著，且量级相近：最不拥堵的 \texttt{GD}（争用 \ContentionLo{}）为 \GainLoopScatter{}，\texttt{GC}/\texttt{S22} 为 \GainLoopLow{}/\GainLoopMid{}，\texttt{S21}/\texttt{S11} 为 \GainLoopHigh{}/\GainLoopFunnel{}；降幅不随争用强度上升。派遣五组符号不一，均不显著。
+路径规划内嵌评价五组均显著，且量级相近：最不拥堵的 \texttt{GD}（争用 \ContentionLo{}）为 \GainLoopScatter{}，\texttt{GC}/\texttt{S22} 为 \GainLoopLow{}/\GainLoopMid{}，\texttt{S21}/\texttt{S11} 为 \GainLoopHigh{}/\GainLoopFunnel{}；降幅不随争用强度上升。派遣五组中四组为 CLBS 更优（\texttt{S21} 例外），校正后均不显著。
 
 \paragraph{AGV 配比}
-闭环在 $N_A/N_M=0.5$、$1.0$、$1.5$（基点）、$2.0$ 上依次为 \GainLoopStarve{}、\GainLoopFleetOne{}、\GainLoopFunnel{}、\GainLoopFleetTwo{}，均显著；AGV 最少的一组降幅最小。
-本族原用于检验派遣收益是否存在 AGV 数量上界，即 AGV 增多后试算开销抵消派遣收益。闭环内派遣依次为 \GainProbeStarve{}、\GainProbeFleetOne{}、\GainProbeFleetBase{}、\GainProbeFleetTwo{}，符号不一，校正后四组均不显著（校正前 $p\PProbeFleetHalfRaw$、$p\PProbeFleetOneRaw$、$p\PProbeFleetBaseRaw$、$p\PProbeFleetTwoRaw$），未能确定派遣收益随 AGV 数量变化的规律。
+路径规划内嵌评价在 $N_A/N_M=0.5$、$1.0$、$1.5$（基点）、$2.0$ 上依次为 \GainLoopStarve{}、\GainLoopFleetOne{}、\GainLoopFunnel{}、\GainLoopFleetTwo{}，均显著；AGV 最少的一组降幅最小。
+本族原用于检验派遣收益是否存在 AGV 数量上界，即 AGV 增多后试算开销抵消派遣收益。路径规划内嵌评价下的派遣依次为 \GainProbeStarve{}、\GainProbeFleetOne{}、\GainProbeFleetBase{}、\GainProbeFleetTwo{}，符号不一，校正后四组均不显著（校正前 $p\PProbeFleetHalfRaw$、$p\PProbeFleetOneRaw$、$p\PProbeFleetBaseRaw$、$p\PProbeFleetTwoRaw$），未能确定派遣收益随 AGV 数量变化的规律。
 
 \paragraph{柔性}
-闭环在 $F=0.3$、$0.6$、$1.0$ 上为 \GainLoopFlexLo{}、\GainLoopFunnel{} 与 \GainLoopFlexHi{}，逐组显著且量级相近。派遣为 \GainProbeFlexLo{}、\GainProbeFleetBase{} 与 \GainProbeFlexHi{}，均不显著（校正前 $p\PProbeFlexLoRaw$、$p\PProbeFlexHiRaw$）。
-异构度批次对派遣给出 \GainProbePre{}（$0$ 组显著），与此一致。
+路径规划内嵌评价在 $F=0.3$、$0.6$、$1.0$ 上为 \GainLoopFlexLo{}、\GainLoopFunnel{} 与 \GainLoopFlexHi{}，逐组显著且量级相近。派遣为 \GainProbeFlexLo{}、\GainProbeFleetBase{} 与 \GainProbeFlexHi{}，校正后均不显著（$F=0.3$ 校正前 $p\PProbeFlexLoRaw$、校正后 $p\PProbeFlexLoHolm$；$F=1.0$ 校正前 $p\PProbeFlexHiRaw$）。
 
 \subsubsection{计算开销与两项加速}
 \label{sec:costlaw}
 
-在固定挂钟预算下，单次评价开销与可完成的评价次数此消彼长。预约表感知派遣的单次评价开销远高于规则派车，故本节直接度量开销，以及两项加速能挽回多少。
+在固定运行时间预算下，单次评价开销与可完成的评价次数此消彼长。预约表感知派遣的单次评价开销远高于规则派车，故本节直接度量开销，以及两项加速能挽回多少。
 
 \paragraph{两种预算口径}
-图~\ref{fig:protocol} 给出各配置的单次评价开销与同一预算内完成的评价次数，开环仅用约四分之一挂钟即完成了最多的评价次数。阶梯批次实测的单次评价开销为：开环 \MsOpen{}\,ms，闭环规则派车 \MsLoopRule{}\,ms，完整闭环 \MsLoopProbe{}\,ms，闭环约为开环的 $37$ 倍；在另一批附加代价扫描中，开启附加代价使单次评价从 \MsPricedRef{}\,ms 升到 \MsPriced{}\,ms，约再乘 $4.8$ 倍。两批的绝对耗时不可直接比较，但两个倍数之积表明，开销最高与最低的配置相差约两个数量级。
-图~\ref{fig:protocols} 把同一组比较在两种口径下各做一次。同代数口径不计额外开销，偏向开销高的配置：预约表感知派遣相对规则派车为 \GainProbeSameGen{}（$p\PProbeSameGen$）；同挂钟下、加速之前仅为 \GainProbeSameClock{}（$p\PProbeSameClock$），接近零。前者回答额外的路由计算是否改进了每一代的排序，后者回答相同时间内完工时间是否下降，二者不能相互替代。
+图~\ref{fig:protocol} 给出各配置的单次评价开销与同一预算内完成的评价次数，开环只用不到一半的运行时间即完成了最多的评价次数。阶梯批次实测的单次评价开销为：开环 \MsOpen{}\,ms，CLBS-R \MsLoopRule{}\,ms，CLBS \MsLoopProbe{}\,ms，约为开环的 $\MsLoopOverOpen$ 倍，相差两个数量级；在另一批附加代价扫描（旧模型）中，开启附加代价使单次评价从 \MsPricedRef{}\,ms 升到 \MsPriced{}\,ms，约再乘 $4.8$ 倍。两批的绝对耗时不可直接比较。
+两种口径回答不同的问题。同代数口径不计额外开销，回答额外的路径规划计算是否改进了每一代的排序；相同运行时间口径回答同样的时间内完工时间是否下降，二者不能相互替代。路径规划内嵌评价下的预约表感知派遣正是二者分歧之处：同代数下相对规则派车降低 \SameGenGainAbs{}（$p\SameGenP$），相同运行时间下只降低 \GainProbeLoop{}（$p\PProbeLoop$；第~\ref{sec:ablation}~节）。
 
 \begin{figure}[t]
 \centering
@@ -1726,9 +1750,9 @@ B、C 两族含共用基点（空心竖线处的 $1.5$ 与 $0.6$）。
 \Description{A log-log scatter of cost per evaluation against evaluations
 completed. A grey hyperbola marks the 90-second budget cap. The two closed-loop
 configurations sit on it, while the open-loop configuration sits well below it
-because it stalls after about twenty-four seconds. Orange markers are the
+because it stalls within 21 to 40 seconds. Orange markers are the
 pruning ablation off and on; a callout marks the on setting.}
-\caption{单次评价开销与完成的评价次数。灰线为 $90$ 秒预算上限，点落在线上表示开销 $\times$ 次数等于该配置的挂钟。两个闭环配置落在线上，即每次都用满预算；开环落在线下方，因其约 $24$ 秒即由早停终止，并非被预算截断。
+\caption{单次评价开销与完成的评价次数。灰线为 $90$ 秒预算上限，点落在线上表示开销 $\times$ 次数等于该配置的运行时间。CLBS-R 与 CLBS 落在线上，即每次都用满预算；开环落在线下方，因其在 $21$--$40$ 秒内即由早停终止，并非被预算截断。
 OL 与 TS 共用同一次开环搜索，故共用一个点。淡色小点为三个算例的逐个测量值，实心大点为其几何平均。
 橙色圆点为两项加速的关闭与开启（引出线标出开启者）；二者选出的 AGV 相同（第~\ref{sec:speedup}~节），沿该线的位移仅反映算力节省。}
 \label{fig:protocol}
@@ -1736,28 +1760,16 @@ OL 与 TS 共用同一次开环搜索，故共用一个点。淡色小点为三�
 %% 与 prune_ablation.csv;后者缺失时脚本自动省略橙色圆点而不报错。
 \end{figure}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=\columnwidth]{fig/fig_protocols_CN.pdf}
-\Description{The same paired comparisons shown twice, once under an equal
-wall-clock budget and once under an equal number of generations.}
-\caption{同一组比较在两种预算口径下的结果，每一行按其所隔离的机制命名。
-预约表感知派遣在同代数下为 \GainProbeSameGen{}（$p\PProbeSameGen$），同挂钟下为 \GainProbeSameClock{}（$p\PProbeSameClock$）。
-该批运行于两项加速之前（表~\ref{tab:batches}）。}
-\label{fig:protocols}
-%% 由 fig/fig_protocols_CN.py 从 clbs/experiments/protocols.csv 生成(4 算例 x 10 种子)。
-\end{figure}
-
 \paragraph{开销规律}
-预约表感知派遣把每个运输任务的路由调用从 $1$ 次增至至多 $N_A$ 次，开销随 AGV 数量线性增长。剪枝所用下界在争用越弱时越紧，跳过的候选越多。实测与此一致：六组中路由调用削减率最高的是最不拥堵的一组（\RouteCallCutHi{}），最低的是 AGV 最多的一组（\RouteCallCutLo{}），剪枝效果减弱但未失效。二者合起来\emph{预测}：AGV 足够多、争用足够强时，试算开销将抵消派遣收益。第~\ref{sec:ablation_scn}~节 AGV 配比族未能证实这一上界；开销规律本身是直接测得的，由它推出的上界尚未验证。
+预约表感知派遣把每个运输任务的路径规划调用从 $1$ 次增至至多 $N_A$ 次，开销随 AGV 数量线性增长。剪枝所用下界在争用越弱时越紧，跳过的候选越多。实测与此一致：六组中路径规划调用削减率最高的是最不拥堵的一组（\RouteCallCutHi{}），最低的是 AGV 最多的一组（\RouteCallCutLo{}），剪枝效果减弱但未失效。二者合起来\emph{预测}：AGV 足够多、争用足够强时，试算开销将抵消派遣收益。第~\ref{sec:ablation_scn}~节 AGV 配比族未能证实这一上界；开销规律本身是直接测得的，由它推出的上界尚未验证。
 
 \paragraph{单独开关两项加速}
-为排除批次差异，另做一组只改变加速开关的对照：同算例、同种子、同预算。先做等价性自检：六个算例上各取六条随机染色体，开启与关闭加速时的完工时间与派车序列\emph{逐位相同}，$36$ 组无一例外，与第~\ref{sec:speedup}~节的分析一致；路由调用合计减少 \RouteCallCut{}。因此同挂钟下的完工时间差\emph{仅}来自节省的算力。
-结果见表~\ref{tab:prune}：开启加速使完工时间再降 \GainPrune{}（\WinPrune{} 胜 / \LosePrune{} 负，$p\PPrune$），同预算内评价次数为 \EvalRatioPrune{} 倍，单次评价加速 \SpeedupProbe{} 倍。可见加速对 CLBS 本身是必要的：关闭加速时，CLBS 的 $C_{\max}$ 会再高 \GainPrune{}。但即使开启加速，单次评价开销仍约为规则派车的 \CostMultAfter{} 倍（加速前约 \CostMultBefore{} 倍），闭环内 CLBS 仍未显著优于 CLBS-R（第~\ref{sec:complement}~节）。
+为排除批次差异，另做一组只改变加速开关的对照：同算例、同种子、同预算。先做等价性自检：六个算例上各取六条随机染色体，开启与关闭加速时的完工时间与派车序列\emph{逐位相同}，$36$ 组无一例外，与第~\ref{sec:speedup}~节的分析一致；路径规划调用合计减少 \RouteCallCut{}。因此相同运行时间下的完工时间差\emph{仅}来自节省的算力。
+结果见表~\ref{tab:prune}：开启加速使完工时间再降 \GainPrune{}（\WinPrune{} 胜 / \LosePrune{} 负，$p\PPrune$），同预算内评价次数为 \EvalRatioPrune{} 倍，单次评价加速 \SpeedupProbe{} 倍。可见加速对 CLBS 本身是必要的：关闭加速时，CLBS 的 $C_{\max}$ 会再高 \GainPrune{}。但即使开启加速，单次评价开销仍约为规则派车的 \CostMultAfter{} 倍（加速前约 \CostMultBefore{} 倍），CLBS 相对 CLBS-R 的降幅只有 \GainProbeLoop{}（第~\ref{sec:complement}~节）。
 
 \begin{table}[t]
 \caption{只改变两项加速（下界剪枝与胜者路径复用）。「关」/「开」指二者是否启用，加粗表头为本文采用的设置。
-两种设置输出逐位相同，差值仅来自节省的算力。同算例、同种子、同挂钟；$n=60$ 配对，双侧 Wilcoxon 符号秩检验（$^{***}p<0.001$）。
+两种设置输出逐位相同，差值仅来自节省的算力。同算例、同种子、相同运行时间；$n=60$ 配对，双侧 Wilcoxon 符号秩检验（$^{***}p<0.001$）。
 两个比值列的分母都是\emph{关}的值：评价次数按 开/关，单次评价耗时按 关/开。}
 \label{tab:prune}
 \small
@@ -1772,7 +1784,7 @@ wall-clock budget and once under an equal number of generations.}
 本节报告第~\ref{sec:interface}~节两种接口的结果。主批次中附加代价关闭（$\theta=0$）；按让行记录的局部搜索在四个配置中以相同设置启用，不影响配置之间的比较。
 
 \paragraph{按让行记录的局部搜索}
-在第~\ref{sec:whichcongestion}~节的 $\MatrixCells$ 组独立数据中，关掉让行记录的相对增益为 \GainCertMatrix{}（仅 $1$ 组显著），关掉错峰算子为 \GainStaggerMatrix{}（$2$ 组显著），均不为正：在相同挂钟下，把解码次数用于该邻域，不如用于种群进化。让行记录与错峰在两项加速前后没有改动，开销也不随剪枝变化，故可引用该批较早的数据；派遣则不行，因为其开销正是加速的对象。
+在 $\MatrixCells$ 组独立算例的数据中（表~\ref{tab:batches}），关掉让行记录的相对增益为 \GainCertMatrix{}（仅 $1$ 组显著），关掉错峰算子为 \GainStaggerMatrix{}（$2$ 组显著），均不为正：在相同运行时间下，把解码次数用于该邻域，不如用于种群进化。让行记录与错峰在两项加速前后没有改动，开销也不随剪枝变化，故可引用该批较早的数据；派遣则不行，因为其开销正是加速的对象。
 
 \paragraph{走廊时段附加代价}
 第~\ref{sec:interface}~节指出，附加代价会重复计入适应度已含的延误，但这一论证不能给出完工时间变差的幅度，故单独度量。实验在两种预算口径下扫描 $\theta$，并在所有 $\theta$ 上固定路径搜索的宽度。
@@ -1785,7 +1797,7 @@ pricing strength: under equal wall-clock the penalty is large and flat, under
 equal evaluations it is absent. Markers are means over seeds and error bars are
 the standard error of the mean. The batch is two separately generated instances
 that are not members of the paper's A/B/C families.}
-\caption{走廊时段附加代价的影响，正值表示更差。同挂钟（左）下，完工时间变差在附加代价一开启即出现，并在 $\theta$ 的十倍范围内平坦，与右轴的单次评价开销同步；同评价次数（右）下变差消失。
+\caption{走廊时段附加代价的影响，正值表示更差。相同运行时间（左）下，完工时间变差在附加代价一开启即出现，并在 $\theta$ 的十倍范围内平坦，与右轴的单次评价开销同步；同评价次数（右）下变差消失。
 标记为均值，误差棒为均值标准误；「显著」指每个 $\theta$ 与 $\theta=0$ 按种子配对的双侧 Wilcoxon 检验。
 两个算例不属于表~\ref{tab:instances} 的三族，批次见表~\ref{tab:batches}。}
 \label{fig:theta}
@@ -1794,8 +1806,8 @@ that are not members of the paper's A/B/C families.}
 %% 该批次属加速之前的测量;附加代价机制在加速前后未改动,且其开销与剪枝无关,故该测量对它依然有效。
 \end{figure}
 
-如图~\ref{fig:theta} 所示，同挂钟下每个 $\theta$ 都使完工时间显著变差，且在十倍范围内平坦；同评价次数下不显著。带附加代价的路由在同一预算内完成的评价次数约为不带时的五分之一，即损害来自评价次数减少，而非候选解排序出错。
-另有两点可排除其他解释。其一，在两个数量级的 $\theta$ 范围内，带附加代价的路由修改的是相同的少数路径，累计附加代价只占总行驶时间的很小一部分，不足以改变到达时刻的次序；只有 $\theta$ 大到附加代价超过到达时刻时，重复计入的影响才显现。其二，开销是结构性的：有无附加代价的耗时之比在每个 $\theta$ 上都相同，额外开销来自多标签 Pareto 搜索本身，与引理~\ref{lem:label} 一致。
+如图~\ref{fig:theta} 所示，相同运行时间下每个 $\theta$ 都使完工时间显著变差，且在十倍范围内平坦；同评价次数下不显著。带附加代价的路径规划在同一预算内完成的评价次数约为不带时的五分之一，即损害来自评价次数减少，而非候选解排序出错。
+另有两点可排除其他解释。其一，在两个数量级的 $\theta$ 范围内，带附加代价的路径规划修改的是相同的少数路径，累计附加代价只占总行驶时间的很小一部分，不足以改变到达时刻的次序；只有 $\theta$ 大到附加代价超过到达时刻时，重复计入的影响才显现。其二，开销是结构性的：有无附加代价的耗时之比在每个 $\theta$ 上都相同，额外开销来自多标签 Pareto 搜索本身，与引理~\ref{lem:label} 一致。
 因此，只要适应度取自完整的无冲突解码，附加代价就不含新信息，结果由其额外开销决定。扩充层间接口之前，应先检查接收层的目标是否已包含该接口要传递的量。
 
 \subsubsection{失效原因：稀释与开销}
@@ -1807,14 +1819,14 @@ that are not members of the paper's A/B/C families.}
 \paragraph{沿关键链的稀释}
 一份让行记录指明的是消除\emph{一次}让行所需的信息。完工时间由一条链决定，消除一处走廊延误后，另一约束（上游工序、某台机器或另一条走廊）通常随之成为紧约束，实际改进只是被消除延误的一部分。当一个瓶颈只是若干量级相当的瓶颈之一时，针对它的改进远小于被消除的让行时长。
 
-\paragraph{闭环内派遣无显著收益的原因}
-同样的稀释也作用于预约表感知派遣：试算选出的是当前任务送达最早的 AGV，这一局部改进传到完工时间时只保留一部分。节点模型下，单次评价开销在加速前为规则派车的 \CostMultBefore{} 倍，加速后仍为 \CostMultAfter{} 倍；在闭环内，剩余的局部改进不足以抵消评价次数的减少，合计变化为 $+\GainProbeLoop$，不显著。
-因此两种机制都受稀释限制，区别在于开销：按让行记录的局部搜索即使在同评价次数下也无收益；派遣在开环下有显著收益（\GainProbeOpen{}），在闭环内的收益则被开销抵消，进一步降低试算开销是使其在闭环内生效的前提。
+\paragraph{路径规划内嵌评价下的派遣在相同运行时间下收益较小的原因}
+派遣与按让行记录的局部搜索不同：相同代数下它使 $C_{\max}$ 降低 \SameGenGainAbs{}（第~\ref{sec:ablation}~节），说明试算选车的局部改进确实传到了完工时间，没有被关键链稀释殆尽。它在相同运行时间下的收益只有 \GainProbeLoop{}，原因在开销：节点模型下，单次评价开销在加速前为规则派车的 \CostMultBefore{} 倍，加速后仍为 \CostMultAfter{} 倍，同一预算内完成的代数随之减少。加速前同一比较为 $+2.07\%$，不显著；加速后转为显著的降幅。
+因此两种机制的失效原因不同：局部搜索即使在同评价次数下也无收益，失效源于信号本身；派遣每代有效，其在路径规划内嵌评价下的净收益受开销限制，进一步降低试算开销仍可扩大这一收益。
 
 \subsection{案例分析}
 \label{sec:casestudy}
 
-本节在单个\texttt{S11} 算例上并列 OL 与 CLBS，说明一次求解中发生了什么。图~\ref{fig:case_gantt} 把加工机器与 AGV 画在同一时间轴上。可见三点：开环解中，让行成段出现在库区出入口附近的走廊上，并集中于少数几辆 AGV；闭环解大幅减少了这些等待，且若干道工序被指派到并非最快的机器，即以较长加工换取更通畅的路径（式~\eqref{eq:reassign}）；闭环解的 AGV 负载也更均衡，这是前两点的结果。
+本节在单个\texttt{S11} 算例上并列 OL 与 CLBS，说明一次求解中发生了什么。图~\ref{fig:case_gantt} 把加工机器与 AGV 画在同一时间轴上。可见三点：开环解中，让行成段出现在库区出入口附近的走廊上，并集中于少数几辆 AGV；CLBS 解大幅减少了这些等待，且若干道工序被指派到并非最快的机器，即以较长加工换取更通畅的路径（式~\eqref{eq:reassign}）；CLBS 解的 AGV 负载也更均衡，这是前两点的结果。
 
 \begin{figure*}[t]
 \centering
@@ -1846,44 +1858,44 @@ with each link coloured by its attribution label.}
 
 \subsection{工作总结}
 
-本文研究机器指派与 AGV 无冲突路由须同时决策的柔性作业车间调度问题，聚焦运输耗时超过加工、拥堵集中于少数共享走廊的车间。在这类车间中，通往快速机器的走廊拥堵时，较慢但通行顺畅的机器可能是更优的选择，而常数运输时间模型看不到这一点。
-为此，本文提出闭环双层框架：上层以文化基因算法搜索机器指派与工序顺序，下层为每个运输任务选定 AGV 并以安全区间搜索在走廊与节点预约表上规划无冲突路径；通过路由内嵌评价与预约表感知派遣两项技术让路由结果进入排产，并以下界剪枝与胜者路径复用减少选车开销。实验以可实现的完工时间 $C_{\max}$ 为唯一判定指标，在相同挂钟时间预算下把本文方法与开环、两阶段及三段式编码三种对比方法直接比较，并以消融说明各组成部分的作用。
+本文研究机器指派与 AGV 无冲突路径规划须同时决策的柔性作业车间调度问题，聚焦运输耗时超过加工、拥堵集中于少数共享走廊的车间。在这类车间中，通往快速机器的走廊拥堵时，较慢但通行顺畅的机器可能是更优的选择，而常数运输时间模型看不到这一点。
+为此，本文提出闭环双层框架：上层以文化基因算法搜索机器指派与工序顺序，下层为每个运输任务选定 AGV 并以安全区间搜索在走廊与节点预约表上规划无冲突路径；通过路径规划内嵌评价与预约表感知派遣两项技术让路径规划结果进入排产，并以下界剪枝与胜者路径复用减少选车开销。实验以可实现的完工时间 $C_{\max}$ 为唯一判定指标，在相同运行时间预算下把本文方法与开环、两阶段及三段式编码三种对比方法直接比较，并以消融说明各组成部分的作用。
 
 \subsection{主要结论}
 \label{sec:contributions}
 
-\textbf{(1) 相同挂钟预算下，本文方法的 $C_{\max}$ 小于三种对比方法。}
+\textbf{(1) 相同运行时间预算下，本文方法的 $C_{\max}$ 小于三种对比方法。}
 相对开环方法降低 $\GainEndToEnd$（$p\PEndToEnd$，$\NPairs$ 个配对中 $\WinEndToEnd$ 胜 $\LoseEndToEnd$ 负），相对两阶段方法降低 $\GainLoopProbe$（$p\PLoopProbe$），相对把 AGV 编入染色体的三段式编码降低 $\GainLyu$（$p\PLyu$）（第~\ref{sec:main}~节）。后一比较说明，AGV 应在解码时按预约表选派，而不是交给遗传操作逐代筛选。
 
-\textbf{(2) 路由内嵌评价是降幅的主要来源。}
-相对开环，闭环在规则派车下使完工时间降低 $\GainLoopRule$（$p\PLoopRule$），在预约表感知派遣下降低 $\GainLoopProbe$（$p\PLoopProbe$）；$\NCases$ 组中有 \CellsSigLoopAdj{} 组经 Holm 校正后仍显著。降幅在布局族内并不随争用强度上升，在 AGV 最少的一组最小（第~\ref{sec:whichcongestion}~节）。
+\textbf{(2) 路径规划内嵌评价是降幅的主要来源。}
+相对开环，路径规划内嵌评价在规则派车下使完工时间降低 $\GainLoopRule$（$p\PLoopRule$），在预约表感知派遣下降低 $\GainLoopProbe$（$p\PLoopProbe$）；$\NCases$ 组中有 \CellsSigLoopAdj{} 组经 Holm 校正后仍显著。降幅在布局族内并不随争用强度上升，在 AGV 最少的一组最小（第~\ref{sec:whichcongestion}~节）。
 
-\textbf{(3) 预约表感知派遣只在开环下显著。}
-开环下派遣使完工时间降低 $\GainProbeOpen$（$p\PProbeOpen$）；闭环内与规则派车无显著差异（$+\GainProbeLoop$，$p\PProbeLoop$，$95\%$ 区间 \CIProbeLoop{}）。两项加速只跳过注定落选的试算（第~\ref{sec:speedup}~节，并经逐位自检），使路由调用减少 \RouteCallCut{}，并使 CLBS 的 $C_{\max}$ 降低 \GainPrune{}；但单次评价开销仍约为规则派车的 \CostMultAfter{} 倍，不足以使派遣在闭环内取得净收益。
+\textbf{(3) 预约表感知派遣在开环与路径规划内嵌评价下均降低完工时间，后者的净收益受开销所限。}
+开环下派遣使完工时间降低 $\GainProbeOpen$（$p\PProbeOpen$）。采用路径规划内嵌评价时，相同代数下降低 \SameGenGainAbs{}（$p\SameGenP$，$\SameGenNPairs$ 个配对中 $\SameGenWin$ 胜），相同运行时间下降低 \GainProbeLoop{}（$p\PProbeLoop$，$95\%$ 区间 \CIProbeLoop{}）。两项加速只跳过注定落选的试算（第~\ref{sec:speedup}~节，并经逐位自检），使路径规划调用减少 \RouteCallCut{}，并使 CLBS 的 $C_{\max}$ 降低 \GainPrune{}；加速前，路径规划内嵌评价下的派遣在相同运行时间下并无净收益。单次评价开销仍约为规则派车的 \CostMultAfter{} 倍，故相同运行时间下的收益只及相同代数下的一小部分。
 
-\textbf{(4) 两项技术部分重叠，派遣不能替代闭环。}
-端到端降低 $\GainEndToEnd$，明显低于独立复合的预测值 $\GainIndepProduct$：派遣在开环下取得的降幅，闭环大多已经取得。「先排产、后解冲突」的路线即使改用预约表感知派遣，也只能获得 $\GainProbeOpen$，拿不到闭环带来的 $\GainLoopRule$（第~\ref{sec:ablation}~节）。
+\textbf{(4) 两项技术部分重叠，派遣不能替代路径规划内嵌评价。}
+端到端降低 $\GainEndToEnd$，明显低于独立复合的预测值 $\GainIndepProduct$：派遣在开环下取得的降幅，路径规划内嵌评价大多已经取得。「先排产、后解冲突」的路线即使改用预约表感知派遣，也只能获得 $\GainProbeOpen$，拿不到路径规划内嵌评价带来的 $\GainLoopRule$（第~\ref{sec:ablation}~节）。
 
 \subsection{局限}
 \label{sec:limitations}
 
 \textbf{(1) 算例族的范围。}
-主实验固定规模、只改变结构，故不就机制随规模的变化作结论；$H$ 固定为 $0.3$，其影响只在规模较小的独立算例上检验过。布局族中只有三组脊式算例之间的差异可单独归因于容量，网格算例还同时改变了拓扑与距离（最远行程由 \LegDumbbell{} 升至 \LegGrid{}）；争用强度只统计走廊上的重叠，不计节点处的等待，也不区分可由改派绕开的部分。这两点可能是闭环收益不随争用强度上升的原因。采用自建算例，是因为这一方向尚无带显式路网的公开基准（第~\ref{sec:instances}~节）。
+主实验固定规模、只改变结构，故不就机制随规模的变化作结论；$H$ 与 $c$ 的影响只在基点附近的 \texttt{S11}、\texttt{S21} 上检验过（第~\ref{sec:whichcongestion}~节）。布局族中只有三组脊式算例之间的差异可单独归因于容量，网格算例还同时改变了拓扑与距离（最远行程由 \LegDumbbell{} 升至 \LegGrid{}）；争用强度只统计走廊上的重叠，不计节点处的等待，也不区分可由改派绕开的部分。这两点可能是路径规划内嵌评价的收益不随争用强度上升的原因。采用自建算例，是因为这一方向尚无带显式路网的公开基准（第~\ref{sec:instances}~节）。
 
-\textbf{(2) 闭环内派遣未取得净收益。}
-在 $90$ 秒预算与节点模型下，试算派遣的开销抵消了其局部改进；更长的预算或更低开销的试算能否改变这一结论，本文未检验。其逐组效应只有数个百分点，与种子间离散度同阶（第~\ref{sec:ablation_scn}~节）。
+\textbf{(2) 路径规划内嵌评价下派遣的净收益较小。}
+相同代数下派遣使 $C_{\max}$ 降低 \SameGenGainAbs{}，但在 $90$ 秒预算与节点模型下，开销抵消了其中大部分，合计只剩 \GainProbeLoop{}；更长的预算能否扩大这一收益，本文未检验。相同运行时间下其逐组效应只有数个百分点，与种子间离散度同阶，逐组校正后无一组显著（第~\ref{sec:ablation_scn}~节）。
 
 \textbf{(3) 有走廊争用时，解与最优的距离未知。}
-上层搜索已在无争用的公开基准上标定（第~\ref{sec:external}~节），但有争用的算例尚无可证最优值。这不影响配置之间的差值，但数个百分点量级的效应（如闭环内派遣的 $+\GainProbeLoop$）可能与这一距离相当。
+上层搜索已在无争用的公开基准上标定（第~\ref{sec:external}~节），但有争用的算例尚无可证最优值。这不影响配置之间的差值，但数个百分点量级的效应（如路径规划内嵌评价下派遣的 \GainProbeLoop{}）可能与这一距离相当。
 
 \textbf{(4) 附加代价与按让行记录的局部搜索未降低完工时间。}
-二者都在同一实现、同一挂钟下判定。所有配置同比例加速时结论不变；只有单独降低某一接口的开销才可能改变结论（派遣的加速即为一例），届时须重新度量。附加代价需要多标签搜索，本文只在只预约走廊的模型上实现并度量了它；节点有容量时多标签搜索还须按安全区间分标签，尚未实现。
+二者都在同一实现、同一运行时间下判定。所有配置同比例加速时结论不变；只有单独降低某一接口的开销才可能改变结论（派遣的加速即为一例），届时须重新度量。附加代价需要多标签搜索，本文只在只预约走廊的模型上实现并度量了它；节点有容量时多标签搜索还须按安全区间分标签，尚未实现。
 
 \textbf{(5) 未考虑故障与动态到达。}
 结果限于工件与工时已知、设备不发生故障的静态设定（假设 A7）。出现故障或在线到达时，机制的价值还包括修复排程的速度，本文未度量。
 
 \textbf{(6) 未测试运输不超过加工的车间。}
-本文算例的 $\bar{T}_t/\bar{T}_p$ 标定为 $4.0$。运输不超过加工时，AGV 争用依然存在，但通常不是瓶颈，闭环收益预期较小。
+本文算例的 $\bar{T}_t/\bar{T}_p$ 标定为 $4.0$。运输不超过加工时，AGV 争用依然存在，但通常不是瓶颈，路径规划内嵌评价的收益预期较小。
 
 \subsection{未来工作}
 \label{sec:future_work}
@@ -1894,7 +1906,7 @@ with each link coloured by its attribution label.}
 
 \textbf{(3) 有争用时的最优间隙。} 对应局限 (3)：小规模算例可用 van Os 与 Basten~\cite{vanos2026exact} 的精确方法求解；大规模算例上间隙对延长搜索不敏感，需要改进编码或邻域。
 
-\textbf{(4) 增量评价。} 对应局限 (4)：解码器状态单向推进，扰动只作用于序列某一位置之后时，此前的事件与预约不变；只重解被扰动的部分可单独降低局部搜索的开销，之后在相同挂钟下重新度量。
+\textbf{(4) 增量评价。} 对应局限 (4)：解码器状态单向推进，扰动只作用于序列某一位置之后时，此前的事件与预约不变；只重解被扰动的部分可单独降低局部搜索的开销，之后在相同运行时间下重新度量。
 
 \textbf{(5) 动态环境。} 对应局限 (5)：动态柔性作业车间工作已把机器故障、紧急插单与工件到达纳入重调度~\cite{gui2023dynamic,zhao2026deep,dauzereperes2024fjsp}；此时需比较从头重解的评价器与只修改局部邻域的方法何者修复更快。
 

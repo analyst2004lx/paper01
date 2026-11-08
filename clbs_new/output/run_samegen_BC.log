@@ -3,3 +3,98 @@ B NA/NM 0.5    B2 seed=42     Cmax= 117.50 decodes=  3051     125s
 B NA/NM 0.5    B1 seed=7      Cmax= 123.50 decodes=  3102      80s
 B NA/NM 0.5    B2 seed=7      Cmax= 117.00 decodes=  3109     128s
 B NA/NM 0.5    B1 seed=2024   Cmax= 123.50 decodes=  2973      71s
+B NA/NM 0.5    B2 seed=2024   Cmax= 119.00 decodes=  3024     141s
+B NA/NM 0.5    B1 seed=13     Cmax= 135.50 decodes=  2993      77s
+B NA/NM 0.5    B2 seed=13     Cmax= 113.00 decodes=  3060      99s
+B NA/NM 0.5    B1 seed=1      Cmax= 122.50 decodes=  3047      52s
+B NA/NM 0.5    B2 seed=1      Cmax= 117.50 decodes=  3118      97s
+B NA/NM 0.5    B1 seed=8      Cmax= 118.50 decodes=  3080      57s
+B NA/NM 0.5    B2 seed=8      Cmax= 114.50 decodes=  3102      96s
+B NA/NM 0.5    B1 seed=99     Cmax= 132.50 decodes=  3131      58s
+B NA/NM 0.5    B2 seed=99     Cmax= 115.00 decodes=  3026      94s
+B NA/NM 0.5    B1 seed=123    Cmax= 117.50 decodes=  3085      54s
+B NA/NM 0.5    B2 seed=123    Cmax= 116.50 decodes=  3133     101s
+B NA/NM 0.5    B1 seed=777    Cmax= 120.50 decodes=  3018      59s
+B NA/NM 0.5    B2 seed=777    Cmax= 118.50 decodes=  3111      80s
+B NA/NM 0.5    B1 seed=31415  Cmax= 116.50 decodes=  3132      44s
+B NA/NM 0.5    B2 seed=31415  Cmax= 109.00 decodes=  3060      76s
+B NA/NM 1.0    B1 seed=42     Cmax=  75.00 decodes=  3080      51s
+B NA/NM 1.0    B2 seed=42     Cmax=  69.50 decodes=  3072     159s
+B NA/NM 1.0    B1 seed=7      Cmax=  90.00 decodes=  3083      54s
+B NA/NM 1.0    B2 seed=7      Cmax=  86.00 decodes=  2838     154s
+B NA/NM 1.0    B1 seed=2024   Cmax=  81.50 decodes=  3060      54s
+B NA/NM 1.0    B2 seed=2024   Cmax=  78.00 decodes=  2946     177s
+B NA/NM 1.0    B1 seed=13     Cmax=  79.00 decodes=  2920      48s
+B NA/NM 1.0    B2 seed=13     Cmax=  81.00 decodes=  2955     152s
+B NA/NM 1.0    B1 seed=1      Cmax=  88.50 decodes=  2931      68s
+B NA/NM 1.0    B2 seed=1      Cmax=  70.00 decodes=  2959     210s
+B NA/NM 1.0    B1 seed=8      Cmax=  85.00 decodes=  2967      66s
+B NA/NM 1.0    B2 seed=8      Cmax=  76.50 decodes=  3019     224s
+B NA/NM 1.0    B1 seed=99     Cmax=  77.50 decodes=  3029      68s
+B NA/NM 1.0    B2 seed=99     Cmax=  75.50 decodes=  2973     207s
+B NA/NM 1.0    B1 seed=123    Cmax=  77.50 decodes=  2974      68s
+B NA/NM 1.0    B2 seed=123    Cmax=  85.00 decodes=  2967     202s
+B NA/NM 1.0    B1 seed=777    Cmax=  89.50 decodes=  2983      70s
+B NA/NM 1.0    B2 seed=777    Cmax=  75.00 decodes=  2890     207s
+B NA/NM 1.0    B1 seed=31415  Cmax=  83.50 decodes=  3100      70s
+B NA/NM 1.0    B2 seed=31415  Cmax=  67.50 decodes=  2899     185s
+B NA/NM 2.0    B1 seed=42     Cmax=  67.00 decodes=  2827      69s
+B NA/NM 2.0    B2 seed=42     Cmax=  48.00 decodes=  2873     279s
+B NA/NM 2.0    B1 seed=7      Cmax=  73.00 decodes=  2744      45s
+B NA/NM 2.0    B2 seed=7      Cmax=  62.50 decodes=  2953     332s
+B NA/NM 2.0    B1 seed=2024   Cmax=  73.50 decodes=  2580      51s
+B NA/NM 2.0    B2 seed=2024   Cmax=  47.00 decodes=  2833     294s
+B NA/NM 2.0    B1 seed=13     Cmax=  60.00 decodes=  2709      44s
+B NA/NM 2.0    B2 seed=13     Cmax=  48.00 decodes=  2926     288s
+B NA/NM 2.0    B1 seed=1      Cmax=  62.50 decodes=  2757      44s
+B NA/NM 2.0    B2 seed=1      Cmax=  48.00 decodes=  2861     253s
+B NA/NM 2.0    B1 seed=8      Cmax=  59.00 decodes=  2778      44s
+B NA/NM 2.0    B2 seed=8      Cmax=  46.50 decodes=  2902     342s
+B NA/NM 2.0    B1 seed=99     Cmax=  77.00 decodes=  2812      77s
+B NA/NM 2.0    B2 seed=99     Cmax=  53.50 decodes=  2883     422s
+B NA/NM 2.0    B1 seed=123    Cmax=  62.50 decodes=  2682      64s
+B NA/NM 2.0    B2 seed=123    Cmax=  52.00 decodes=  2879     455s
+B NA/NM 2.0    B1 seed=777    Cmax=  72.00 decodes=  2726      74s
+B NA/NM 2.0    B2 seed=777    Cmax=  49.00 decodes=  2959     466s
+B NA/NM 2.0    B1 seed=31415  Cmax=  64.50 decodes=  2727      66s
+B NA/NM 2.0    B2 seed=31415  Cmax=  47.50 decodes=  2875     416s
+C F=0.3        B1 seed=42     Cmax=  70.50 decodes=  2694      57s
+C F=0.3        B2 seed=42     Cmax=  60.00 decodes=  3083     305s
+C F=0.3        B1 seed=7      Cmax=  67.00 decodes=  2743      68s
+C F=0.3        B2 seed=7      Cmax=  64.50 decodes=  2791     309s
+C F=0.3        B1 seed=2024   Cmax=  71.00 decodes=  2890      71s
+C F=0.3        B2 seed=2024   Cmax=  58.50 decodes=  2949     305s
+C F=0.3        B1 seed=13     Cmax=  74.00 decodes=  3019      71s
+C F=0.3        B2 seed=13     Cmax=  60.50 decodes=  2851     264s
+C F=0.3        B1 seed=1      Cmax=  68.50 decodes=  2771      64s
+C F=0.3        B2 seed=1      Cmax=  59.00 decodes=  2738     264s
+C F=0.3        B1 seed=8      Cmax=  74.00 decodes=  2839      67s
+C F=0.3        B2 seed=8      Cmax=  58.00 decodes=  2907     273s
+C F=0.3        B1 seed=99     Cmax=  72.00 decodes=  2878      73s
+C F=0.3        B2 seed=99     Cmax=  59.50 decodes=  2966     277s
+C F=0.3        B1 seed=123    Cmax=  69.00 decodes=  2898      69s
+C F=0.3        B2 seed=123    Cmax=  58.00 decodes=  3014     313s
+C F=0.3        B1 seed=777    Cmax=  78.00 decodes=  2852      70s
+C F=0.3        B2 seed=777    Cmax=  57.00 decodes=  2876     276s
+C F=0.3        B1 seed=31415  Cmax=  75.50 decodes=  2944      70s
+C F=0.3        B2 seed=31415  Cmax=  59.50 decodes=  3165     325s
+C F=1.0        B1 seed=42     Cmax=  59.50 decodes=  2679      57s
+C F=1.0        B2 seed=42     Cmax=  54.00 decodes=  3013     273s
+C F=1.0        B1 seed=7      Cmax=  55.50 decodes=  2652      54s
+C F=1.0        B2 seed=7      Cmax=  45.50 decodes=  2984     229s
+C F=1.0        B1 seed=2024   Cmax=  73.50 decodes=  2815      69s
+C F=1.0        B2 seed=2024   Cmax=  48.00 decodes=  2804     262s
+C F=1.0        B1 seed=13     Cmax=  66.50 decodes=  2841      63s
+C F=1.0        B2 seed=13     Cmax=  49.50 decodes=  2967     254s
+C F=1.0        B1 seed=1      Cmax=  52.50 decodes=  2739      59s
+C F=1.0        B2 seed=1      Cmax=  47.50 decodes=  2871     263s
+C F=1.0        B1 seed=8      Cmax=  63.50 decodes=  2787      60s
+C F=1.0        B2 seed=8      Cmax=  48.00 decodes=  2956     251s
+C F=1.0        B1 seed=99     Cmax=  64.50 decodes=  2745      61s
+C F=1.0        B2 seed=99     Cmax=  49.00 decodes=  3022     302s
+C F=1.0        B1 seed=123    Cmax=  71.00 decodes=  2930      69s
+C F=1.0        B2 seed=123    Cmax=  46.00 decodes=  2964     238s
+C F=1.0        B1 seed=777    Cmax=  62.00 decodes=  2698      69s
+C F=1.0        B2 seed=777    Cmax=  55.00 decodes=  2827     292s
+C F=1.0        B1 seed=31415  Cmax=  51.50 decodes=  2867      52s
+C F=1.0        B2 seed=31415  Cmax=  45.50 decodes=  2797     263s
