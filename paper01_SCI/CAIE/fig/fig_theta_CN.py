@@ -14,7 +14,7 @@ from fig_theta import series  # noqa: E402
 
 S.use_cjk()
 
-TAG_CN = {"low": "low", "mid": "mid", "high": "high", "funnel": "funnel"}
+TAG_CN = {"low": "GC", "mid": "S22", "high": "S21", "funnel": "S11"}
 
 
 def main():

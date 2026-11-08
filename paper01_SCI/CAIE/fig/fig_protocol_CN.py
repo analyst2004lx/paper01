@@ -39,14 +39,17 @@ def main() -> None:
             [r["decodes"] for r in rs])
         ax.plot([x], [y], "o", color=LADDER_COLOR[arm], markersize=6.5,
                 markeredgecolor="white", markeredgewidth=0.7, zorder=5)
+        left = arm == "B1"
         ax.annotate(LADDER_SHORT[arm], (x, y), textcoords="offset points",
-                    xytext=(7, 4), fontsize=7.2, color=LADDER_COLOR[arm],
-                    fontweight="bold")
+                    xytext=(-5, -6) if left else (7, 4),
+                    ha="right" if left else "left",
+                    va="top" if left else "baseline", fontsize=7.2,
+                    color=LADDER_COLOR[arm], fontweight="bold")
         if arm == "B0":
             stall_at = src.gmean([r["runtime_sec"] for r in rs])
 
     ax.text(0.03, 0.06,
-            "B0 与 B0$^+$ 共用一次开环搜索，故共用一个点；\n"
+            "OL 与 TS 共用一次开环搜索，故共用一个点；\n"
             "开环在 %.0f 秒自行停止——已收敛，并非被预算打断" % stall_at,
             transform=ax.transAxes, fontsize=FS_FOOT, color="#777777",
             va="bottom")

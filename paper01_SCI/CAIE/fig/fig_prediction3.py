@@ -42,7 +42,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.abspath(os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "clbs")))
+    os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "clbs_new")))
 
 from _style import (FS_ANNOT, FS_FOOT, FS_LEG, LADDER, by,  # noqa: E402
                     load_output, mark_draft, mean, plt, save, sem)

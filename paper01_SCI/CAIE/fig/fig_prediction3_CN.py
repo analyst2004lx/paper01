@@ -7,7 +7,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.abspath(os.path.join(
-    os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "clbs")))
+    os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "clbs_new")))
 
 from _style import (FS_ANNOT, FS_FOOT, FS_LEG, by,  # noqa: E402
                     load_output, mark_draft, plt, save, use_cjk)
@@ -21,7 +21,7 @@ EFFECTS = [
 ]
 PANELS = [
     ("A", "布局", "争用强度（%）"),
-    ("B", "车机比", "$N_A/N_M$"),
+    ("B", "AGV 配比", "$N_A/N_M$"),
     ("C", "柔性", "$F$"),
 ]
 
@@ -76,7 +76,8 @@ def main() -> None:
             ax.set_xticks(xs)
 
     axes[0].set_ylabel("$\\Delta C_{\\max}$（%）\n负值更好")
-    axes[0].legend(loc="lower left", fontsize=FS_LEG, handlelength=1.8)
+    axes[0].legend(loc="center", bbox_to_anchor=(0.55, 0.45), fontsize=FS_LEG,
+                   handlelength=1.8, framealpha=0.9)
     fig.tight_layout(rect=(0.0, 0.095, 1.0, 1.0))
     fig.text(0.995, 0.012,
              "每组 %d 个种子，同挂钟；误差棒为种子间均值标准误；\n"

@@ -1,0 +1,76 @@
+{
+  "layouts": [
+    {
+      "layout": "2-M",
+      "size": 3,
+      "symmetric": false,
+      "closure_violations": 0,
+      "max_excess": 0.0,
+      "digraph_reconstructible": true,
+      "corridor_reconstructible": false
+    },
+    {
+      "layout": "3-M",
+      "size": 4,
+      "symmetric": false,
+      "closure_violations": 2,
+      "max_excess": 4.0,
+      "digraph_reconstructible": false,
+      "corridor_reconstructible": false
+    },
+    {
+      "layout": "4-M",
+      "size": 5,
+      "symmetric": false,
+      "closure_violations": 0,
+      "max_excess": 0.0,
+      "digraph_reconstructible": true,
+      "corridor_reconstructible": false
+    },
+    {
+      "layout": "5-M",
+      "size": 6,
+      "symmetric": false,
+      "closure_violations": 0,
+      "max_excess": 0.0,
+      "digraph_reconstructible": true,
+      "corridor_reconstructible": false
+    },
+    {
+      "layout": "6-M",
+      "size": 7,
+      "symmetric": false,
+      "closure_violations": 0,
+      "max_excess": 0.0,
+      "digraph_reconstructible": true,
+      "corridor_reconstructible": false
+    },
+    {
+      "layout": "7-M",
+      "size": 8,
+      "symmetric": false,
+      "closure_violations": 16,
+      "max_excess": 6.0,
+      "digraph_reconstructible": false,
+      "corridor_reconstructible": false
+    },
+    {
+      "layout": "8-M",
+      "size": 9,
+      "symmetric": false,
+      "closure_violations": 0,
+      "max_excess": 0.0,
+      "digraph_reconstructible": true,
+      "corridor_reconstructible": false
+    }
+  ],
+  "source": {
+    "dataset": "hf",
+    "converter": "convert_public.py",
+    "converter_version": 1,
+    "delta_return": 0,
+    "num_agvs": 2,
+    "jobsets_txt_sha256": "59921c43eb5eda51bbeb9056d9d1ad7d37d57692fb6efff1cde956ce48b06894",
+    "layouts_txt_sha256": "34615d816212a11ce4c6713b82aeaaad6105903f98d78538d8d0b92aca3c9d21"
+  }
+}

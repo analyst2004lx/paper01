@@ -8,7 +8,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from _style import (FULL, FS_ANNOT, FS_FOOT, FS_LEG,  # noqa: E402
-                    FS_TICK_SM, plt, save, use_cjk)
+                    FS_TICK_SM, case_name, plt, save, use_cjk)
 import fig_case_gantt as src  # noqa: E402
 
 use_cjk()
@@ -88,8 +88,8 @@ def main() -> None:
     tt = src.load_case()
     xmax = 1.06 * max(tt[a]["makespan"] for a in ("B0", "B2"))
     fig, axes = plt.subplots(2, 1, figsize=(FULL, 5.0), sharex=True)
-    draw(axes[0], tt["B0"], "B0  开环，规则派车", xmax)
-    draw(axes[1], tt["B2"], "B2  闭环，预约表感知派遣（本文）", xmax)
+    draw(axes[0], tt["B0"], "OL  开环，规则派车", xmax)
+    draw(axes[1], tt["B2"], "CLBS  闭环，预约表感知派遣（本文）", xmax)
     axes[1].set_xlabel("时间")
 
     handles = [
@@ -104,7 +104,7 @@ def main() -> None:
                    fontsize=FS_LEG,
                    bbox_to_anchor=(0.5, 1.30), frameon=False)
     fig.text(0.005, 0.005, "算例 %s，种子 %s，争用 %.1f%%"
-             % (tt["B2"]["case"], tt["B2"]["seed"],
+             % (case_name(tt["B2"]["case"]), tt["B2"]["seed"],
                 100.0 * tt["B2"]["contention"]),
              fontsize=FS_FOOT, color="#777777")
     fig.tight_layout(rect=(0, 0.015, 1, 0.955))

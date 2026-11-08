@@ -1,0 +1,6 @@
+﻿A funnel       B1 seed=42     Cmax=  68.50 decodes=  2779      47s
+A funnel       B2 seed=42     Cmax=  47.50 decodes=  3010     274s
+A funnel       B1 seed=7      Cmax=  73.00 decodes=  2559      48s
+A funnel       B2 seed=7      Cmax=  51.00 decodes=  2907     290s
+A funnel       B1 seed=2024   Cmax=  61.00 decodes=  2827      45s
+A funnel       B2 seed=2024   Cmax=  56.50 decodes=  2959     312s

@@ -1,0 +1,78 @@
+{
+  "name": "sfjs02-ideal",
+  "delta_return": 0,
+  "jobs": [
+    {
+      "id": 1,
+      "num_ops": 2
+    },
+    {
+      "id": 2,
+      "num_ops": 2
+    }
+  ],
+  "machines": [
+    {
+      "id": 1,
+      "node": "m1"
+    },
+    {
+      "id": 2,
+      "node": "m2"
+    }
+  ],
+  "proc_time": {
+    "(1,1)": {
+      "1": 43.0
+    },
+    "(1,2)": {
+      "1": 64.0,
+      "2": 71.0
+    },
+    "(2,1)": {
+      "1": 21.0,
+      "2": 35.0
+    },
+    "(2,2)": {
+      "2": 43.0
+    }
+  },
+  "num_agvs": 2,
+  "network": {
+    "lu_node": "LU",
+    "nodes": [
+      "LU",
+      "m1",
+      "m2"
+    ],
+    "corridors": [],
+    "ideal_dist": {
+      "LU": {
+        "LU": 0.0,
+        "m1": 4.0,
+        "m2": 2.0
+      },
+      "m1": {
+        "LU": 8.0,
+        "m1": 0.0,
+        "m2": 4.0
+      },
+      "m2": {
+        "LU": 4.0,
+        "m1": 4.0,
+        "m2": 0.0
+      }
+    }
+  },
+  "_spec": {
+    "dataset": "hf",
+    "converter": "convert_public.py",
+    "converter_version": 1,
+    "delta_return": 0,
+    "num_agvs": 2,
+    "jobsets_txt_sha256": "59921c43eb5eda51bbeb9056d9d1ad7d37d57692fb6efff1cde956ce48b06894",
+    "layouts_txt_sha256": "34615d816212a11ce4c6713b82aeaaad6105903f98d78538d8d0b92aca3c9d21",
+    "instance": "sfjs02",
+    "layout": "2-M"
+  }
+}

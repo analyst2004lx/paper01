@@ -1,0 +1,307 @@
+"""基线阶梯:把"文献比较"与"我们的创新"拆成两段互不冒领的差距。
+
+为什么需要它。此前所有 A/B(dispatch_ab / abc_matrix / exhaustive_ab / price_matrix)
+两档都是 conflict_free=True,比的是"我们自己去掉某个创新点"的消融,量到的是阶梯上最陡
+的一级。而文献里的 FJSP-T 方法普遍用常数行驶时间矩阵、不建模 AGV 冲突,那一级从没量过。
+只报消融会低估问题的分量,只报文献比较则会把无冲突路由本身的价值冒领成本文的创新。
+
+公平性的支点是**统一执行器**:无论计划从哪来,都必须放进同一个无冲突路由器执行、过同一个
+校验器,报的都是可实现的 makespan。否则开环方法会报出一个在真实系统里根本不可行的数
+(其乐观幅度恰为争用占比,漏斗算例上可达 32%),比较随之失去意义。
+
+四级阶梯,前两级对应两篇最接近的已发表工作:
+
+  B0  开环规划 + 真实执行    上层用理想最短路搜索(conflict_free=False),搜完放进真实
+                             路由器执行。对应 Sensors 2026, 26:543(Li & Mao 等):调度层
+                             产出忽略运输的甘特图,下游 PBS 解冲突,再把到达时刻平移回
+                             时间轴;其派车用 "Idle Priority" k*=argmin Cost(path_k,L_start),
+                             与本框架的 dispatch_rule 同式。
+  B0+ 开环规划 + 冲突感知派车 上层同样冻结,但车辆指派改为查预约表决定。对应 Sensors
+                             2023, 23:4526:第一阶段混合 GA 在**常数运输时间矩阵**上排产,
+                             第二阶段才用 AGV 编码 GA 在冻结的排产上优化车辆指派并处理
+                             冲突,无回流。此处以试探派车作其第二阶段的贪心近似——它未必
+                             弱于对方的 GA,故这一级是**对基线宽容**的口径。
+  B1  闭环规划 + 规则派车     搜索时即计冲突,派车仍用理想矩阵估。与 B2 信息完全对等。
+  B2  闭环规划 + 试探派车     本文方法。
+  BL  闭环规划 + AGV 编入染色体 Lyu 等(2019)/贺长征等(2019)的三段式编码:AGV 串与工序串
+                             逐位对应、随工序一起交叉与交换,解码时按基因派车。与 B2 同算例、
+                             同路由器、同挂钟、同种子,只差 AGV 由编码决定还是解码时试算决定。
+
+论文中的名称(代码、CSV 的 arm 列与 log 一律保留旧名,只在出表出图时换名,
+见 paper01_SCI/CAIE/tab/gen_tables_ladder.py 与 fig/_style.py 的 ARM_NAME):
+  B0 → OL(Open-Loop)   B0+ → TS(Two-Stage)   BL → AE(AGV-Encoded)
+  B1 → CLBS-R(规则派车消融)   B2 → CLBS(本文方法)
+  B0宽松(lenient)→ OL-RD(Open-Loop, Re-Dispatch,现场改派)
+
+四段差距各有归属,不得互相冒领:
+  B0 → B0+  冻结排产后再优化车辆指派值多少(2026 → 2023 的进步)
+  B0+→ B1   **把拥堵搬进搜索目标**值多少,即闭环本身的价值。这是本框架的主张,
+            也是 2026 那篇在结论里自陈的未来工作("extending this mechanism into a
+            fully iterative loop"),故可正当主张,但须与下一段分开报。
+  B1 → B2   只差派车一处决策、信息完全对等,是决策级闭环那个具体机制的贡献。
+
+若 B0+ ≈ B1,则"闭环"这条主张站不住——这是熟悉 2023 那篇的审稿人一定会问的,
+故必须自己先测。
+
+B0 的执行口径。开环搜出的计划含一套派车决策,执行时有两种复现方式:
+  strict   用 forced_dispatch 逐字复现原派车决策——"计划怎么定就怎么执行"
+  lenient  执行时按规则重新派车——"车间现场可以改派"
+lenient 对基线更宽容,故取它为主报口径,strict 一并给出以示我们没有挑对自己有利的那个。
+
+三档共用同一挂钟预算,B0 的搜索也拿满同样的时间,不因它便宜就少给。
+
+运行(clbs/ 目录下):
+  py -u -m tools.baseline_ladder [--budget 90] [--seeds a,b,c,d] [--only 名字,名字]
+
+Baseline ladder: split "comparison with the literature" and "our contribution" into two gaps that do not claim each other's credit.
+
+Why it is needed. Every previous A/B (dispatch_ab / abc_matrix / exhaustive_ab / price_matrix) set conflict_free=True on both arms, so it measured an ablation of "our method with one contribution removed" — the steepest step of the ladder. FJSP-T methods in the literature generally use a constant travel-time matrix and do not model AGV conflicts; that step was never measured. Reporting only the ablation understates the size of the problem; reporting only the literature comparison would claim the value of conflict-free routing itself as this paper's contribution.
+
+The fairness pivot is a **common executor**: whatever the plan's origin, it must be executed on the same conflict-free router, pass the same validator, and report a realizable makespan. Otherwise an open-loop method reports a number that is infeasible on the real system (its optimism equals the contention share, up to 32% on funnel instances), and the comparison is meaningless.
+
+Four-level ladder; the first two match the two closest published works:
+
+  B0  Open-loop planning + real execution. The upper level searches with ideal shortest paths (conflict_free=False); the finished plan is executed on the real router. Corresponds to Sensors 2026, 26:543 (Li & Mao et al.): the scheduling layer emits a Gantt chart that ignores transport, a downstream PBS resolves conflicts, and arrival times are shifted back onto the timeline; its dispatch uses "Idle Priority" k*=argmin Cost(path_k, L_start), the same form as this framework's dispatch_rule.
+  B0+ Open-loop planning + conflict-aware dispatch. The upper level is likewise frozen, but vehicle assignment consults the reservation table. Corresponds to Sensors 2023, 23:4526: stage one is a hybrid GA on a **constant travel-time matrix**; stage two is an AGV-encoded GA that optimizes vehicle assignment on the frozen schedule and handles conflicts, with no feedback. Probe dispatch is used here as a greedy approximation of that second stage — it is not necessarily weaker than their GA, so this level is **lenient to the baseline**.
+  B1  Closed-loop planning + rule dispatch. Conflicts are counted during search; dispatch still estimates from the ideal matrix. Information-equivalent to B2.
+  B2  Closed-loop planning + probe dispatch. This paper's method.
+
+Names in the paper (code, the CSV arm column and logs keep the old names; only
+tables and figures are relabelled, via ARM_NAME in
+paper01_SCI/CAIE/tab/gen_tables_ladder.py and fig/_style.py):
+  B0 -> OL (Open-Loop)   B0+ -> TS (Two-Stage)   BL -> AE (AGV-Encoded)
+  B1 -> CLBS-R (rule-dispatch ablation)   B2 -> CLBS (this paper)
+  "B0宽松" (lenient) -> OL-RD (Open-Loop, Re-Dispatch)
+
+Each gap has an owner and must not claim another's credit:
+  B0 → B0+  what optimizing vehicle assignment on a frozen schedule is worth (the step from 2026 to 2023)
+  B0+→ B1   what **moving congestion into the search objective** is worth, i.e. the value of the closed loop itself. This is the framework's claim, and it is the future work the 2026 paper states in its conclusion ("extending this mechanism into a fully iterative loop"), so it can be claimed legitimately, but it must be reported separately from the next gap.
+  B1 → B2   differs only in one dispatch decision, with fully equivalent information: the contribution of that specific decision-level closed-loop mechanism.
+
+If B0+ ≈ B1, the "closed loop" claim does not stand — a reviewer who knows the 2023 paper will ask, so we must measure it ourselves first.
+
+Execution protocol for B0. The open-loop plan contains a dispatch decision, and there are two ways to reproduce it at execution:
+  strict   forced_dispatch reproduces the original dispatch verbatim — "execute the plan as decided"
+  lenient  re-dispatch by the rule at execution — "the shop floor may reassign"
+Lenient is more generous to the baseline, so it is the primary reported protocol; strict is also given so we did not pick the variant that favors us.
+
+The three arms share one wall-clock budget. B0's search is given the same time; it is not given less because it is cheap.
+
+Run (from the clbs/ directory):
+  py -u -m tools.baseline_ladder [--budget 90] [--seeds a,b,c,d] [--only name,name]
+"""
+from __future__ import annotations
+
+import os
+import sys
+import time
+from dataclasses import replace
+from typing import Dict, List
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from algorithm.decoder import decode
+from algorithm.ga import GAConfig, run_ga
+from algorithm.stats import wilcoxon_signed_rank
+from algorithm.validator import validate
+from tools.abc_matrix import CASES, build
+from tools.price_matrix import instance_contention
+
+
+def main() -> int:
+    args = sys.argv[1:]
+    budget = float(args[args.index("--budget") + 1]) if "--budget" in args else 90.0
+    seeds = ([int(x) for x in args[args.index("--seeds") + 1].split(",")]
+             if "--seeds" in args else [42, 7, 2024, 13])
+    cases = CASES
+    if "--only" in args:
+        want = set(args[args.index("--only") + 1].split(","))
+        cases = [c for c in CASES if c["name"] in want]
+    # 敏感性批次用:--cap 1|2|inf 改机器节点容量 c,--het 改异构度 H,
+    # --arms 只跑部分档(B0宽松、B0+ 随 B0 免费得到),--out 另写一份 CSV,不覆盖主批次。
+    # For sensitivity batches: --cap 1|2|inf sets machine-node capacity c, --het sets
+    # heterogeneity H, --arms runs a subset (B0宽松 and B0+ come free with B0), and
+    # --out writes a separate CSV so the main batch is not overwritten.
+    cap_s = args[args.index("--cap") + 1] if "--cap" in args else "2"
+    cap = None if cap_s == "inf" else int(cap_s)
+    het = float(args[args.index("--het") + 1]) if "--het" in args else 0.3
+    run_arms = (set(args[args.index("--arms") + 1].split(","))
+                if "--arms" in args else {"B0", "B1", "B2", "BL"})
+    out_name = args[args.index("--out") + 1] if "--out" in args else "baseline_ladder.csv"
+    full = run_arms >= {"B0", "B1", "B2", "BL"} and cap == 2 and het == 0.3
+
+    print(f"基线阶梯:B0 开环规划+真实执行 / B1 闭环+规则派车 / B2 闭环+试探派车"
+          f" / BL 闭环+AGV 编入染色体")
+    print(f"各档同挂钟 {budget:.0f}s,种子={seeds};全部经无冲突路由执行并过校验器")
+    print(f"c={cap_s}  H={het}  档={sorted(run_arms)}  输出={out_name}\n")
+
+    # B0 取"复现计划派车"而非"执行时重新派车":前者既是 2026 那篇的忠实模型,实测
+    # 亦更强(funnel 格 63.00 对 78.00),对基线取强者。B0宽松仅作对账保留。
+    # B0 uses "reproduce the planned dispatch" rather than "re-dispatch at
+    # execution": the former is the faithful model of the 2026 paper and is
+    # stronger in measurement (funnel cell 63.00 vs 78.00), so the baseline
+    # gets the stronger one. B0-lenient is kept only for reconciliation.
+    keys = ("B0", "B0宽松", "B0+", "B1", "B2", "BL")
+    mk: Dict[str, Dict[str, List[float]]] = {k: {} for k in keys}
+    cont: Dict[str, float] = {}
+    t0 = time.time()
+
+    for case in cases:
+        inst, net, _c = build(dict(case, het=het))
+        inst = replace(inst, machine_capacity=cap)
+        nm = case["name"]
+        cont[nm] = instance_contention(inst, net, "exact")
+        base = GAConfig(pop=60, max_gen=2000, stall_gen=400, use_conflict_ops=True,
+                        theta=0.0, max_entry_options=3, time_budget_sec=budget)
+        for k in keys:
+            mk[k][nm] = []
+
+        for s in seeds:
+            cfg = replace(base, seed=s)
+
+            # B0:开环搜索(理想矩阵,不查预约表),再放进真实路由器执行
+            # B0: open-loop search (ideal matrix, no reservation table), then execute on the real router.
+            done = {}
+            if "B0" in run_arms:
+                out0 = run_ga(inst, net, replace(cfg, dispatch="rule"),
+                              conflict_free=False, use_ls=True)
+                ch = out0["best_chrom"]
+                done["B0宽松"] = decode(inst, net, ch["ma"], ch["os"],
+                                      conflict_free=True, dispatch="rule")
+                done["B0"] = decode(inst, net, ch["ma"], ch["os"], conflict_free=True,
+                                    dispatch="rule",
+                                    forced_dispatch=out0["best_result"].dispatch_order)
+                # B0+:排产仍冻结,只把车辆指派换成查预约表的(2023 那篇第二阶段的近似)
+                # B0+: schedule stays frozen; only vehicle assignment consults the reservation table (approximation of the 2023 paper's second stage).
+                done["B0+"] = decode(inst, net, ch["ma"], ch["os"],
+                                     conflict_free=True, dispatch="exact")
+
+            # B1 / B2:闭环搜索,只差派车
+            # B1 / B2: closed-loop search, differing only in dispatch.
+            for key, disp in (("B1", "rule"), ("B2", "exact"), ("BL", "gene")):
+                if key in run_arms:
+                    out = run_ga(inst, net, replace(cfg, dispatch=disp),
+                                 conflict_free=True, use_ls=True)
+                    done[key] = out["best_result"]
+
+            for key, res in done.items():
+                mk[key][nm].append(res.makespan)
+                errs = validate(inst, res.to_timetable())
+                if errs:
+                    print(f"  !! 校验失败 {nm} {key} seed={s}: {errs[:1]}")
+
+        print(f"  已完成 {nm:<14s} 争用 {cont[nm]:.1%}  累计 {time.time() - t0:.0f}s",
+              flush=True)
+
+    # 逐种子原始数据落盘,便于事后换口径重算而不必重跑
+    # Write per-seed raw data so a later protocol change can be recomputed without a rerun.
+    out_csv = os.path.join(os.path.dirname(__file__), "..", "output", out_name)
+    os.makedirs(os.path.dirname(out_csv), exist_ok=True)
+    with open(out_csv, "w", encoding="utf-8") as f:
+        f.write("case,contention,arm,seed,makespan\n" if full else
+                "case,cap,het,contention,arm,seed,makespan\n")
+        for case in cases:
+            nm = case["name"]
+            for k in keys:
+                for s, v in zip(seeds, mk[k][nm]):
+                    f.write(f"{nm},{cont[nm]:.4f},{k},{s},{v:.4f}\n" if full else
+                            f"{nm},{cap_s},{het},{cont[nm]:.4f},{k},{s},{v:.4f}\n")
+    print(f"\n逐种子原始数据已写入 {os.path.normpath(out_csv)}")
+
+    if not full:
+        ran = [k for k in keys if mk[k][cases[0]["name"]]]
+        print(f"\n{'算例':<14s} {'争用':>7s} " + "".join(f"{k:>9s}" for k in ran))
+        for case in cases:
+            nm = case["name"]
+            print(f"{nm:<14s} {cont[nm]:>7.1%} "
+                  + "".join(f"{sum(mk[k][nm]) / len(seeds):>9.2f}" for k in ran))
+        return 0
+
+    print(f"\n{'算例':<14s} {'争用':>7s} " + "".join(f"{k:>9s}" for k in keys)
+          + f" {'B0→B1':>8s} {'B1→B2':>8s} {'B0→B2':>8s}")
+    print("-" * 96)
+    for case in cases:
+        nm = case["name"]
+        avg = {k: sum(mk[k][nm]) / len(seeds) for k in keys}
+        print(f"{nm:<14s} {cont[nm]:>7.1%} "
+              + "".join(f"{avg[k]:>9.2f}" for k in keys)
+              + f" {(avg['B1'] - avg['B0']) / avg['B0']:>7.2%}"
+              + f" {(avg['B2'] - avg['B1']) / avg['B1']:>8.2%}"
+              + f" {(avg['B2'] - avg['B0']) / avg['B0']:>7.2%}")
+    print("-" * 96)
+
+    # 各配对的相对增益在此累积,供末尾的互补性小结引用,避免把结论写死在字符串里:
+    # 换一批数据就该跟着变的数字,不能靠人记得去改。
+    # Accumulate each pair's relative gain here for the complementarity summary,
+    # so the conclusion is not hardcoded: numbers that must change with a new
+    # batch cannot depend on someone remembering to edit them.
+    gains: Dict[str, float] = {}
+
+    def paired(a: str, b: str, note: str) -> None:
+        xa = [v for c in cases for v in mk[a][c["name"]]]
+        xb = [v for c in cases for v in mk[b][c["name"]]]
+        rel = sum((x - y) / y for x, y in zip(xb, xa)) / len(xa)
+        gains[f"{a}->{b}"] = rel
+        w = wilcoxon_signed_rank(xb, xa)
+        win = sum(1 for x, y in zip(xb, xa) if x < y - 1e-9)
+        print(f"  {a:>6s} → {b:<4s} {rel:>+8.2%}  {win:>2d} 胜 / "
+              f"{sum(1 for x, y in zip(xb, xa) if x > y + 1e-9):>2d} 负  "
+              f"n_eff={w['n_eff']:>2d}  p={w['p_value']:.4f}   {note}")
+
+    # 这四档是 2x2 析因(闭环与否 x 派车方式),不是一条链。B0+ 用试探派车而 B1 用
+    # 规则派车,故 B0+→B1 同时跨两个因子,**不能**用来量闭环的价值——B NA/NM 0.5
+    # 那格该对比为正,只因试探派车在那格特别值钱、被 B0+ 白拿了去。干净的对比是
+    # 固定一个因子只动另一个,即下面四行。
+    # These four arms are a 2x2 factorial (closed loop or not × dispatch), not a
+    # chain. B0+ uses probe dispatch and B1 uses rule dispatch, so B0+→B1 crosses
+    # two factors and **cannot** measure the value of the closed loop — the
+    # B NA/NM 0.5 cell comes out positive only because probe dispatch is especially
+    # valuable there and B0+ received it for free. A clean contrast holds one
+    # factor fixed and moves the other: the four rows below.
+    print(f"\n{'':>16s}{'规则派车':>10s}{'试探派车':>10s}")
+    for row, (ka, kb) in (("开环", ("B0", "B0+")), ("闭环", ("B1", "B2"))):
+        va = sum(sum(mk[ka][c["name"]]) for c in cases) / (len(cases) * len(seeds))
+        vb = sum(sum(mk[kb][c["name"]]) for c in cases) / (len(cases) * len(seeds))
+        print(f"{row:>16s}{va:>10.2f}{vb:>10.2f}")
+
+    print("\n2x2 析因的四个干净对比:")
+    paired("B0", "B1", "闭环的价值(规则派车下)")
+    paired("B0+", "B2", "闭环的价值(试探派车下)")
+    paired("B0", "B0+", "试探派车的价值(开环下)= 2026 结构 → 2023 结构")
+    paired("B1", "B2", "试探派车的价值(闭环下)= 本文机制")
+    print("\n端到端:")
+    paired("B0", "B2", "文献结构 → 本文")
+    print("\n编码方式(同为闭环,只差 AGV 由染色体决定还是解码时试算):")
+    paired("BL", "B2", "Lyu 式三段式编码 → 本文")
+    print("\n参考(跨两个因子,仅列出以便对账,不可用于归因):")
+    paired("B0+", "B1", "混淆:同时换了闭环与派车")
+    paired("B0", "B0宽松", "执行时重新派车 vs 复现计划派车")
+
+    print("\n口径提醒:")
+    print("  B0  = 开环规划 + **复现计划中的派车**。这是 2026 那篇的忠实模型:其任务分配层")
+    print("        在甘特图上先定好机器人,再交 PBS 路由,执行滑坡时只平移时间轴、不改派。")
+    print("        实测它亦强于'执行时按规则重新派车'(B0宽松),故取它为主报口径——")
+    print("        对基线取强者,是我们这边该承担的举证责任。")
+    print("  B0+ = 排产冻结、车辆指派感知冲突,对应 2023 那篇的两阶段结构。")
+
+    # 互补性小结:两个机制若彼此独立,端到端应恰为二者的乘积复合;实测超出即为正交互。
+    # 这几个数一律现算,不写死——上一版这里印的是初跑的固定数字,补跑之后就与表自相矛盾。
+    # Complementarity: if the two mechanisms are independent, end-to-end should
+    # equal their product; beating that is a positive interaction. These numbers
+    # are always computed, never hardcoded — the previous version printed the
+    # first run's fixed digits and contradicted the table after the extra runs.
+    g_open, g_loop = gains.get("B0->B0+", 0.0), gains.get("B1->B2", 0.0)
+    g_rule, g_e2e = gains.get("B0->B1", 0.0), gains.get("B0->B2", 0.0)
+    indep = (1.0 + g_rule) * (1.0 + g_open) - 1.0
+    print(f"  闭环与试探派车是**互补品**而非替代品:试探派车在开环下仅值 {g_open:+.2%},")
+    print(f"  在闭环内部达 {g_loop:+.2%};闭环的价值同样在试探派车下更大。端到端 {g_e2e:+.2%}")
+    print(f"  与两者独立时的乘积 {indep:+.2%} 相比,"
+          + ("超出前者,存在正交互。" if g_e2e < indep - 1e-9 else
+             "**并未超出**,正交互的论断在这批数据上不成立,论文第 5.4 节须改写!"))
+    print("  拥堵感知的派车装在一张对拥堵视而不见的排程上几乎不值钱——这一点须在论文里")
+    print("  明写,它把两个贡献焊成一体。")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

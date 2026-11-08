@@ -201,13 +201,39 @@ function Invoke-Git {
     )
 
     function Get-ProgressBytes {
-        if ([string]::IsNullOrWhiteSpace($ProgressDir) -or -not (Test-Path -LiteralPath $ProgressDir)) { return [int64]0 }
+        param([int]$RootPid = 0)
         $sum = [int64]0
-        Get-ChildItem -LiteralPath $ProgressDir -Filter $ProgressFilter -Force -ErrorAction SilentlyContinue |
-            ForEach-Object {
-                if ($null -ne $ProgressSince -and $_.LastWriteTime -lt $ProgressSince.AddSeconds(-2)) { return }
-                $sum += [int64]$_.Length
-            }
+        # Windows often reports tmp_pack Length=0 until the handle is closed.
+        # Network progress is visible on git-remote-https ReadTransferCount.
+        if ($RootPid -gt 0) {
+            try {
+                $all = @(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue)
+                $ids = New-Object 'System.Collections.Generic.HashSet[int]'
+                [void]$ids.Add($RootPid)
+                $changed = $true
+                while ($changed) {
+                    $changed = $false
+                    foreach ($gp in $all) {
+                        if ($ids.Contains([int]$gp.ParentProcessId) -and -not $ids.Contains([int]$gp.ProcessId)) {
+                            [void]$ids.Add([int]$gp.ProcessId)
+                            $changed = $true
+                        }
+                    }
+                }
+                foreach ($gp in $all) {
+                    if ($ids.Contains([int]$gp.ProcessId) -and $null -ne $gp.ReadTransferCount) {
+                        $sum += [int64]$gp.ReadTransferCount
+                    }
+                }
+            } catch {}
+        }
+        if (-not [string]::IsNullOrWhiteSpace($ProgressDir) -and (Test-Path -LiteralPath $ProgressDir)) {
+            Get-ChildItem -LiteralPath $ProgressDir -Filter $ProgressFilter -Force -ErrorAction SilentlyContinue |
+                ForEach-Object {
+                    try { $_.Refresh() } catch {}
+                    $sum += [int64]$_.Length
+                }
+        }
         return $sum
     }
     $git = $script:GitExe
@@ -255,17 +281,18 @@ function Invoke-Git {
 
         $sw = [System.Diagnostics.Stopwatch]::StartNew()
         $lastBeat = 0
-        if ($null -eq $ProgressSince) { $ProgressSince = Get-Date }
-        $lastBytes = Get-ProgressBytes
+        $rootPid = 0
+        try { $rootPid = [int]$proc.Id } catch { $rootPid = 0 }
+        $lastBytes = Get-ProgressBytes -RootPid $rootPid
         $lastProgressSec = 0
-        $watchProgress = -not [string]::IsNullOrWhiteSpace($ProgressDir)
+        $watchProgress = ($rootPid -gt 0) -or (-not [string]::IsNullOrWhiteSpace($ProgressDir))
         while (-not $proc.HasExited) {
             Start-Sleep -Milliseconds 500
             $elapsed = $sw.Elapsed.TotalSeconds
             $idle = $elapsed
             $bytesNow = $lastBytes
             if ($watchProgress) {
-                $bytesNow = Get-ProgressBytes
+                $bytesNow = Get-ProgressBytes -RootPid $rootPid
                 if ($bytesNow -gt $lastBytes) {
                     $lastBytes = $bytesNow
                     $lastProgressSec = $elapsed
@@ -696,11 +723,11 @@ try {
 
     Write-Log 'fetch origin...'
     # HTTP/1.1 + larger buffer helps when HTTPS pack download stalls mid-way
+    # Do not set http.lowSpeedLimit for fetch: a 193 MB pack was aborted 14 KB
+    # from the end ("Less than 1000 bytes/sec ... 60 seconds") on WireGuard.
     $httpHardening = @(
         '-c', 'http.version=HTTP/1.1'
         '-c', 'http.postBuffer=524288000'
-        '-c', 'http.lowSpeedLimit=1000'
-        '-c', 'http.lowSpeedTime=60'
     )
     Write-Log 'preflight: ls-remote origin (checks GitHub without downloading a pack)...'
     $preflight = Invoke-Git -GitArgs ($httpHardening + @('ls-remote', '--heads', 'origin')) -AllowFail -HeartbeatSec 10 -TimeoutSec 30
