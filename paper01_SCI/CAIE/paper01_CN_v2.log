@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2026.8.8)  8 NOV 2026 22:31
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2026.8.8)  8 NOV 2026 22:51
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -2480,80 +2480,93 @@ Underfull \vbox (badness 10000) has occurred while \output is active []
 [15.15] [16.16] [17.17]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/sc' will be
 (Font)              scaled to size 8.0pt on input line 1402.
- (./tab/tab_external.tex) [18.18] [19.19]
-(./tab/tab_instances.tex)
-Underfull \vbox (badness 1394) has occurred while \output is active []
-
- [20.20]
-Underfull \vbox (badness 3088) has occurred while \output is active []
+ (./tab/tab_external.tex) [18.18]
+File: fig/fig_layouts_CN.pdf Graphic file (type pdf)
+<use fig/fig_layouts_CN.pdf>
+ [19.19]
+(./tab/tab_instances.tex) [20.20]
+Underfull \vbox (badness 2401) has occurred while \output is active []
 
  [21.21]
-Underfull \hbox (badness 10000) in paragraph at lines 1529--1529
+Underfull \hbox (badness 10000) in paragraph at lines 1542--1542
 []\TU/SimSun(0)/m/n/7 路 径 规 划 内 嵌 评 价
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1529--1529
+Underfull \hbox (badness 10000) in paragraph at lines 1542--1542
 \TU/SimSun(0)/m/n/7 下 派 遣 的 每 代 效 果
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1529--1529
+Underfull \hbox (badness 10000) in paragraph at lines 1542--1542
 []\TU/SimSun(0)/m/n/7 不 设 上 限  |（各
  []
 
 [22.22]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/n' will be
-(Font)              scaled to size 6.0pt on input line 1588.
+(Font)              scaled to size 6.0pt on input line 1601.
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/n' will be
-(Font)              scaled to size 5.0pt on input line 1588.
+(Font)              scaled to size 5.0pt on input line 1601.
  (./tab/tab_main.tex)
 File: fig/fig_convergence_closedloop_CN.pdf Graphic file (type pdf)
 <use fig/fig_convergence_closedloop_CN.pdf>
- [23.23]
-Underfull \vbox (badness 1117) has occurred while \output is active []
+ [23.23] [24.24]
+Underfull \vbox (badness 1859) has occurred while \output is active []
 
- [24.24]
+ [25.25]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/b/n' will be
-(Font)              scaled to size 8.0pt on input line 1638.
+(Font)              scaled to size 8.0pt on input line 1651.
 
-(./tab/tab_bytag.tex) [25.25] (./tab/tab_sens.tex) [26.26] [27.27]
+(./tab/tab_bytag.tex) (./tab/tab_sens.tex) [26.26] [27.27]
 File: fig/fig_prediction3_CN.pdf Graphic file (type pdf)
 <use fig/fig_prediction3_CN.pdf>
+ [28.28]
 File: fig/fig_protocol_CN.pdf Graphic file (type pdf)
 <use fig/fig_protocol_CN.pdf>
- [28.28]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/it' will be
-(Font)              scaled to size 8.0pt on input line 1773.
+(Font)              scaled to size 8.0pt on input line 1786.
 
 (./tab/tab_prune.tex) [29.29]
 File: fig/fig_theta_CN.pdf Graphic file (type pdf)
 <use fig/fig_theta_CN.pdf>
  [30.30]
+Underfull \vbox (badness 3118) has occurred while \output is active []
+
+ [31.31]
 File: fig/fig_case_gantt_CN.pdf Graphic file (type pdf)
 <use fig/fig_case_gantt_CN.pdf>
 File: fig/fig_case_chain_CN.pdf Graphic file (type pdf)
 <use fig/fig_case_chain_CN.pdf>
- [31.31] [32.32] [33.33]
+
+[32.32]
+Underfull \vbox (badness 5741) has occurred while \output is active []
+
+ [33.33]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [34.34]
 (./paper01_CN_v2.bbl
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
 (Font)              scaled to size 7.0pt on input line 46.
- [34.34])
+
+Underfull \vbox (badness 1762) has occurred while \output is active []
+
+ [35.35])
 
 Class acmart Warning: \vspace should only be used to provide space above/below 
-surrounding objects on input line 1928.
+surrounding objects on input line 1941.
 
 
 Class acmart Warning: CCS concepts are mandatory for papers over two pages.
 
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 1928.
+(Font)              scaled to size 10.95pt on input line 1941.
 (c:/texlive/2024/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
 File: se-pdfdoc.def 2019/11/29 v1.12 stringenc: PDFDocEncoding
 )
 (c:/texlive/2024/texmf-dist/tex/generic/stringenc/se-utf32be.def
 File: se-utf32be.def 2019/11/29 v1.12 stringenc: UTF-32BE
-) [35.35]
+) [36.36]
 (./paper01_CN_v2.aux)
  ***********
 LaTeX2e <2023-11-01> patch level 1
@@ -2564,15 +2577,15 @@ L3 programming layer <2022/07/14>
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 Package rerunfilecheck Info: File `paper01_CN_v2.out' has not changed.
-(rerunfilecheck)             Checksum: EC51293DA38D0B86C128764BE016B4C8;4032.
+(rerunfilecheck)             Checksum: D8459168DE3570E873D9A4451124EEDD;4032.
  ) 
 Here is how much of TeX's memory you used:
- 50512 strings out of 474772
- 1091908 string characters out of 5761269
- 1985842 words of memory out of 5000000
- 71653 multiletter control sequences out of 15000+600000
+ 50522 strings out of 474772
+ 1092179 string characters out of 5761269
+ 1992842 words of memory out of 5000000
+ 71662 multiletter control sequences out of 15000+600000
  572234 words of font info for 221 fonts, out of 8000000 for 9000
  1509 hyphenation exceptions out of 8191
- 105i,17n,135p,1010b,32981s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 105i,17n,135p,1010b,32980s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on paper01_CN_v2.xdv (35 pages, 1173568 bytes).
+Output written on paper01_CN_v2.xdv (36 pages, 1183284 bytes).

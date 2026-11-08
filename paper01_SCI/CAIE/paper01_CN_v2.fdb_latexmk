@@ -1,18 +1,18 @@
 # Fdb version 4
-["bibtex paper01_CN_v2"] 1794148299.97492 "paper01_CN_v2.aux" "paper01_CN_v2.bbl" "paper01_CN_v2" 1794148310.95887 0
+["bibtex paper01_CN_v2"] 1794149480.11302 "paper01_CN_v2.aux" "paper01_CN_v2.bbl" "paper01_CN_v2" 1794149491.77023 0
   "./ACM-Reference-Format.bst" 1793965172 96784 12e0ced1522ea2bfa9b2fb12855c7e9e ""
   "./reference-base.bib" 1793965281 54371 4bc2a6d94683996c75e82273b6da4fb6 ""
-  "paper01_CN_v2.aux" 1794148307 46334 935bf8b6d6ee653b165621b514e00120 "xelatex"
+  "paper01_CN_v2.aux" 1794149488 47861 d02c6793eb903333bf686e5e2dfe0f93 "xelatex"
   (generated)
   "paper01_CN_v2.bbl"
   "paper01_CN_v2.blg"
   (rewritten before read)
-["xdvipdfmx"] 1794148309.44131 "paper01_CN_v2.xdv" "paper01_CN_v2.pdf" "paper01_CN_v2" 1794148310.97547 0
-  "paper01_CN_v2.xdv" 1794148307 1173568 f7dd6d0ab01bc302d326b1a798aa2227 "xelatex"
+["xdvipdfmx"] 1794149490.22107 "paper01_CN_v2.xdv" "paper01_CN_v2.pdf" "paper01_CN_v2" 1794149491.78655 0
+  "paper01_CN_v2.xdv" 1794149488 1183284 7dfdbcbbc7f43eb3f3a00414554cb6b5 "xelatex"
   (generated)
   "paper01_CN_v2.pdf"
   (rewritten before read)
-["xelatex"] 1794148300.60793 "paper01_CN_v2.tex" "paper01_CN_v2.xdv" "paper01_CN_v2" 1794148310.96008 0
+["xelatex"] 1794149480.70074 "paper01_CN_v2.tex" "paper01_CN_v2.xdv" "paper01_CN_v2" 1794149491.77059 0
   "acmart.cls" 1793965259 126055 54cc4edcc7b9cb1bf0a23c528626957c ""
   "c:/Windows/Fonts/msyh.ttc" 1752635948 19704352 1e10e74402e59d54499af795caf0b135 ""
   "c:/texlive/2024/texmf-dist/fonts/map/fontname/texfonts.map" 1786172309 3524 cb3e574dea2d1052e39280babc910dc8 ""
@@ -253,14 +253,15 @@
   "fig/fig_case_gantt_CN.pdf" 1794148269 65762 14b66c91dbf79951bb560bcfc16690a7 ""
   "fig/fig_convergence_closedloop_CN.pdf" 1794148266 55500 29642148a4939d8c44b893e2ba45ffe6 ""
   "fig/fig_framework_CN.pdf" 1794063116 114479 45b1d50ff6399585d69137292ffcc721 ""
+  "fig/fig_layouts_CN.pdf" 1794149168 55176 0d9d99b4973accc284fd6fec0096dd72 ""
   "fig/fig_motivating_CN.pdf" 1794148240 88976 84e1a44cb55a61c23ded293f2880dd22 ""
   "fig/fig_prediction3_CN.pdf" 1794148272 66881 51def4e0f14790739e9a9cb9aa92e8bd ""
   "fig/fig_protocol_CN.pdf" 1794146704 48646 b4734b47022b813228e69e17659d4fed ""
   "fig/fig_theta_CN.pdf" 1794148236 47323 276d118e08292a00768d55ed06c199de ""
-  "paper01_CN_v2.aux" 1794148307 46334 935bf8b6d6ee653b165621b514e00120 "xelatex"
-  "paper01_CN_v2.bbl" 1794148300 19211 93e2fa57954c60d4af3487bf62b62263 "bibtex paper01_CN_v2"
-  "paper01_CN_v2.out" 1794148307 4032 ec51293da38d0b86c128764be016b4c8 "xelatex"
-  "paper01_CN_v2.tex" 1794148050 179506 7eaddb1b5f26e36eb3736872fa8377e1 ""
+  "paper01_CN_v2.aux" 1794149488 47861 d02c6793eb903333bf686e5e2dfe0f93 "xelatex"
+  "paper01_CN_v2.bbl" 1794149480 19211 93e2fa57954c60d4af3487bf62b62263 "bibtex paper01_CN_v2"
+  "paper01_CN_v2.out" 1794149488 4032 d8459168de3570e873d9a4451124eedd "xelatex"
+  "paper01_CN_v2.tex" 1794149312 180837 8e153e1966b1ea027ea3d6a9076d3dd1 ""
   "tab/samegen_macros.tex" 1794131963 569 793f793eb74760a64945ab00df66c87f ""
   "tab/sens_macros.tex" 1794121461 2017 5f72038d5c33fc32d78cecb16e011a27 ""
   "tab/tab_bytag.tex" 1794143857 1539 0e30586a41b392e0b48c4cf5ea5e86c3 ""

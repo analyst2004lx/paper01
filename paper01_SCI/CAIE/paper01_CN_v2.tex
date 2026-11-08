@@ -1415,10 +1415,23 @@ A3 & M1，$5$ & $\max(5+0,8)+6=14$ & 试算 & $\mathbf{17}$ \\
 \paragraph{共同核心}
 全部受控算例有 $12$ 个工件、每工件 $3$ 道工序（共 $36$ 道真实工序）、$8$ 台加工机器，异构度 $H=0.3$，运输与加工时间比 $\bar{T}_t/\bar{T}_p$ 标定为 $4.0$，使 AGV 争用成为主要约束。生成器对每道工序的 $|\Omega_{ji}|$ 个加工时间先抽取独立扰动，标准化为零均值、单位方差后再乘以 $H$，因此改变柔性不会改变 $H$；取整带来的小偏差在生成后实测并随算例记录。各算例均以固定随机种子生成，可完全复现。在此核心上沿三个方向变化（表~\ref{tab:instances}）。
 
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{fig/fig_layouts_CN.pdf}
+\Description{Three road networks. Left: the spine layout, with the raw store and
+finished-goods store at the two ends, two hubs each carrying four machines on spurs,
+and dashed extra lanes for S21 and S22. Middle and right: a 4 by 4 junction grid
+with the two stores at opposite corners and eight machines on spurs, clustered in
+the far corner (GC) or dispersed (GD).}
+\caption{A 族五种布局的路网。(a) 脊式布局：实线为 \texttt{S11}，虚线为 \texttt{S21} 在两端各增的一条通道，点线为 \texttt{S22} 在中段另增的一条走廊；每条并行通道经各自的中间路口，故增删通道只改容量、不改路程。(b)(c) 同一 $4\times4$ 网格，两库位于对角，机器分别聚于远离毛坯库的一角（\texttt{GC}）与按最远点铺开（\texttt{GD}）。数字为通行时间（时间单位），图中只标出代表性走廊，同类走廊相同；机器与库区均经支线挂在路口上，过路车不经过机器节点。拓扑由生成器直接导出，与实验所用算例一致。}
+\label{fig:layouts}
+%% 由 fig/fig_layouts_CN.py 调用 clbs_new/tools/abc_matrix.build 生成,不手工排节点。
+\end{figure*}
+
 \paragraph{A 族：布局}
-前三组采用脊式布局：一条主干走廊贯穿加工区，各机器经支线挂在脊上的两个枢纽处，一半靠近毛坯库 $v_{\mathrm{in}}$，一半靠近成品库 $v_{\mathrm{out}}$；两库分处脊的两端，各经一条或两条并行通道接入，物流由一端进、另一端出。这对应量产车间中沿中央走廊布置加工区的常见布局，中廊拥堵是已知的现场问题~\cite{suh2022spine}。全部入场运输都经过同一入口，全部成品运输都经过同一出口，往返于两个枢纽之间的运输都经过同一段中廊，是有意构造的高争用情形。脊式布局便于只增删并行走廊：增一条走廊只改容量、不改路程。串联式单车环~\cite{rahimikelarijani2020tandem}中 AGV 互不相遇，几乎没有争用，不适合本文。
+前三组采用脊式布局（图~\ref{fig:layouts}(a)）：一条主干走廊贯穿加工区，各机器经支线挂在脊上的两个枢纽处，一半靠近毛坯库 $v_{\mathrm{in}}$，一半靠近成品库 $v_{\mathrm{out}}$；两库分处脊的两端，各经一条或两条并行通道接入，物流由一端进、另一端出。这对应量产车间中沿中央走廊布置加工区的常见布局，中廊拥堵是已知的现场问题~\cite{suh2022spine}。全部入场运输都经过同一入口，全部成品运输都经过同一出口，往返于两个枢纽之间的运输都经过同一段中廊，是有意构造的高争用情形。脊式布局便于只增删并行走廊：增一条走廊只改容量、不改路程。串联式单车环~\cite{rahimikelarijani2020tandem}中 AGV 互不相遇，几乎没有争用，不适合本文。
 三组脊式算例只增加并行走廊（两端通道 $1\to2$、中段 $1\to2$），节点与走廊数由 $15/14$ 增至 $18/20$；其中 \texttt{S11} 与 \texttt{S21} 只差两端各一条通道、最小割减半，构成单因素对照。脊式算例记为 \texttt{S}$xy$（Spine），$x$、$y$ 依次为两端通道数与中段走廊数，三组为 \texttt{S11}、\texttt{S21}、\texttt{S22}。
-为覆盖低争用区间，另两组采用 $4\times4$ 网格：\texttt{GC}（Grid-Clustered，机器聚在远离毛坯库的一角）与在同一网格上按最远点铺开机器的 \texttt{GD}（Grid-Dispersed），两库位于对角。网格节点全部是路口，机器与库区各经一条短支线挂在网格节点上（A6），共 $26$ 个节点、$34$ 条走廊。网格路口多、可绕行，争用下降，但毛坯库到最远机器的畅通行程由脊式的 \LegDumbbell{} 增至 \LegGrid{}，完工时间也是本族最高。
+为覆盖低争用区间，另两组采用 $4\times4$ 网格（图~\ref{fig:layouts}(b)(c)）：\texttt{GC}（Grid-Clustered，机器聚在远离毛坯库的一角）与在同一网格上按最远点铺开机器的 \texttt{GD}（Grid-Dispersed），两库位于对角。网格节点全部是路口，机器与库区各经一条短支线挂在网格节点上（A6），共 $26$ 个节点、$34$ 条走廊。网格路口多、可绕行，争用下降，但毛坯库到最远机器的畅通行程由脊式的 \LegDumbbell{} 增至 \LegGrid{}，完工时间也是本族最高。
 因此本族是「容量 $+$ 拓扑」的拼接：脊式三组之间的差可归因于容量，跨到网格则容量与距离同时变化。争用强度大体按 \texttt{S11}、\texttt{S21}、\texttt{S22}、\texttt{GC}、\texttt{GD} 下降（\ContentionAHi{} 至 \ContentionLo{}），但 \texttt{GC}（\ContentionALow{}）略高于 \texttt{S22}（\ContentionAMid{}），实测值见表~\ref{tab:instances}。全文最高争用 \ContentionHi{} 出现在 C 族 $F=1.0$ 一组。
 
 \paragraph{B 族：AGV 配比}

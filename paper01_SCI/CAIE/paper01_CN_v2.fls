@@ -486,6 +486,9 @@ INPUT ./fig/fig_framework_CN.pdf
 INPUT ./tab/tab_external.tex
 INPUT ./tab/tab_external.tex
 INPUT tab/tab_external.tex
+INPUT ./fig/fig_layouts_CN.pdf
+INPUT ./fig/fig_layouts_CN.pdf
+INPUT ./fig/fig_layouts_CN.pdf
 INPUT ./tab/tab_instances.tex
 INPUT ./tab/tab_instances.tex
 INPUT tab/tab_instances.tex
