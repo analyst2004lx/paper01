@@ -12,48 +12,49 @@ Reallocated glb_str_ptr (elt_size=4) to 20 items from 10.
 Reallocated global_strs (elt_size=200001) to 20 items from 10.
 Reallocated glb_str_end (elt_size=4) to 20 items from 10.
 Reallocated singl_function (elt_size=4) to 100 items from 50.
+Warning--empty address in schwenke2018transport
 Warning--empty publisher in zhang2024guidance
 Warning--empty address in zhang2024guidance
 Warning--page numbers missing in both pages and numpages fields in zhang2024guidance
-You've used 27 entries,
+You've used 28 entries,
             6273 wiz_defined-function locations,
-            1781 strings with 25815 characters,
-and the built_in function-call counts, 34182 in all, are:
-= -- 5418
-> -- 1068
+            1788 strings with 26139 characters,
+and the built_in function-call counts, 35456 in all, are:
+= -- 5562
+> -- 1099
 < -- 0
-+ -- 385
-- -- 365
-* -- 2426
-:= -- 3058
-add.period$ -- 134
-call.type$ -- 27
-change.case$ -- 211
-chr.to.int$ -- 26
-cite$ -- 30
-duplicate$ -- 2720
-empty$ -- 1872
-format.name$ -- 472
-if$ -- 8971
++ -- 395
+- -- 374
+* -- 2513
+:= -- 3169
+add.period$ -- 139
+call.type$ -- 28
+change.case$ -- 218
+chr.to.int$ -- 27
+cite$ -- 32
+duplicate$ -- 2850
+empty$ -- 1961
+format.name$ -- 485
+if$ -- 9280
 int.to.chr$ -- 3
 int.to.str$ -- 1
-missing$ -- 109
-newline$ -- 281
-num.names$ -- 188
-pop$ -- 929
+missing$ -- 114
+newline$ -- 289
+num.names$ -- 195
+pop$ -- 980
 preamble$ -- 1
-purify$ -- 425
+purify$ -- 440
 quote$ -- 0
-skip$ -- 1004
+skip$ -- 1055
 stack$ -- 0
-substring$ -- 2518
-swap$ -- 357
+substring$ -- 2633
+swap$ -- 373
 text.length$ -- 0
 text.prefix$ -- 0
 top$ -- 0
-type$ -- 443
-warning$ -- 3
-while$ -- 161
+type$ -- 473
+warning$ -- 4
+while$ -- 167
 width$ -- 0
-write$ -- 576
-(There were 3 warnings)
+write$ -- 596
+(There were 4 warnings)

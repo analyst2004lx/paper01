@@ -14,7 +14,7 @@ from fig_theta import series  # noqa: E402
 
 S.use_cjk()
 
-TAG_CN = {"low": "low", "mid": "mid", "high": "high", "funnel": "funnel"}
+TAG_CN = {"low": "GC", "mid": "S22", "high": "S21", "funnel": "S11"}
 
 
 def main():
@@ -24,7 +24,7 @@ def main():
     fig, axes = S.plt.subplots(1, 2, figsize=(S.FULL * 0.86, 2.25),
                                sharey=True)
     panels = [
-        (axes[0], wall, "同挂钟预算", True),
+        (axes[0], wall, "相同运行时间预算", True),
         (axes[1], gen, "同评价次数", False),
     ]
 
