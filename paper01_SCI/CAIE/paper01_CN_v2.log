@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.8.28)  9 NOV 2026 17:49
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.8.28)  10 NOV 2026 17:36
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -2351,85 +2351,86 @@ LaTeX Font Info:    Font shape `TU/LinLibertine(0)/b/n' will be
 (Font)              scaled to size 9.0pt on input line 616.
 
 [3.3]
-Underfull \vbox (badness 1895) has occurred while \output is active []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [4.4]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [5.5]
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 7.0pt on input line 716.
+(Font)              scaled to size 7.0pt on input line 715.
 
-Underfull \hbox (badness 10000) in paragraph at lines 718--718
-[]\TU/SimSun(0)/m/n/7 走 廊 排
+Underfull \hbox (badness 10000) in paragraph at lines 717--717
+[]\TU/SimSun(0)/m/n/7 走 廊 单
  []
 
 
-Underfull \hbox (badness 5908) in paragraph at lines 718--718
-[]\TU/SimSun(0)/m/n/7 排 产 评 价 所 用 运 输 时
- []
-
-
-Underfull \hbox (badness 3148) in paragraph at lines 721--722
+Underfull \hbox (badness 3148) in paragraph at lines 720--721
 []\TU/SimSun(0)/m/n/7 常 数 矩 阵 下 改 进 求
  []
 
 
-Underfull \hbox (badness 3148) in paragraph at lines 723--724
+Underfull \hbox (badness 3148) in paragraph at lines 722--723
 []\TU/SimSun(0)/m/n/7 任 务 持 续 到 达 时 的
  []
 
 
-Underfull \hbox (badness 3148) in paragraph at lines 725--726
+Underfull \hbox (badness 3148) in paragraph at lines 724--725
 []\TU/SimSun(0)/m/n/7 大 规 模 车 队 的 拥 堵
  []
 
 
-Underfull \hbox (badness 3148) in paragraph at lines 729--730
+Underfull \hbox (badness 3148) in paragraph at lines 728--729
 []\TU/SimSun(0)/m/n/7 强 化 学 习 排 产 与 多
  []
 
 
-Underfull \hbox (badness 4981) in paragraph at lines 730--730
+Underfull \hbox (badness 4981) in paragraph at lines 729--729
 []\TU/LinLibertine(1)/m/n/7 GA \TU/SimSun(0)/m/n/7 内 嵌 时 间 窗 路
  []
 
+
+Underfull \hbox (badness 10000) in paragraph at lines 730--730
+[]\TU/SimSun(0)/m/n/7 机 器 节 点 与 路
+ []
+
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/b/n' will be
-(Font)              scaled to size 7.0pt on input line 734.
+(Font)              scaled to size 7.0pt on input line 733.
 
-Underfull \hbox (badness 3148) in paragraph at lines 735--739
-[]\TU/SimSun(0)/b/n/7 走 廊 争 用 下 快 慢 机
+Underfull \hbox (badness 3148) in paragraph at lines 734--738
+[]\TU/SimSun(0)/b/n/7 走 廊 争 用 下 权 衡 快
  []
 
 
-Underfull \hbox (badness 3148) in paragraph at lines 735--739
-\TU/SimSun(0)/b/n/7 算 力 下 路 径 规 划 内
+Underfull \hbox (badness 3148) in paragraph at lines 734--738
+\TU/SimSun(0)/b/n/7 并 在 相 同 算 力 下 检
  []
 
 
-Overfull \hbox (20.59962pt too wide) in paragraph at lines 716--741
- [][] 
- []
+Underfull \vbox (badness 4859) has occurred while \output is active []
 
+ [6.6]
+Underfull \vbox (badness 1748) has occurred while \output is active []
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
-
- [5.5]
-[6.6] [7.7]
-LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 7.2pt on input line 841.
-LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 5.4pt on input line 841.
-
-Underfull \vbox (badness 10000) has occurred while \output is active []
+ [7.7]
+Underfull \vbox (badness 3439) has occurred while \output is active []
 
  [8.8]
+[9.9]
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/sc' will be
-(Font)              scaled to size 9.0pt on input line 908.
+(Font)              scaled to size 9.0pt on input line 904.
 
 
 LaTeX Font Warning: Font shape `TU/SimSun(0)/m/sc' undefined
-(Font)              using `TU/SimSun(0)/m/n' instead on input line 908.
+(Font)              using `TU/SimSun(0)/m/n' instead on input line 904.
 
-[9.9]
-Overfull \hbox (4.48393pt too wide) in paragraph at lines 969--970
+
+Underfull \hbox (badness 10000) in paragraph at lines 955--955
+[]\TU/SimSun(0)/m/n/7 下 层  |（解 码 时
+ []
+
+
+Overfull \hbox (4.48393pt too wide) in paragraph at lines 965--966
 []\TU/SimSun(0)/m/n/9 每 个 候 选 解 的 适 应 度 取 为 下 层 完 成 全 部 运 输 任 务 的 无 冲 突 路 径 规 划
  之 后 的 $[][]$，|
  []
@@ -2437,15 +2438,16 @@ Overfull \hbox (4.48393pt too wide) in paragraph at lines 969--970
 [10.10]
 File: fig/fig_framework_CN.pdf Graphic file (type pdf)
 <use fig/fig_framework_CN.pdf>
+ [11.11]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/it' will be
-(Font)              scaled to size 9.0pt on input line 1012.
+(Font)              scaled to size 9.0pt on input line 1008.
 
 
 LaTeX Font Warning: Font shape `TU/MicrosoftYaHei(0)/m/it' undefined
-(Font)              using `TU/MicrosoftYaHei(0)/m/n' instead on input line 1012
+(Font)              using `TU/MicrosoftYaHei(0)/m/n' instead on input line 1008
 .
 
-[11.11]
+[12.12]
 
 Package fontspec Info: Could not resolve font "FangSong/BI" (it probably
 (fontspec)             doesn't exist).
@@ -2473,53 +2475,57 @@ Package fontspec Info: Font family 'FangSong(0)' created for font 'FangSong'
 (fontspec)             <->"FangSong/OT:script=hani;language=dflt;"
 (fontspec)             - 'small caps'  (m/sc) with NFSS spec.: 
 
-
-Underfull \vbox (badness 2181) has occurred while \output is active []
-
- [12.12]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 1075.
+put line 1071.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/sc' will be
-(Font)              scaled to size 8.0pt on input line 1082.
+(Font)              scaled to size 8.0pt on input line 1078.
+ [13.13] [14.14]
+Underfull \vbox (badness 4660) has occurred while \output is active []
 
-[13.13] [14.14] [15.15] [16.16] [17.17] [18.18]
+ [15.15]
+LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
+(Font)              scaled to size 7.2pt on input line 1222.
+LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
+(Font)              scaled to size 5.4pt on input line 1222.
+
+[16.16] [17.17] [18.18] [19.19]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/sc' will be
-(Font)              scaled to size 8.0pt on input line 1400.
+(Font)              scaled to size 8.0pt on input line 1396.
  (./tab/tab_external.tex)
-[19.19]
 File: fig/fig_layouts_CN.pdf Graphic file (type pdf)
 <use fig/fig_layouts_CN.pdf>
- [20.20] (./tab/tab_instances.tex) [21.21] [22.22]
-Underfull \hbox (badness 10000) in paragraph at lines 1540--1540
+ [20.20] [21.21]
+(./tab/tab_instances.tex) [22.22] [23.23]
+Underfull \hbox (badness 10000) in paragraph at lines 1537--1537
 []\TU/SimSun(0)/m/n/7 路 径 规 划 内 嵌 评 价
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1540--1540
+Underfull \hbox (badness 10000) in paragraph at lines 1537--1537
 \TU/SimSun(0)/m/n/7 下 派 遣 的 每 代 效 果
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1540--1540
+Underfull \hbox (badness 10000) in paragraph at lines 1537--1537
 []\TU/SimSun(0)/m/n/7 不 设 上 限  |（各
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 1541--1541
+Underfull \hbox (badness 10000) in paragraph at lines 1538--1538
 []\TU/SimSun(0)/m/n/7 附 加 代 价 扫 描
  []
 
-[23.23]
+[24.24]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/n' will be
-(Font)              scaled to size 6.0pt on input line 1599.
+(Font)              scaled to size 6.0pt on input line 1596.
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/n' will be
-(Font)              scaled to size 5.0pt on input line 1599.
+(Font)              scaled to size 5.0pt on input line 1596.
  (./tab/tab_main.tex)
 File: fig/fig_convergence_closedloop_CN.pdf Graphic file (type pdf)
 <use fig/fig_convergence_closedloop_CN.pdf>
- [24.24] [25.25]
+ [25.25]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/b/n' will be
-(Font)              scaled to size 8.0pt on input line 1649.
+(Font)              scaled to size 8.0pt on input line 1646.
  (./tab/tab_bytag.tex) [26.26]
 (./tab/tab_sens.tex) [27.27] [28.28]
 File: fig/fig_prediction3_CN.pdf Graphic file (type pdf)
@@ -2527,39 +2533,41 @@ File: fig/fig_prediction3_CN.pdf Graphic file (type pdf)
  [29.29]
 File: fig/fig_protocol_CN.pdf Graphic file (type pdf)
 <use fig/fig_protocol_CN.pdf>
- [30.30]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/it' will be
-(Font)              scaled to size 8.0pt on input line 1784.
- (./tab/tab_prune.tex)
+(Font)              scaled to size 8.0pt on input line 1781.
+ (./tab/tab_prune.tex) [30.30]
 File: fig/fig_theta_CN.pdf Graphic file (type pdf)
 <use fig/fig_theta_CN.pdf>
 
-[31.31]
+[31.31] [32.32]
 File: fig/fig_case_gantt_CN.pdf Graphic file (type pdf)
 <use fig/fig_case_gantt_CN.pdf>
- [32.32]
 File: fig/fig_case_chain_CN.pdf Graphic file (type pdf)
 <use fig/fig_case_chain_CN.pdf>
- [33.33] [34.34]
-Underfull \vbox (badness 2073) has occurred while \output is active []
+
+Underfull \vbox (badness 1043) has occurred while \output is active []
+
+ [33.33]
+[34.34]
+Underfull \vbox (badness 1270) has occurred while \output is active []
 
  [35.35]
 (./paper01_CN_v2.bbl
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
 (Font)              scaled to size 7.0pt on input line 46.
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 2698) has occurred while \output is active []
 
  [36.36])
 
 Class acmart Warning: \vspace should only be used to provide space above/below 
-surrounding objects on input line 1939.
+surrounding objects on input line 1936.
 
 
 Class acmart Warning: CCS concepts are mandatory for papers over two pages.
 
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 1939.
+(Font)              scaled to size 10.95pt on input line 1936.
 (c:/texlive/2024/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
 File: se-pdfdoc.def 2019/11/29 v1.12 stringenc: PDFDocEncoding
 )
@@ -2576,15 +2584,15 @@ L3 programming layer <2022/07/14>
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 Package rerunfilecheck Info: File `paper01_CN_v2.out' has not changed.
-(rerunfilecheck)             Checksum: 503D5DF94CEBD653B50A7BFF82477FCB;4135.
+(rerunfilecheck)             Checksum: 8B69C9D70640EC8EECE3756017AC2DCB;4267.
  ) 
 Here is how much of TeX's memory you used:
- 50520 strings out of 474772
- 1092144 string characters out of 5761268
- 1996842 words of memory out of 5000000
- 71661 multiletter control sequences out of 15000+600000
- 572226 words of font info for 220 fonts, out of 8000000 for 9000
+ 50538 strings out of 474772
+ 1093604 string characters out of 5761268
+ 1984842 words of memory out of 5000000
+ 71681 multiletter control sequences out of 15000+600000
+ 572210 words of font info for 218 fonts, out of 8000000 for 9000
  1509 hyphenation exceptions out of 8191
  105i,17n,135p,1010b,32981s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on paper01_CN_v2.xdv (37 pages, 1220948 bytes).
+Output written on paper01_CN_v2.xdv (37 pages, 1234352 bytes).

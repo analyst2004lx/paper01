@@ -71,7 +71,7 @@ def main() -> None:
 
         ax.axhline(0, color="#444444", linewidth=0.7, zorder=2)
         ax.set_xlabel(xlabel)
-        ax.set_title("%s：%s" % (fam, fam_name), fontsize=8.5)
+        ax.set_title(fam_name, fontsize=8.5)
         if fam != "A":
             ax.set_xticks(xs)
 

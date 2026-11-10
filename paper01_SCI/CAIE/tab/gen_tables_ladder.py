@@ -71,13 +71,16 @@ LAYOUT_ORDER = list(LAYOUT_NAME)
 
 
 def case_tex(c: str) -> str:
-    """Paper label of a case: 'A funnel' -> 'A S11', 'B NA/NM 0.5' -> 'B $N_A/N_M=0.5$'."""
+    """Paper label of a case: 'A funnel' -> '\\texttt{S11}', 'B NA/NM 0.5' -> '$N_A/N_M=0.5$'.
+
+    The family letter is dropped: the paper names the families by the factor
+    they vary, and the tables separate them by rules."""
     fam, _, rest = c.partition(" ")
     if rest.startswith("NA/NM "):
-        rest = "$N_A/N_M=%s$" % rest.split()[1]
-    elif rest.startswith("F="):
-        rest = "$F=%s$" % rest[2:]
-    return "%s %s" % (fam, LAYOUT_NAME.get(rest, rest))
+        return "$N_A/N_M=%s$" % rest.split()[1]
+    if rest.startswith("F="):
+        return "$F=%s$" % rest[2:]
+    return r"\texttt{%s}" % LAYOUT_NAME.get(rest, rest)
 
 
 def case_key(c: str):
