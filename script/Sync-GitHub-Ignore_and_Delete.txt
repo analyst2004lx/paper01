@@ -252,4 +252,5 @@ paper04\table_inventory.txt
 paper04\texput.log
 开题报告\于琪-开题报告(20260909).docx
 开题报告\于琪-开题PPT(20260909).pptx
+开题报告\图书馆-听课凭证.docx
 </Delete>
