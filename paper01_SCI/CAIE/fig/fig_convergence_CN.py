@@ -14,11 +14,11 @@ import fig_convergence as src  # noqa: E402
 use_cjk()
 
 HINT = src.HINT
-CURVES = [("B1", "#6baed6", "-", "B1  闭环，规则派车"),
-          ("B2", "#08519c", "-", "B2  闭环，预约表感知派遣")]
-LANDING = [("B0", "#525252", "X", "B0  执行后"),
-           ("B0+", "#969696", "P", "B0$^+$  执行后")]
-CASE_CN = {"A funnel": "漏斗算例"}
+CURVES = [("B1", "#6baed6", "-", "CLBS-R  路径规划内嵌评价，规则派车"),
+          ("B2", "#08519c", "-", "CLBS  路径规划内嵌评价，预约表感知派遣")]
+LANDING = [("B0", "#525252", "X", "OL  执行后"),
+           ("B0+", "#969696", "P", "TS  执行后")]
+CASE_CN = {"A funnel": "S11 算例"}
 
 
 def main() -> None:
@@ -40,7 +40,7 @@ def main() -> None:
         src.band(ax, sur, "#525252")
         ax.plot([p[0] for p in sur], [p[1] for p in sur], ls=(0, (3, 1.6)),
                 color="#525252", linewidth=1.2,
-                label="B0  开环目标\n（代理量，不可实现）")
+                label="OL  开环目标\n（代理量，不可实现）")
 
     for arm, colour, ls, label in CURVES:
         pts = src.step_envelope([r for r in conv if r["arm"] == arm])
@@ -70,11 +70,11 @@ def main() -> None:
                 ha="right", va="center", fontsize=FS_ANNOT, color="#d62728",
                 fontweight="bold")
 
-    ax.set_xlabel("挂钟时间（秒）")
+    ax.set_xlabel("运行时间（秒）")
     ax.set_ylabel("迄今最好 $C_{\\max}$")
     ax.set_title("%s，%d 个种子（色带：种子间最小–最大）"
                  % (CASE_CN.get(case, case), len(seeds)), fontsize=8.5)
-    ax.legend(loc="upper right", bbox_to_anchor=(0.90, 1.02),
+    ax.legend(loc="lower right", bbox_to_anchor=(0.86, 0.02),
               fontsize=FS_LEG, handlelength=1.9, labelspacing=0.3)
     fig.tight_layout()
     save(fig, "fig_convergence_closedloop_CN")

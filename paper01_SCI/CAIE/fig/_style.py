@@ -33,7 +33,7 @@ DATA = os.path.abspath(os.path.join(HERE, "..", "..", "..", "clbs", "experiments
 # The ladder batch writes here directly, without going through the older
 # export step; these CSVs are read with the stdlib so that a machine carrying
 # only matplotlib can still draw the figures.
-OUTPUT = os.path.abspath(os.path.join(HERE, "..", "..", "..", "clbs", "output"))
+OUTPUT = os.path.abspath(os.path.join(HERE, "..", "..", "..", "clbs_new", "output"))
 
 # ACM two-column: a single column is about 3.33in, the full width about 7.0in.
 COL = 3.33
@@ -125,8 +125,11 @@ ARM_COLOR = {
     "priced": "#d62728",
 }
 
-TAG_LABEL = {"low": "low", "mid": "mid", "high": "high",
-             "funnel": "funnel"}
+# 论文中的布局名;CSV 与代码仍用旧 tag(见 gen_tables_ladder.py 顶部的对照)。
+# Layout names in the paper; CSVs and code keep the old tags.
+LAYOUT_NAME = {"funnel": "S11", "high": "S21", "mid": "S22",
+               "low": "GC", "scatter": "GD"}
+TAG_LABEL = {t: LAYOUT_NAME[t] for t in ("low", "mid", "high", "funnel")}
 TAG_COLOR = {"low": "#c7e9c0", "mid": "#a1d99b",
              "high": "#08519c", "funnel": "#d95f02"}
 
@@ -227,14 +230,23 @@ def span(xs):
 # that colour carries "closed loop or not" and lightness carries the dispatch
 # rule.  Keeping this in one place is what stops figure 3 and figure 7 from
 # disagreeing about which blue is B1.
+# Keys are the arm ids in the CSVs; the paper prints ARM_NAME instead:
+#   B0 -> OL, B0宽松 -> OL-RD, B0+ -> TS, BL -> AE, B1 -> CLBS-R, B2 -> CLBS.
+ARM_NAME = {"B0": "OL", "B0+": "TS", "BL": "AE", "B1": "CLBS-R", "B2": "CLBS"}
 LADDER = ["B0", "B0+", "B1", "B2"]
 LADDER_LABEL = {
-    "B0": "B0\nopen loop,\nrule dispatch",
-    "B0+": "B0$^+$\nopen loop,\nprobing dispatch",
-    "B1": "B1\nclosed loop,\nrule dispatch",
-    "B2": "B2 (proposed)\nclosed loop,\nprobing dispatch",
+    "B0": "OL\nopen loop,\nrule dispatch",
+    "B0+": "TS\nopen loop,\nprobing dispatch",
+    "B1": "CLBS-R\nclosed loop,\nrule dispatch",
+    "B2": "CLBS (proposed)\nclosed loop,\nprobing dispatch",
 }
-LADDER_SHORT = {"B0": "B0", "B0+": "B0$^+$", "B1": "B1", "B2": "B2"}
+LADDER_SHORT = {a: ARM_NAME[a] for a in LADDER}
+
+
+def case_name(c):
+    """Paper label of a ladder case: 'A funnel' -> 'A S11'."""
+    fam, _, rest = c.partition(" ")
+    return "%s %s" % (fam, LAYOUT_NAME.get(rest, rest))
 LADDER_COLOR = {"B0": "#bdbdbd", "B0+": "#737373",
                 "B1": "#6baed6", "B2": "#08519c"}
 

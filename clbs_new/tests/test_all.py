@@ -1,0 +1,623 @@
+"""规格文档第九节 T1–T14 测试断言。运行方式(clbs/ 目录下): py -m tests.test_all
+
+Test assertions T1–T14 of specification section 9. Run from the clbs/ directory: py -m tests.test_all
+"""
+from __future__ import annotations
+
+import json
+import os
+import random
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from algorithm.instance import load_instance, parse_instance
+from algorithm.network import Network
+from algorithm.decoder import decode
+from algorithm.ga import GAConfig, run_ga, random_ma, random_os
+from algorithm.generator import (CONGESTION_PRESETS, build_instance, make_spec,
+                                 measure)
+from algorithm.pricing import default_bucket_width
+from algorithm.report import corridor_occupancy
+from algorithm.validator import validate
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+INSTANCE_PATH = os.path.join(HERE, "..", "input", "example_3x3x2.json")
+
+
+def _load():
+    inst = load_instance(INSTANCE_PATH)
+    net = Network(inst.nodes, inst.corridors, inst.lu_node)
+    return inst, net
+
+
+def _base_os(inst):
+    """一个固定的实工序 OS(不含伪工序)。
+
+    A fixed OS of real operations (no pseudo-operations).
+    """
+    return [1, 1, 1, 2, 2, 3, 3]
+
+
+# ---------------- T1 理想最短路矩阵 ----------------
+# T1 ideal shortest-path matrix
+
+def t1_ideal_dist():
+    _inst, net = _load()
+    d = net.ideal_dist
+    expected = {("v0", "r1"): 4, ("v0", "r2"): 7, ("v0", "r3"): 7,
+                ("r1", "r2"): 6, ("r1", "r3"): 6, ("r2", "r3"): 4}
+    for (a, b), v in expected.items():
+        assert d[a][b] == v, f"t*({a},{b}) = {d[a][b]},期望 {v}"
+        assert d[b][a] == v, f"t* 不对称: ({b},{a})"
+
+
+# ---------------- T2 建模文档参考方案(makespan=51)通过校验 ----------------
+# T2 the modeling-document reference plan (makespan=51) passes validation
+
+def _reference_timetable():
+    """建模文档第七节的可行方案完整时刻表(人工推演,已消解全部冲突)。
+
+    Full timetable of the feasible plan in section 7 of the modeling document (worked out by hand; every conflict resolved).
+    """
+    ops = [
+        (1, 1, 1, 4, 8), (1, 2, 2, 18, 23), (1, 3, 3, 27, 32),
+        (2, 1, 2, 9, 13), (2, 2, 3, 17, 23),
+        (3, 1, 1, 12, 15), (3, 2, 2, 30, 34),
+    ]
+    # (agv, u, v, enter, exit, task);伪工序编号 = n(j)+1
+    # (agv, u, v, enter, exit, task); pseudo-operation index = n(j)+1
+    segs = [
+        # AGV1
+        (1, "v0", "c1", 0, 2, "J1-1-loaded"), (1, "c1", "r1", 2, 4, "J1-1-loaded"),
+        (1, "r1", "c1", 4, 6, "J3-1-empty"), (1, "c1", "v0", 6, 8, "J3-1-empty"),
+        (1, "v0", "c1", 8, 10, "J3-1-loaded"), (1, "c1", "r1", 10, 12, "J3-1-loaded"),
+        (1, "r1", "c2", 12, 16, "J1-2-loaded"), (1, "c2", "r2", 16, 18, "J1-2-loaded"),
+        (1, "r2", "c2", 18, 20, "J3-2-empty"), (1, "c2", "r1", 20, 24, "J3-2-empty"),
+        (1, "r1", "c2", 24, 28, "J3-2-loaded"), (1, "c2", "r2", 28, 30, "J3-2-loaded"),
+        (1, "r2", "c2", 34, 36, "J3-3-loaded"), (1, "c2", "c1", 36, 39, "J3-3-loaded"),
+        (1, "c1", "v0", 39, 41, "J3-3-loaded"),
+        # AGV2
+        (2, "v0", "c1", 2, 4, "J2-1-loaded"), (2, "c1", "c2", 4, 7, "J2-1-loaded"),
+        (2, "c2", "r2", 7, 9, "J2-1-loaded"),
+        (2, "r2", "c2", 13, 15, "J2-2-loaded"), (2, "c2", "r3", 15, 17, "J2-2-loaded"),
+        (2, "r3", "c2", 19, 21, "J1-3-empty"), (2, "c2", "r2", 21, 23, "J1-3-empty"),
+        (2, "r2", "c2", 23, 25, "J1-3-loaded"), (2, "c2", "r3", 25, 27, "J1-3-loaded"),
+        (2, "r3", "c2", 27, 29, "J2-3-loaded"), (2, "c2", "c1", 29, 32, "J2-3-loaded"),
+        (2, "c1", "v0", 32, 34, "J2-3-loaded"),
+        (2, "v0", "c1", 34, 36, "J1-4-empty"), (2, "c1", "c2", 39, 42, "J1-4-empty"),
+        (2, "c2", "r3", 42, 44, "J1-4-empty"),
+        (2, "r3", "c2", 44, 46, "J1-4-loaded"), (2, "c2", "c1", 46, 49, "J1-4-loaded"),
+        (2, "c1", "v0", 49, 51, "J1-4-loaded"),
+    ]
+    return {
+        "instance": "example_3x3x2", "delta_return": 1, "makespan": 51.0,
+        "operations": [{"job": j, "i": i, "machine": m, "start": float(s), "finish": float(f)}
+                       for j, i, m, s, f in ops],
+        "returns": [{"job": 2, "complete": 34.0}, {"job": 3, "complete": 41.0},
+                    {"job": 1, "complete": 51.0}],
+        "agv_segments": [{"agv": a, "u": u, "v": v, "enter": float(e), "exit": float(x),
+                          "task": t} for a, u, v, e, x, t in segs],
+    }
+
+
+def t2_reference_plan_valid():
+    inst, _net = _load()
+    errors = validate(inst, _reference_timetable())
+    assert not errors, "参考方案未通过校验:\n" + "\n".join(errors)
+
+
+# ---------------- T3 任意染色体解码可行(三重保证) ----------------
+# T3 any chromosome decodes to a feasible plan (the triple guarantee)
+
+def t3_random_chromosomes_feasible():
+    inst, net = _load()
+    rng = random.Random(0)
+    for it in range(1000):
+        ma = random_ma(inst, rng)
+        os_seq = random_os(inst, rng)
+        result = decode(inst, net, ma, os_seq, conflict_free=True)
+        assert result.makespan < float("inf")
+        errors = validate(inst, result.to_timetable())
+        assert not errors, f"第 {it} 个随机染色体不可行:\n" + "\n".join(errors)
+
+
+# ---------------- T4 解码确定性 ----------------
+# T4 decode determinism
+
+def t4_decode_deterministic():
+    inst, net = _load()
+    rng = random.Random(7)
+    ma, os_seq = random_ma(inst, rng), random_os(inst, rng)
+    r1 = decode(inst, net, ma, os_seq, conflict_free=True)
+    r2 = decode(inst, net, ma, os_seq, conflict_free=True)
+    assert json.dumps(r1.to_timetable(), sort_keys=True) == \
+           json.dumps(r2.to_timetable(), sort_keys=True), "同一染色体两次解码结果不一致"
+
+
+# ---------------- T5 同机连续工序无运输任务(C4) ----------------
+# T5 consecutive operations on the same machine have no transport task (C4)
+
+def t5_same_machine_no_transport():
+    inst, net = _load()
+    ma = {(1, 1): 1, (1, 2): 1, (1, 3): 1,
+          (2, 1): 3, (2, 2): 3, (3, 1): 2, (3, 2): 2}
+    os_seq = [1, 1, 1, 2, 2, 3, 3, 1, 2, 3]
+    result = decode(inst, net, ma, os_seq, conflict_free=True)
+    for j in (1, 2, 3):
+        n = sum(1 for tr in result.transports if tr.job == j)
+        assert n == 2, f"工件 {j} 应只有 2 个运输任务(首道送达+成品回运),实际 {n}"
+    assert not validate(inst, result.to_timetable())
+
+
+# ---------------- T6 回运开关 δ_return ----------------
+# T6 return-haul switch δ_return
+
+def t6_delta_return_switch():
+    inst1, net1 = _load()
+    with open(INSTANCE_PATH, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    data["delta_return"] = 0
+    inst0 = parse_instance(data)
+    net0 = Network(inst0.nodes, inst0.corridors, inst0.lu_node)
+
+    ma = {(1, 1): 1, (1, 2): 2, (1, 3): 3, (2, 1): 2, (2, 2): 3,
+          (3, 1): 1, (3, 2): 2}
+    os_base = _base_os(inst1)
+    r1 = decode(inst1, net1, ma, os_base + [1, 2, 3], conflict_free=True)
+    r0 = decode(inst0, net0, ma, os_base, conflict_free=True)
+    assert r1.makespan >= r0.makespan - 1e-9, "计回运的 C_max 不应更小"
+    real_max = max(rec.finish for rec in r1.ops.values() if not rec.pseudo)
+    assert abs(r0.makespan - real_max) < 1e-9, \
+        "δ=0 的 C_max 应等于 δ=1 同方案的最大实工序完工时刻"
+    assert not validate(inst0, r0.to_timetable())
+
+
+# ---------------- T7 冲突消解:两车抢同一走廊,后到者让行 ----------------
+# T7 conflict resolution: two vehicles contest one corridor; the later one yields
+
+def t7_conflict_resolution():
+    inst, net = _load()
+    ma = {(1, 1): 1, (3, 1): 1, (1, 2): 2, (1, 3): 3,
+          (2, 1): 2, (2, 2): 3, (3, 2): 2}
+    os_seq = [1, 3, 1, 1, 2, 2, 3, 1, 2, 3]  # J1、J3 首道相继从 v0 发往 r1
+    # The first operations of J1 and J3 leave v0 for r1 one after the other.
+    result = decode(inst, net, ma, os_seq, conflict_free=True)
+    tr = next(t for t in result.transports if t.job == 3 and t.i == 1)
+    assert tr.agv == 2, f"J3 首道应派给 AGV2,实际 AGV{tr.agv}"
+    first = tr.loaded_plan.segments[0]
+    assert first.enter == 2.0, f"AGV2 应等到 t=2 才进入 v0-c1,实际 {first.enter}"
+    assert tr.loaded_plan.arrive == 6.0, f"AGV2 应 t=6 到达 r1,实际 {tr.loaded_plan.arrive}"
+    assert tr.loaded_plan.total_wait > 0, "让行等待应被计入拥堵统计"
+    assert not validate(inst, result.to_timetable())
+
+
+# ---------------- T8 GA 有效性:小算例应不劣于人工参考方案(51) ----------------
+# T8 GA effectiveness: on the small instance it should be no worse than the hand reference (51)
+
+def t8_ga_beats_reference():
+    inst, net = _load()
+    cfg = GAConfig(pop=40, max_gen=60, stall_gen=25, seed=42)
+    out = run_ga(inst, net, cfg, conflict_free=True, use_ls=True)
+    best = out["best_result"]
+    errors = validate(inst, best.to_timetable())
+    assert not errors, "GA 最优解未通过校验:\n" + "\n".join(errors)
+    assert best.makespan <= 51.0 + 1e-9, \
+        f"GA 最优 C_max = {best.makespan},应不劣于参考方案 51"
+    print(f"      (GA 最优 C_max = {best.makespan:.1f}, {out['generations']} 代, "
+          f"{out['evaluations']} 次评估)")
+
+
+# ---------------- T9 禁派集:被禁车辆不得承接,且全禁时仍可解码 ----------------
+# T9 forbidden-vehicle set: a banned vehicle must not take the task, and a full ban still decodes
+
+def t9_forbid_vehicles():
+    inst, net = _load()
+    ma = {(1, 1): 1, (3, 1): 1, (1, 2): 2, (1, 3): 3,
+          (2, 1): 2, (2, 2): 3, (3, 2): 2}
+    os_seq = [1, 3, 1, 1, 2, 2, 3, 1, 2, 3]
+
+    base = decode(inst, net, ma, os_seq, conflict_free=True)
+    tr0 = next(t for t in base.transports if t.job == 3 and t.i == 1)
+    assert tr0.agv == 2, f"基线下 J3 首道应派给 AGV2,实际 AGV{tr0.agv}"
+
+    # 禁掉 AGV2 后,该任务必须换车,且方案仍可行
+    # After AGV2 is banned, that task must change vehicle, and the plan stays feasible.
+    res = decode(inst, net, ma, os_seq, conflict_free=True, forbid={(3, 1): {2}})
+    tr = next(t for t in res.transports if t.job == 3 and t.i == 1)
+    assert tr.agv != 2, "禁派集未生效:AGV2 仍承接了 (3,1)"
+    errors = validate(inst, res.to_timetable())
+    assert not errors, "禁派后方案不可行:\n" + "\n".join(errors)
+
+    # 全禁则回退到完整车队(保可解码性),不得抛异常或产生无限完工时间
+    # A full ban falls back to the whole fleet (decodability is kept); it must not raise or produce an infinite completion time.
+    res_all = decode(inst, net, ma, os_seq, conflict_free=True,
+                     forbid={(3, 1): {1, 2}})
+    assert res_all.makespan < float("inf"), "全禁时应回退到完整车队"
+    assert not validate(inst, res_all.to_timetable())
+
+
+# ---------------- T10 占用率两套算法一致(顺带验预约表回滚无残留) ----------------
+# T10 the two occupancy algorithms agree (and reservation-table rollback leaves no residue)
+
+def t10_occupancy_consistency():
+    inst, net = _load()
+    delta = default_bucket_width(inst)
+    ma = {(1, 1): 1, (3, 1): 1, (1, 2): 2, (1, 3): 3,
+          (2, 1): 2, (2, 2): 3, (3, 2): 2}
+    os_seq = [1, 3, 1, 1, 2, 2, 3, 1, 2, 3]
+    # dispatch=exact 会做试探性落表再回滚;若回滚有残留,预约表侧会多出占用
+    # dispatch=exact writes a probe into the table and then rolls it back; leftover reservations would show extra occupation on the table side.
+    res = decode(inst, net, ma, os_seq, conflict_free=True, dispatch="exact",
+                 bucket_width=delta, collect_occupancy=True)
+    assert res.occupancy, "collect_occupancy=True 时应采集到占用率"
+
+    from_table = res.occupancy                                  # 预约表侧
+    # Reservation-table side
+    from_tt = corridor_occupancy(res.to_timetable(), delta)      # 时刻表侧(独立重算)
+    # Timetable side (independent recomputation)
+    assert set(from_table) == set(from_tt), (
+        f"占用槽位不一致: 仅预约表 {set(from_table) - set(from_tt)}, "
+        f"仅时刻表 {set(from_tt) - set(from_table)}(疑似回滚残留)")
+    for key, v in from_table.items():
+        assert abs(v - from_tt[key]) < 1e-9, \
+            f"槽位 {key} 占用率不一致: 预约表 {v} vs 时刻表 {from_tt[key]}"
+    assert all(0.0 - 1e-9 <= v <= 1.0 + 1e-9 for v in from_tt.values()), \
+        "独占语义下占用率不应超过 1"
+
+
+# ---------------- T11 生成算例可解码、下界合法、H=0 退化 ----------------
+# T11 generated instances decode, the lower bound is valid, and H=0 degenerates correctly
+
+def t11_generated_instances():
+    rng = random.Random(0)
+    for tag in sorted(CONGESTION_PRESETS):
+        for h in (0.0, 0.3):
+            spec = make_spec(tag, heterogeneity=h, flexibility=0.6, num_jobs=4,
+                             num_machines=4, num_agvs=3, ops_per_job=2, seed=11)
+            data = build_instance(spec)
+            feat = measure(data)
+            gi = parse_instance(data)
+            gnet = Network(gi.nodes, gi.corridors, gi.lu_node)
+            gnet.check_reachability()
+
+            if h == 0.0:
+                assert feat["heterogeneity"] == 0.0, \
+                    f"{tag}: H=0 应退化为零异构,实测 {feat['heterogeneity']}"
+            else:
+                assert abs(feat["heterogeneity"] - h) < 0.06, \
+                    f"{tag}: H 目标 {h} 实测 {feat['heterogeneity']},偏差过大"
+
+            lb = feat["lower_bound"]
+            for _ in range(20):
+                res = decode(gi, gnet, random_ma(gi, rng), random_os(gi, rng),
+                             conflict_free=True)
+                assert res.makespan < float("inf")
+                errors = validate(gi, res.to_timetable())
+                assert not errors, f"{tag} 生成算例不可行:\n" + "\n".join(errors)
+                # 下界必须真的是下界,否则 (a) 界推导错 或 (b) 解码违反了某条约束
+                # The lower bound must really be a lower bound, or else (a) the bound is derived wrong or (b) the decode violated a constraint.
+                assert res.makespan >= lb - 1e-6, \
+                    f"{tag}: C_max {res.makespan} 低于下界 {lb},界或解码有错"
+
+
+# ---------------- T12 拥堵度旋钮只改容量:high/funnel 与 mid/high 受控对比 ----------------
+# T12 congestion knobs change capacity only: controlled contrasts of high/funnel and mid/high
+
+def t12_congestion_knobs_isolated():
+    def gen(tag):
+        d = build_instance(make_spec(tag, heterogeneity=0.3, flexibility=0.6,
+                                     num_jobs=6, num_machines=4, num_agvs=4,
+                                     ops_per_job=3, seed=5))
+        return d, measure(d)
+
+    mid, f_mid = gen("mid")
+    high, f_high = gen("high")
+    funnel, f_funnel = gen("funnel")
+
+    # high vs funnel:仅 LU 出口容量不同,其余逐字段相同
+    # high vs funnel: only LU-exit capacity differs; every other field matches.
+    assert high["proc_time"] == funnel["proc_time"], "high/funnel 加工时间应完全相同"
+    assert high["machines"] == funnel["machines"], "high/funnel 机器位置应完全相同"
+    assert abs(f_high["Tt_over_Tp"] - f_funnel["Tt_over_Tp"]) < 1e-9, \
+        "high/funnel 的 Tt/Tp 应相同(容量旋钮不得改距离)"
+    assert (f_high["lu_min_cut"], f_funnel["lu_min_cut"]) == (2, 1), \
+        f"LU 割应为 2 vs 1,实测 {f_high['lu_min_cut']} vs {f_funnel['lu_min_cut']}"
+
+    # mid vs high:仅中段通道数不同,LU 割相同
+    # mid vs high: only the number of mid-segment lanes differs; the LU cut is the same.
+    assert (f_mid["far_group_cut"], f_high["far_group_cut"]) == (2, 1), \
+        f"远端割应为 2 vs 1,实测 {f_mid['far_group_cut']} vs {f_high['far_group_cut']}"
+    assert f_mid["lu_min_cut"] == f_high["lu_min_cut"] == 2, "mid/high 的 LU 割应相同"
+
+    # 同种子必须逐字节可复现(F1)
+    # The same seed must be reproducible byte for byte (F1).
+    again = build_instance(make_spec("high", heterogeneity=0.3, flexibility=0.6,
+                                     num_jobs=6, num_machines=4, num_agvs=4,
+                                     ops_per_job=3, seed=5))
+    assert json.dumps(again, sort_keys=True) == json.dumps(high, sort_keys=True), \
+        "同种子生成结果不可复现"
+
+
+# ---------------- T13 统计工具:与已知精确值逐位一致 ----------------
+# T13 statistics utilities: match known exact values bit for bit
+
+def t13_statistics():
+    from algorithm.stats import describe, spearman, wilcoxon_signed_rank
+
+    # 全部同向 5 对:零分布下 P(W+ <= 0) = 1/32,两侧 p = 0.0625
+    # Five pairs, all the same sign: under the null, P(W+ <= 0) = 1/32, two-sided p = 0.0625.
+    w = wilcoxon_signed_rank([2, 3, 4, 5, 6], [1, 1, 1, 1, 1])
+    assert w["method"] == "exact" and abs(w["p_value"] - 0.0625) < 1e-9, w
+
+    # 教科书算例(与 scipy.stats.wilcoxon 一致:statistic=5, p=0.0391)
+    # Textbook example (agrees with scipy.stats.wilcoxon: statistic=5, p=0.0391).
+    x = [1.83, 0.50, 1.62, 2.48, 1.68, 1.88, 1.55, 3.06, 1.30]
+    y = [0.878, 0.647, 0.598, 2.05, 1.06, 1.29, 1.06, 3.14, 1.29]
+    w = wilcoxon_signed_rank(x, y)
+    assert w["statistic"] == 5.0, w
+    assert abs(w["p_value"] - 0.0390625) < 1e-4, w
+
+    # 全平局:makespan 取整后最常见的情形,必须如实报出 n_eff=0 而非伪显著
+    # All ties: the most common case after makespan is rounded. Must report n_eff=0 rather than a spurious significance.
+    w = wilcoxon_signed_rank([70, 72, 70], [70, 72, 70])
+    assert w["n_eff"] == 0 and w["p_value"] == 1.0 and w["method"] == "all-ties", w
+
+    d = describe([71, 69, 80])          # 规格 13.2 的实测三种子
+    # The three measured seeds of spec 13.2.
+    assert d["range"] == 11 and abs(d["mean"] - 73.333) < 1e-3, d
+    assert spearman([1, 2, 3, 4], [2, 4, 6, 9]) > 0.999
+    assert spearman([1, 1, 1], [1, 2, 3]) is None, "无变异时应返回 None 而非 0"
+
+
+# ---------------- T14 批跑基础设施:预算闸门、账本续跑、配对不错位 ----------------
+# T14 batch infrastructure: budget gate, ledger resume, and pairing that does not shift
+
+def t14_batch_infrastructure():
+    import shutil
+    import tempfile
+    from tools.run_matrix import Ledger, _check_p3
+
+    inst, net = _load()
+
+    # (1) 时间预算必须真的掐停:早停与代数上限都放开,只能由预算终止
+    # (1) The time budget must actually cut the run off: stall and the generation cap are both released, so only the budget can stop it.
+    cfg = GAConfig(pop=30, max_gen=10 ** 9, stall_gen=10 ** 9, seed=42,
+                   time_budget_sec=1.0)
+    out = run_ga(inst, net, cfg, conflict_free=True, use_ls=True)
+    assert out["stopped_by"] == "budget", f"应由预算终止,实际 {out['stopped_by']}"
+    assert 1.0 <= out["runtime_sec"] <= 6.0, f"预算 1s 却用了 {out['runtime_sec']}s"
+    assert not validate(inst, out["best_result"].to_timetable())
+
+    # 不给预算时行为不变(向后兼容:stopped_by 只能是 stall / max_gen)
+    # With no budget the behavior is unchanged (backward compatible: stopped_by can only be stall / max_gen).
+    out2 = run_ga(inst, net, GAConfig(pop=20, max_gen=3, stall_gen=99, seed=42),
+                  conflict_free=True, use_ls=False)
+    assert out2["stopped_by"] == "max_gen", out2["stopped_by"]
+
+    # (2) 账本:追加即落盘,重新打开后能识别已完成项(续跑的唯一依据)
+    # (2) Ledger: an append is written immediately, and reopening recognizes finished items (the only basis for resuming a run).
+    tmp = tempfile.mkdtemp(prefix="clbs_ledger_")
+    try:
+        led = Ledger(tmp)
+        led.append({"kind": "result", "instance": "I", "arm": "closed", "seed": 42,
+                    "makespan": 50.0, "valid": True})
+        led.append({"kind": "budget", "instance": "I", "budget_sec": 12.5})
+        again = Ledger(tmp)
+        assert again.done_keys() == {("I", "closed", 42)}, again.done_keys()
+        assert again.budgets()["I"]["budget_sec"] == 12.5
+        assert len(again.results()) == 1, "budget 记录不得混入结果集"
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+    # (3) high/funnel 配对:high 侧多一个 funnel 没有的种子(seed=3,且其增益极大)。
+    #     只有按 (H, 种子) 取交集才会把它排除;若按列表顺序拼接,它会被算进均值。
+    # (3) high/funnel pairing: the high side has one extra seed that funnel does not (seed=3, and its gain is huge).
+    #     Only the intersection on (H, seed) excludes it; concatenating in list order would fold it into the mean.
+    cells = {
+        ("HI", "closed"): {42: 80.0, 7: 90.0, 3: 100.0},
+        ("HI", "nofeedback"): {42: 88.0, 7: 99.0, 3: 200.0},
+        ("FU", "closed"): {42: 80.0, 7: 90.0},
+        ("FU", "nofeedback"): {42: 82.0, 7: 90.0},
+    }
+    feat = {"HI": {"congestion_tag": "high", "target_heterogeneity": 0.3},
+            "FU": {"congestion_tag": "funnel", "target_heterogeneity": 0.3}}
+
+    class _A:
+        arms = ["closed", "nofeedback"]
+
+    d = _check_p3(cells, feat, _A())["by_mechanism"]["nofeedback"]
+    assert d["n_pairs"] == 2, f"只有 seed 42/7 可配对,实际 {d['n_pairs']}"
+    assert abs(d["high_mean_gain"] - 8.0 / 88.0) < 1e-4, \
+        f"high 侧均值 {d['high_mean_gain']} 疑似混入了未配对的 seed=3"
+    assert abs(d["funnel_mean_gain"] - (2.0 / 82.0) / 2) < 1e-4, d
+    assert d["verdict"] == "支持", d
+
+
+def t15_matrix_only_instance():
+    """矩阵型算例(公开基准退化对标,规格 12.2 / 12.4 第 2 项)。
+
+    要断言的正是"为什么必须给 `ideal_dist` 这条旁路、而不能还原成走廊图":
+    公开基准的行驶时间矩阵可能**有向**、且可能**不满足三角不等式**,这两种性质
+    没有任何无向走廊图能承载。若哪天有人图省事把它改成"造一张完全图跑最短路",
+    本测试会立刻失败——因为最短路会把非度量的那一项抄近道抹平。
+
+    Matrix-form instance (degenerate benchmark on public instances, spec 12.2 / 12.4 item 2).
+
+    What is asserted is exactly why `ideal_dist` must be a bypass and must not be reconstructed as a corridor graph: a public benchmark's travel-time matrix may be directed and may violate the triangle inequality, and no undirected corridor graph can carry either property. If someone later "saves effort" by building a complete graph and running shortest paths, this test fails immediately — shortest paths would shortcut the non-metric entry and flatten it.
+    """
+    data = {
+        "name": "matrix_only",
+        "delta_return": 0,
+        "jobs": [{"id": 1, "num_ops": 1}],
+        "machines": [{"id": 1, "node": "m1"}, {"id": 2, "node": "m2"}],
+        "proc_time": {"(1,1)": {"1": 5, "2": 7}},
+        "num_agvs": 1,
+        "network": {
+            "lu_node": "LU", "nodes": ["LU", "m1", "m2"], "corridors": [],
+            # 有向:LU->m1=10 而 m1->LU=3;
+            # 非度量:m2->m1 直达 9 > 绕行 m2->LU->m1 = 1+10 = 11?不,取 9 < 11。
+            # 真正的非度量项是 m1->m2 直达 8 > m1->LU->m2 = 3+2 = 5。
+            # Directed: LU->m1=10 while m1->LU=3.
+            # Non-metric: a direct m2->m1 of 9 > the detour m2->LU->m1 = 1+10 = 11? No; 9 < 11.
+            # The real non-metric entry is a direct m1->m2 of 8 > m1->LU->m2 = 3+2 = 5.
+            "ideal_dist": {
+                "LU": {"LU": 0, "m1": 10, "m2": 2},
+                "m1": {"LU": 3, "m1": 0, "m2": 8},
+                "m2": {"LU": 1, "m1": 9, "m2": 0},
+            },
+        },
+    }
+    inst = parse_instance(data)
+    net = Network(inst.nodes, inst.corridors, inst.lu_node, ideal_dist=inst.ideal_dist)
+    net.check_reachability()
+
+    assert net.dist_is_given and not net.routable
+    # (1) 有向性保留 / (1) directedness is preserved
+    assert net.ideal_dist["LU"]["m1"] == 10 and net.ideal_dist["m1"]["LU"] == 3
+    # (2) 非度量项**不被抹平**:若走了最短路合成,m1->m2 会变成 5
+    # (2) The non-metric entry is not flattened: shortest-path synthesis would turn m1->m2 into 5.
+    assert net.ideal_dist["m1"]["m2"] == 8, "非度量项被最短路抄了近道"
+
+    # (3) 退化解码用的就是这张矩阵:LU->m1 = 10,加工 5,δ_return=0 -> 15
+    # (3) Degenerate decoding uses this matrix: LU->m1 = 10, processing 5, δ_return=0 -> 15.
+    res = decode(inst, net, {(1, 1): 1}, [1], conflict_free=False)
+    assert abs(res.makespan - 15.0) < 1e-9, res.makespan
+    assert not validate(inst, res.to_timetable())
+
+    # (4) 没有走廊图时,冲突模型必须显式拒绝而不是给出无意义的解
+    # (4) With no corridor graph, the conflict model must reject explicitly rather than return a meaningless solution.
+    try:
+        decode(inst, net, {(1, 1): 1}, [1], conflict_free=True)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("矩阵型算例不该能在 conflict_free=True 下解码")
+
+
+# ---------------- 运行器 ----------------
+# Runner
+
+# ---------------- T16 节点模型:容量 c 各档全部可行,试探降本不改输出 ----------------
+# T16 node model: every capacity c is feasible, and the probe cost cut leaves the output unchanged
+
+def t16_node_model():
+    import dataclasses
+    rng = random.Random(3)
+    for tag in ("high", "scatter"):
+        spec = make_spec(tag, heterogeneity=0.3, flexibility=0.6, num_jobs=6,
+                         num_machines=4, num_agvs=5, ops_per_job=3, seed=5)
+        base = parse_instance(build_instance(spec))
+        assert base.node_model and base.out_node != base.lu_node
+        net = Network(base.nodes, base.corridors, base.lu_node)
+        lb = measure(build_instance(spec))["lower_bound"]
+        for cap in (1, 2, None):
+            inst = dataclasses.replace(base, machine_capacity=cap)
+            for _ in range(8):
+                ma, os_seq = random_ma(inst, rng), random_os(inst, rng)
+                fast = decode(inst, net, ma, os_seq, dispatch="exact")
+                slow = decode(inst, net, ma, os_seq, dispatch="exact_noopt")
+                assert fast.dispatch_order == slow.dispatch_order
+                assert fast.to_timetable() == slow.to_timetable(), \
+                    f"{tag} c={cap}: 剪枝/复用改变了输出"
+                for res in (fast, decode(inst, net, ma, os_seq, dispatch="rule")):
+                    errors = validate(inst, res.to_timetable())
+                    assert not errors, f"{tag} c={cap} 不可行:\n" + "\n".join(errors)
+                    assert res.makespan >= lb - 1e-6
+
+
+# ---------------- T17 三段式编码(AGV 编入染色体)基线 ----------------
+# T17 tri-string encoding baseline (AGV encoded in the chromosome)
+
+def t17_gene_dispatch():
+    import dataclasses
+    from algorithm.ga import (clone, mutate, os_shift, pox_crossover_paired,
+                              random_av)
+    rng = random.Random(11)
+    spec = make_spec("high", heterogeneity=0.3, flexibility=0.6, num_jobs=6,
+                     num_machines=4, num_agvs=5, ops_per_job=3, seed=5)
+    base = parse_instance(build_instance(spec))
+    net = Network(base.nodes, base.corridors, base.lu_node)
+
+    # 解码严格按基因派车,且各档 c 下都可行
+    # Decoding dispatches exactly by gene, and is feasible under every c.
+    for cap in (1, 2, None):
+        inst = dataclasses.replace(base, machine_capacity=cap)
+        for _ in range(8):
+            ma, os_seq = random_ma(inst, rng), random_os(inst, rng)
+            av = random_av(inst, len(os_seq), rng)
+            res = decode(inst, net, ma, os_seq, dispatch="gene", agv_genes=av)
+            errors = validate(inst, res.to_timetable())
+            assert not errors, f"c={cap} 不可行:\n" + "\n".join(errors)
+            for tr in res.transports:
+                p = [q for q, j in enumerate(os_seq) if j == tr.job][tr.i - 1]
+                assert tr.agv == av[p]
+
+    # 交叉、变异与定向移位后,AGV 基因仍跟随原工序
+    # After crossover, mutation and directed shift, each AGV gene still follows its operation.
+    def tagged(os_seq, av):
+        cnt, out = {}, []
+        for j, v in zip(os_seq, av):
+            cnt[j] = cnt.get(j, 0) + 1
+            out.append(((j, cnt[j]), v))
+        return out
+
+    o1, o2 = random_os(base, rng), random_os(base, rng)
+    a1, a2 = random_av(base, len(o1), rng), random_av(base, len(o2), rng)
+    c1o, c1a, c2o, c2a = pox_crossover_paired(o1, a1, o2, a2, base.job_ids, rng)
+    assert sorted(c1o) == sorted(o1) and len(c1a) == len(c1o)
+    from_p = [dict(tagged(o1, a1)), dict(tagged(o2, a2))]
+    for op, v in tagged(c1o, c1a):
+        assert v in (from_p[0][op], from_p[1][op])
+    ch = {"ma": random_ma(base, rng), "os": list(o1), "av": list(a1)}
+    before = dict(tagged(ch["os"], ch["av"]))
+    assert os_shift(ch["os"], 3, later=True, av=ch["av"])
+    assert dict(tagged(ch["os"], ch["av"])) == before
+    ch2 = clone(ch)
+    mutate(base, ch2, rng)
+    assert len(ch2["av"]) == len(ch2["os"]) and "av" in ch2
+
+    # 短跑 GA 可运行且最优解可行
+    # A short GA run works and its best solution is feasible.
+    out = run_ga(base, net, GAConfig(pop=12, max_gen=4, stall_gen=4, seed=1,
+                                     dispatch="gene"), conflict_free=True)
+    assert "av" in out["best_chrom"]
+    assert not validate(base, out["best_result"].to_timetable())
+
+
+TESTS = [
+    ("T1 理想最短路矩阵", t1_ideal_dist),
+    ("T2 参考方案(makespan=51)校验", t2_reference_plan_valid),
+    ("T3 1000 随机染色体可行性", t3_random_chromosomes_feasible),
+    ("T4 解码确定性", t4_decode_deterministic),
+    ("T5 同机连续工序免运输", t5_same_machine_no_transport),
+    ("T6 回运开关 δ_return", t6_delta_return_switch),
+    ("T7 走廊冲突消解与让行", t7_conflict_resolution),
+    ("T8 GA 有效性(<=51)", t8_ga_beats_reference),
+    ("T9 禁派集生效与兜底", t9_forbid_vehicles),
+    ("T10 占用率一致性与回滚无残留", t10_occupancy_consistency),
+    ("T11 生成算例可行性与下界合法性", t11_generated_instances),
+    ("T12 拥堵度旋钮受控性与可复现", t12_congestion_knobs_isolated),
+    ("T13 统计工具(精确 Wilcoxon / 平局 / 秩相关)", t13_statistics),
+    ("T14 批跑基础设施(预算闸门/账本续跑/配对不错位)", t14_batch_infrastructure),
+    ("T15 矩阵型算例(有向 + 非度量,退化对标)", t15_matrix_only_instance),
+    ("T16 节点模型(容量 c 各档可行 / 试探降本不改输出)", t16_node_model),
+    ("T17 三段式编码基线(按基因派车 / 算子保持对应)", t17_gene_dispatch),
+]
+
+
+def main() -> int:
+    failed = 0
+    for name, fn in TESTS:
+        try:
+            fn()
+            print(f"[PASS] {name}")
+        except Exception as e:  # noqa: BLE001
+            failed += 1
+            print(f"[FAIL] {name}: {e}")
+    print(f"\n{len(TESTS) - failed}/{len(TESTS)} 通过")
+    return 1 if failed else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

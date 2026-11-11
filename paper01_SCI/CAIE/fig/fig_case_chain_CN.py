@@ -7,7 +7,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from _style import COL, FS_FOOT, FS_LEG, plt, save, use_cjk  # noqa: E402
+from _style import (COL, FS_FOOT, FS_LEG, case_name, plt, save,  # noqa: E402
+                    use_cjk)
 import fig_case_chain as src  # noqa: E402
 
 use_cjk()
@@ -65,8 +66,8 @@ def main() -> None:
     d_mk = arms["B0"]["makespan"] - arms["B2"]["makespan"]
     ax.set_xticks(range(len(order)))
     ax.set_xticklabels(
-        ["B0\n开环\n$C_{\\max}=%.0f$" % arms["B0"]["makespan"],
-         "B2\n本文\n$C_{\\max}=%.0f$" % arms["B2"]["makespan"]],
+        ["OL\n开环\n$C_{\\max}=%.0f$" % arms["B0"]["makespan"],
+         "CLBS\n本文\n$C_{\\max}=%.0f$" % arms["B2"]["makespan"]],
         fontsize=7)
     ax.set_ylabel("关键链构成\n（时间单位）")
     ax.set_xlim(-0.5, 1.5)
@@ -92,14 +93,14 @@ def main() -> None:
         ax2.text(mk + 0.8, y, r"$C_{\max}=%.0f$" % mk,
                  ha="left", va="center", fontsize=6.2, color="#111111")
     ax2.set_yticks(range(len(order)))
-    ax2.set_yticklabels(["B0", "B2"], fontsize=7)
+    ax2.set_yticklabels(["OL", "CLBS"], fontsize=7)
     ax2.set_ylim(len(order) - 0.5, -0.5)
     ax2.set_xlim(0, 1.22 * max(arms[a]["makespan"] for a in order))
     ax2.set_xlabel(r"时间（归因环节 $\subset [0,C_{\max}]$）")
     ax2.grid(axis="y", visible=False)
 
     fig.text(0.005, 0.005, "算例 %s，种子 %s"
-             % (arms["B2"]["case"], arms["B2"]["seed"]),
+             % (case_name(arms["B2"]["case"]), arms["B2"]["seed"]),
              fontsize=FS_FOOT, color="#777777")
     fig.tight_layout(rect=(0, 0.02, 1, 1))
     save(fig, "fig_case_chain_CN")

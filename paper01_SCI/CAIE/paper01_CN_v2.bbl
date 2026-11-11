@@ -284,6 +284,20 @@
 \href{https://doi.org/10.1007/s42452-020-3002-y}{doi:\nolinkurl{10.1007/s42452-020-3002-y}}
 
 
+\bibitem[Schwenke et~al\mbox{.}(2018)]%
+        {schwenke2018transport}
+\bibfield{author}{\bibinfo{person}{Clemens Schwenke},
+  \bibinfo{person}{Sebastian Jannasch}, {and} \bibinfo{person}{Klaus
+  Kabitzsch}.} \bibinfo{year}{2018}\natexlab{}.
+\newblock \showarticletitle{Optimization versus Construction of Transport
+  Schedules to Reduce Travel Time Variability and Avoid Congestions in
+  Conveyor-Based {AMHS} for Wafer Fabs}. In
+  \bibinfo{booktitle}{\emph{Proceedings of the 2018 Winter Simulation
+  Conference}}. \bibinfo{publisher}{IEEE}, \bibinfo{pages}{3502--3513}.
+\newblock
+\href{https://doi.org/10.1109/WSC.2018.8632488}{doi:\nolinkurl{10.1109/WSC.2018.8632488}}
+
+
 \bibitem[Suh and Choi(2022)]%
         {suh2022spine}
 \bibfield{author}{\bibinfo{person}{Yong~Jin Suh} {and}
@@ -389,20 +403,6 @@
   \bibinfo{pages}{116192}.
 \newblock
 \href{https://doi.org/10.1016/j.engappai.2026.116192}{doi:\nolinkurl{10.1016/j.engappai.2026.116192}}
-
-
-\bibitem[贺长征 et~al\mbox{.}(2019)]%
-        {he2019integrated}
-\bibfield{author}{\bibinfo{person}{贺长征}, \bibinfo{person}{宋豫川},
-  \bibinfo{person}{雷琦}, \bibinfo{person}{吕向飞},
-  \bibinfo{person}{刘软香}, {and} \bibinfo{person}{陈进}.}
-  \bibinfo{year}{2019}\natexlab{}.
-\newblock
-  \showarticletitle{柔性作业车间多自动导引小车和机器的集成调度}.
-\newblock \bibinfo{journal}{\emph{中国机械工程}} \bibinfo{volume}{30},
-  \bibinfo{number}{4} (\bibinfo{year}{2019}), \bibinfo{pages}{438--447}.
-\newblock
-\href{https://doi.org/10.3969/j.issn.1004-132X.2019.04.009}{doi:\nolinkurl{10.3969/j.issn.1004-132X.2019.04.009}}
 
 
 \end{thebibliography}

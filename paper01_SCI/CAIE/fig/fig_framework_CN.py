@@ -61,17 +61,17 @@ def main() -> None:
                                 boxstyle="round,pad=0.2", linewidth=1.1,
                                 linestyle=(0, (4, 2.5)), facecolor="none",
                                 edgecolor=C_EVAL, zorder=0.5))
-    ax.text(32, 56.6, "上层：候选解搜索与适应度评价（解码器属于上层）",
+    ax.text(32, 56.6, "上层：文化基因算法与适应度评价（解码器属于上层）",
             ha="center", va="center", fontsize=9.5, fontweight="bold",
             color=C_EVAL)
 
     box(ax, -19.5, 13, 15.5, 31,
-        "输入：算例\n\n工序链\n可选机器与工时\n车队规模\n走廊网络",
+        "输入：算例\n\n工序链\n可选机器与工时\n车队规模\n路网与节点容量",
         fc=C_BOX, ec=C_EDGE, lw=1.0, fs=8.0, style="round,pad=0.3")
     arrow(ax, (-3.7, 28.5), (1.6, 28.5), lw=1.2, ms=9)
 
     box(ax, 103, 13, 16, 31,
-        "输出\n\n无冲突时间表\n（工序起止时刻、\n车辆路径与\n走廊进入时刻）\n及 $C_{\\max}$",
+        "输出\n\n无冲突时间表\n（工序起止时刻、\n各车任务与轨迹）\n及 $C_{\\max}$",
         fc=C_BOX, ec=C_EDGE, lw=1.0, fs=8.0, style="round,pad=0.3")
     arrow(ax, (97.3, 28.5), (102.6, 28.5), lw=1.2, ms=9)
     ax.text(100, 32.6, "终止时\n最优解", ha="center", va="center",
@@ -92,13 +92,12 @@ def main() -> None:
 
     box(ax, 32, 5, 30, 45, "", fc=C_BOX, ec=C_EDGE, lw=1.0,
         style="round,pad=0.2", zorder=1)
-    ax.text(47, 52.6, "事件驱动解码器", ha="center", va="center",
+    ax.text(47, 52.6, "解码器", ha="center", va="center",
             fontsize=9.5, fontweight="bold")
-    box(ax, 34.5, 40, 25, 5.5, "弹出下一道就绪工序", fs=8.2)
-    box(ax, 34.5, 30, 25, 7.5, "生成运输任务\n（取货、送货、就绪时刻）", fs=8.2)
-    box(ax, 34.5, 18, 25, 9, "选择车辆：\n对候选车试算预约表",
-        ec=C_DEC, lw=1.4, weight="bold", color=C_DEC, fs=8.2)
-    box(ax, 34.5, 8, 25, 7.5, "提交走廊预约\n推进仿真时钟", fs=8.2)
+    box(ax, 34.5, 40, 25, 5.5, "按工序序列取下一道工序", fs=8.2)
+    box(ax, 34.5, 30, 25, 7.5, "生成运输任务\n（取货点、目的地、就绪时刻）", fs=8.0)
+    box(ax, 34.5, 18, 25, 9, "调用下层\n得到承运车辆与送达时刻", fs=8.2)
+    box(ax, 34.5, 8, 25, 7.5, "排定加工\n开工 $=\\max$(送达, 机器空闲)", fs=8.0)
     arrow(ax, (47, 40), (47, 37.5))
     arrow(ax, (47, 30), (47, 27.0))
     arrow(ax, (47, 18), (47, 15.5))
@@ -106,22 +105,24 @@ def main() -> None:
 
     box(ax, 70, 5, 27, 45, "", fc=C_BOX, ec=C_EDGE, lw=1.0,
         style="round,pad=0.2", zorder=1)
-    ax.text(83.5, 52.6, "下层：无冲突路由", ha="center",
+    ax.text(83.5, 52.6, "下层：运输任务规划器", ha="center",
             va="center", fontsize=9.5, fontweight="bold")
-    box(ax, 72, 35.5, 23, 9.5, "时间窗 Dijkstra\n走廊网络上\n最早到达搜索", fs=8.0)
-    box(ax, 72, 21, 23, 9.5, "预约表\n走廊占用区间", fs=8.0)
-    box(ax, 72, 8, 23, 8, "试算后回滚\n（不写入预约表）",
-        ec=C_DEC, lw=1.0, color=C_DEC, fs=8.0)
-    arrow(ax, (80, 35.5), (80, 30.5))
-    arrow(ax, (88, 30.5), (88, 35.5))
-    arrow(ax, (83.5, 21), (83.5, 16.0), ls=(0, (2, 1.6)), color=C_DEC)
+    box(ax, 72, 38, 23, 8.5, "选车：按编号试算各车\n下界剪枝跳过必败者",
+        ec=C_DEC, lw=1.4, weight="bold", color=C_DEC, fs=7.8)
+    box(ax, 72, 25.5, 23, 9, "安全区间搜索\n空载、等件、满载、\n停放或离场", fs=7.8)
+    box(ax, 72, 15.5, 23, 6.5, "预约表\n走廊与节点占用", fs=7.8)
+    box(ax, 72, 7, 23, 5.5, "胜者路径复用：重放写入", fs=7.8)
+    arrow(ax, (80, 38), (80, 34.5))
+    arrow(ax, (88, 34.5), (88, 38))
+    arrow(ax, (83.5, 25.5), (83.5, 22.0))
+    arrow(ax, (83.5, 15.5), (83.5, 12.5))
 
-    arrow(ax, (59.5, 24.0), (72.0, 40.0), color=C_EDGE, lw=1.1, rad=-0.15)
-    ax.text(68.2, 29.5, "路由\n请求", ha="center", va="center",
+    arrow(ax, (59.5, 24.5), (72.0, 42.0), color=C_EDGE, lw=1.1, rad=-0.15)
+    ax.text(67.0, 36.5, "运输\n任务", ha="center", va="center",
             fontsize=7.2, color=C_EDGE)
 
-    arrow(ax, (72.0, 11.5), (59.5, 20.5), color=C_DEC, lw=1.7, rad=-0.16, ms=9)
-    badge(ax, 65.8, 15.0, 2, C_DEC)
+    arrow(ax, (72.0, 9.5), (59.5, 20.5), color=C_DEC, lw=1.7, rad=-0.16, ms=9)
+    badge(ax, 65.8, 14.0, 2, C_DEC)
 
     arrow(ax, (34.5, 9.0), (24.5, 18.0), color=C_EVAL, lw=1.7, rad=-0.18, ms=9)
     badge(ax, 29.3, 12.8, 1, C_EVAL)
@@ -134,7 +135,7 @@ def main() -> None:
     ax.text(6.5, -0.4, "通路一：回传无冲突时间表的完工时间作为适应度  →  每个候选解一次",
             ha="left", va="center", fontsize=8.0, color=C_EVAL)
     badge(ax, 3.5, -3.4, 2, C_DEC)
-    ax.text(6.5, -3.4, "通路二：回传可实现的送达时刻  →  每个运输任务一次",
+    ax.text(6.5, -3.4, "通路二：选车时在预约表上试算各车的实际送达时刻，回传胜者及其送达时刻  →  每个运输任务一次",
             ha="left", va="center", fontsize=8.0, color=C_DEC)
 
     stem = os.path.join(HERE, "fig_framework_CN")

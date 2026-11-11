@@ -1,0 +1,1378 @@
+"""路网、理想最短路 t*、容量化预约表、走廊-时段影子价格与价格感知多标签路由。
+
+冲突模型(规格 5.1):
+- 通行资源 = 物理走廊,双向共用一个预约资源,默认容量 1(独占);
+- 占用时窗为半开区间 [t, t+tau);
+- 节点分三类(NodeModel):库区(毛坯库/成品库)容量不限;机器节点为"1 个交接位 +
+  待命位",总容量 c(含交接中的车,None = 不限);路口容量 1。车在节点的停留区间为
+  [到达, 离开 + h),h 为节点净空时距;等待只能发生在有空位的节点上。
+- 节点约束只在任务级路由 Router.plan_task 中生效;单段 Router.route 保留给开环退化档
+  与旧诊断工具,不检查节点。
+
+层间接口(价格协调版,规格 5.5):
+下层不再只回答"最早何时到达",而是在"到达时刻"与"占用他人资源的代价"之间取
+Pareto 前沿,并按 arrive + theta * price_cost 择优。price_cost 由上层下发的
+影子价格 PriceTable 计价,与 makespan 同量纲,因此 theta 是无量纲协调强度:
+theta = 0 时退化为纯最早到达(与价格协调前的实现逐字节等价)。
+
+Road network, ideal shortest paths t*, capacitated reservation table, corridor-time shadow prices, and price-aware multi-label routing.
+
+Conflict model (spec 5.1):
+- the travel resource is a physical corridor; both directions share one reservation resource, default capacity 1 (exclusive);
+- occupation windows are half-open intervals [t, t+tau);
+- waiting happens at node berths (capacity is ample, so they are not reserved); a node crossing has measure zero and is not reserved.
+
+Inter-level interface (price-coordination version, spec 5.5):
+the lower level no longer answers only "what is the earliest arrival". It keeps the Pareto front between "arrival time" and "the cost of occupying someone else's resource", and picks by arrive + theta * price_cost. price_cost is priced by the shadow-price PriceTable issued by the upper level and has the same dimension as makespan, so theta is a dimensionless coordination strength. theta = 0 falls back to pure earliest arrival (byte-for-byte equivalent to the implementation before price coordination).
+"""
+from __future__ import annotations
+
+import bisect
+import heapq
+from dataclasses import dataclass, field
+from typing import Dict, List, Optional, Sequence, Tuple
+
+BucketKey = Tuple[str, int]  # (corridor_id, bucket_index)
+INF = float("inf")
+NODE_EPS = 1e-9
+
+
+@dataclass(frozen=True)
+class Segment:
+    """一次走廊穿越:从 u 于 enter 时刻进入,exit = enter + tau 时刻到达 v。
+
+    One corridor traversal: enter from u at time enter, and arrive at v at exit = enter + tau.
+    """
+    corridor: str
+    u: str
+    v: str
+    enter: float
+    exit: float
+
+
+@dataclass
+class RoutePlan:
+    start: str
+    goal: str
+    t0: float                      # 最早出发时刻 / Earliest departure time
+    arrive: float                  # 到达 goal 的时刻 / Arrival time at goal
+    segments: List[Segment] = field(default_factory=list)
+    wait_by_corridor: Dict[str, float] = field(default_factory=dict)
+    price_cost: float = 0.0        # 本条路径占用的走廊-时段的影子价格总额
+    # Total shadow price of the corridor-time slots this path occupies
+
+    @property
+    def total_wait(self) -> float:
+        return sum(self.wait_by_corridor.values())
+
+    @property
+    def travel_time(self) -> float:
+        return sum(s.exit - s.enter for s in self.segments)
+
+    def wait_events(self) -> List[Tuple[str, float, float, float]]:
+        """逐次让行事件 (走廊, 等待起, 等待止, 等待时长)。
+
+        与 wait_by_corridor 的区别是保留了**时刻**,关键路径归因与影子价格的时段
+        定位都需要它——只有标量总量无法回答"哪个时段的通行权更值钱"。
+
+        Per-yield events (corridor, wait start, wait end, wait duration).
+
+        Unlike wait_by_corridor, this keeps the time. Critical-path attribution and the time-slot location of shadow prices both need it — a scalar total cannot answer "which period's right-of-way is worth more".
+        """
+        out: List[Tuple[str, float, float, float]] = []
+        at_time = self.t0
+        for s in self.segments:
+            if s.enter > at_time + 1e-12:
+                out.append((s.corridor, at_time, s.enter, s.enter - at_time))
+            at_time = s.exit
+        return out
+
+
+def corridor_id(u: str, v: str) -> str:
+    """双向走廊的规范 id(与方向无关)。
+
+    Canonical id of a bidirectional corridor (independent of direction).
+    """
+    return f"{u}|{v}" if u <= v else f"{v}|{u}"
+
+
+class Network:
+    """走廊图 + 理想最短路矩阵 t*。
+
+    `ideal_dist` 参数(规格 12.2 / 12.4 第 2 项)用于公开基准的退化对标:文献只发布
+    一张位置对–时长矩阵,把它**原样**作为 t* 使用,不做任何最短路合成。必须给这条
+    旁路的理由是,这类矩阵有两种性质无法由"无向走廊图 + 最短路"表达:
+
+    1. **有向**——同一对位置的往返时长不等(单向导轨的必然结果);而 `corridors`
+       是无向的,一条走廊只有一个 `time`;
+    2. **不满足三角不等式**——直达时长可能长于绕行时长(HF 的 3-M / 7-M 两个"随机
+       生成"布局实测如此)。任何图的最短路闭包必然满足三角不等式,故这类矩阵**不是
+       任何图的最短路闭包**,试图还原只会得到一个比原算例更容易的算例。
+
+    给定 `ideal_dist` 时 `corridors` 为空,网络无法路由,只能跑 `conflict_free=False`
+    的退化档;`Router` 对此有显式拦截。
+
+    Corridor graph plus the ideal shortest-path matrix t*.
+
+    The `ideal_dist` argument (spec 12.2 / 12.4 item 2) is for the degenerate benchmark on public instances: the literature publishes one location-pair duration matrix, and it is used as t* as-is, with no shortest-path synthesis. The bypass is required because such a matrix has two properties that "undirected corridor graph + shortest paths" cannot express:
+
+    1. Directed — the two directions between the same pair of locations can have unequal durations (inevitable for one-way guideways), whereas `corridors` are undirected and a corridor has a single `time`;
+    2. It may violate the triangle inequality — a direct duration can exceed a detour (measured on the two "randomly generated" HF layouts 3-M / 7-M). The shortest-path closure of any graph satisfies the triangle inequality, so such a matrix is not the shortest-path closure of any graph. Reconstructing one would only produce an instance easier than the original.
+
+    When `ideal_dist` is given, `corridors` is empty, the network cannot route, and only the degenerate arm `conflict_free=False` can run. `Router` rejects the other case explicitly.
+    """
+
+    def __init__(self, nodes: List[str], corridors: List[dict], lu_node: str,
+                 ideal_dist: Optional[Dict[str, Dict[str, float]]] = None):
+        self.nodes = list(nodes)
+        self.lu_node = lu_node
+        self.corridor_time: Dict[str, float] = {}
+        self.adj: Dict[str, List[Tuple[str, str, float]]] = {n: [] for n in nodes}
+        for c in corridors:
+            cid = corridor_id(c["u"], c["v"])
+            tau = float(c["time"])
+            self.corridor_time[cid] = tau
+            self.adj[c["u"]].append((cid, c["v"], tau))
+            self.adj[c["v"]].append((cid, c["u"], tau))
+        self.dist_is_given = ideal_dist is not None
+        if ideal_dist is not None:
+            self.ideal_dist = {a: dict(row) for a, row in ideal_dist.items()}
+            for n in self.nodes:
+                self.ideal_dist.setdefault(n, {})[n] = 0.0
+        else:
+            self.ideal_dist = self._all_pairs_shortest()
+
+    @property
+    def routable(self) -> bool:
+        """是否存在可路由的走廊图(矩阵型算例为假)。
+
+        Whether a routable corridor graph exists (false for matrix-form instances).
+        """
+        return bool(self.corridor_time)
+
+    def _all_pairs_shortest(self) -> Dict[str, Dict[str, float]]:
+        """无预约理想最短路矩阵 t*(规格 5.4)。
+
+        Ideal shortest-path matrix t* with no reservations (spec 5.4).
+        """
+        dist_all: Dict[str, Dict[str, float]] = {}
+        for src in self.nodes:
+            dist = {src: 0.0}
+            heap = [(0.0, src)]
+            while heap:
+                d, u = heapq.heappop(heap)
+                if d > dist.get(u, float("inf")):
+                    continue
+                for _cid, v, tau in self.adj[u]:
+                    nd = d + tau
+                    if nd < dist.get(v, float("inf")):
+                        dist[v] = nd
+                        heapq.heappush(heap, (nd, v))
+            dist_all[src] = dist
+        return dist_all
+
+    def incident_corridors(self, node: str) -> List[str]:
+        return [cid for cid, _v, _t in self.adj[node]]
+
+    def check_reachability(self) -> None:
+        for a in self.nodes:
+            for b in self.nodes:
+                if b not in self.ideal_dist[a]:
+                    raise ValueError(f"路网不连通: {a} 无法到达 {b}(违反 D1)")
+
+    # ---------------- 结构指标(算例特征;规格 12.3) ----------------
+    # Structural indicators (instance features; spec 12.3)
+
+    def shortest_path_corridors(self, a: str, b: str) -> List[str]:
+        """a→b 一条最短路上的走廊序列(并列时取字典序最小,保证确定性)。
+
+        Corridor sequence of one shortest path from a to b (lexicographically smallest on ties, so the result is deterministic).
+        """
+        dist = {a: 0.0}
+        prev: Dict[str, Tuple[str, str]] = {}      # node -> (前驱节点, 走廊) / node -> (predecessor node, corridor)
+        heap = [(0.0, a)]
+        while heap:
+            d, u = heapq.heappop(heap)
+            if d > dist.get(u, float("inf")):
+                continue
+            if u == b:
+                break
+            for cid, v, tau in sorted(self.adj[u]):
+                nd = d + tau
+                if nd < dist.get(v, float("inf")):
+                    dist[v] = nd
+                    prev[v] = (u, cid)
+                    heapq.heappush(heap, (nd, v))
+        if b not in dist:
+            return []
+        path: List[str] = []
+        cur = b
+        while cur != a:
+            p, cid = prev[cur]
+            path.append(cid)
+            cur = p
+        path.reverse()
+        return path
+
+    def funnel_share(self, machine_nodes: Sequence[str]) -> float:
+        """**决策无关拥堵**的结构占比 ∈ [0,1]:典型 LU→RA 行程中落在
+        "所有 LU→RA 最短路共用走廊"上的时间比例。
+
+        动机:每个工件的首道送达与成品回运都必须穿过 LU 出口侧的共用走廊,
+        不论工序派给哪台 RA——这部分拥堵**不含决策杠杆**,只抬高所有方案的
+        基线延误,不为改派/错峰提供可利用的差异。该值越低,机制可利用的信号
+        越强。局限:只刻画 LU 侧的强制流量,不含机器间换机运输。
+
+        Structural share of decision-independent congestion in [0,1]: the fraction of time, on a typical LU→robotic-arm trip, that falls on corridors shared by every LU→robotic-arm shortest path.
+
+        Motive: every job's first delivery and finished-goods return haul must cross the shared corridors on the LU-exit side, no matter which robotic arm the operation is assigned to. That congestion has no decision lever. It only raises the baseline delay of every solution and does not create a difference that reassignment or stagger can exploit. The lower this value, the stronger the signal a mechanism can use. Limitation: it describes only the forced flow on the LU side, not changeover travel between machines.
+        """
+        targets = [m for m in dict.fromkeys(machine_nodes) if m != self.lu_node]
+        if not targets:
+            return 0.0
+        paths = [self.shortest_path_corridors(self.lu_node, m) for m in targets]
+        if any(not p for p in paths):
+            return 0.0
+        common = set(paths[0])
+        for p in paths[1:]:
+            common &= set(p)
+        t_common = sum(self.corridor_time[c] for c in common)
+        t_mean = sum(sum(self.corridor_time[c] for c in p) for p in paths) / len(paths)
+        return t_common / t_mean if t_mean > 0 else 0.0
+
+    def lu_cut(self, machine_nodes: Sequence[str],
+               source: Optional[str] = None) -> Tuple[int, List[str]]:
+        """**漏斗**:使 LU 与全部 RA 失联所需的最小走廊集合,返回 (宽度, 走廊列表)。
+
+        = LU 到"全体 RA 超汇"的走廊连通度(单位容量最大流 / 最小割)。宽度给出
+        LU 同时能发出的车辆数上限:值为 1 意味着存在单点漏斗,该走廊上的排队与
+        指派决策无关(参见 funnel_share 与 lu_cut_bound)。
+
+        Funnel: the smallest set of corridors whose removal disconnects the LU from every robotic arm. Returns (width, corridor list).
+
+        Equal to the corridor connectivity from the LU to a super-sink of all robotic arms (unit-capacity max flow / min cut). The width is an upper bound on how many vehicles the LU can send at once. A value of 1 means a single-point funnel exists, and queueing on that corridor does not depend on the assignment decision (see funnel_share and lu_cut_bound).
+        """
+        src = source or self.lu_node
+        targets = [m for m in dict.fromkeys(machine_nodes) if m != src]
+        if not targets or src in targets:
+            return 0, []
+        # 每条物理走廊建一对反向弧,各容量 1(无向单位容量走廊)
+        # Each physical corridor gets a pair of opposite arcs, capacity 1 each (undirected unit-capacity corridor).
+        cap: Dict[Tuple[str, str], int] = {}
+        for cid in self.corridor_time:
+            u, v = cid.split("|", 1)
+            cap[(u, v)] = 1
+            cap[(v, u)] = 1
+        sink = "__sink__"
+        big = len(self.corridor_time) + 1
+        for m in targets:
+            cap[(m, sink)] = big                               # 汇侧不设限
+            # The sink side is not capacity-limited.
+            cap[(sink, m)] = 0
+        adj: Dict[str, set] = {}
+        for (u, v) in cap:
+            adj.setdefault(u, set()).add(v)
+            adj.setdefault(v, set()).add(u)
+
+        flow = 0
+        while True:                                            # Edmonds-Karp
+            parent: Dict[str, Optional[str]] = {src: None}
+            queue = [src]
+            while queue and sink not in parent:
+                u = queue.pop(0)
+                for v in sorted(adj.get(u, ())):
+                    if v not in parent and cap.get((u, v), 0) > 0:
+                        parent[v] = u
+                        queue.append(v)
+            if sink not in parent:
+                break
+            nodes_on_path = _path_nodes(parent, sink)
+            push = min(cap[(parent[v], v)] for v in nodes_on_path)
+            for v in nodes_on_path:
+                u = parent[v]
+                cap[(u, v)] -= push
+                cap[(v, u)] = cap.get((v, u), 0) + push
+            flow += push
+
+        # 残量图中从源可达的一侧 S,割边即 S→V\S 且原容量>0 的物理走廊
+        # Side S reachable from the source in the residual graph. Cut edges are physical corridors from S to V\S whose original capacity was > 0.
+        reach = {src}
+        queue = [src]
+        while queue:
+            u = queue.pop(0)
+            for v in adj.get(u, ()):
+                if v not in reach and cap.get((u, v), 0) > 0:
+                    reach.add(v)
+                    queue.append(v)
+        cut = sorted({corridor_id(u, v) for cid in self.corridor_time
+                      for u, v in [cid.split("|", 1)]
+                      if (u in reach) != (v in reach)})
+        return flow, cut
+
+    def store_cut_bound(self, machine_nodes: Sequence[str], num_jobs: int,
+                        delta_return: int = 1,
+                        out_node: Optional[str] = None) -> float:
+        """毛坯库与成品库分开时的漏斗下界。
+
+        每个工件的首道送达必须穿越 cut(毛坯库) 一次;δ_return=1 时成品回运还必须穿越
+        cut(成品库) 一次。两组穿越各自独立成界,取大者。两库重合时退化为 lu_cut_bound。
+
+        Funnel bound when the raw-material store and the finished-goods store are separate: each
+        job's first delivery crosses cut(raw store) once, and with δ_return=1 its return haul
+        crosses cut(finished store) once. Each set of crossings bounds C_max on its own; take the larger.
+        """
+        out = out_node or self.lu_node
+        if out == self.lu_node:
+            return self.lu_cut_bound(machine_nodes, num_jobs, delta_return)
+
+        def one(src: str) -> float:
+            _k, cut = self.lu_cut(machine_nodes, source=src)
+            inv = sum(1.0 / self.corridor_time[c] for c in cut
+                      if self.corridor_time[c] > 0)
+            return num_jobs / inv if inv > 0 else 0.0
+
+        bound = one(self.lu_node)
+        if delta_return:
+            bound = max(bound, one(out))
+        return bound
+
+    def lu_cut_bound(self, machine_nodes: Sequence[str], num_jobs: int,
+                     delta_return: int = 1) -> float:
+        """LU 漏斗给出的 makespan 下界(与任何调度决策无关的硬地板)。
+
+        论证:δ_return=1 时每个工件必须**穿越漏斗两次**(首道送达出、成品回运
+        入),δ_return=0 时至少一次;漏斗由 k 条独占走廊组成,一次穿越占用走廊 c
+        达 tau(c)。把 X 次穿越分配到各割边、令 x_c 为落在 c 上的次数,则耗时
+        >= max_c x_c*tau(c);在 sum(x_c)=X 下最小化该上界得 X / sum_c (1/tau(c))。
+        故 C_max >= X / sum_c (1/tau(c))。这是零成本可得的合法下界。
+
+        Makespan lower bound given by the LU funnel (a hard floor independent of any scheduling decision).
+
+        Argument: when δ_return=1 every job must cross the funnel twice (out on the first delivery, in on the finished-goods return haul); when δ_return=0, at least once. The funnel is k exclusive corridors, and one crossing occupies corridor c for tau(c). Assign X crossings to the cut edges and let x_c be the number that fall on c. The time taken is at least max_c x_c*tau(c). Minimizing that bound subject to sum(x_c)=X yields X / sum_c (1/tau(c)). Hence C_max >= X / sum_c (1/tau(c)). This is a valid lower bound obtained at zero cost.
+        """
+        _k, cut = self.lu_cut(machine_nodes)
+        if not cut:
+            return 0.0
+        crossings = num_jobs * (2 if delta_return else 1)
+        inv = sum(1.0 / self.corridor_time[c] for c in cut
+                  if self.corridor_time[c] > 0)
+        return crossings / inv if inv > 0 else 0.0
+
+    def far_group_cut(self, machine_nodes: Sequence[str]) -> int:
+        """**深层瓶颈容量**:隔离"远端 RA 组"所需的最小走廊数。
+
+        `lu_min_cut` 只看 LU 出口,看不到路网深处的争用;而单台 RA 的连通度恒被
+        它自己那条支线卡成 1,也没有区分力。故取"到 LU 的理想距离高于中位数"的
+        RA 作为一组求最小割:哑铃布局下它恰等于中段并行通道数。
+
+        Deep-bottleneck capacity: the minimum number of corridors needed to isolate the "far robotic-arm group".
+
+        `lu_min_cut` only sees the LU exits and misses contention deep in the road network. A single robotic arm's connectivity is always pinned at 1 by its own spur, which has no discriminating power. The robotic arms whose ideal distance to the LU is above the median are therefore taken as one group and a min cut is computed. On a dumbbell layout this equals the number of parallel mid-segment lanes.
+        """
+        ds = {m: self.ideal_dist[self.lu_node].get(m, float("inf"))
+              for m in dict.fromkeys(machine_nodes) if m != self.lu_node}
+        if not ds:
+            return 0
+        vals = sorted(ds.values())
+        mid = vals[len(vals) // 2]
+        far = [m for m, d in ds.items() if d > mid]
+        if not far:                                   # 全等距时退化为取最远的一组
+            # When all distances are equal, fall back to the farthest group.
+            mx = max(vals)
+            far = [m for m, d in ds.items() if d >= mx]
+        k, _cut = self.lu_cut(far)
+        return k
+
+    def structural_features(self, machine_nodes: Sequence[str]) -> dict:
+        k, cut = self.lu_cut(machine_nodes)
+        return {
+            "funnel_share": round(self.funnel_share(machine_nodes), 4),
+            "lu_min_cut": k,
+            "lu_cut_corridors": cut,
+            "far_group_cut": self.far_group_cut(machine_nodes),
+            "corridors_per_node": round(len(self.corridor_time) / len(self.nodes), 4),
+        }
+
+
+def _path_nodes(parent: Dict[str, Optional[str]], sink: str) -> List[str]:
+    """增广路上除源点外的节点序列(自源向汇)。
+
+    Node sequence on an augmenting path, excluding the source (from source toward the sink).
+    """
+    out: List[str] = []
+    cur = sink
+    while parent[cur] is not None:
+        out.append(cur)
+        cur = parent[cur]
+    out.reverse()
+    return out
+
+
+# --------------------------------------------------------------------------
+# 走廊-时段影子价格(规格 5.5) / Corridor-time shadow prices (spec 5.5)
+# --------------------------------------------------------------------------
+
+class PriceTable:
+    """影子价格 pi(c,b):走廊 c 在时间桶 b 内**每单位占用时长**的边际 makespan 代价。
+
+    量纲说明(这是价格化接口成立的关键):pi = (松弛该时空槽位一个容量单位所换来的
+    makespan 改善) / 桶宽,是"时间/时间"的无量纲比率;于是一条路径的
+    price_cost = sum(pi * 占用时长) 具有**时间量纲**,可与到达时刻直接相加。
+    因此 arrive + theta * price_cost 是量纲一致的标量化,theta 为无量纲协调强度。
+
+    这一点正是价格化接口替代原"lam * 累计让行等待"启发式的理由:后者把一个随算例
+    规模增长的全局累计量与单道工序尺度的量相加,lam 无法跨算例可比。
+
+    Shadow price pi(c,b): the marginal makespan cost, per unit of occupation time, of corridor c inside time bucket b.
+
+    On dimension (this is what makes the priced interface valid): pi = (makespan improvement from relaxing that space-time slot by one capacity unit) / bucket width, a dimensionless "time/time" ratio. A path's price_cost = sum(pi * occupation time) therefore has the dimension of time and can be added directly to the arrival time. arrive + theta * price_cost is a dimensionally consistent scalarization, and theta is a dimensionless coordination strength.
+
+    This is exactly why the priced interface replaces the old "lam * cumulative yield-wait" heuristic: the latter adds a global cumulative quantity that grows with instance size to a quantity on the scale of a single operation, and lam is not comparable across instances.
+    """
+
+    def __init__(self, bucket_width: float):
+        if bucket_width <= 0:
+            raise ValueError("bucket_width 必须为正")
+        self.bucket_width = float(bucket_width)
+        self._pi: Dict[BucketKey, float] = {}
+
+    def bucket(self, t: float) -> int:
+        return int(t // self.bucket_width)
+
+    def bucket_span(self, b: int) -> Tuple[float, float]:
+        return b * self.bucket_width, (b + 1) * self.bucket_width
+
+    def is_empty(self) -> bool:
+        return not self._pi
+
+    def set(self, cid: str, b: int, value: float) -> None:
+        if value > 0:
+            self._pi[(cid, b)] = value
+        else:
+            self._pi.pop((cid, b), None)
+
+    def get(self, cid: str, b: int) -> float:
+        return self._pi.get((cid, b), 0.0)
+
+    def items(self):
+        return self._pi.items()
+
+    def interval_cost(self, cid: str, ts: float, te: float) -> float:
+        """一次占用 [ts, te) 的价格总额:跨桶按各桶内的重叠时长加权。
+
+        Total price of one occupation [ts, te): across buckets, weighted by the overlap duration inside each bucket.
+        """
+        if te <= ts:
+            return 0.0
+        total = 0.0
+        b = self.bucket(ts)
+        while b * self.bucket_width < te:
+            lo, hi = self.bucket_span(b)
+            overlap = min(te, hi) - max(ts, lo)
+            if overlap > 0:
+                total += self.get(cid, b) * overlap
+            b += 1
+        return total
+
+    def node_price(self, net: Network, node: str, t: float) -> float:
+        """节点在 t 时刻的"通行权价格":相邻走廊在该时段价格的均值。
+
+        用于上层评分(规格 6.5):衡量"把工序放到该 RA 处,其进出运输要买多贵的路"。
+        取均值而非求和,使不同度数的节点可比。
+
+        "Right-of-way price" of a node at time t: the mean price of adjacent corridors in that period.
+
+        Used by upper-level scoring (spec 6.5): how expensive a road must be bought for the transport into and out of a robotic arm if the operation is placed there. The mean, rather than the sum, keeps nodes of different degree comparable.
+        """
+        cids = net.incident_corridors(node)
+        if not cids:
+            return 0.0
+        b = self.bucket(t)
+        return sum(self.get(cid, b) for cid in cids) / len(cids)
+
+
+# --------------------------------------------------------------------------
+# 容量化预约表(规格 5.2) / Capacitated reservation table (spec 5.2)
+# --------------------------------------------------------------------------
+
+class ReservationTable:
+    """每条走廊的占用时窗列表,支持按走廊-时段设置容量、撤销与检查点回滚。
+
+    容量默认为 1(与独占语义等价)。容量提升仅用于影子价格的有限差分探测
+    (pricing.finite_difference_prices):把某个 (c,b) 的容量临时加 1,重解一次,
+    makespan 的改善量即该槽位的边际价值。
+
+    Per-corridor lists of occupation windows, with per corridor-time capacity, cancellation, and checkpoint rollback.
+
+    Capacity defaults to 1 (equivalent to exclusive use). Raising capacity is used only for finite-difference probes of shadow prices (pricing.finite_difference_prices): temporarily add 1 to the capacity of some (c,b), re-solve once, and the makespan improvement is that slot's marginal value.
+    """
+
+    def __init__(self, bucket_width: float = 0.0,
+                 capacity_override: Optional[Dict[BucketKey, int]] = None):
+        # cid -> 按 t_start 排序的 [t_start, t_end, agv, task];容量 > 1 时允许重叠
+        # cid -> [t_start, t_end, agv, task] sorted by t_start; overlap is allowed when capacity > 1.
+        self._res: Dict[str, List[Tuple[float, float, int, str]]] = {}
+        self.bucket_width = float(bucket_width)
+        self._cap: Dict[BucketKey, int] = dict(capacity_override or {})
+        self._undo: List[Tuple[str, Tuple[float, float, int, str]]] = []
+
+    # ---- 容量 ----
+    # Capacity
+
+    def _bucket(self, t: float) -> int:
+        return int(t // self.bucket_width) if self.bucket_width > 0 else 0
+
+    def capacity(self, cid: str, ts: float, te: float) -> int:
+        """占用区间跨越的所有时段中的最小容量(保守取法)。
+
+        Minimum capacity among all periods the occupation interval crosses (the conservative choice).
+        """
+        if not self._cap:
+            return 1
+        cap = 1 << 30
+        b = self._bucket(ts)
+        b_end = self._bucket(max(ts, te - 1e-9))
+        while b <= b_end:
+            cap = min(cap, self._cap.get((cid, b), 1))
+            b += 1
+        return max(1, cap)
+
+    # ---- 查询 ----
+    # Queries
+
+    def _overlap_count(self, cid: str, ts: float, te: float) -> int:
+        cnt = 0
+        for a, b, _agv, _task in self._res.get(cid, []):
+            if a >= te - 1e-12:
+                break                       # 列表按 a 升序,后续不可能重叠
+                # The list is sorted by a ascending, so later entries cannot overlap.
+            if b > ts + 1e-12:
+                cnt += 1
+        return cnt
+
+    def _is_free(self, cid: str, ts: float, tau: float) -> bool:
+        te = ts + tau
+        return self._overlap_count(cid, ts, te) < self.capacity(cid, ts, te)
+
+    def earliest_entry(self, cid: str, t: float, tau: float) -> float:
+        """从 t 起最早可占用 [t', t'+tau) 的时刻。
+
+        Earliest time, from t onward, at which [t', t'+tau) can be occupied.
+        """
+        if not self._cap:
+            # 容量恒为 1 时预约互不重叠、按起点排序即按终点排序,线性扫描即得同一结果
+            # With unit capacity the reservations are disjoint, so a linear scan gives the same answer
+            cand = t
+            for a, b, _agv, _task in self._res.get(cid, ()):
+                if b <= cand + 1e-12:
+                    continue
+                if a >= cand + tau - 1e-12:
+                    break
+                cand = b
+            return cand
+        for cand in self._entry_candidates(cid, t):
+            if self._is_free(cid, cand, tau):
+                return cand
+        # 所有既有占用结束之后必然可行
+        # After every existing occupation has ended, entry is necessarily feasible.
+        ends = [b for _a, b, _agv, _task in self._res.get(cid, [])]
+        return max([t] + ends)
+
+    def _entry_candidates(self, cid: str, t: float) -> List[float]:
+        cands = {t}
+        for _a, b, _agv, _task in self._res.get(cid, []):
+            if b > t:
+                cands.add(b)
+        return sorted(cands)
+
+    def feasible_entries(self, cid: str, t: float, tau: float,
+                         limit: int, horizon_buckets: int = 3) -> List[float]:
+        """从 t 起若干个可行进入时刻(升序,首个即最早)。
+
+        除"最早可行"外,还给出后续时间桶的边界时刻——价格感知路由据此可以选择
+        "多等一会儿,进一个更便宜的时段",这是单标签最早到达搜索无法表达的决策。
+
+        Several feasible entry times from t onward (ascending; the first is the earliest).
+
+        Besides the earliest feasible entry, later bucket boundaries are also offered. Price-aware routing can then choose to "wait a little longer and enter a cheaper period", a decision that single-label earliest-arrival search cannot express.
+        """
+        first = self.earliest_entry(cid, t, tau)
+        out = [first]
+        if limit <= 1:
+            return out
+        cands = set(self._entry_candidates(cid, t))
+        if self.bucket_width > 0:
+            b0 = self._bucket(first)
+            for k in range(1, horizon_buckets + 1):
+                cands.add((b0 + k) * self.bucket_width)
+        for cand in sorted(cands):
+            if len(out) >= limit:
+                break
+            if cand <= first + 1e-12:
+                continue
+            if self._is_free(cid, cand, tau):
+                out.append(cand)
+        return out
+
+    # ---- 修改 ----
+    # Modifications
+
+    def reserve(self, cid: str, ts: float, te: float, agv: int, task: str) -> None:
+        lst = self._res.setdefault(cid, [])
+        if self._overlap_count(cid, ts, te) >= self.capacity(cid, ts, te):
+            raise AssertionError(f"预约冲突 {cid}: [{ts},{te}) 超出容量")
+        item = (ts, te, agv, task)
+        bisect.insort(lst, item)
+        self._undo.append((cid, item))
+
+    def release_all(self, task: str) -> int:
+        """撤销某任务的全部占用(规格 5.2);返回撤销的区间数。
+
+        Cancel every occupation of a task (spec 5.2); return how many intervals were removed.
+        """
+        removed = 0
+        for cid, lst in self._res.items():
+            keep = [r for r in lst if r[3] != task]
+            if len(keep) != len(lst):
+                removed += len(lst) - len(keep)
+                self._res[cid] = keep
+        if removed:
+            self._undo = [(c, it) for c, it in self._undo if it[3] != task]
+        return removed
+
+    def checkpoint(self) -> int:
+        """记录当前状态令牌,供 rollback 回退(供派车试探与价格探测使用)。
+
+        Record a token for the current state, so rollback can undo it (used by dispatch probes and price probes).
+        """
+        return len(self._undo)
+
+    def rollback(self, token: int) -> None:
+        while len(self._undo) > token:
+            cid, item = self._undo.pop()
+            lst = self._res.get(cid)
+            if not lst:
+                continue
+            idx = bisect.bisect_left(lst, item)
+            if idx < len(lst) and lst[idx] == item:
+                lst.pop(idx)
+
+    # ---- 统计 ----
+    # Statistics
+
+    def all_reservations(self) -> Dict[str, List[Tuple[float, float, int, str]]]:
+        return self._res
+
+    def occupancy(self, bucket_width: float) -> Dict[BucketKey, float]:
+        """各走廊-时段的占用率 util[c][b] = 桶内被占用时长 / 桶宽,取值 [0,1]。
+
+        这是**前瞻性**拥堵信号(我若此刻前往可能受阻),与解码器统计的实际让行
+        等待(**回顾性**信号:这里已经真的堵了)含义不同,不可混用。
+
+        Occupancy of each corridor-time slot, util[c][b] = occupied time inside the bucket / bucket width, in [0,1].
+
+        This is a forward-looking congestion signal (I may be blocked if I head there now). It does not mean the same thing as the actual yield-wait counted by the decoder (a retrospective signal: it really was congested here), and the two must not be mixed.
+        """
+        util: Dict[BucketKey, float] = {}
+        if bucket_width <= 0:
+            return util
+        for cid, lst in self._res.items():
+            for ts, te, _agv, _task in lst:
+                b = int(ts // bucket_width)
+                while b * bucket_width < te:
+                    lo, hi = b * bucket_width, (b + 1) * bucket_width
+                    overlap = min(te, hi) - max(ts, lo)
+                    if overlap > 0:
+                        util[(cid, b)] = util.get((cid, b), 0.0) + overlap / bucket_width
+                    b += 1
+        return util
+
+
+# --------------------------------------------------------------------------
+# 节点模型与节点占用表 / Node model and node occupancy table
+# --------------------------------------------------------------------------
+
+@dataclass(frozen=True)
+class NodeModel:
+    """三类节点的容量与净空时距。
+
+    store    毛坯库、成品库:容量不限,不建占用表;
+    machine  1 个交接位 + 待命位,总容量 machine_capacity(含交接中的车;None = 不限);
+    junction 路口:容量 1。
+    一辆车在节点上的占用区间为 [到达, 离开 + headway),停放的空车为 [到达, ∞)。
+
+    Capacity and clearance headway of the three node kinds. A vehicle occupies a node over
+    [arrival, departure + headway); a parked idle vehicle over [arrival, ∞).
+    """
+    kinds: Dict[str, str]
+    machine_capacity: Optional[int]
+    headway: float
+
+    def cap(self, node: str) -> float:
+        kind = self.kinds.get(node, "junction")
+        if kind == "store":
+            return INF
+        if kind == "machine":
+            return INF if self.machine_capacity is None else float(self.machine_capacity)
+        return 1.0
+
+    def need(self, node: str) -> float:
+        """离开后仍须保留的净空;容量不限的节点不需要。"""
+        return 0.0 if self.cap(node) == INF else self.headway
+
+    @classmethod
+    def from_instance(cls, inst) -> "NodeModel":
+        stores = {inst.lu_node, inst.out_node}
+        kinds = {n: "junction" for n in inst.nodes}
+        for node in inst.machine_node.values():
+            if node not in stores:
+                kinds[node] = "machine"
+        for node in stores:
+            kinds[node] = "store"
+        return cls(kinds, inst.machine_capacity, float(inst.node_headway))
+
+
+NodeItem = Tuple[float, float, int, str]   # (start, end, agv, task);end 可为 INF
+_ALWAYS: List[Tuple[float, float]] = [(-INF, INF)]
+
+
+class NodeTable:
+    """节点占用表:按节点记录各车的停留区间,支持检查点回滚与安全区间查询。
+
+    Node occupancy table: per-node vehicle stay intervals, with checkpoint rollback and
+    safe-interval queries.
+    """
+
+    def __init__(self, model: NodeModel):
+        self.model = model
+        self._occ: Dict[str, List[NodeItem]] = {}
+        self._undo: List[Tuple[str, str, NodeItem, int]] = []
+        # 节点内容的版本号,作安全区间缓存的失效键。新版本号全局唯一,回滚时恢复旧号,
+        # 故版本号相同即内容相同,试探回滚后缓存仍然有效。
+        # Content version per node, the invalidation key of the safe-interval cache. New ids are
+        # globally unique and rollback restores the old id, so equal ids mean equal contents.
+        self._version: Dict[str, int] = {}
+        self._next_version = 0
+        self._present: Dict[Tuple[str, int], int] = {}
+        self._cache: Dict[Tuple[str, int], Tuple[int, List[Tuple[float, float]]]] = {}
+        self.cap_of: Dict[str, float] = {n: model.cap(n) for n in model.kinds}
+        self.need_of: Dict[str, float] = {n: model.need(n) for n in model.kinds}
+
+    def _bump(self, node: str) -> int:
+        prev = self._version.get(node, 0)
+        self._next_version += 1
+        self._version[node] = self._next_version
+        return prev
+
+    def _add(self, node: str, item: NodeItem) -> None:
+        bisect.insort(self._occ.setdefault(node, []), item)
+        key = (node, item[2])
+        self._present[key] = self._present.get(key, 0) + 1
+        self._undo.append(("add", node, item, self._bump(node)))
+
+    def _remove(self, node: str, item: NodeItem) -> None:
+        lst = self._occ.get(node, [])
+        idx = bisect.bisect_left(lst, item)
+        if idx >= len(lst) or lst[idx] != item:
+            raise KeyError(f"节点 {node} 上没有占用 {item}")
+        lst.pop(idx)
+        self._present[(node, item[2])] -= 1
+        self._undo.append(("remove", node, item, self._bump(node)))
+
+    def _max_count(self, node: str, ts: float, te: float, exclude: int) -> int:
+        items = [it for it in self._occ.get(node, ())
+                 if it[2] != exclude and it[0] < te and it[1] > ts]
+        points = [ts] + [it[0] for it in items if ts <= it[0] < te]
+        best = 0
+        for p in points:
+            c = sum(1 for a, b, _k, _t in items if a <= p + NODE_EPS and b > p + NODE_EPS)
+            best = max(best, c)
+        return best
+
+    def reserve(self, node: str, ts: float, te: float, agv: int, task: str) -> None:
+        cap = self.model.cap(node)
+        if cap == INF:
+            return
+        if te > ts + NODE_EPS and self._max_count(node, ts, te, agv) >= cap:
+            raise AssertionError(f"节点 {node} 容量冲突: AGV{agv} [{ts},{te})")
+        self._add(node, (ts, te, agv, task))
+
+    def close_open(self, node: str, agv: int, end: float) -> None:
+        """把该车在此节点上的开放停放区间 [s, ∞) 收为 [s, end)。"""
+        if self.model.cap(node) == INF:
+            return
+        for it in list(self._occ.get(node, ())):
+            if it[2] == agv and it[1] == INF:
+                self._remove(node, it)
+                self._add(node, (it[0], end, agv, it[3]))
+                return
+
+    def open_parkers(self, node: str, exclude: Optional[int] = None) -> List[NodeItem]:
+        return [it for it in self._occ.get(node, ())
+                if it[1] == INF and it[2] != exclude]
+
+    def safe_intervals(self, node: str, agv: int) -> List[Tuple[float, float]]:
+        """其他车的占用数低于容量的极大半开区间,按时间升序。"""
+        cap = self.cap_of[node]
+        if cap == INF:
+            return _ALWAYS
+        occ = self._occ.get(node, ())
+        # 该车在此节点没有停留时,与其他同样没有停留的车共用一份缓存
+        # A vehicle with no stay at this node shares one cache entry with every other such vehicle
+        key = (node, agv if self._present.get((node, agv), 0) else -1)
+        ver = self._version.get(node, 0)
+        hit = self._cache.get(key)
+        if hit is not None and hit[0] == ver:
+            return hit[1]
+        events: List[Tuple[float, int]] = []
+        for a, b, k, _t in occ:
+            if k == agv:
+                continue
+            events.append((a, 1))
+            if b != INF:
+                events.append((b, -1))
+        events.sort(key=lambda e: (e[0], e[1]))
+        out: List[Tuple[float, float]] = []
+        count, lo = 0, -INF
+        i = 0
+        while i < len(events):
+            t = events[i][0]
+            before = count
+            while i < len(events) and abs(events[i][0] - t) <= NODE_EPS:
+                count += events[i][1]
+                i += 1
+            if before < cap <= count and lo is not None:
+                if t > lo + NODE_EPS:
+                    out.append((lo, t))
+                lo = None
+            elif before >= cap > count:
+                lo = t
+        if lo is not None:
+            out.append((lo, INF))
+        self._cache[key] = (ver, out)
+        return out
+
+    def checkpoint(self) -> int:
+        return len(self._undo)
+
+    def rollback(self, token: int) -> None:
+        while len(self._undo) > token:
+            op, node, item, prev = self._undo.pop()
+            lst = self._occ.setdefault(node, [])
+            key = (node, item[2])
+            if op == "add":
+                idx = bisect.bisect_left(lst, item)
+                lst.pop(idx)
+                self._present[key] -= 1
+            else:
+                bisect.insort(lst, item)
+                self._present[key] = self._present.get(key, 0) + 1
+            self._version[node] = prev
+
+    def all_occupancy(self) -> Dict[str, List[NodeItem]]:
+        return self._occ
+
+
+@dataclass
+class TaskPlan:
+    """一次运输任务(含为腾位而做的驱离)的完整规划,可整体重放。
+
+    ops 为按序执行的落表操作,重放即得与规划时相同的预约状态;state 为执行后各车的
+    (位置, 可用时刻)更新。
+
+    Full plan of one transport task, including evictions; `ops` replays the reservations
+    in order, and `state` holds the resulting (location, available time) of each vehicle.
+    """
+    agv: int
+    empty: RoutePlan
+    loaded: RoutePlan
+    relocations: List[Tuple[int, RoutePlan]] = field(default_factory=list)
+    ops: List[tuple] = field(default_factory=list)
+    state: Dict[int, Tuple[str, float]] = field(default_factory=dict)
+
+
+# --------------------------------------------------------------------------
+# 路由层(规格 5.3) / Routing layer (spec 5.3)
+# --------------------------------------------------------------------------
+
+@dataclass
+class _Label:
+    t: float          # 到达该节点的时刻 / Arrival time at this node
+    g: float          # 累计价格代价 / Cumulative price cost
+    node: str
+    parent: int       # 上一个 label 在 pool 中的下标,-1 表示起点
+    # Index of the previous label in the pool; -1 means the start.
+    seg: Optional[Segment]
+
+
+class Router:
+    """时间窗路由:价格为空或 theta=0 时为单标签最早到达;否则为价格加权多标签搜索。
+
+    conflict_free=False 时退化为查理想最短路 t*(规格 12.2 第一层对标)。
+
+    Time-window routing: single-label earliest arrival when prices are empty or theta=0; otherwise price-weighted multi-label search.
+
+    When conflict_free=False, it falls back to looking up the ideal shortest path t* (layer-1 benchmark of spec 12.2).
+    """
+
+    # 全局路由调用计数器,仅供诊断工具统计"降本减少了多少次路由"用,不参与任何决策。
+    # 用类属性而非实例属性,是因为 decode() 内部自建 Router 且不外露,实例计数取不到。
+    # Global routing-call counter, used only by diagnostic tools to count how many routes the cost cut avoided. It takes part in no decision.
+    # A class attribute, not an instance attribute, because decode() builds its own Router and does not expose it, so an instance counter cannot be read.
+    total_route_calls = 0
+
+    def __init__(self, network: Network, conflict_free: bool = True,
+                 prices: Optional[PriceTable] = None, theta: float = 0.0,
+                 max_entry_options: int = 3, label_budget: int = 3000,
+                 bucket_width: float = 0.0,
+                 capacity_override: Optional[Dict[BucketKey, int]] = None,
+                 node_model: Optional[NodeModel] = None):
+        if conflict_free and not network.routable:
+            raise ValueError(
+                "该算例只给了行驶时间矩阵、没有走廊图,无法在冲突模型下路由;"
+                "只能跑 conflict_free=False 的退化对标档(规格 12.2)")
+        self.net = network
+        self.conflict_free = conflict_free
+        self.prices = prices
+        self.theta = float(theta)
+        self.max_entry_options = int(max_entry_options)
+        self.label_budget = int(label_budget)
+        bw = bucket_width or (prices.bucket_width if prices is not None else 0.0)
+        self.bucket_width = bw
+        self.table = ReservationTable(bucket_width=bw,
+                                      capacity_override=capacity_override)
+        self.nodes: Optional[NodeTable] = (NodeTable(node_model)
+                                           if node_model is not None else None)
+
+    def checkpoint(self) -> Tuple[int, int]:
+        return (self.table.checkpoint(),
+                self.nodes.checkpoint() if self.nodes is not None else 0)
+
+    def rollback(self, token: Tuple[int, int]) -> None:
+        self.table.rollback(token[0])
+        if self.nodes is not None:
+            self.nodes.rollback(token[1])
+
+    # ---- 是否启用价格感知搜索 ----
+    # Whether price-aware search is enabled.
+    def _price_aware(self) -> bool:
+        return (self.conflict_free and self.theta > 0.0
+                and self.prices is not None and not self.prices.is_empty())
+
+    def route(self, start: str, goal: str, t0: float, agv: int, task: str,
+              commit: bool = True) -> RoutePlan:
+        Router.total_route_calls += 1
+        if start == goal:
+            return RoutePlan(start, goal, t0, t0)
+
+        if not self.conflict_free:
+            # 退化模式:运输时间 = 理想最短路,无预约
+            # Degenerate mode: travel time = ideal shortest path, no reservations.
+            arrive = t0 + self.net.ideal_dist[start][goal]
+            return RoutePlan(start, goal, t0, arrive)
+
+        segs, arrive, price_cost = (self._search_priced(start, goal, t0)
+                                    if self._price_aware()
+                                    else self._search_earliest(start, goal, t0))
+
+        # 等待统计:进入某走廊前在其上游节点停靠的时长,记到该走廊头上
+        # Wait statistics: time spent waiting at the upstream node before entering a corridor, charged to that corridor.
+        waits: Dict[str, float] = {}
+        at_time = t0
+        for s in segs:
+            w = s.enter - at_time
+            if w > 0:
+                waits[s.corridor] = waits.get(s.corridor, 0.0) + w
+            at_time = s.exit
+
+        if commit:
+            for s in segs:
+                self.table.reserve(s.corridor, s.enter, s.exit, agv, task)
+
+        return RoutePlan(start, goal, t0, arrive, segs, waits, price_cost)
+
+    # ---- 单标签最早到达(价格协调前的原始行为) ----
+    # Single-label earliest arrival (the original behavior before price coordination).
+
+    def _search_earliest(self, start: str, goal: str,
+                         t0: float) -> Tuple[List[Segment], float, float]:
+        best: Dict[str, float] = {start: t0}
+        prev: Dict[str, Tuple[str, str, float, float]] = {}
+        heap: List[Tuple[float, str]] = [(t0, start)]
+        while heap:
+            t, u = heapq.heappop(heap)
+            if t > best.get(u, float("inf")):
+                continue
+            if u == goal:
+                break
+            for cid, v, tau in self.net.adj[u]:
+                enter = self.table.earliest_entry(cid, t, tau)
+                arr = enter + tau
+                if arr < best.get(v, float("inf")):
+                    best[v] = arr
+                    prev[v] = (u, cid, enter, arr)
+                    heapq.heappush(heap, (arr, v))
+
+        if goal not in best:
+            raise RuntimeError(f"路由失败: {start} -> {goal}(路网不连通?)")
+
+        segs: List[Segment] = []
+        node = goal
+        while node != start:
+            u, cid, enter, exit_ = prev[node]
+            segs.append(Segment(cid, u, node, enter, exit_))
+            node = u
+        segs.reverse()
+        cost = 0.0
+        if self.prices is not None:
+            cost = sum(self.prices.interval_cost(s.corridor, s.enter, s.exit) for s in segs)
+        return segs, best[goal], cost
+
+    # ---- 价格加权多标签 Pareto 搜索 ----
+    # Price-weighted multi-label Pareto search.
+
+    def _search_priced(self, start: str, goal: str,
+                       t0: float) -> Tuple[List[Segment], float, float]:
+        """在 (到达时刻 t, 累计价格 g) 上做 Pareto 支配剪枝,按 t + theta*g 出队。
+
+        正确性:每条弧使 t 与 g 均非减,故 key = t + theta*g 沿路径单调非减,
+        首次弹出 goal 即该标量化下的最优;支配关系 (t1<=t2 且 g1<=g2) 有效,
+        因为节点可无限等待(停靠位不占通行资源),早到者能模拟晚到者的任何后续。
+
+        Pareto dominance pruning on (arrival time t, cumulative price g), dequeued by t + theta*g.
+
+        Correctness: every arc leaves both t and g nondecreasing, so key = t + theta*g is monotone along a path, and the first time goal is popped is optimal for that scalarization. Dominance (t1<=t2 and g1<=g2) is valid because a node may wait indefinitely (a berth does not consume travel resource), so an earlier arrival can imitate any continuation of a later arrival.
+        """
+        prices = self.prices
+        assert prices is not None
+        theta = self.theta
+
+        pool: List[_Label] = [_Label(t0, 0.0, start, -1, None)]
+        frontier: Dict[str, List[Tuple[float, float]]] = {start: [(t0, 0.0)]}
+        heap: List[Tuple[float, float, float, int]] = [(t0, t0, 0.0, 0)]
+        goal_idx: Optional[int] = None
+        expanded = 0
+
+        def dominated(node: str, t: float, g: float) -> bool:
+            for ti, gi in frontier.get(node, ()):
+                if ti <= t + 1e-12 and gi <= g + 1e-12:
+                    return True
+            return False
+
+        def insert_frontier(node: str, t: float, g: float) -> None:
+            lst = [p for p in frontier.get(node, []) if not (t <= p[0] + 1e-12 and g <= p[1] + 1e-12)]
+            lst.append((t, g))
+            frontier[node] = lst
+
+        while heap:
+            _key, t, g, idx = heapq.heappop(heap)
+            lab = pool[idx]
+            if lab.node == goal:
+                goal_idx = idx
+                break
+            if expanded >= self.label_budget:
+                break
+            expanded += 1
+            for cid, v, tau in self.net.adj[lab.node]:
+                for enter in self.table.feasible_entries(cid, t, tau, self.max_entry_options):
+                    arr = enter + tau
+                    ng = g + prices.interval_cost(cid, enter, arr)
+                    if dominated(v, arr, ng):
+                        continue
+                    insert_frontier(v, arr, ng)
+                    pool.append(_Label(arr, ng, v, idx, Segment(cid, lab.node, v, enter, arr)))
+                    heapq.heappush(heap, (arr + theta * ng, arr, ng, len(pool) - 1))
+
+        if goal_idx is None:
+            # 预算耗尽或未达:回退到最早到达搜索,保证解码永不失败(建模文档 B4)
+            # Budget exhausted or goal not reached: fall back to earliest-arrival search, so decoding never fails (modeling document B4).
+            return self._search_earliest(start, goal, t0)
+
+        segs: List[Segment] = []
+        idx = goal_idx
+        while pool[idx].seg is not None:
+            segs.append(pool[idx].seg)      # type: ignore[arg-type]
+            idx = pool[idx].parent
+        segs.reverse()
+        return segs, pool[goal_idx].t, pool[goal_idx].g
+
+    # ---- 任务级安全区间路由(节点模型) ----
+    # Task-level safe-interval routing (node model)
+
+    def _interval_at(self, node: str, agv: int, t: float) -> Tuple[float, float]:
+        assert self.nodes is not None
+        for lo, hi in self.nodes.safe_intervals(node, agv):
+            if lo <= t + NODE_EPS and t < hi - NODE_EPS:
+                return lo, hi
+        raise RuntimeError(f"AGV{agv} 于 {t} 在节点 {node} 上没有可停留区间")
+
+    def _nearest_store(self, node: str) -> str:
+        assert self.nodes is not None
+        stores = sorted(n for n, k in self.nodes.model.kinds.items() if k == "store")
+        return min(stores, key=lambda s: (self.net.ideal_dist[node][s], s))
+
+    def _sipp(self, agv: int, start: str, t0: float, start_iv: Tuple[float, float],
+              pickup: Optional[str], ready: float, goal: str, accept,
+              must_succeed: bool = True):
+        """安全区间搜索:状态 = (节点, 安全区间, 阶段),每个状态只保留最早到达。
+
+        阶段 0 驶向取货点 pickup;在 pickup 上等到 max(到达, ready) 后切入阶段 1,驶向 goal。
+        pickup 为 None 时只有阶段 1。goal 处由 accept(node, 区间, 到达) 判定能否结束,
+        返回非 None 即接受。返回 (标签链, accept 的结果);无解时 must_succeed 为真则报错。
+
+        Safe-interval search over states (node, safe interval, phase), keeping only the earliest
+        arrival per state. Phase 0 heads for `pickup`; after waiting there until max(arrival, ready)
+        the search switches to phase 1 and heads for `goal`, where `accept` decides termination.
+        """
+        assert self.nodes is not None
+        model = self.nodes.model
+        Router.total_route_calls += 1
+        # 标签:(节点, 区间, 阶段, 到达时刻, 父标签, 走廊段或 None)
+        pool: List[tuple] = []
+        best: Dict[Tuple[str, float, int], float] = {}
+        heap: List[Tuple[Tuple[float, float], float, str, int, int]] = []
+        dist = self.net.ideal_dist
+        to_goal = dist[goal] if goal in dist else {}
+        d_pg = dist[pickup][goal] if pickup is not None else 0.0
+
+        # A* 键:理想行程是可采纳且一致的下界,故每个状态首次出队即其最早到达
+        # A* key: ideal travel time is an admissible, consistent bound, so each state's first pop is its earliest arrival
+        # 等件期间许多标签键值相同,并列时取理想剩余行程短者,免得按宽度优先铺满全图
+        # While waiting for the job many labels tie; ties go to the shorter ideal remaining trip
+        def f_key(node: str, ph: int, t: float) -> Tuple[float, float]:
+            if ph == 0:
+                rem = dist[node][pickup] + d_pg
+                return max(t + dist[node][pickup], ready) + d_pg, rem
+            rem = to_goal.get(node, 0.0)
+            return t + rem, rem
+
+        def push(node: str, iv: Tuple[float, float], ph: int, t: float,
+                 parent: int, seg: Optional[tuple]) -> int:
+            key = (node, iv[0], ph)
+            if t < best.get(key, INF) - NODE_EPS:
+                best[key] = t
+                pool.append((node, iv, ph, t, parent, seg))
+                heapq.heappush(heap, (f_key(node, ph, t), t, node, ph, len(pool) - 1))
+                return len(pool) - 1
+            return -1
+
+        # 后继按需生成:对每个邻点只压入最早可进的那个安全区间,其出队时再压入下一个。
+        # 同一节点后一区间的到达必晚于前一区间,A* 键不减,故出队次序与一次全压相同。
+        # Successors are generated lazily: only the earliest enterable safe interval of each
+        # neighbour is pushed, and the next one when that child is popped. A later interval of the
+        # same node is always reached later, so the pop order matches pushing them all at once.
+        siblings: Dict[int, Tuple[int, str, str, float, int]] = {}
+
+        need_of = self.nodes.need_of
+        safe = self.nodes.safe_intervals
+        entry = self.table.earliest_entry
+
+        def expand_edge(parent: int, cid: str, v: str, tau: float, first: int,
+                        ivs: Optional[List[Tuple[float, float]]] = None) -> None:
+            node, iv_p, ph, t, _p, _s = pool[parent]
+            dep_hi = iv_p[1] - need_of[node]
+            need_v = need_of[v]
+            if ivs is None:
+                ivs = safe(v, agv)
+            for n in range(first, len(ivs)):
+                lo2, hi2 = ivs[n]
+                if lo2 - tau > dep_hi + NODE_EPS:
+                    return
+                upper = min(dep_hi, hi2 - need_v - tau)
+                lower = max(t, lo2 - tau)
+                if lower > upper + NODE_EPS:
+                    continue
+                dep = entry(cid, lower, tau)
+                if dep > upper + NODE_EPS:
+                    continue
+                child = push(v, ivs[n], ph, dep + tau, parent, (cid, node, v, dep, dep + tau))
+                if child >= 0:
+                    siblings[child] = (parent, cid, v, tau, n + 1)
+                    return
+
+        push(start, start_iv, 0 if pickup is not None else 1, t0, -1, None)
+        expanded = 0
+        while heap:
+            _f, _t, _n, _p, idx = heapq.heappop(heap)
+            sib = siblings.pop(idx, None)
+            if sib is not None:
+                expand_edge(*sib)
+            node, iv, ph, t, _parent, _seg = pool[idx]
+            if t > best[(node, iv[0], ph)] + NODE_EPS:
+                continue
+            expanded += 1
+            if expanded > self.label_budget * 50:
+                break
+            if ph == 0 and node == pickup:
+                tp = max(t, ready)
+                if tp + need_of[node] <= iv[1] + NODE_EPS:
+                    push(node, iv, 1, tp, idx, None)
+            if ph == 1 and node == goal:
+                res = accept(node, iv, t)
+                if res is not None:
+                    chain = []
+                    k = idx
+                    while k >= 0:
+                        n_, iv_, ph_, t_, p_, s_ = pool[k]
+                        chain.append((n_, iv_, ph_, t_, p_,
+                                      Segment(*s_) if s_ is not None else None))
+                        k = p_
+                    chain.reverse()
+                    return chain, res
+            if iv[1] - need_of[node] < t - NODE_EPS:
+                continue
+            for cid, v, tau in self.net.adj[node]:
+                ivs = safe(v, agv)
+                # 跳过在本标签到达之前就已结束的区间
+                # Skip intervals that end before this label could get there
+                first = bisect.bisect_right(ivs, (t + tau, INF)) - 1 if len(ivs) > 1 else 0
+                expand_edge(idx, cid, v, tau, max(0, first), ivs)
+        if must_succeed:
+            raise RuntimeError(f"任务路由失败: AGV{agv} {start}->{pickup}->{goal}")
+        return None
+
+    @staticmethod
+    def _plan_from(start: str, goal: str, t0: float, arrive: float,
+                   segs: List[Segment]) -> RoutePlan:
+        waits: Dict[str, float] = {}
+        at_time = t0
+        for s in segs:
+            w = s.enter - at_time
+            if w > NODE_EPS:
+                waits[s.corridor] = waits.get(s.corridor, 0.0) + w
+            at_time = s.exit
+        return RoutePlan(start, goal, t0, arrive, list(segs), waits, 0.0)
+
+    def _apply(self, ops: List[tuple], op: tuple) -> None:
+        assert self.nodes is not None
+        kind = op[0]
+        if kind == "corr":
+            _k, cid, ts, te, agv, task = op
+            self.table.reserve(cid, ts, te, agv, task)
+        elif kind == "nadd":
+            _k, node, ts, te, agv, task = op
+            self.nodes.reserve(node, ts, te, agv, task)
+        else:
+            _k, node, agv, end = op
+            self.nodes.close_open(node, agv, end)
+        ops.append(op)
+
+    def replay(self, plan: TaskPlan) -> None:
+        """把已规划任务的全部落表操作原样重放(胜者路径复用)。"""
+        scratch: List[tuple] = []
+        for op in plan.ops:
+            self._apply(scratch, op)
+
+    def _commit_chain(self, ops: List[tuple], agv: int, chain: List[tuple],
+                      task: str, start_open: bool, end_open: bool) -> None:
+        """把一条标签链落表:走廊段,以及沿途各节点的停留区间。
+
+        起点若是该车的开放停放区间则收口;终点 end_open 为真时记为开放停放 [到达, ∞)。
+        """
+        assert self.nodes is not None
+        model = self.nodes.model
+        visits: List[List] = [[chain[0][0], chain[0][3], None]]   # [节点, 到达, 离开]
+        for _node, _iv, ph, _t, _p, seg in chain[1:]:
+            if seg is None:
+                continue
+            visits[-1][2] = seg.enter
+            self._apply(ops, ("corr", seg.corridor, seg.enter, seg.exit, agv,
+                              f"{task}-p{ph}"))
+            visits.append([seg.v, seg.exit, None])
+        for n, (node, arr, dep) in enumerate(visits):
+            need = model.need(node)
+            last = n == len(visits) - 1
+            if n == 0 and start_open:
+                if dep is not None:
+                    self._apply(ops, ("nclose", node, agv, dep + need))
+                continue
+            if last:
+                if end_open:
+                    self._apply(ops, ("nadd", node, arr, INF, agv, task))
+                continue
+            self._apply(ops, ("nadd", node, arr, dep + need, agv, task))
+
+    def _relocate(self, ops: List[tuple], agv: int, node: str, t0: float,
+                  start_iv: Tuple[float, float], task: str, start_open: bool,
+                  must_succeed: bool = True):
+        """把停在机器节点 node 的车开往最近的库区;返回 (库区, 路径计划) 或 None。"""
+        store = self._nearest_store(node)
+        found = self._sipp(agv, node, t0, start_iv, None, 0.0, store,
+                           lambda _n, _iv, _t: True, must_succeed=must_succeed)
+        if found is None:
+            return None
+        chain, _ = found
+        if ops is not None:
+            self._commit_chain(ops, agv, chain, task, start_open=start_open,
+                               end_open=False)
+        segs = [c[5] for c in chain if c[5] is not None]
+        plan = self._plan_from(node, store, t0, chain[-1][3], segs)
+        return store, plan, chain
+
+    def plan_task(self, agv: int, loc: str, avail: float, pickup: str, dest: str,
+                  ready: float, task: str) -> TaskPlan:
+        """规划并落表一次运输任务:必要的驱离 + 空载段 + 等件 + 载货段 + 停放或离场。
+
+        Plan and commit one transport task: any evictions, empty leg, wait for the job,
+        loaded leg, and then park at the destination or leave for the nearest store.
+        """
+        assert self.nodes is not None and self.conflict_free
+        model = self.nodes.model
+        ops: List[tuple] = []
+        state: Dict[int, Tuple[str, float]] = {}
+        relocs: List[Tuple[int, RoutePlan]] = []
+
+        # 端点机器上的开放停放车数 >= 容量时,先把最早停下的空车开去库区;
+        # 停放数本就不超过容量,故每个端点至多驱离一辆
+        for x in dict.fromkeys([pickup, dest]):
+            if model.kinds.get(x) != "machine":
+                continue
+            while True:
+                parked = self.nodes.open_parkers(x, exclude=agv)
+                if len(parked) < model.cap(x):
+                    break
+                s0, _e, p_agv, _tk = min(parked, key=lambda it: (it[0], it[2]))
+                iv = self._interval_at(x, p_agv, s0)
+                store, plan, _ch = self._relocate(ops, p_agv, x, s0, iv,
+                                                  f"R{p_agv}-{task}", start_open=True)
+                relocs.append((p_agv, plan))
+                state[p_agv] = (store, plan.arrive)
+
+        start_iv = self._interval_at(loc, agv, avail)
+        dest_is_machine = model.kinds.get(dest) == "machine"
+
+        def accept(node: str, iv: Tuple[float, float], t: float):
+            if iv[1] == INF:
+                return ("park", None)
+            if not dest_is_machine:
+                return None
+            found = self._relocate(None, agv, node, t, iv, "", start_open=False,
+                                   must_succeed=False)
+            return None if found is None else ("leave", found)
+
+        chain, (mode, found) = self._sipp(agv, loc, avail, start_iv, pickup, ready,
+                                          dest, accept)
+        start_open = any(it[2] == agv for it in self.nodes.open_parkers(loc))
+        self._commit_chain(ops, agv, chain, task, start_open=start_open,
+                           end_open=(mode == "park"))
+
+        # chain[0] 是起点;其后第一个不带走廊段的标签就是在取货点的阶段切换
+        switch = next(i for i in range(1, len(chain)) if chain[i][5] is None)
+        empty_segs = [c[5] for c in chain[1:switch] if c[5] is not None]
+        loaded_segs = [c[5] for c in chain[switch + 1:] if c[5] is not None]
+        t_arr_pick = chain[switch - 1][3]
+        t_pick = chain[switch][3]
+        t_deliver = chain[-1][3]
+        empty = self._plan_from(loc, pickup, avail, t_arr_pick, empty_segs)
+        loaded = self._plan_from(pickup, dest, t_pick, t_deliver, loaded_segs)
+
+        if mode == "leave":
+            store, plan, rchain = found
+            # 离场链的起点即目的机器:按普通节点写入 [送达, 离开 + h)
+            self._commit_chain(ops, agv, rchain, f"R{agv}-{task}", start_open=False,
+                               end_open=False)
+            relocs.append((agv, plan))
+            state[agv] = (store, plan.arrive)
+        else:
+            state[agv] = (dest, t_deliver)
+        return TaskPlan(agv, empty, loaded, relocs, ops, state)

@@ -1,0 +1,61 @@
+# Bilge & Ulusoy (1995) 四个布局的行驶时间矩阵
+#
+# 来源:database/raw/bilge_ulusoy_1995/bilge_ulusoy1995_jobsets_layouts.pdf 第 2 页 Table 13
+#      "Travelling times in the layouts with four machines (Bilge and Ulusoy, 1995)"
+#
+# !! 取数方式:人工转录,不是 pdftotext !!
+#    该 PDF 由 "Microsoft: Print To PDF" 产出且**不含任何内嵌字体**(pdffonts 输出为空),
+#    pdftotext 全文只得 5 个字符,即整份是栅格图像。故无法机读,只能人工转录或 OCR。
+#    转录时按 200-260 dpi 分页裁切逐行核对(pdftoppm -r 200 -x/-y/-W/-H)。
+#
+#    复核状态:**布局 1 已被机器复核**——文献(Homayouni & Fontes)说明 hf 那一族的 4 机布局
+#    就是本表的布局 1,而 hf 的矩阵是 pdftotext 从**另一份** PDF 机读的,两条取数路径完全独立;
+#    实测 5x5 共 25 格逐项相等。该比对已做成硬断言,见 tools/check_fidelity.py
+#    的 crosscheck_bu_layout1(),不等即报错。
+#    ** 布局 2/3/4 无独立机读来源可对,仍只有单人转录,引用前须第二人复核。**
+#
+# 行 = 起点,列 = 终点,单位与原文一致(时间单位)。顺序恒为 LU M1 M2 M3 M4。
+# 四张矩阵**全部不对称**(单向导轨的必然结果),但**全部满足三角不等式**。
+# 即:可还原为有向图(digraph_reconstructible=True),
+#     但不可能是任何无向走廊网络的全对最短路矩阵(corridor_reconstructible=False)。
+# 校验脚本见 tools/check_fidelity.py;结论记在 experiments_database/fidelity_bu.csv。
+
+layout 1
+     LU  M1  M2  M3  M4
+LU    0   6   8  10  12
+M1   12   0   6   8  10
+M2   10   6   0   6   8
+M3    8   8   6   0   6
+M4    6  10   8   6   0
+
+layout 2
+     LU  M1  M2  M3  M4
+LU    0   4   6   8   6
+M1    6   0   2   4   2
+M2    8  12   0   2   4
+M3    6  10  12   0   2
+M4    4   8  10  12   0
+
+layout 3
+     LU  M1  M2  M3  M4
+LU    0   2   4  10  12
+M1   12   0   2   8  10
+M2   10  12   0   6   8
+M3    4   6   8   0   2
+M4    2   4   6  12   0
+
+layout 4
+     LU  M1  M2  M3  M4
+LU    0   4   8  10  14
+M1   18   0   4   6  10
+M2   20  14   0   8   6
+M3   12   8   6   0   6
+M4   14  14  12   6   0
+
+# 附注(与 Lyu 2019 的一处分歧,记录备查):
+# Lyu 等 (2019) 在取用这四个布局时写道 "We revised a value in the fourth layout because of
+# the irregular transport time (the travel time from M2 to M1 should be 12)"。
+# 原文 Table 13 布局 4 的 M2->M1 确为 14(已在 200 dpi 下核对)。以 14 计并不违反三角不等式
+# (M2->M3->M1 = 8+8 = 16,M2->M4->M1 = 6+14 = 20,M2->LU->M1 = 20+4 = 24,均不短于 14),
+# 故 Lyu 的修改依据不是度量不一致,而应是与其导轨几何的一致性。本文档一律以**原文的 14** 为准;
+# 若将来取用 Lyu 的参照值,须注意其算例在这一格上与原文不同。
