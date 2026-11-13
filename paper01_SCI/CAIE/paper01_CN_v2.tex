@@ -129,6 +129,16 @@
 \newcommand{\PProbeOpen}{<10^{-4}}
 \newcommand{\GainProbeLoop}{2.69\%}      % CLBS-R  -> CLBS ,路径规划内嵌评价下(被大车队两格拖低)
 \newcommand{\PProbeLoop}{=0.0015}
+\newcommand{\GainProbeLoopPre}{+2.07\%}  % 同一比较,加速之前(output/baseline_ladder_v1.csv)
+\newcommand{\PProbeLoopPre}{=0.19}
+% 案例分析关键链(clbs_new/output/case_study/*.json,A funnel 种子 42)
+\newcommand{\CaseMkOL}{91}
+\newcommand{\CaseMkCLBS}{54.5}
+\newcommand{\CaseMkDrop}{36.5}
+\newcommand{\CaseCorrOL}{59}
+\newcommand{\CaseCorrCLBS}{33.5}
+\newcommand{\CaseCorrDrop}{25.5}
+\newcommand{\CaseVehCLBS}{5.5}
 % 端到端:文献结构 -> 本文
 \newcommand{\GainEndToEnd}{22.21\%}      % OL  -> CLBS
 \newcommand{\PEndToEnd}{<10^{-4}}
@@ -1383,7 +1393,7 @@ O\bigl((N+n)\,N_A\,|E|\,Q^{2}\,(W+\log(|V|Q))\bigr).
 \section{实验与结果分析}
 \label{sec:Chapter_V}
 
-全部实验以同一个指标作判定：经同一无冲突路径规划器执行、并通过独立校验后可实现的完工时间 $C_{\max}$。计算开销不作为另一项指标，而作为比较的约束：各配置在相同运行时间预算下运行。实验回答四个问题：(1) 在相同运行时间预算下，本文方法的 $C_{\max}$ 是否小于基线方法，即先排产后规划路径的开环方法、先排产后处理车辆的两阶段方法，以及把 AGV 编入染色体的三段式编码？(2) 这一优势在哪些算例上成立，以现有种子数能否确定其范围？(3) 方法的各组成部分（路径规划内嵌评价、预约表感知派遣与两项加速）各起什么作用？(4) 已实现但未降低 $C_{\max}$ 的其他接口，失效原因是什么？
+全部实验以同一个指标作判定：经同一无冲突路径规划器执行、并通过独立校验后可实现的完工时间 $C_{\max}$。计算开销不作为另一项指标，而作为比较的约束：各配置在相同运行时间预算下运行。实验回答四个问题：(1) 在相同运行时间预算下，本文方法的 $C_{\max}$ 是否小于基线方法，即先排产后规划路径的开环方法、先排产后处理车辆的两阶段方法，以及把 AGV 编入染色体的三段式编码？(2) 这一优势在哪些算例上成立，以现有种子数能否确定其范围？(3) 方法的各组成部分（路径规划内嵌评价、预约表感知派遣与两项加速）各起什么作用？(4) 已实现但未降低 $C_{\max}$ 的其他接口，原因是什么？
 此外，在删去争用约束的公开基准上标定上层搜索本身的强弱。上述实验见表~\ref{tab:plan}。
 
 \begin{table}[t]
@@ -1694,6 +1704,7 @@ $F$ 取 $0.3$、$0.6$（基点）、$1.0$。本文方法相对 OL 为 \ScnOLRang
 \begin{table}[t]
 \caption{机器节点容量 $c$ 与异构度 $H$ 的敏感性：逐组各方法的完工时间及本文方法相对三种基线方法的逐对相对差（每组 $n=10$ 个按种子配对的比较）。
 表之上半在 \texttt{S11}、\texttt{S21} 上取 $c\in\{1,2,\infty\}$（$H=0.3$），表之下半在 \texttt{S11} 上取 $H\in\{0,0.15,0.3,0.5\}$（$c=2$）；其余参数同对照点。
+$c$ 的中间取值（$3,\ldots,10$）见图~\ref{fig:sens_cap}，不列入本表，以免扩大 Holm 族。
 显著性标记规则同表~\ref{tab:bytag}，Holm 校正的族为一个对比在一个因素下的全部组（$c$ 为 \SensNCap{} 组，$H$ 为 \SensNHet{} 组）。
 \texttt{S11}、$c=2$、$H=0.3$ 即对照点，两半共用一次运行。本批与表~\ref{tab:bytag} 种子相同，但单独运行，且同时运行的进程更多，各配置在同一运行时间内完成的代数较少；故对照点上用满运行时间的 AE、CLBS 与表~\ref{tab:bytag} 不同，由早停终止的 OL、TS 与之相同。比较应在本表之内进行。}
 \label{tab:sens}
@@ -1709,10 +1720,29 @@ $H$ 取 $0$、$0.15$、$0.3$（对照点）、$0.5$，在 \texttt{S11} 上变化
 总之，在所考察的范围内，本文方法的优势不依赖于把 $H$ 定在某一水平；对照点 $H=0.3$ 高于公开算例的中位 \PubHMed{}，但 $H=0.15$ 上相对 OL 与 TS 的相对差与对照点相差不到一个百分点。
 
 \paragraph{机器节点容量}
-$c$ 取 $1$、$2$（对照点）、$\infty$，在 \texttt{S11} 与 \texttt{S21} 上变化（表~\ref{tab:sens} 中按 $c$ 变化的各行）；本文在这三档上考察节点容量，未再加密中间档。$c$ 越小，机器节点处的排队越多，四种方法的 $C_{\max}$ 都随之上升；\texttt{S11} 上 CLBS 由 $c=\infty$ 的 $53.80$ 升至 $c=1$ 的 $82.10$。
+$c$ 取 $1$、$2$（对照点）、$\infty$，在 \texttt{S11} 与 \texttt{S21} 上变化（表~\ref{tab:sens} 中按 $c$ 变化的各行）。$c$ 越小，机器节点处的排队越多，四种方法的 $C_{\max}$ 都随之上升；\texttt{S11} 上 CLBS 由 $c=\infty$ 的 $53.80$ 升至 $c=1$ 的 $82.10$。
 在上述各组上，本文方法相对 AE 为 \SensAERangeCap{}，\SensNCap{} 组均在校正后显著；相对 OL 为 \SensOLRangeCap{}，\SensNCap{} 组中 \SensOLSigCap{} 组校正后显著，方向全部一致。相对 TS 为 \SensTSRangeCap{}；效应量在 $c=2$ 时最大（\texttt{S11} \SensTSFunnelTwo{}、\texttt{S21} \SensTSHighTwo{}），但经族内 Holm 校正后，\SensNCap{} 组均不显著（表中 $^{\dagger}$ 为校正前显著、校正后不显著）。
 相对 OL 与 TS 的优势幅度都在 $c=2$ 时最大；将容量增至 $\infty$ 或减至 $1$，优势均变小。$c=\infty$ 时（\SensTSFunnelInf{}、\SensTSHighInf{}）机器节点不再阻塞，冲突只剩走廊与路口，开环代理目标的偏差变小，路径规划内嵌评价可纠正的部分随之减少。$c=1$ 时（\SensTSFunnelOne{}、\SensTSHighOne{}）一个机器节点同一时刻只容一辆车，交接车与待命车相互阻挡，排队主要由节点容量本身决定，排产层面可改善的余地变小；\texttt{S21} 上 TS 略优，差异不显著。
-因此，本文方法相对两阶段方法的优势在节点容量适中时最明显；节点完全不受限时，问题接近只有走廊排他的旧有模型，节点极度紧张时，瓶颈转到节点本身。
+
+为看清 $c=2$ 与 $c=\infty$ 之间是否存在优势突然消失的拐点，另按同一协议在 $c=3,\ldots,10$ 上补测，走势见图~\ref{fig:sens_cap}。
+未校正下，相对 OL、TS、AE 在两布局上均仍显著，未出现显著性自某一取值起消失的拐点；相对 OL、TS 的优势幅度在 $c=2$ 附近最大，随后随 $c$ 增大逐步收窄并接近 $c=\infty$ 时的水平，约在 $c\ge 6$ 后趋于平台。
+因此，本文方法相对两阶段方法的优势在节点容量适中时最明显；节点完全不受限时，问题接近只有走廊排他的旧有模型，节点极度紧张时，瓶颈转到节点本身。主表仍只报 $c\in\{1,2,\infty\}$ 三个取值；中间取值的效应量走势由图~\ref{fig:sens_cap} 给出。
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{fig/fig_sens_capacity_CN.pdf}
+\Description{Two panels of line plots of relative makespan change of CLBS versus
+OL, TS and AE against machine-node capacity c from 1 to 10 and infinity, for
+layouts S11 and S21. Advantages peak near c=2 and then shrink smoothly toward
+infinity; almost all markers are filled (uncorrected significant).}
+\caption{说明机器节点容量 $c$ 加密后的相对差走势（CLBS 相对 OL、TS、AE）。
+左：布局 \texttt{S11}；右：布局 \texttt{S21}。横轴含 $c=1,\ldots,10$ 与 $\infty$（与有限取值之间留空）；
+点状竖线为表~\ref{tab:sens} 的对照点 $c=2$。
+实心为该组未校正 Wilcoxon 显著（$p<0.05$），空心为不显著；误差棒为 $\NSeeds$ 个种子上的均值标准误。
+主表 Holm 族仍仅含 $c\in\{1,2,\infty\}$ 共 \SensNCap{} 组；本图用于展示中间取值的效应量形状，故点填充按未校正 $p$。}
+\label{fig:sens_cap}
+%% 由 fig/fig_sens_capacity_CN.py 从 clbs_new/output/sens_c*.csv 生成。
+\end{figure}
 
 \subsection{消融：各组成部分的作用}
 \label{sec:ablation}
@@ -1731,7 +1761,7 @@ $c$ 取 $1$、$2$（对照点）、$\infty$，在 \texttt{S11} 与 \texttt{S21} 
 固定是否采用路径规划内嵌评价、只改变选车规则。开环下 $\text{OL}\to\text{TS}$ 为 $-\GainProbeOpen$（$p\PProbeOpen$）：排产已定时，按预约表选车能明显减少执行中的冲突延误。
 
 采用路径规划内嵌评价时，相同运行时间下 $\text{CLBS-R}\to\text{CLBS}$ 为 $-\GainProbeLoop$（$p\PProbeLoop$；伪中位数降幅 \HLProbeLoop{}，$95\%$ 置信区间 \CIProbeLoop{}），但逐组校正后无一组显著。
-这一降幅远小于开环下的 \GainProbeOpen{}，且只有启用两项加速后才站得住：加速之前同一比较为 $+2.07\%$（$p=0.19$），派遣收益被评价开销完全抵消。
+这一降幅远小于开环下的 \GainProbeOpen{}，且只有启用两项加速后才站得住：加速之前同一比较为 $\GainProbeLoopPre$（$p\PProbeLoopPre$），派遣收益被评价开销完全抵消。
 
 同运行时间结果把「每一代是否更好」与「同样时间内能跑多少代」混在一起。为分开二者，另在全部 $\SameGenNCells$ 组 $\times$ $10$ 个种子上让 CLBS-R 与 CLBS 各跑 $\SameGenGens$ 代、不设运行时间上限。
 相同代数下，CLBS 的 $C_{\max}$ 降低 \SameGenGainAbs{}（$p\SameGenP$，$\SameGenNPairs$ 个配对中 $\SameGenWin$ 胜 $\SameGenLose$ 负），逐组 \SameGenRange{}，方向全部一致；校正前 $\SameGenNCells$ 组中 \SameGenSigRaw{} 组显著，Holm 校正后因单组只有 $10$ 个种子，校正后的 $p$ 最小为 \SameGenHolmMin{}，略高于 $0.05$。完成同样 $\SameGenGens$ 代，CLBS 的平均用时为 CLBS-R 的 \SameGenTimeRatio{} 倍。
@@ -1739,8 +1769,8 @@ $c$ 取 $1$、$2$（对照点）、$\infty$，在 \texttt{S11} 与 \texttt{S21} 
 因此，派遣在路径规划内嵌评价下确实改进了每一代的搜索质量；相同运行时间下净收益只剩 \GainProbeLoop{}，则是因为 CLBS 相对 CLBS-R 的单次评价约为 \CostMultAfter{} 倍（第~\ref{sec:costlaw}~节），同样时间内完成的搜索代数更少，每代改进被评价次数减少所抵消。
 
 \paragraph{两者的关系}
-若两项技术彼此独立，端到端降幅应等于二者单独降幅的复合，即由 \GainLoopRule{} 与 \GainProbeOpen{} 得到 \GainIndepProduct{}。
-实测端到端仅为 \GainEndToEnd{}，低于该预测，说明二者部分重叠：开环下派遣所能拿到的那部分降幅，路径规划内嵌评价大多已经覆盖。
+若两项技术彼此独立，二者同时采用时（CLBS 相对 OL）的降幅应等于二者单独降幅的复合，即由 \GainLoopRule{} 与 \GainProbeOpen{} 得到 \GainIndepProduct{}。
+实测仅为 \GainEndToEnd{}，低于该预测，说明二者部分重叠：开环下派遣所能取得的降幅，路径规划内嵌评价已部分取得。
 反过来，派遣也不能代替路径规划内嵌评价：两阶段结构（TS）只取得派遣的 \GainProbeOpen{}，而路径规划内嵌评价单独可取得 \GainLoopRule{}；后者要求让行等待在搜索时进入适应度，仅靠事后改派得不到这一降幅。
 
 \subsubsection{路径规划内嵌评价与派遣在三个系列上的表现}
@@ -1834,10 +1864,11 @@ OL 与 TS 共用同一次开环搜索，故共用一个点。淡色小点为三�
 本节报告第~\ref{sec:interface}~节两种接口的结果。主批次中附加代价关闭（$\theta=0$）；按让行记录的局部搜索在各配置中以相同设置启用，不影响配置之间的比较。
 
 \paragraph{按让行记录的局部搜索}
-在 $\MatrixCells$ 组独立算例的数据中（表~\ref{tab:batches}），关掉让行记录的相对增益为 \GainCertMatrix{}（仅 $1$ 组显著），关掉错峰算子为 \GainStaggerMatrix{}（$2$ 组显著），均不为正：在相同运行时间下，把解码次数用于该邻域，不如用于种群进化。让行记录与错峰在两项加速前后没有改动，开销也不随剪枝变化，故可引用该批较早的数据；派遣则不行，因为其开销正是加速的对象。但该批测于引入节点容量之前（只预约走廊），节点有容量后未重测，这一结论在现行模型下尚待验证。
+在 $\MatrixCells$ 组独立算例上（表~\ref{tab:batches}），关掉让行记录的相对增益为 \GainCertMatrix{}（仅 $1$ 组显著），关掉错峰算子为 \GainStaggerMatrix{}（$2$ 组显著），均不为正：相同运行时间下，把解码次数用于该邻域不如用于种群进化。
 
 \paragraph{走廊时段附加代价}
-第~\ref{sec:interface}~节指出，附加代价会重复计入适应度已含的延误，但这一论证不能给出完工时间变差的幅度，故单独度量。实验在两种预算口径下扫描 $\theta$，并在所有 $\theta$ 上固定路径搜索的宽度。
+主结论：相同运行时间下开启附加代价会使 $C_{\max}$ 变差，原因是单次评价变贵、同预算内完成的代数变少，而不是候选解被排错。
+第~\ref{sec:interface}~节已说明附加代价会重复计入适应度里已有的延误；此处用两种预算口径扫描 $\theta$（路径搜索宽度固定），给出变差幅度。
 
 \begin{figure}[t]
 \centering
@@ -1845,38 +1876,39 @@ OL 与 TS 共用同一次开环搜索，故共用一个点。淡色小点为三�
 \Description{Two panels of makespan change relative to theta equals zero against
 pricing strength: under equal wall-clock the penalty is large and flat, under
 equal evaluations it is absent. Markers are means over seeds and error bars are
-the standard error of the mean. The batch is two separately generated instances
-that are not members of the paper's A/B/C families.}
-\caption{走廊时段附加代价的影响，正值表示更差。相同运行时间（左）下，完工时间变差在附加代价一开启即出现，并在 $\theta$ 的十倍范围内平坦，与右轴的单次评价开销同步；同评价次数（右）下变差消失。
-标记为均值，误差棒为均值标准误；「显著」指每个 $\theta$ 与 $\theta=0$ 按种子配对的双侧 Wilcoxon 检验。
-两个算例不属于表~\ref{tab:instances} 的三个系列，批次见表~\ref{tab:batches}。}
+the standard error of the mean.}
+\caption{走廊时段附加代价的影响，正值表示更差。
+相同运行时间（左）：一旦开启附加代价（$\theta>0$），完工时间即显著变差，并在所扫的 $\theta$ 范围内大致平坦，与右轴单次评价开销同步上升；
+同评价次数（右）：变差不显著。
+标记为均值，误差棒为均值标准误；「显著」指每个 $\theta$ 与 $\theta=0$ 按种子配对的双侧 Wilcoxon 检验。}
 \label{fig:theta}
 %% 由 fig/fig_theta_CN.py 从 clbs/experiments/theta_sweep.csv 与 theta_sweep_gen.csv 生成
 %% (08-05 落盘,2 算例 x 10 种子,左图每点 20 次运行、右图 10 次)。
 %% 该批次属加速之前的测量;附加代价机制在加速前后未改动,且其开销与剪枝无关,故该测量对它依然有效。
 \end{figure}
 
-如图~\ref{fig:theta} 所示，相同运行时间下每个 $\theta$ 都使完工时间显著变差，且在十倍范围内平坦；同评价次数下不显著。带附加代价的路径规划在同一预算内完成的评价次数约为不带时的五分之一，即损害来自评价次数减少，而非候选解排序出错。
-另有两点可排除其他解释。其一，在两个数量级的 $\theta$ 范围内，带附加代价的路径规划修改的是相同的少数路径，累计附加代价只占总行驶时间的很小一部分，不足以改变到达时刻的次序；只有 $\theta$ 大到附加代价超过到达时刻时，重复计入的影响才显现。其二，开销是结构性的：有无附加代价的耗时之比在每个 $\theta$ 上都相同，额外开销来自多标签 Pareto 搜索本身，与引理~\ref{lem:label} 一致。
-因此，只要适应度取自完整的无冲突解码，附加代价就不含新信息，结果由其额外开销决定。扩充层间接口之前，应先检查接收层的目标是否已包含该接口要传递的量。
+图~\ref{fig:theta} 与上述主结论一致：带附加代价时，同预算内评价次数约为不带时的五分之一。
+变差不是因为附加代价改变了候选解的优劣次序，有两点可以说明。其一，在所扫的 $\theta$ 范围内，附加代价改动的只是少数路径，累计附加代价只占总行驶时间的很小一部分，不足以改变到达次序；只有 $\theta$ 大到附加代价超过到达时刻时，重复计入才会显现。其二，有无附加代价的耗时之比在每个 $\theta$ 上相同，额外开销来自多标签 Pareto 搜索本身，与引理~\ref{lem:label} 一致。
+因此，只要适应度取自完整的无冲突解码，附加代价就不含新信息，结果由其额外开销决定。
 
-\subsubsection{失效原因：稀释与开销}
+\subsubsection{收益有限或无收益的原因：稀释与开销}
 \label{sec:whycost}
 
-\paragraph{解码次数的分配}
-按让行记录的局部搜索消耗了很大一部分解码次数，而所解码的邻居中能改进完工时间的不到五十分之一。该邻域规模小且指向明确（第~\ref{sec:ls}~节），命中率仍低，说明记录所指的工序在改派或错峰后并不能缩短关键链。本文另试了三种改进：按预期让行而非畅通时间为改派打分、把错峰改为定向插入、接受完工时间不变但总让行下降的平台移动；在同评价次数下均不显著。因此失效源于信号本身，而非其使用方式。
+\paragraph{按让行记录的局部搜索：改派与错峰很少缩短完工时间}
+局部搜索无收益，主要是因为按让行记录做的改派与错峰很少能缩短完工时间。它消耗了很大一部分解码次数，但试探过的候选解（按让行记录改派或错峰后的染色体）中，完工时间短于当前解的不到五十分之一。这并非邻域过大所致：邻域至多 \LSNbr{} 个候选，且每个都由让行记录指定（第~\ref{sec:ls}~节）。本文另试了三种用法：按预期让行而非畅通时间为改派打分、把错峰改为定向插入、接受完工时间不变但总让行下降的平台移动；在同评价次数下均不显著。因此问题在让行记录所提供的信息本身，而非其用法；原因见下段。
 
 \paragraph{沿关键链的稀释}
-一份让行记录指明的是消除\emph{一次}让行所需的信息。完工时间由一条链决定，消除一处走廊延误后，另一约束（上游工序、某台机器或另一条走廊）通常随之成为紧约束，实际改进只是被消除延误的一部分。当一个瓶颈只是若干量级相当的瓶颈之一时，针对它的改进远小于被消除的让行时长。
+关键链指解码所得时间表中决定完工时间的那条链：从最后完工的工序向前回溯，依次经过各道工序的加工、其所等的机器或上游工序、运输段及其上的让行（第~\ref{sec:ls}~节）。一条让行记录只对应这条链上的一次让行。消除这次让行后，完工时间缩短的量通常远小于这次让行的时长：工件提前到达，却常常转而等待机器空闲、上游工序或另一条走廊，提前量被这些新出现的等待吃掉一部分。链上量级相当的等待越多，能缩短的部分越小。
 
-\paragraph{路径规划内嵌评价下的派遣在相同运行时间下收益较小的原因}
-派遣与按让行记录的局部搜索不同：相同代数下它使 $C_{\max}$ 降低 \SameGenGainAbs{}（第~\ref{sec:ablation}~节），说明试算选车的局部改进确实传到了完工时间，没有被关键链稀释殆尽。它在相同运行时间下的收益只有 \GainProbeLoop{}，原因在开销：节点模型下，单次评价开销在加速前为规则派车的 \CostMultBefore{} 倍，加速后仍为 \CostMultAfter{} 倍，同一预算内完成的代数随之减少。加速前同一比较为 $+2.07\%$，不显著；加速后转为显著的降幅。
-因此两种机制的失效原因不同：局部搜索即使在同评价次数下也无收益，失效源于信号本身；派遣每代有效，其在路径规划内嵌评价下的净收益受开销限制，进一步降低试算开销仍可扩大这一收益。
+\paragraph{派遣：每代有效，净收益受评价开销限制}
+派遣在相同运行时间下收益较小，主要是因为评价开销。派遣本身每代有效：相同代数下它使 $C_{\max}$ 降低 \SameGenGainAbs{}（第~\ref{sec:ablation}~节），即试算选车的改进大部分传到了完工时间，没有像让行记录那样被稀释。但 CLBS 的单次评价开销为 CLBS-R 的 \CostMultAfter{} 倍（加速前为 \CostMultBefore{} 倍），同一运行时间内完成的代数随之减少，净收益只剩 \GainProbeLoop{}。加速前后的对比印证了这一点：加速前同一比较为 $\GainProbeLoopPre$，不显著；加速后转为显著的降幅。
+
+因此两种机制收益受限的原因不同：按让行记录的局部搜索受限于稀释，即使在同评价次数下也无收益；派遣每代有效，净收益受评价开销限制，进一步降低试算开销仍可扩大这一收益。
 
 \subsection{案例分析}
 \label{sec:casestudy}
 
-本节在单个\texttt{S11} 算例上并列 OL 与 CLBS，说明一次求解中发生了什么。图~\ref{fig:case_gantt} 把加工机器与 AGV 画在同一时间轴上。可见三点：开环解中，让行成段出现在库区出入口附近的走廊上，并集中于少数几辆 AGV；CLBS 解大幅减少了这些等待，且若干道工序被指派到并非最快的机器，即以较长加工换取更通畅的路径（式~\eqref{eq:reassign}）；CLBS 解的 AGV 负载也更均衡，这是前两点的结果。
+本节取一个\texttt{S11} 算例，对比 OL 与 CLBS 各自求得的解，说明两者差在哪里。图~\ref{fig:case_gantt} 把加工机器与 AGV 画在同一时间轴上，可见三点：(1) OL 先排产、后规划路径，其解中让行成段出现在库区出入口附近的走廊上，并集中于少数几辆 AGV；(2) CLBS 的解大幅减少了这些等待，且若干道工序被指派到并非最快的机器，即以较长加工换取更通畅的路径（式~\eqref{eq:reassign}）；(3) CLBS 解的 AGV 负载也更均衡，这是 (1)(2) 两点的结果。
 
 \begin{figure*}[t]
 \centering
@@ -1890,14 +1922,14 @@ and yielding waits shaded separately.}
 %% 的 --case-study 落盘)。让行/空闲的区分由脚本从相邻段的 task 字段推出,不是另存的标注。
 \end{figure*}
 
-图~\ref{fig:case_chain} 按表~\ref{tab:attrib} 给关键链各环着色。OL 的链上走廊占用占显著比例；CLBS 上它们大体消失，取而代之的是机器繁忙与上游工序。这正是第~\ref{sec:whycost}~节所述的稀释：消除一处走廊延误后，另一约束成为紧约束。
+图~\ref{fig:case_chain} 按表~\ref{tab:attrib} 给两个解的关键链各环着色，灰色为未归因部分，主要是畅通行驶。OL 的关键链以走廊占用为主（\CaseCorrOL{}，约占 $C_{\max}=\CaseMkOL$ 的三分之二）；CLBS 的关键链上走廊占用降到 \CaseCorrCLBS{}，仍是最大的一类，另出现 \CaseVehCLBS{} 的无车可用。完工时间缩短 \CaseMkDrop{}，多于走廊占用的减少量 \CaseCorrDrop{}，因为 CLBS 换了一个排产方案，链上的上游工序等待与畅通行驶也随之缩短。
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{fig/fig_case_chain_CN.pdf}
+\includegraphics[width=0.75\columnwidth]{fig/fig_case_chain_CN.pdf}
 \Description{The critical chain of the open-loop and closed-loop solutions,
 with each link coloured by its attribution label.}
-\caption{关键链各环按表~\ref{tab:attrib} 着色。上：OL 与 CLBS 关键链的构成，标题并列「被消除的走廊等待」与「实际缩短的完工时间」，二者之差即被新的紧约束吸收的部分。下：同一条链在时间轴上的位置。}
+\caption{OL 与 CLBS 两个解的关键链，各环按表~\ref{tab:attrib} 着色，灰色为未归因部分（主要是畅通行驶）。上：各类环节的总时长；标题给出关键链上走廊等待的减少量与完工时间的缩短量。下：同一条链在时间轴上的位置。}
 \label{fig:case_chain}
 %% 由 fig/fig_case_chain_CN.py 从同一批 case_study/*.json 生成;归因标签直接取
 %% algorithm/decoder.py 的 critical_chain(),五类标签一个不并、不归入 other。
@@ -1921,10 +1953,10 @@ with each link coloured by its attribution label.}
 相对开环，路径规划内嵌评价在规则派车下使完工时间降低 $\GainLoopRule$（$p\PLoopRule$），在预约表感知派遣下降低 $\GainLoopProbe$（$p\PLoopProbe$）；$\NCases$ 组中有 \CellsSigLoopAdj{} 组经 Holm 校正后仍显著。降幅在布局系列内并不随争用强度上升，在 AGV 最少的一组最小（第~\ref{sec:whichcongestion}~节）。
 
 \textbf{(3) 预约表感知派遣在开环与路径规划内嵌评价下均降低完工时间，后者的净收益受开销所限。}
-开环下派遣使完工时间降低 $\GainProbeOpen$（$p\PProbeOpen$）。采用路径规划内嵌评价时，相同代数下降低 \SameGenGainAbs{}（$p\SameGenP$，$\SameGenNPairs$ 个配对中 $\SameGenWin$ 胜），相同运行时间下降低 \GainProbeLoop{}（$p\PProbeLoop$，$95\%$ 区间 \CIProbeLoop{}）。两项加速只跳过注定落选的试算（第~\ref{sec:speedup}~节，并经逐位自检），使路径规划调用减少 \RouteCallCut{}，并使 CLBS 的 $C_{\max}$ 降低 \GainPrune{}；加速前，路径规划内嵌评价下的派遣在相同运行时间下并无净收益。单次评价开销仍约为规则派车的 \CostMultAfter{} 倍，故相同运行时间下的收益只及相同代数下的一小部分。
+开环下派遣使完工时间降低 $\GainProbeOpen$（$p\PProbeOpen$）。采用路径规划内嵌评价时，相同代数下降低 \SameGenGainAbs{}（$p\SameGenP$，$\SameGenNPairs$ 个配对中 $\SameGenWin$ 胜），相同运行时间下降低 \GainProbeLoop{}（$p\PProbeLoop$，$95\%$ 区间 \CIProbeLoop{}）。两项加速只省去不影响选车结果的计算：送达时刻下界已晚于当前最早送达者的候选 AGV 不再试算，选中 AGV 在试算中算出的路径直接复用（第~\ref{sec:speedup}~节），选出的 AGV 与完工时间与不加速时逐位相同。它们使路径规划调用减少 \RouteCallCut{}，使 CLBS 的 $C_{\max}$ 降低 \GainPrune{}；加速前，路径规划内嵌评价下的派遣在相同运行时间下并无净收益。加速后单次评价开销仍约为规则派车的 \CostMultAfter{} 倍，因此相同运行时间下的降幅小于相同代数下的降幅。
 
 \textbf{(4) 两项技术部分重叠，派遣不能替代路径规划内嵌评价。}
-端到端降低 $\GainEndToEnd$，明显低于独立复合的预测值 $\GainIndepProduct$：派遣在开环下取得的降幅，路径规划内嵌评价大多已经取得。「先排产、后解冲突」的路线即使改用预约表感知派遣，也只能获得 $\GainProbeOpen$，拿不到路径规划内嵌评价带来的 $\GainLoopRule$（第~\ref{sec:ablation}~节）。
+两项技术同时采用时（CLBS 相对 OL），完工时间降低 $\GainEndToEnd$，低于按二者独立作用复合的预测值 $\GainIndepProduct$：派遣在开环下取得的降幅，路径规划内嵌评价已部分取得。反过来，开环下即使改用预约表感知派遣，也只降低 $\GainProbeOpen$，不到路径规划内嵌评价单独带来的 $\GainLoopRule$ 的一半（第~\ref{sec:ablation}~节），因此派遣不能替代路径规划内嵌评价。
 
 \subsection{局限}
 \label{sec:limitations}

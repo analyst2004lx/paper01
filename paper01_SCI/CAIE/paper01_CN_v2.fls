@@ -515,6 +515,9 @@ INPUT tab/tab_bytag.tex
 INPUT ./tab/tab_sens.tex
 INPUT ./tab/tab_sens.tex
 INPUT tab/tab_sens.tex
+INPUT ./fig/fig_sens_capacity_CN.pdf
+INPUT ./fig/fig_sens_capacity_CN.pdf
+INPUT ./fig/fig_sens_capacity_CN.pdf
 INPUT ./fig/fig_prediction3_CN.pdf
 INPUT ./fig/fig_prediction3_CN.pdf
 INPUT ./fig/fig_prediction3_CN.pdf
