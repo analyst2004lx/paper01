@@ -28,12 +28,12 @@ def draw(ax, tt, title, xmax):
     y = 0
     for m in machines:
         ypos[("M", m)] = y
-        labels.append("机器 %s" % m)
+        labels.append("M%s" % m)
         y += 1
     y += 0.6
     for a in agvs:
         ypos[("A", a)] = y
-        labels.append("AGV %s" % a)
+        labels.append("A%s" % a)
         y += 1
 
     for o in ops:

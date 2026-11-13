@@ -1,4 +1,4 @@
-PWD C:/Users/analy/Desktop/AI_Folder/paper01_SCI/CAIE
+PWD C:/Users/Administrator/Desktop/AI_Folder/paper01_SCI/CAIE
 INPUT c:/texlive/2024/texmf.cnf
 INPUT c:/texlive/2024/texmf-dist/web2c/texmf.cnf
 INPUT c:/texlive/2024/texmf-var/web2c/xetex/xelatex.fmt
@@ -413,6 +413,16 @@ INPUT c:/texlive/2024/texmf-dist/tex/latex/tools/bm.sty
 INPUT c:/texlive/2024/texmf-dist/tex/latex/tools/bm.sty
 INPUT c:/texlive/2024/texmf-dist/tex/latex/multirow/multirow.sty
 INPUT c:/texlive/2024/texmf-dist/tex/latex/multirow/multirow.sty
+INPUT c:/texlive/2024/texmf-dist/tex/latex/psnfss/pifont.sty
+INPUT c:/texlive/2024/texmf-dist/tex/latex/psnfss/pifont.sty
+INPUT c:/texlive/2024/texmf-dist/tex/latex/psnfss/upzd.fd
+INPUT c:/texlive/2024/texmf-dist/tex/latex/psnfss/upzd.fd
+INPUT c:/texlive/2024/texmf-dist/tex/latex/psnfss/upzd.fd
+INPUT c:/texlive/2024/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm
+INPUT c:/texlive/2024/texmf-dist/tex/latex/psnfss/upsy.fd
+INPUT c:/texlive/2024/texmf-dist/tex/latex/psnfss/upsy.fd
+INPUT c:/texlive/2024/texmf-dist/tex/latex/psnfss/upsy.fd
+INPUT c:/texlive/2024/texmf-dist/fonts/tfm/adobe/symbol/psyr.tfm
 INPUT c:/texlive/2024/texmf-dist/tex/latex/enumitem/enumitem.sty
 INPUT c:/texlive/2024/texmf-dist/tex/latex/enumitem/enumitem.sty
 INPUT c:/texlive/2024/texmf-dist/tex/latex/amscls/amsthm.sty
@@ -492,6 +502,7 @@ INPUT ./fig/fig_layouts_CN.pdf
 INPUT ./tab/tab_instances.tex
 INPUT ./tab/tab_instances.tex
 INPUT tab/tab_instances.tex
+INPUT c:/texlive/2024/texmf-dist/fonts/tfm/adobe/zapfding/pzdr.tfm
 INPUT ./tab/tab_main.tex
 INPUT ./tab/tab_main.tex
 INPUT tab/tab_main.tex
@@ -504,6 +515,9 @@ INPUT tab/tab_bytag.tex
 INPUT ./tab/tab_sens.tex
 INPUT ./tab/tab_sens.tex
 INPUT tab/tab_sens.tex
+INPUT ./fig/fig_sens_capacity_CN.pdf
+INPUT ./fig/fig_sens_capacity_CN.pdf
+INPUT ./fig/fig_sens_capacity_CN.pdf
 INPUT ./fig/fig_prediction3_CN.pdf
 INPUT ./fig/fig_prediction3_CN.pdf
 INPUT ./fig/fig_prediction3_CN.pdf
