@@ -1395,12 +1395,46 @@ try {
 
             if ($pushOk -and $aheadN -gt 0) {
                 Write-Log ('push origin/{0} (ahead={1}) ...' -f $branch, $aheadN)
-                $push = Invoke-Git -GitArgs @('push', '-u', 'origin', $branch) -AllowFail
+                $push = Invoke-Git -GitArgs @('push', '-u', 'origin', $branch) -AllowFail -HeartbeatSec 15 -TimeoutSec 90
                 if ($push.ExitCode -ne 0) {
-                    Write-Log ('push failed. Login Git Credential Manager / SSH first.{0}{1}' -f [Environment]::NewLine, $push.Output) -Level ERROR
-                    exit 3
+                    $pushOut = [string]$push.Output
+                    $authFail = $pushOut -match 'Authentication failed|could not read Username|Permission denied|Invalid username or password|terminal prompts disabled|403'
+                    $staleRemote = $pushOut -match 'cannot lock ref|non-fast-forward|\[rejected\]|failed to push some refs'
+                    if ($authFail) {
+                        Write-Log ('push failed. Login Git Credential Manager / SSH first.{0}{1}' -f [Environment]::NewLine, $pushOut) -Level ERROR
+                        exit 3
+                    }
+                    if ($staleRemote) {
+                        Write-Log 'Push rejected because remote main moved during this run. Fetching once.' -Level WARN
+                        $fetchRetry = Invoke-Git -GitArgs ($httpHardening + @('fetch', '--prune', '--no-tags', 'origin', $branch)) -AllowFail -HeartbeatSec 15 -TimeoutSec 90
+                        if ($fetchRetry.ExitCode -ne 0) {
+                            Write-Log ('fetch after rejected push failed: {0}' -f $fetchRetry.Output) -Level ERROR
+                            exit 3
+                        }
+                        $alreadyThere = Invoke-Git -GitArgs @('merge-base', '--is-ancestor', 'HEAD', $remoteRef) -AllowFail
+                        if ($alreadyThere.ExitCode -eq 0) {
+                            Write-Log 'Remote already contains this commit. Nothing further to push.'
+                        } else {
+                            Write-Log 'Remote has other commits. Merging, then pushing once more.' -Level WARN
+                            $mergeRetry = Invoke-Git -GitArgs @('merge', '--no-edit', $remoteRef) -AllowFail -WithCommitIdentity
+                            if ($mergeRetry.ExitCode -ne 0) {
+                                Write-Log ('merge after rejected push failed: {0}' -f $mergeRetry.Output) -Level ERROR
+                                exit 3
+                            }
+                            $pushRetry = Invoke-Git -GitArgs @('push', '-u', 'origin', $branch) -AllowFail -HeartbeatSec 15 -TimeoutSec 90
+                            if ($pushRetry.ExitCode -ne 0) {
+                                Write-Log ('push failed after fetch: {0}' -f $pushRetry.Output) -Level ERROR
+                                exit 3
+                            }
+                            Write-Log 'push ok'
+                        }
+                    } else {
+                        Write-Log ('push failed: {0}' -f $pushOut) -Level ERROR
+                        exit 3
+                    }
+                } else {
+                    Write-Log 'push ok'
                 }
-                Write-Log 'push ok'
             } elseif ($pushOk) {
                 Write-Log 'Remote already up to date (nothing to push)'
             }
