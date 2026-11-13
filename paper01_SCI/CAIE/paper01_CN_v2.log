@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.8.28)  13 NOV 2026 12:20
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.8.28)  13 NOV 2026 17:49
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -2571,18 +2571,18 @@ File: fig/fig_case_chain_CN.pdf Graphic file (type pdf)
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
 (Font)              scaled to size 7.0pt on input line 46.
 
-Underfull \vbox (badness 2073) has occurred while \output is active []
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
  [37.37])
 
 Class acmart Warning: \vspace should only be used to provide space above/below 
-surrounding objects on input line 2010.
+surrounding objects on input line 1994.
 
 
 Class acmart Warning: CCS concepts are mandatory for papers over two pages.
 
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 2010.
+(Font)              scaled to size 10.95pt on input line 1994.
 (c:/texlive/2024/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
 File: se-pdfdoc.def 2019/11/29 v1.12 stringenc: PDFDocEncoding
 )
@@ -2599,15 +2599,15 @@ L3 programming layer <2022/07/14>
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
 Package rerunfilecheck Info: File `paper01_CN_v2.out' has not changed.
-(rerunfilecheck)             Checksum: BB4BAF9EE08E8D1C247324789F64F596;4267.
+(rerunfilecheck)             Checksum: BF253BC0F4A22DDB3041D76D8FF11BE8;4194.
  ) 
 Here is how much of TeX's memory you used:
- 50627 strings out of 474772
- 1095077 string characters out of 5761268
+ 50626 strings out of 474772
+ 1095060 string characters out of 5761268
  1994842 words of memory out of 5000000
- 71759 multiletter control sequences out of 15000+600000
+ 71758 multiletter control sequences out of 15000+600000
  573252 words of font info for 220 fonts, out of 8000000 for 9000
  1509 hyphenation exceptions out of 8191
  105i,17n,135p,1010b,32981s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on paper01_CN_v2.xdv (38 pages, 1269752 bytes).
+Output written on paper01_CN_v2.xdv (38 pages, 1258356 bytes).
