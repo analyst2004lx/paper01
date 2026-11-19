@@ -57,7 +57,7 @@ def main() -> None:
 
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.75))
     ax = axes[0]
-    ax.plot(r0_t, r0_c, "s--", color="#c45c26", label="R0+")
+    ax.plot(r0_t, r0_c, "s--", color="#c45c26", label="GR")
     for b, t, c in zip(budgets, r0_t, r0_c):
         ax.annotate(f"{b:g}s", (t, c), textcoords="offset points",
                     xytext=(8, 7), fontsize=7)
@@ -70,9 +70,9 @@ def main() -> None:
     ax.set_title("时间–完工时间权衡")
 
     ax = axes[1]
-    ax.plot(budgets, r0_chg, "s--", color="#c45c26", label="R0+")
+    ax.plot(budgets, r0_chg, "s--", color="#c45c26", label="GR")
     ax.axhline(r2_chg_mean, color="#1f4e79", linestyle="-", label="STRC")
-    ax.set_xlabel("R0+ 预算 (s)")
+    ax.set_xlabel("GR 预算 (s)")
     ax.set_ylabel("占用改动比例")
     ax.set_ylim(0, 1.08)
     ax.legend(loc="center right")

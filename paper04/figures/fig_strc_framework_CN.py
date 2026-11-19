@@ -81,10 +81,10 @@ def main() -> None:
                 arrowprops=dict(arrowstyle="->", color=C_CTRL, lw=1.1))
 
     box(ax, 0.25, 0.85, 4.0, 1.7,
-        "对照 R1\n同一套改路\n$U\\leftarrow$ 工序依赖图",
+        "对照 AOR\n同一套改路\n$U\\leftarrow$ 工序依赖图",
         fc="#fdeee6", ec=C_CTRL, fs=8, tc="#7a3b10")
     box(ax, 4.7, 0.85, 4.1, 1.7,
-        "对照 R0+\n热启动全局重调度\n限定搜索时间",
+        "对照 GR\n热启动全局重调度\n限定搜索时间",
         fc="#fdeee6", ec=C_CTRL, fs=8, tc="#7a3b10")
     box(ax, 9.2, 0.85, 4.5, 1.7,
         "输出\n可行性、耗时、\n$C_{\\max}$、改动比例",

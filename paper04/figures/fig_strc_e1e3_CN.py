@@ -26,9 +26,9 @@ ORDER = ("example_3x3x2", "congested_8x4x4", "S8x4x4_funnel",
 LABEL = {
     "example_3x3x2": "小例",
     "congested_8x4x4": "拥堵例",
-    "S8x4x4_high": "high",
-    "S8x4x4_funnel": "funnel",
-    "S8x4x4_mid": "mid",
+    "S8x4x4_high": "S21",
+    "S8x4x4_funnel": "S11",
+    "S8x4x4_mid": "S22",
 }
 
 
@@ -70,8 +70,8 @@ def main() -> None:
     ax.set_ylim(0, max(cl) * 1.25)
 
     ax = axes[1]
-    ax.bar(x - w / 2, r1_feas, w, label="R1 可行", color="#b0b8c0")
-    ax.bar(x + w / 2, r2_feas, w, label="R2 / STRC 可行", color="#1f4e79")
+    ax.bar(x - w / 2, r1_feas, w, label="AOR 可行", color="#b0b8c0")
+    ax.bar(x + w / 2, r2_feas, w, label="STRC 可行", color="#1f4e79")
     ax.set_xticks(x)
     ax.set_xticklabels([LABEL[n] for n in names], fontsize=8)
     ax.set_ylabel("可行率")
