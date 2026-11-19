@@ -66,16 +66,18 @@ def main() -> None:
             color=C_EVAL)
 
     box(ax, -19.5, 13, 15.5, 31,
-        "输入：算例\n\n工序链\n可选机器与工时\n车队规模\n路网与节点容量",
+        "输入：调度算例\n\n各工件的工序链\n各工序的可选机器\n及其加工时间\nAGV 数量\n路网与节点容量",
         fc=C_BOX, ec=C_EDGE, lw=1.0, fs=8.0, style="round,pad=0.3")
     arrow(ax, (-3.7, 28.5), (1.6, 28.5), lw=1.2, ms=9)
 
     box(ax, 103, 13, 16, 31,
         "输出\n\n无冲突时间表\n（工序起止时刻、\n各车任务与轨迹）\n及 $C_{\\max}$",
         fc=C_BOX, ec=C_EDGE, lw=1.0, fs=8.0, style="round,pad=0.3")
-    arrow(ax, (97.3, 28.5), (102.6, 28.5), lw=1.2, ms=9)
-    ax.text(100, 32.6, "终止时\n最优解", ha="center", va="center",
-            fontsize=7.0, color=C_EDGE)
+    ax.plot([62, 62, 111], [3.2, 1.8, 1.8], color=C_EDGE, lw=1.2,
+            solid_capstyle="butt", zorder=5)
+    arrow(ax, (111, 1.8), (111, 12.4), lw=1.2, ms=9)
+    ax.text(98, 0.3, "搜索所得最好解", ha="center", va="center",
+            fontsize=7.6, color=C_EDGE)
 
     box(ax, 2, 5, 25, 45, "", fc=C_BOX, ec=C_EDGE, lw=1.0,
         style="round,pad=0.2", zorder=1)
@@ -83,12 +85,15 @@ def main() -> None:
             va="center", fontsize=9.5, fontweight="bold")
     box(ax, 4.5, 37, 20, 7.5, "染色体种群\n（机器指派、工序排序）", fs=8.2)
     box(ax, 4.5, 27, 20, 7, "交叉、变异\n与局部搜索", fs=8.2)
-    box(ax, 4.5, 16.5, 20, 7, "适应度 $=$ 真实 $C_{\\max}$",
+    box(ax, 4.5, 16.5, 20, 7, "适应度 $=$ 可实现的 $C_{\\max}$",
         ec=C_EVAL, lw=1.4, weight="bold", color=C_EVAL, fs=8.5)
     box(ax, 4.5, 8, 20, 5, "选择", fs=8.2)
     arrow(ax, (14.5, 37), (14.5, 34.0))
     arrow(ax, (14.5, 16.5), (14.5, 13.0))
     arrow(ax, (3.4, 10.5), (3.4, 40.5))
+    ax.text(3.4, 25.5, "下\n一\n代", linespacing=1.05, ha="center", va="center",
+            fontsize=6.6, color=C_EDGE, zorder=6,
+            bbox=dict(boxstyle="square,pad=0.15", fc=C_BOX, ec="none"))
 
     box(ax, 32, 5, 30, 45, "", fc=C_BOX, ec=C_EDGE, lw=1.0,
         style="round,pad=0.2", zorder=1)
@@ -102,40 +107,62 @@ def main() -> None:
     arrow(ax, (47, 30), (47, 27.0))
     arrow(ax, (47, 18), (47, 15.5))
     arrow(ax, (33.4, 11.5), (33.4, 42.0))
+    ax.text(33.4, 26.5, "下\n一\n道\n工\n序", linespacing=1.05, ha="center",
+            va="center", fontsize=6.6, color=C_EDGE, zorder=6,
+            bbox=dict(boxstyle="square,pad=0.15", fc=C_BOX, ec="none"))
 
     box(ax, 70, 5, 27, 45, "", fc=C_BOX, ec=C_EDGE, lw=1.0,
         style="round,pad=0.2", zorder=1)
     ax.text(83.5, 52.6, "下层：运输任务规划器", ha="center",
             va="center", fontsize=9.5, fontweight="bold")
-    box(ax, 72, 38, 23, 8.5, "选车：按编号试算各车\n下界剪枝跳过必败者",
+    box(ax, 72, 38, 23, 8.5, "选车：按下界升序逐车试算\n剪枝跳过必败者",
         ec=C_DEC, lw=1.4, weight="bold", color=C_DEC, fs=7.8)
     box(ax, 72, 25.5, 23, 9, "安全区间搜索\n空载、等件、满载、\n停放或离场", fs=7.8)
     box(ax, 72, 15.5, 23, 6.5, "预约表\n走廊与节点占用", fs=7.8)
-    box(ax, 72, 7, 23, 5.5, "胜者路径复用：重放写入", fs=7.8)
-    arrow(ax, (80, 38), (80, 34.5))
-    arrow(ax, (88, 34.5), (88, 38))
-    arrow(ax, (83.5, 25.5), (83.5, 22.0))
-    arrow(ax, (83.5, 15.5), (83.5, 12.5))
+    box(ax, 72, 6.2, 23, 6.6, "写入胜者轨迹\n（复用试算结果，不重新搜索）", fs=7.4)
+    arrow(ax, (79, 38), (79, 34.5))
+    ax.text(77.2, 36.3, "试算", ha="right", va="center", fontsize=6.6,
+            color=C_EDGE)
+    arrow(ax, (87, 34.5), (87, 38))
+    ax.text(88.8, 36.3, "送达时刻", ha="left", va="center", fontsize=6.6,
+            color=C_EDGE)
+    arrow(ax, (79, 22.0), (79, 25.5))
+    ax.text(77.2, 23.8, "读取", ha="right", va="center", fontsize=6.6,
+            color=C_EDGE)
+    arrow(ax, (87, 13.2), (87, 15.2))
+    ax.text(88.8, 14.2, "写入", ha="left", va="center", fontsize=6.6,
+            color=C_EDGE)
+    ax.plot([95.4, 96.3, 96.3], [42.2, 42.2, 9.8], color=C_EDGE, lw=0.9,
+            zorder=5)
+    arrow(ax, (96.3, 9.8), (95.4, 9.8), ms=6)
+    ax.text(96.3, 26.0, "胜\n者", linespacing=1.05, ha="center", va="center",
+            fontsize=6.6, color=C_EDGE, zorder=6,
+            bbox=dict(boxstyle="square,pad=0.15", fc=C_BOX, ec="none"))
 
     arrow(ax, (59.5, 24.5), (72.0, 42.0), color=C_EDGE, lw=1.1, rad=-0.15)
     ax.text(67.0, 36.5, "运输\n任务", ha="center", va="center",
             fontsize=7.2, color=C_EDGE)
 
-    arrow(ax, (72.0, 9.5), (59.5, 20.5), color=C_DEC, lw=1.7, rad=-0.16, ms=9)
-    badge(ax, 65.8, 14.0, 2, C_DEC)
+    arrow(ax, (69.7, 19.5), (59.9, 20.5), color=C_DEC, lw=1.7, ms=9)
+    badge(ax, 65.9, 19.9, 2, C_DEC)
+    ax.text(67.5, 15.0, "承运AGV\n送达时刻", ha="center", va="center",
+            fontsize=6.6, color=C_DEC, linespacing=1.15)
 
     arrow(ax, (34.5, 9.0), (24.5, 18.0), color=C_EVAL, lw=1.7, rad=-0.18, ms=9)
     badge(ax, 29.3, 12.8, 1, C_EVAL)
 
-    arrow(ax, (24.5, 42.5), (34.5, 42.5), color=C_EDGE, lw=1.1)
-    ax.text(29.5, 44.4, "候选解", ha="center", va="center", fontsize=7.2,
-            color=C_EDGE)
+    ax.plot([24.9, 29.5, 29.5], [30.5, 30.5, 44.0], color=C_EDGE, lw=1.1,
+            zorder=5)
+    arrow(ax, (29.5, 44.0), (34.2, 44.0), color=C_EDGE, lw=1.1)
+    ax.text(29.5, 37.2, "候\n选\n解", ha="center", va="center", fontsize=7.0,
+            color=C_EDGE, linespacing=1.05, zorder=6,
+            bbox=dict(boxstyle="square,pad=0.15", fc="white", ec="none"))
 
     badge(ax, 3.5, -0.4, 1, C_EVAL)
-    ax.text(6.5, -0.4, "通路一：回传无冲突时间表的完工时间作为适应度  →  每个候选解一次",
+    ax.text(6.5, -0.4, "通路 1（路径规划内嵌评价）：全部工序排完后，回传无冲突时间表的完工时间作为适应度  →  每个候选解一次",
             ha="left", va="center", fontsize=8.0, color=C_EVAL)
     badge(ax, 3.5, -3.4, 2, C_DEC)
-    ax.text(6.5, -3.4, "通路二：选车时在预约表上试算各车的实际送达时刻，回传胜者及其送达时刻  →  每个运输任务一次",
+    ax.text(6.5, -3.4, "通路 2（预约表感知派遣）：选车时在预约表上试算各 AGV 的实际送达时刻，回传胜者及其送达时刻  →  每个运输任务一次",
             ha="left", va="center", fontsize=8.0, color=C_DEC)
 
     stem = os.path.join(HERE, "fig_framework_CN")

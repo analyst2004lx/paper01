@@ -418,7 +418,7 @@ def tab_prune() -> None:
              r"& 评价次数比 & 单次评价加速比 \\",
              r"\cmidrule(lr){3-4}",
              r"算例 & 争用强度 & 关 & \textbf{开} & $\Delta C_{\max}$ "
-             r"& (开/关) & (关/开) \\",
+             r"& 开$\div$关 & 关$\div$开 \\",
              r"\midrule"]
     for c in cases:
         a = mean([by[c][on][s] for s in seeds if s in by[c].get(on, {})])

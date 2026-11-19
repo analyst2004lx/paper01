@@ -58,8 +58,8 @@ HINT = "py -u -m tools.baseline_ladder --budget 90 --seeds 42,7,2024,13,1,99,123
 # Effects shown.  Both are single-factor contrasts: each holds one factor of the
 # 2x2 fixed and moves the other, so each can be attributed to one mechanism.
 EFFECTS = [
-    ("B0", "B1", "closed loop\n(rule dispatch fixed)", "#08519c", "o", "-"),
-    ("B1", "B2", "probing dispatch\n(closed loop fixed)", "#d95f02", "s", "--"),
+    ("B0", "B1", "closed-loop evaluation (rule dispatch fixed)", "#08519c", "o", "-"),
+    ("B1", "B2", "reservation-aware dispatch (closed loop fixed)", "#d95f02", "s", "--"),
 ]
 PANELS = [
     ("A", "layout", "contention strength (%)"),
@@ -200,17 +200,16 @@ def main() -> None:
             ax.set_xticks(xs)
 
     axes[0].set_ylabel("$\\Delta C_{\\max}$ (%)\nnegative is better")
-    axes[0].legend(loc="lower left", fontsize=FS_LEG, handlelength=1.8)
-    # tight_layout first, then reserve a strip for the protocol line: stating the
-    # correction is what makes the marker fills readable, so it must not be laid
-    # on top of the axis labels.
-    fig.tight_layout(rect=(0.0, 0.095, 1.0, 1.0))
-    fig.text(0.995, 0.012,
-             "%d seeds per cell, equal wall clock; error bar = standard error "
-             "of the mean over seeds;\nfilled marker = that cell significant at "
-             "$p<%.2f$, Holm-corrected over the %d cells"
+    # Legend under all three panels (shared); panel-A-only legend is easy to miss.
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.tight_layout(rect=(0.0, 0.20, 1.0, 1.0))
+    fig.legend(handles, labels, loc="lower center", ncol=2, fontsize=FS_LEG,
+               handlelength=2.2, frameon=False, bbox_to_anchor=(0.5, 0.08))
+    fig.text(0.5, 0.012,
+             "%d seeds per cell, equal wall clock; error bar = SEM over seeds; "
+             "filled marker = Holm $p<%.2f$ over the %d cells, hollow = n.s."
              % (len(seeds), ALPHA, len(cells)),
-             ha="right", va="bottom", fontsize=FS_FOOT, color="#777777")
+             ha="center", va="bottom", fontsize=FS_FOOT, color="#777777")
     save(fig, "fig_prediction3")
 
 

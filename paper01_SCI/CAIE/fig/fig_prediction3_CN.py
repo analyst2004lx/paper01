@@ -16,8 +16,8 @@ import fig_prediction3 as src  # noqa: E402
 use_cjk()
 
 EFFECTS = [
-    ("B0", "B1", "路径规划内嵌评价\n（派车规则固定）", "#08519c", "o", "-"),
-    ("B1", "B2", "预约表感知派遣\n（路径规划内嵌评价固定）", "#d95f02", "s", "--"),
+    ("B0", "B1", "路径规划内嵌评价（派车规则固定）", "#08519c", "o", "-"),
+    ("B1", "B2", "预约表感知派遣（路径规划内嵌评价固定）", "#d95f02", "s", "--"),
 ]
 PANELS = [
     ("A", "布局", "争用强度（%）"),
@@ -76,14 +76,16 @@ def main() -> None:
             ax.set_xticks(xs)
 
     axes[0].set_ylabel("$\\Delta C_{\\max}$（%）\n负值更好")
-    axes[0].legend(loc="center", bbox_to_anchor=(0.55, 0.45), fontsize=FS_LEG,
-                   handlelength=1.8, framealpha=0.9)
-    fig.tight_layout(rect=(0.0, 0.095, 1.0, 1.0))
-    fig.text(0.995, 0.012,
-             "每组 %d 个种子，相同运行时间；误差棒为种子间均值标准误；\n"
-             "实心标记 $=$ 该组 Holm 校正后 $p<%.2f$ 显著（族为该效应的 %d 组）"
+    # 图例放整图底部(三面板共用);只画在 A 面板时读者看 B/C 会对不上线型
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.tight_layout(rect=(0.0, 0.20, 1.0, 1.0))
+    fig.legend(handles, labels, loc="lower center", ncol=2, fontsize=FS_LEG,
+               handlelength=2.2, frameon=False, bbox_to_anchor=(0.5, 0.08))
+    fig.text(0.5, 0.012,
+             "每组 %d 个种子，相同运行时间；误差棒为种子间均值标准误；"
+             "实心标记 $=$ 该组 Holm 校正后 $p<%.2f$ 显著（族为该效应的 %d 组），空心为不显著"
              % (len(seeds), src.ALPHA, len(cells)),
-             ha="right", va="bottom", fontsize=FS_FOOT, color="#777777")
+             ha="center", va="bottom", fontsize=FS_FOOT, color="#777777")
     save(fig, "fig_prediction3_CN")
 
 

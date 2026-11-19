@@ -46,6 +46,7 @@ def main() -> None:
     stack_max = max(sum(comps[a].values()) for a in order)
     ax.set_ylim(0, 1.62 * stack_max)
 
+    labelled = set()
     for x, arm in enumerate(order):
         bottom = 0.0
         stack = sum(comps[arm].values())
@@ -55,9 +56,10 @@ def main() -> None:
                 continue
             ax.bar(x, v, bottom=bottom, width=0.55, color=colour,
                    edgecolor="white", linewidth=0.6,
-                   label=label if x == 0 else None, zorder=3)
+                   label=None if k in labelled else label, zorder=3)
+            labelled.add(k)
             if v >= 0.06 * stack:
-                ax.text(x, bottom + v / 2, "%.0f" % v, ha="center",
+                ax.text(x, bottom + v / 2, "%g" % v, ha="center",
                         va="center", fontsize=6.2, color="white",
                         fontweight="bold", zorder=4)
             bottom += v
@@ -66,13 +68,13 @@ def main() -> None:
     d_mk = arms["B0"]["makespan"] - arms["B2"]["makespan"]
     ax.set_xticks(range(len(order)))
     ax.set_xticklabels(
-        ["OL\n开环\n$C_{\\max}=%.0f$" % arms["B0"]["makespan"],
-         "CLBS\n本文\n$C_{\\max}=%.0f$" % arms["B2"]["makespan"]],
+        ["OL\n开环\n$C_{\\max}=%g$" % arms["B0"]["makespan"],
+         "CLBS\n本文\n$C_{\\max}=%g$" % arms["B2"]["makespan"]],
         fontsize=7)
     ax.set_ylabel("关键链构成\n（时间单位）")
     ax.set_xlim(-0.5, 1.5)
     ax.legend(loc="upper right", fontsize=FS_LEG, labelspacing=0.3)
-    ax.set_title("走廊等待消除 %.0f，收回完工时间 %.0f"
+    ax.set_title("关键链上走廊等待减少 %g，完工时间缩短 %g"
                  % (d_corr, d_mk), fontsize=7.6, loc="left")
 
     colour_of = {k: c for k, _l, c in kinds}
@@ -90,7 +92,7 @@ def main() -> None:
                             facecolors=colour_of.get(k, OTHER[2]),
                             edgecolor="white", linewidth=0.3, zorder=3)
         ax2.axvline(mk, color="#111111", linewidth=0.7, zorder=2)
-        ax2.text(mk + 0.8, y, r"$C_{\max}=%.0f$" % mk,
+        ax2.text(mk + 0.8, y, r"$C_{\max}=%g$" % mk,
                  ha="left", va="center", fontsize=6.2, color="#111111")
     ax2.set_yticks(range(len(order)))
     ax2.set_yticklabels(["OL", "CLBS"], fontsize=7)
