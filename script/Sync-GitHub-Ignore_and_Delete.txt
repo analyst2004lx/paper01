@@ -34,7 +34,7 @@ script/Toggle-443Forward.ps1
 </Ignore>
 
 <Rename>
-paper04_SCI：paper04_old
+paper04_S：paper04_o
 </Rename>
 
 <Delete>
@@ -250,7 +250,9 @@ paper04\sec_sizes.txt
 paper04\table_inventory.py
 paper04\table_inventory.txt
 paper04\texput.log
+paper04_old
 开题报告\于琪-开题报告(20260909).docx
 开题报告\于琪-开题PPT(20260909).pptx
 开题报告\图书馆-听课凭证.docx
+
 </Delete>
