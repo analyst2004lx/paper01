@@ -55,7 +55,7 @@ def main() -> None:
     fig, axes = plt.subplots(1, 2, figsize=(7.2, 2.75))
     ax = axes[0]
     ax.plot(phis, p04_t, "o-", label=r"STRC", color="#1f4e79")
-    ax.plot(phis, p01_t, "s--", label=r"R0+ (2s)", color="#c45c26")
+    ax.plot(phis, p01_t, "s--", label=r"GR (2s)", color="#c45c26")
     ax.set_xlabel(r"受影响比例 $\varphi$")
     ax.set_ylabel("墙钟时间 (ms)")
     ax.set_yscale("log")
@@ -65,7 +65,7 @@ def main() -> None:
 
     ax = axes[1]
     ax.plot(phis, p04_c, "o-", label=r"STRC", color="#1f4e79")
-    ax.plot(phis, p01_c, "s--", label=r"R0+ (2s)", color="#c45c26")
+    ax.plot(phis, p01_c, "s--", label=r"GR (2s)", color="#c45c26")
     ax.set_xlabel(r"受影响比例 $\varphi$")
     ax.set_ylabel(r"$C_{\max}$（均值，可行）")
     ax.set_xlim(min(phis) - 0.06, max(phis) + 0.06)
