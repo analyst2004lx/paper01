@@ -1,0 +1,240 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand*\HyPL@Entry[1]{}
+\citation{xin2025review,meng2025cp,qin2026knowledge}
+\citation{kim2026congestion}
+\citation{vanos2026exact,sun2023integrated,lyu2019approach,li2026framework}
+\HyPL@Entry{0<</S/D>>}
+\@writefile{toc}{\contentsline {section}{Abstract}{1}{section*.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {1}引言}{1}{section.1}\protected@file@percent }
+\newlabel{sec:introduction}{{1}{1}{引言}{section.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}背景与动机}{1}{subsection.1.1}\protected@file@percent }
+\citation{subramaniam2003maor}
+\citation{zhang2023energy,tang2026dynamic}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}工序依赖图无法刻画的缺口}{2}{subsection.1.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}主要思想与贡献}{2}{subsection.1.3}\protected@file@percent }
+\newlabel{sec:contributions}{{1.3}{2}{主要思想与贡献}{subsection.1.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces 动机示意：同一份排程、同一次走廊阻断，两种划界方法检查的层不同。 每幅上层为机器层（工序甘特），下层为走廊层（预约表），斜纹框为走廊 \(e^{\star }\) 上的阻断时段，竖虚线为决策时刻 \(t_{\mathrm {now}}\)。 (a)\nonbreakingspace AOR 只检查机器层：各工序均可执行，起点工序集为空，判定无需重调度；但走廊层上 AGV \(k_1\) 的占用已与阻断冲突，原排程实际不可行。 (b)\nonbreakingspace 本文方法检查走廊层：与阻断重叠的 \(k_1\) 占用成为起点，沿让行边（\(k_1\to k_2\)，同走廊）、同车边与同机边纳入后续占用， 形成预约影响集（虚线框）；集外占用保持原计划，\(t_{\mathrm {now}}\) 前已完成的占用不可改写。}}{3}{figure.caption.2}\protected@file@percent }
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:motivate}{{1}{3}{动机示意：同一份排程、同一次走廊阻断，两种划界方法检查的层不同。 每幅上层为机器层（工序甘特），下层为走廊层（预约表），斜纹框为走廊 \(e^{\star }\) 上的阻断时段，竖虚线为决策时刻 \(t_{\mathrm {now}}\)。 (a)~AOR 只检查机器层：各工序均可执行，起点工序集为空，判定无需重调度；但走廊层上 AGV \(k_1\) 的占用已与阻断冲突，原排程实际不可行。 (b)~本文方法检查走廊层：与阻断重叠的 \(k_1\) 占用成为起点，沿让行边（\(k_1\to k_2\)，同走廊）、同车边与同机边纳入后续占用， 形成预约影响集（虚线框）；集外占用保持原计划，\(t_{\mathrm {now}}\) 前已完成的占用不可改写。}{figure.caption.2}{}}
+\citation{zhang2023energy}
+\citation{tang2026dynamic}
+\citation{subramaniam2003maor}
+\citation{qiao2012single}
+\citation{salido2017rescheduling}
+\citation{kuster2007local}
+\citation{li2025learning}
+\citation{margot2003decompositions}
+\citation{vieira2003rescheduling,ouelhadj2009survey}
+\citation{mascis2002alternative}
+\citation{dariano2007branch}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.4}篇章结构}{4}{subsection.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {2}相关工作}{4}{section.2}\protected@file@percent }
+\newlabel{sec:related_work}{{2}{4}{相关工作}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}作业车间的局部重调度}{4}{subsection.2.1}\protected@file@percent }
+\newlabel{sec:rw_aor}{{2.1}{4}{作业车间的局部重调度}{subsection.2.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}排他资源上的占用先后}{4}{subsection.2.2}\protected@file@percent }
+\newlabel{sec:rw_ag}{{2.2}{4}{排他资源上的占用先后}{subsection.2.2}{}}
+\citation{svancara2019online}
+\citation{malka2024online}
+\citation{zhang2024guidance}
+\citation{xin2025review}
+\citation{meng2025cp,qin2026knowledge}
+\citation{jafarian2026integrated}
+\citation{kim2026congestion}
+\citation{vanos2026exact}
+\citation{sun2023integrated}
+\citation{li2026framework}
+\citation{sun2023integrated}
+\citation{zhang2023energy}
+\citation{subramaniam2003maor}
+\citation{qiao2012single,salido2017rescheduling}
+\citation{kuster2007local}
+\citation{zhang2023energy,tang2026dynamic}
+\citation{mascis2002alternative,dariano2007branch}
+\citation{svancara2019online,malka2024online}
+\citation{meng2025cp,qin2026knowledge,jafarian2026integrated}
+\citation{vanos2026exact,sun2023integrated,li2026framework}
+\citation{vanos2026exact}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}无冲突多车路径的局部重规划}{5}{subsection.2.3}\protected@file@percent }
+\newlabel{sec:rw_mapf}{{2.3}{5}{无冲突多车路径的局部重规划}{subsection.2.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}考虑运输的柔性作业车间调度}{5}{subsection.2.4}\protected@file@percent }
+\newlabel{sec:rw_position}{{2.4}{5}{考虑运输的柔性作业车间调度}{subsection.2.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}本文定位}{5}{subsection.2.5}\protected@file@percent }
+\newlabel{sec:rw_claim}{{2.5}{5}{本文定位}{subsection.2.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces 相关工作与本文在问题设定和重调度范围上的对比。 {\Pifont {pzd}\char 51}\ 表示具备，{\Pifont {pzd}\char 55}\ 表示不具备，— 表示不适用（该类工作不划定局部重调度范围）。 「占用时段」指模型显式记录各 AGV、智能体或列车占用路段（闭塞区段、时空格点）的时段。 「划定在」为范围内允许改写的对象； 「失效沿哪些途径纳入」以失效所经的共享资源表示划界时追踪的传播途径； 「走廊扰动下不漏」指走廊阻断等只作用于走廊的扰动发生时，失效的占用全部落入范围； 「与修复算法无关」指范围由给定规则唯一确定，不随修复或检测算法的实现与停止条件而变。}}{6}{table.caption.3}\protected@file@percent }
+\newlabel{tab:position}{{1}{6}{相关工作与本文在问题设定和重调度范围上的对比。 \cmark \ 表示具备，\xmark \ 表示不具备，— 表示不适用（该类工作不划定局部重调度范围）。 「占用时段」指模型显式记录各 AGV、智能体或列车占用路段（闭塞区段、时空格点）的时段。 「划定在」为范围内允许改写的对象； 「失效沿哪些途径纳入」以失效所经的共享资源表示划界时追踪的传播途径； 「走廊扰动下不漏」指走廊阻断等只作用于走廊的扰动发生时，失效的占用全部落入范围； 「与修复算法无关」指范围由给定规则唯一确定，不随修复或检测算法的实现与停止条件而变。}{table.caption.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}走廊预约设定与执行期恢复问题}{6}{section.3}\protected@file@percent }
+\newlabel{sec:problem}{{3}{6}{走廊预约设定与执行期恢复问题}{section.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}系统设定与记号}{6}{subsection.3.1}\protected@file@percent }
+\newlabel{sec:system_brief}{{3.1}{6}{系统设定与记号}{subsection.3.1}{}}
+\newlabel{sec:shop}{{3.1.1}{6}{车间与排程}{subsubsection.3.1.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.1}车间与排程}{6}{subsubsection.3.1.1}\protected@file@percent }
+\citation{shan2021pull,sun2023integrated}
+\citation{phillips2011sipp,kasaura2022sipp}
+\citation{silver2005cooperative}
+\@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces 本文常用记号}}{7}{table.caption.5}\protected@file@percent }
+\newlabel{tab:notation}{{2}{7}{本文常用记号}{table.caption.5}{}}
+\newlabel{sec:reservation}{{3.1.2}{7}{走廊预约与无冲突}{subsubsection.3.1.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.2}走廊预约与无冲突}{7}{subsubsection.3.1.2}\protected@file@percent }
+\newlabel{sec:two_graphs}{{3.1.3}{7}{工序依赖图与预约依赖图}{subsubsection.3.1.3}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {3.1.3}工序依赖图与预约依赖图}{7}{subsubsection.3.1.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces 两张图的顶点集不相交（构造示意）。 (a)\nonbreakingspace 工序依赖图 \(G_T\)，顶点是工序，走廊阻断找不到作为起点的工序； (b)\nonbreakingspace 预约依赖图 \(G_R\)，顶点是走廊占用，从与阻断时段重叠的占用出发，沿四类依赖边 （让行、同车、同工件、同机；定义\nonbreakingspace \ref {def:dep}）纳入后续占用。}}{8}{figure.caption.4}\protected@file@percent }
+\newlabel{fig:graphs}{{2}{8}{两张图的顶点集不相交（构造示意）。 (a)~工序依赖图 \(G_T\)，顶点是工序，走廊阻断找不到作为起点的工序； (b)~预约依赖图 \(G_R\)，顶点是走廊占用，从与阻断时段重叠的占用出发，沿四类依赖边 （让行、同车、同工件、同机；定义~\ref {def:dep}）纳入后续占用。}{figure.caption.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}执行期假设}{8}{subsection.3.2}\protected@file@percent }
+\newlabel{sec:assumptions}{{3.2}{8}{执行期假设}{subsection.3.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}两类扰动}{8}{subsection.3.3}\protected@file@percent }
+\newlabel{sec:disturbance_classes}{{3.3}{8}{两类扰动}{subsection.3.3}{}}
+\newlabel{def:ab}{{1}{8}{A/B 类扰动}{definition.1}{}}
+\newlabel{rem:agv_class}{{1}{8}{AGV 故障为何属于 A 类}{remark.1}{}}
+\newlabel{def:task_impact}{{2}{9}{工序依赖图上的直接集与影响域}{definition.2}{}}
+\newlabel{def:seeds}{{3}{9}{作为起点的占用}{definition.3}{}}
+\newlabel{prop:miss}{{1}{9}{B 类上工序依赖图给出空范围}{prop.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}恢复问题}{9}{subsection.3.4}\protected@file@percent }
+\newlabel{sec:recovery_problem}{{3.4}{9}{恢复问题}{subsection.3.4}{}}
+\newlabel{prob:recovery}{{1}{9}{按预约表划定范围的有界重调度}{problem.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces 按预约影响集划界的有界修复。 上排：由起点占用得到影响集并改路；中排：失败后扩大允许改写的范围； 下排：按工序依赖图划界的对照与热启动全局重调度对照，以及输出指标。 耗时同为毫秒量级的另外三种对照方法（RS、RD、ALL）未画出，见第\nonbreakingspace \ref {sec:cheap}\nonbreakingspace 节。}}{10}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:framework}{{3}{10}{按预约影响集划界的有界修复。 上排：由起点占用得到影响集并改路；中排：失败后扩大允许改写的范围； 下排：按工序依赖图划界的对照与热启动全局重调度对照，以及输出指标。 耗时同为毫秒量级的另外三种对照方法（RS、RD、ALL）未画出，见第~\ref {sec:cheap}~节。}{figure.caption.6}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}基于时空预约闭包的有界修复}{10}{section.4}\protected@file@percent }
+\newlabel{sec:strc}{{4}{10}{基于时空预约闭包的有界修复}{section.4}{}}
+\newlabel{sec:repair}{{4}{10}{基于时空预约闭包的有界修复}{section.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1}第一步：划界}{10}{subsection.4.1}\protected@file@percent }
+\newlabel{sec:closure_def}{{4.1}{10}{第一步：划界}{subsection.4.1}{}}
+\newlabel{def:dep}{{4}{10}{预约依赖图}{definition.4}{}}
+\newlabel{def:strc}{{5}{10}{预约影响集与时空预约闭包}{definition.5}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces 预约影响集的构造示意（同一组占用画在两幅中）。 (a)\nonbreakingspace 走廊—时间图：每个色块是一条走廊占用，标注为「占用·AGV」； 只有 \(r_1\) 与走廊 \(e^\star \) 的阻断时段重叠，成为起点；\(r_0\) 在 \(t_{\mathrm {now}}\) 前已完成，不参与划界。 (b)\nonbreakingspace 这些占用之间的依赖边（颜色区分类型）：从 \(r_1\) 出发沿边可达 \(r_2\)--\(r_5\)， 它们与 \(r_1\) 构成预约影响集 \(\mathrm {Cl}(\mathrm {Src})\)（虚线框）。 \(r_6\) 只有指向集内的边，从起点不可达，留在集外并保持原计划；集内没有指向集外的边。}}{11}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:closure}{{4}{11}{预约影响集的构造示意（同一组占用画在两幅中）。 (a)~走廊—时间图：每个色块是一条走廊占用，标注为「占用·AGV」； 只有 \(r_1\) 与走廊 \(e^\star \) 的阻断时段重叠，成为起点；\(r_0\) 在 \(t_{\mathrm {now}}\) 前已完成，不参与划界。 (b)~这些占用之间的依赖边（颜色区分类型）：从 \(r_1\) 出发沿边可达 \(r_2\)--\(r_5\)， 它们与 \(r_1\) 构成预约影响集 \(\mathrm {Cl}(\mathrm {Src})\)（虚线框）。 \(r_6\) 只有指向集内的边，从起点不可达，留在集外并保持原计划；集内没有指向集外的边。}{figure.caption.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2}预约影响集的性质}{11}{subsection.4.2}\protected@file@percent }
+\newlabel{sec:containment}{{4.2}{11}{预约影响集的性质}{subsection.4.2}{}}
+\newlabel{prop:struct}{{2}{11}{结构闭合性}{prop.2}{}}
+\newlabel{rem:minimality}{{2}{12}{预约影响集与最小允许改写集合}{remark.2}{}}
+\newlabel{sec:structure}{{4.2}{12}{预约影响集的性质}{remark.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3}第二步：单遍改路}{12}{subsection.4.3}\protected@file@percent }
+\newlabel{sec:level1}{{4.3}{12}{第二步：单遍改路}{subsection.4.3}{}}
+\newlabel{prop:outside}{{3}{12}{集外字段不变的充分条件}{prop.3}{}}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {1}{\ignorespaces 单遍改路 \(\textsc  {ReplayReroute}\)}}{13}{algorithm.1}\protected@file@percent }
+\newlabel{alg:replay}{{1}{13}{单遍改路 \(\textsc {ReplayReroute}\)}{algorithm.1}{}}
+\newlabel{rem:precommit}{{3}{13}{命题~\ref {prop:outside} 的前提在何种情况下不成立}{remark.3}{}}
+\citation{kuster2007local}
+\@writefile{loa}{\contentsline {algorithm}{\numberline {2}{\ignorespaces 基于预约影响集的有界修复（划界 + 单遍改路 + 范围扩展）}}{14}{algorithm.2}\protected@file@percent }
+\newlabel{alg:strc_repair}{{2}{14}{基于预约影响集的有界修复（划界 + 单遍改路 + 范围扩展）}{algorithm.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4}第三步：失败后扩大范围}{14}{subsection.4.4}\protected@file@percent }
+\newlabel{sec:scope_escalation}{{4.4}{14}{第三步：失败后扩大范围}{subsection.4.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.5}A 类扰动的处理}{14}{subsection.4.5}\protected@file@percent }
+\newlabel{sec:afault}{{4.5}{14}{A 类扰动的处理}{subsection.4.5}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}实验}{14}{section.5}\protected@file@percent }
+\newlabel{sec:experiments}{{5}{14}{实验}{section.5}{}}
+\citation{suh2022spine}
+\citation{lyu2019approach}
+\citation{lyu2019approach}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces 实验所用的路网。上排为主批次：(a)\nonbreakingspace 小例；(b)\nonbreakingspace 拥堵例；(c)\nonbreakingspace 三个脊式布局叠画，实线为 \texttt  {S11}， 虚线为 \texttt  {S21} 增加的一条出口通道，点线为 \texttt  {S22} 再增加的一条中段走廊；每条并行通道经各自的中间路口， 故增删通道只改容量、不改路程。下排为外部布局批次（Lyu 等\nonbreakingspace \citep  {lyu2019approach} 附录 A 的布局 2--6）： 布局 2、3 共用一张 \(4\times 4\) 网格，布局 4--6 共用一张 \(5\times 5\) 网格，灰色虚线为原网格中缺失的走廊， 网格走廊等权（通行时间 \(3\)）。三类节点均不限容量。拓扑逐条读自实验所加载的算例文件。}}{15}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:layouts}{{5}{15}{实验所用的路网。上排为主批次：(a)~小例；(b)~拥堵例；(c)~三个脊式布局叠画，实线为 \texttt {S11}， 虚线为 \texttt {S21} 增加的一条出口通道，点线为 \texttt {S22} 再增加的一条中段走廊；每条并行通道经各自的中间路口， 故增删通道只改容量、不改路程。下排为外部布局批次（Lyu 等~\cite {lyu2019approach} 附录 A 的布局 2--6）： 布局 2、3 共用一张 \(4\times 4\) 网格，布局 4--6 共用一张 \(5\times 5\) 网格，灰色虚线为原网格中缺失的走廊， 网格走廊等权（通行时间 \(3\)）。三类节点均不限容量。拓扑逐条读自实验所加载的算例文件。}{figure.caption.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.1}实验设置}{15}{subsection.5.1}\protected@file@percent }
+\newlabel{sec:protocol}{{5.1}{15}{实验设置}{subsection.5.1}{}}
+\citation{lyu2019approach}
+\citation{fontes2023hybrid}
+\newlabel{sec:vs_r0}{{5.1}{16}{实验设置}{figure.caption.8}{}}
+\citation{subramaniam2003maor}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.2}E1：工序依赖图给出空范围}{17}{subsection.5.2}\protected@file@percent }
+\newlabel{sec:e1}{{5.2}{17}{E1：工序依赖图给出空范围}{subsection.5.2}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {3}{\ignorespaces E1 走廊阻断下两种划界给出的范围（每算例 \(10\) 个随机种子，共 \(50\) 对）。 「三条件通过」计命题\nonbreakingspace \ref {prop:miss} 的三个条件同时成立的算例--随机种子对（\(T_{\mathrm {impact}}=0\)、 起点占用非空、阻断后原排程不可行）。\(|R|\) 为全表占用数，\(|\mathrm {Src}|\) 为起点占用数， \(|\mathrm {Cl}|\) 为预约影响集的占用数，\(\mathrm {Cl}/|R|\) 为预约影响集占全表的比例；均值取 \(10\) 个随机种子的平均。 \texttt  {S11}、\texttt  {S21}、\texttt  {S22} 为三个脊式布局，命名规则见第\nonbreakingspace \ref {sec:protocol}\nonbreakingspace 节。}}{18}{table.caption.9}\protected@file@percent }
+\newlabel{tab:e1}{{3}{18}{E1 走廊阻断下两种划界给出的范围（每算例 \(\NSeeds \) 个随机种子，共 \(\NPairs \) 对）。 「三条件通过」计命题~\ref {prop:miss} 的三个条件同时成立的算例--随机种子对（\(T_{\mathrm {impact}}=0\)、 起点占用非空、阻断后原排程不可行）。\(|R|\) 为全表占用数，\(|\mathrm {Src}|\) 为起点占用数， \(|\mathrm {Cl}|\) 为预约影响集的占用数，\(\mathrm {Cl}/|R|\) 为预约影响集占全表的比例；均值取 \(\NSeeds \) 个随机种子的平均。 \texttt {S11}、\texttt {S21}、\texttt {S22} 为三个脊式布局，命名规则见第~\ref {sec:protocol}~节。}{table.caption.9}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4}{\ignorespaces E2 包含性（每算例 \(10\) 个随机种子）。E2a：没有依赖边从预约影响集内指向集外尚未结束的占用； 「单遍改路可行」：只在影响集内改路、不做范围扩展时恢复可行； E2b：集外占用的走廊、时段与 AGV\emph  {逐条}不变。\texttt  {S11}、\texttt  {S21}、\texttt  {S22} 的含义见表\nonbreakingspace \ref {tab:e1}。}}{18}{table.caption.10}\protected@file@percent }
+\newlabel{tab:e2}{{4}{18}{E2 包含性（每算例 \(\NSeeds \) 个随机种子）。E2a：没有依赖边从预约影响集内指向集外尚未结束的占用； 「单遍改路可行」：只在影响集内改路、不做范围扩展时恢复可行； E2b：集外占用的走廊、时段与 AGV\emph {逐条}不变。\texttt {S11}、\texttt {S21}、\texttt {S22} 的含义见表~\ref {tab:e1}。}{table.caption.10}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.3}E2：包含性}{18}{subsection.5.3}\protected@file@percent }
+\newlabel{sec:e2}{{5.3}{18}{E2：包含性}{subsection.5.3}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.4}E3：边界消融}{18}{subsection.5.4}\protected@file@percent }
+\newlabel{sec:e3}{{5.4}{18}{E3：边界消融}{subsection.5.4}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {5}{\ignorespaces E3 边界消融（不做范围扩展；每算例 \(10\) 个随机种子）。 「AOR 空、\textsc  {STRC}{} 非空」计 AOR 的允许改写集合为空而 \textsc  {STRC}{} 非空的算例--随机种子对；末两列为 \(10\) 个随机种子的均值。 \texttt  {S11}、\texttt  {S21}、\texttt  {S22} 的含义见表\nonbreakingspace \ref {tab:e1}。}}{19}{table.caption.11}\protected@file@percent }
+\newlabel{tab:e3}{{5}{19}{E3 边界消融（不做范围扩展；每算例 \(\NSeeds \) 个随机种子）。 「AOR 空、\STRC {} 非空」计 AOR 的允许改写集合为空而 \STRC {} 非空的算例--随机种子对；末两列为 \(\NSeeds \) 个随机种子的均值。 \texttt {S11}、\texttt {S21}、\texttt {S22} 的含义见表~\ref {tab:e1}。}{table.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces E1 与 E3 的结果（每算例 \(10\) 个随机种子）。 左：每算例按工序依赖图得到的受影响工序数、起点占用数与预约影响集的占用数，柱高为 \(10\) 个随机种子的均值； \(|\mathrm {Cl}|\) 的逐算例四分位距为 \(2\)--\(8\)。 右：单遍改路、不做范围扩展时 AOR 与 \textsc  {STRC}{} 的恢复可行率，按算例--随机种子对计数。}}{19}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:e1e3}{{6}{19}{E1 与 E3 的结果（每算例 \(\NSeeds \) 个随机种子）。 左：每算例按工序依赖图得到的受影响工序数、起点占用数与预约影响集的占用数，柱高为 \(\NSeeds \) 个随机种子的均值； \(|\mathrm {Cl}|\) 的逐算例四分位距为 \(2\)--\(8\)。 右：单遍改路、不做范围扩展时 AOR 与 \STRC {} 的恢复可行率，按算例--随机种子对计数。}{figure.caption.12}{}}
+\newlabel{sec:case}{{5.4}{19}{E3：边界消融}{figure.caption.12}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces 案例甘特图（\(3\times 3\times 2\) 小例，运行随机种子 \(42\)，繁忙走廊阻断）。 (a)\nonbreakingspace 阻断前原排程，按是否属于 \(\mathrm {Cl}\) 着色； (b)\nonbreakingspace 单遍改路后。工序依赖图上的影响域为空；蓝色工序对应影响集内运输被改路。 本图仅示意局部改动的形态。}}{20}{figure.caption.13}\protected@file@percent }
+\newlabel{fig:case}{{7}{20}{案例甘特图（\(3\times 3\times 2\) 小例，运行随机种子 \(42\)，繁忙走廊阻断）。 (a)~阻断前原排程，按是否属于 \(\mathrm {Cl}\) 着色； (b)~单遍改路后。工序依赖图上的影响域为空；蓝色工序对应影响集内运输被改路。 本图仅示意局部改动的形态。}{figure.caption.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.5}E4：路网结构指标能否预测影响集规模（探索性）}{20}{subsection.5.5}\protected@file@percent }
+\newlabel{sec:e4}{{5.5}{20}{E4：路网结构指标能否预测影响集规模（探索性）}{subsection.5.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {6}{\ignorespaces E4 静态路网指标与预约影响集占比（阻断 LU 割中的一条走廊；每张布局 \(10\) 个随机种子，\(\mathrm {Cl}/|R|\) 取中位数）。 全部算例的工件数、AGV 数与其余生成参数相同，只差路网与机器配置。「节点/走廊」为节点数与走廊数。 「极差」为同一组内各布局影响集占比的最大值减最小值；\(4\times 4\) 网格一组只有 \(2\) 张布局、本文构造的一组只有 \(3\) 张， 故极差只作粗略比较。}}{21}{table.caption.14}\protected@file@percent }
+\newlabel{tab:e4pub}{{6}{21}{E4 静态路网指标与预约影响集占比（阻断 LU 割中的一条走廊；每张布局 \(\NSeeds \) 个随机种子，\(\mathrm {Cl}/|R|\) 取中位数）。 全部算例的工件数、AGV 数与其余生成参数相同，只差路网与机器配置。「节点/走廊」为节点数与走廊数。 「极差」为同一组内各布局影响集占比的最大值减最小值；\(4\times 4\) 网格一组只有 \(2\) 张布局、本文构造的一组只有 \(3\) 张， 故极差只作粗略比较。}{table.caption.14}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.6}E5：与全局重调度的权衡}{21}{subsection.5.6}\protected@file@percent }
+\newlabel{sec:e5}{{5.6}{21}{E5：与全局重调度的权衡}{subsection.5.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces E5：不改写已结束占用的 GR 预算扫描与有界修复结果（拥堵例，\(3\) 个随机种子均值）。 左：算法耗时与 \(C_{\max }\)；右：占用改动比例。}}{22}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:e5}{{8}{22}{E5：不改写已结束占用的 GR 预算扫描与有界修复结果（拥堵例，\(3\) 个随机种子均值）。 左：算法耗时与 \(C_{\max }\)；右：占用改动比例。}{figure.caption.15}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {7}{\ignorespaces E5 与不改写已结束占用的热启动全局重调度（\(3\) 个随机种子均值）。 本表只含本文构造的两个算例：\(2\) 算例 \(\times \) \(3\) 随机种子 \(\times \) \(3\) 预算点，独立的算例--随机种子对共 \(6\) 个； 外部布局批次见第\nonbreakingspace \ref {sec:pubrepro}\nonbreakingspace 节。「改动比例」为被改写的占用占全表之比。 \textsc  {STRC}{} 在每对上只运行一次、不受预算影响，故同一算例三个预算行中的 \textsc  {STRC}{} 两列数值相同，均为同一次运行的结果。}}{22}{table.caption.16}\protected@file@percent }
+\newlabel{tab:e5}{{7}{22}{E5 与不改写已结束占用的热启动全局重调度（\(3\) 个随机种子均值）。 本表只含本文构造的两个算例：\(2\) 算例 \(\times \) \(3\) 随机种子 \(\times \) \(3\) 预算点，独立的算例--随机种子对共 \(6\) 个； 外部布局批次见第~\ref {sec:pubrepro}~节。「改动比例」为被改写的占用占全表之比。 \STRC {} 在每对上只运行一次、不受预算影响，故同一算例三个预算行中的 \STRC {} 两列数值相同，均为同一次运行的结果。}{table.caption.16}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {8}{\ignorespaces E6 扰动类型 \(\times \) 划界对象（\(50\) 对/类，共 \(200\) 次测量）。 通行变慢与阻断的起点占用相同，故两者给出同一个预约影响集，\emph  {独立}的划界测量为 \(150\) 次。 \(|R^{\circ }|\) 为 \(t_{\mathrm {now}}\) 之后尚未结束的占用数。 「AOR 为空」计按工序依赖图划界判该扰动无需重调度的算例--随机种子对。 末列不做范围扩展：B 类为单遍改路，A 类为换车或改派。}}{23}{table.caption.17}\protected@file@percent }
+\newlabel{tab:e6}{{8}{23}{E6 扰动类型 \(\times \) 划界对象（\(\NPairs \) 对/类，共 \(200\) 次测量）。 通行变慢与阻断的起点占用相同，故两者给出同一个预约影响集，\emph {独立}的划界测量为 \(150\) 次。 \(|R^{\circ }|\) 为 \(t_{\mathrm {now}}\) 之后尚未结束的占用数。 「AOR 为空」计按工序依赖图划界判该扰动无需重调度的算例--随机种子对。 末列不做范围扩展：B 类为单遍改路，A 类为换车或改派。}{table.caption.17}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.7}E6：扰动类型与划界对象的交叉}{23}{subsection.5.7}\protected@file@percent }
+\newlabel{sec:e6}{{5.7}{23}{E6：扰动类型与划界对象的交叉}{subsection.5.7}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {9}{\ignorespaces E7 毫秒量级内对照（\(50\) 对，设置与 E3 相同：繁忙走廊阻断，\textsc  {STRC}{} 不做范围扩展）。四法均 \(50/50\) 可行。 「改写已结束占用」计改写了已结束占用的算例--随机种子对；「允许改写」为该方法纳入改写的占用占 \(t_{\mathrm {now}}\) 之后尚未结束占用的比例；末列为该方法对 \textsc  {STRC}{} 的 \(C_{\max }\) 胜负。「平均退化」为 \((C_{\max }(\symcal {S}')-C_{\max }(\symcal {S}^0))/C_{\max }(\symcal {S}^0)\) 在 \(50\) 对上的均值，其中 \(\symcal {S}^0\) 为扰动前的排程，\(\symcal {S}'\) 为修复后的排程。ALL 与 \textsc  {STRC}{} 只差允许改写哪些占用， 故这两行之差可全部归因于预约影响集。表\nonbreakingspace \ref {tab:e5} 只含小例与拥堵例两个算例，与本表的 \(50\) 对不是同一组算例，故两表数值不宜直接比较。}}{24}{table.caption.18}\protected@file@percent }
+\newlabel{tab:cheap}{{9}{24}{E7 毫秒量级内对照（\(\NPairs \) 对，设置与 E3 相同：繁忙走廊阻断，\STRC {} 不做范围扩展）。四法均 \(\NPairs /\NPairs \) 可行。 「改写已结束占用」计改写了已结束占用的算例--随机种子对；「允许改写」为该方法纳入改写的占用占 \(t_{\mathrm {now}}\) 之后尚未结束占用的比例；末列为该方法对 \STRC {} 的 \(C_{\max }\) 胜负。「平均退化」为 \((C_{\max }(\mathcal {S}')-C_{\max }(\mathcal {S}^0))/C_{\max }(\mathcal {S}^0)\) 在 \(\NPairs \) 对上的均值，其中 \(\mathcal {S}^0\) 为扰动前的排程，\(\mathcal {S}'\) 为修复后的排程。ALL 与 \STRC {} 只差允许改写哪些占用， 故这两行之差可全部归因于预约影响集。表~\ref {tab:e5} 只含小例与拥堵例两个算例，与本表的 \(\NPairs \) 对不是同一组算例，故两表数值不宜直接比较。}{table.caption.18}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.8}E7：毫秒量级内的对照}{24}{subsection.5.8}\protected@file@percent }
+\newlabel{sec:cheap}{{5.8}{24}{E7：毫秒量级内的对照}{subsection.5.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces E7 事后规则：允许改写占比与稳定性降幅（\(50\) 对，\textsc  {STRC}{} 对 ALL）。 虚线为样本内阈值 \(0.93\)；纵轴为正表示按影响集划界后改动比例更低。}}{25}{figure.caption.19}\protected@file@percent }
+\newlabel{fig:worth}{{9}{25}{E7 事后规则：允许改写占比与稳定性降幅（\(\NPairs \) 对，\STRC {} 对 ALL）。 虚线为样本内阈值 \(\WorthThresh \)；纵轴为正表示按影响集划界后改动比例更低。}{figure.caption.19}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {10}{\ignorespaces E8 扰动规模扫描（拥堵例，\(10\) 个随机种子平均；有界修复启用范围扩展；GR 预算 \(2\)\,s）。 有界修复在各对上的耗时为 2.2--23.8\,ms；GR \(C_{\max }\) 的逐档四分位距为 8--76。}}{26}{table.caption.20}\protected@file@percent }
+\newlabel{tab:scale}{{10}{26}{E8 扰动规模扫描（拥堵例，\(\NSeeds \) 个随机种子平均；有界修复启用范围扩展；GR 预算 \(2\)\,s）。 有界修复在各对上的耗时为 \ScaleMsMin --\ScaleMsMax \,ms；GR \(C_{\max }\) 的逐档四分位距为 \ScaleCmaxIqrLo --\ScaleCmaxIqrHi 。}{table.caption.20}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces E8 扰动规模扫描（拥堵例，\(10\) 个随机种子）： 有界修复与 GR 的算法耗时（对数轴）与完工时间随 \(\mitvarphi \) 变化。曲线取逐档均值， 离散度的度量与表\nonbreakingspace \ref {tab:scale} 相同（四分位距）。}}{26}{figure.caption.21}\protected@file@percent }
+\newlabel{fig:scale}{{10}{26}{E8 扰动规模扫描（拥堵例，\(\NSeeds \) 个随机种子）： 有界修复与 GR 的算法耗时（对数轴）与完工时间随 \(\varphi \) 变化。曲线取逐档均值， 离散度的度量与表~\ref {tab:scale} 相同（四分位距）。}{figure.caption.21}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.9}E8：规模外推}{26}{subsection.5.9}\protected@file@percent }
+\newlabel{sec:e8}{{5.9}{26}{E8：规模外推}{subsection.5.9}{}}
+\newlabel{sec:scale}{{5.9.1}{26}{扰动规模}{subsubsection.5.9.1}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.9.1}扰动规模}{26}{subsubsection.5.9.1}\protected@file@percent }
+\newlabel{sec:instscale}{{5.9.2}{26}{算例规模}{subsubsection.5.9.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {5.9.2}算例规模}{26}{subsubsection.5.9.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {11}{\ignorespaces E8 算例规模扫描（\(7\) 档 \(\times \) \(10\) 个随机种子）。 「影响集」为预约影响集占\emph  {全表}之比，该比的可达上界是 \(|R^{\circ }|/|R|\)、本批均值约 0.61；换以可改写集合为分母则为 0.78--0.91（见正文）。 耗时取中位数，「RD/\textsc  {STRC}{}」一列即两列\emph  {中位数之比}；正文讨论其单调性时用的是先在每对上求比值、 再按档平均的结果，两种计算方式下各档的起落一致但数值不同。末列为 \textsc  {STRC}{} 对 RS 的 \(C_{\max }\) 胜负。}}{27}{table.caption.22}\protected@file@percent }
+\newlabel{tab:instscale}{{11}{27}{E8 算例规模扫描（\(\ScaleKs \) 档 \(\times \) \(\NSeeds \) 个随机种子）。 「影响集」为预约影响集占\emph {全表}之比，该比的可达上界是 \(|R^{\circ }|/|R|\)、本批均值约 \ScaleAliveShare ；换以可改写集合为分母则为 \ScaleCloAliveLo --\ScaleCloAliveHi （见正文）。 耗时取中位数，「RD/\STRC {}」一列即两列\emph {中位数之比}；正文讨论其单调性时用的是先在每对上求比值、 再按档平均的结果，两种计算方式下各档的起落一致但数值不同。末列为 \STRC {} 对 RS 的 \(C_{\max }\) 胜负。}{table.caption.22}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {5.10}外部布局批次的复现}{27}{subsection.5.10}\protected@file@percent }
+\newlabel{sec:pubrepro}{{5.10}{27}{外部布局批次的复现}{subsection.5.10}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}结论}{28}{section.6}\protected@file@percent }
+\newlabel{sec:conclusion}{{6}{28}{结论}{section.6}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.1}工作总结}{28}{subsection.6.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.2}主要结论}{28}{subsection.6.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {6.3}局限与未来工作}{28}{subsection.6.3}\protected@file@percent }
+\newlabel{sec:limitations}{{6.3}{28}{局限与未来工作}{subsection.6.3}{}}
+\citation{homayouni2021production,fontes2023hybrid}
+\citation{lyu2019approach}
+\citation{vanos2026exact}
+\bibstyle{ACM-Reference-Format}
+\bibdata{reference-base}
+\bibcite{dariano2007branch}{{1}{2007}{{D'Ariano et~al\mbox  {.}}}{{}}}
+\bibcite{fontes2023hybrid}{{2}{2023}{{Fontes et~al\mbox  {.}}}{{}}}
+\bibcite{homayouni2021production}{{3}{2021}{{Homayouni and Fontes}}{{}}}
+\bibcite{jafarian2026integrated}{{4}{2026}{{Jafarian-Moghaddam et~al\mbox  {.}}}{{}}}
+\bibcite{kasaura2022sipp}{{5}{2022}{{Kasaura et~al\mbox  {.}}}{{}}}
+\bibcite{kim2026congestion}{{6}{2026}{{Kim and Kim}}{{}}}
+\bibcite{kuster2007local}{{7}{2007}{{Kuster et~al\mbox  {.}}}{{}}}
+\bibcite{li2026framework}{{8}{2026}{{Li et~al\mbox  {.}}}{{}}}
+\bibcite{li2025learning}{{9}{2025}{{Li et~al\mbox  {.}}}{{}}}
+\bibcite{lyu2019approach}{{10}{2019}{{Lyu et~al\mbox  {.}}}{{}}}
+\bibcite{malka2024online}{{11}{2024}{{Malka et~al\mbox  {.}}}{{}}}
+\bibcite{margot2003decompositions}{{12}{2003}{{Margot et~al\mbox  {.}}}{{}}}
+\@writefile{toc}{\contentsline {section}{References}{29}{section*.24}\protected@file@percent }
+\bibcite{mascis2002alternative}{{13}{2002}{{Mascis and Pacciarelli}}{{}}}
+\bibcite{meng2025cp}{{14}{2025}{{Meng et~al\mbox  {.}}}{{}}}
+\bibcite{ouelhadj2009survey}{{15}{2009}{{Ouelhadj and Petrovic}}{{}}}
+\bibcite{phillips2011sipp}{{16}{2011}{{Phillips and Likhachev}}{{}}}
+\bibcite{qiao2012single}{{17}{2012}{{Qiao et~al\mbox  {.}}}{{}}}
+\bibcite{qin2026knowledge}{{18}{2026}{{Qin et~al\mbox  {.}}}{{}}}
+\bibcite{salido2017rescheduling}{{19}{2017}{{Salido et~al\mbox  {.}}}{{}}}
+\bibcite{shan2021pull}{{20}{2021}{{Shan et~al\mbox  {.}}}{{}}}
+\bibcite{silver2005cooperative}{{21}{2005}{{Silver}}{{}}}
+\bibcite{subramaniam2003maor}{{22}{2003}{{Subramaniam and Raheja}}{{}}}
+\bibcite{suh2022spine}{{23}{2022}{{Suh and Choi}}{{}}}
+\bibcite{sun2023integrated}{{24}{2023}{{Sun et~al\mbox  {.}}}{{}}}
+\bibcite{svancara2019online}{{25}{2019}{{{\v {S}}vancara et~al\mbox  {.}}}{{}}}
+\bibcite{tang2026dynamic}{{26}{2026}{{Tang et~al\mbox  {.}}}{{}}}
+\bibcite{vanos2026exact}{{27}{2026}{{van Os and Basten}}{{}}}
+\bibcite{vieira2003rescheduling}{{28}{2003}{{Vieira et~al\mbox  {.}}}{{}}}
+\bibcite{xin2025review}{{29}{2025}{{Xin et~al\mbox  {.}}}{{}}}
+\bibcite{zhang2023energy}{{30}{2023}{{Zhang et~al\mbox  {.}}}{{}}}
+\bibcite{zhang2024guidance}{{31}{2024}{{Zhang et~al\mbox  {.}}}{{}}}
+\newlabel{tocindent-1}{0pt}
+\newlabel{tocindent0}{0pt}
+\newlabel{tocindent1}{4.185pt}
+\newlabel{tocindent2}{14.535pt}
+\newlabel{tocindent3}{18.198pt}
+\newlabel{tocindent4}{0pt}
+\newlabel{tocindent5}{0pt}
+\newlabel{TotPages}{{30}{30}{}{page.30}{}}
+\gdef \@abspage@last{30}

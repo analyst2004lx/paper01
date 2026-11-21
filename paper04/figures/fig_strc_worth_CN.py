@@ -24,9 +24,9 @@ ORDER = ("example_3x3x2", "congested_8x4x4", "S8x4x4_funnel",
 LABEL = {
     "example_3x3x2": "小例",
     "congested_8x4x4": "拥堵例",
-    "S8x4x4_high": "high",
-    "S8x4x4_funnel": "funnel",
-    "S8x4x4_mid": "mid",
+    "S8x4x4_high": "S21",
+    "S8x4x4_funnel": "S11",
+    "S8x4x4_mid": "S22",
 }
 COLOR = {
     "example_3x3x2": "#4c78a8",
@@ -72,7 +72,7 @@ def main() -> None:
     ax.axvline(THRESH, color="0.35", linestyle="--", linewidth=1.0,
                label=rf"事后阈值 ${THRESH:g}$")
     ax.set_xlabel(r"允许改写占比 $\mathrm{Cl}/|R^{\circ}|$")
-    ax.set_ylabel("稳定性降幅 (RA $-$ R2)")
+    ax.set_ylabel("稳定性降幅 (ALL $-$ STRC)")
     ax.set_xlim(0.74, 1.02)
     ax.legend(loc="upper right", fontsize=7, ncol=2, framealpha=0.92)
     fig.tight_layout()
