@@ -42,17 +42,17 @@ def fmt(t):
     return f"{t:g}"
 
 
-def draw_node(ax, n, xy, vin, vout, machines, size=1.0):
+def draw_node(ax, n, xy, vin, vout, machines, size=1.0, store_wh=None, mach_wh=None):
     x, y = xy
     if n in (vin, vout):
-        w, h = 0.50 * size, 0.34 * size
+        w, h = store_wh or (0.50 * size, 0.34 * size)
         ax.add_patch(plt.Rectangle((x - w / 2, y - h / 2), w, h,
                                    fc=C_IN if n == vin else C_OUT,
                                    ec="black", lw=0.8, zorder=3))
         tag = r"$v_{\mathrm{in}}$" if n == vin else r"$v_{\mathrm{out}}$"
         ax.text(x, y, tag, ha="center", va="center", fontsize=FS - 0.5 * (size < 1), zorder=4)
     elif n in machines:
-        w, h = 0.40 * size, 0.30 * size
+        w, h = mach_wh or (0.40 * size, 0.30 * size)
         ax.add_patch(plt.Rectangle((x - w / 2, y - h / 2), w, h, fc=C_MACH,
                                    ec="black", lw=0.7, zorder=3))
         ax.text(x, y, f"M{machines[n]}", ha="center", va="center",
@@ -136,8 +136,8 @@ def grid_panel(ax, rel, title):
     pos = {f"g{r * cols + c + 1}": (c * 1.0, -r * 1.0)
            for r in range(rows) for c in range(cols)}
     # 库区挂在角点外侧;机器放进挂接路口相邻、尚未占用的网格中心,避免压线和互相重叠
-    pos[vin] = (pos["g1"][0] - 0.42, pos["g1"][1] + 0.42)
-    pos[vout] = (pos[f"g{rows * cols}"][0] + 0.42, pos[f"g{rows * cols}"][1] - 0.42)
+    pos[vin] = (pos["g1"][0] - 0.55, pos["g1"][1] + 0.55)
+    pos[vout] = (pos[f"g{rows * cols}"][0] + 0.55, pos[f"g{rows * cols}"][1] - 0.55)
     used = set()
     for pair in sorted(edges, key=lambda p: sorted(p)):
         a, b = sorted(pair)
@@ -164,9 +164,10 @@ def grid_panel(ax, rel, title):
             label, labelled = fmt(t), True
         draw_edge(ax, pos[a], pos[b], label=label, off=(0, 0.2))
     for n in nodes:
-        draw_node(ax, n, pos[n], vin, vout, machines, size=0.95)
-    ax.set_xlim(-0.75, cols - 0.25)
-    ax.set_ylim(-rows + 0.2, 0.75)
+        draw_node(ax, n, pos[n], vin, vout, machines, size=0.95,
+                  store_wh=(0.78, 0.42), mach_wh=(0.62, 0.42))
+    ax.set_xlim(-1.0, cols + 0.0)
+    ax.set_ylim(-rows - 0.05, 0.85)
     finish(ax, title, f"节点/走廊数：{len(nodes)}/{len(edges)}", -0.03)
 
 
@@ -193,11 +194,11 @@ def main() -> None:
                 frozenset(("c2", "r4")): (0.2, 0.0)})
     spine_panel(fig.add_subplot(top[0, 2]))
 
-    pubs = (("S8x4x4-LyuL2-H0.3-F0.6-A4-s42.json", "(d) 布局 2"),
-            ("S8x5x4-LyuL3-H0.3-F0.6-A4-s42.json", "(e) 布局 3"),
-            ("S8x6x4-LyuL4-H0.3-F0.6-A4-s42.json", "(f) 布局 4"),
-            ("S8x7x4-LyuL5-H0.3-F0.6-A4-s42.json", "(g) 布局 5"),
-            ("S8x8x4-LyuL6-H0.3-F0.6-A4-s42.json", "(h) 布局 6"))
+    pubs = (("S8x4x4-LyuL2-H0.3-F0.6-A4-s42.json", "(d) L2"),
+            ("S8x5x4-LyuL3-H0.3-F0.6-A4-s42.json", "(e) L3"),
+            ("S8x6x4-LyuL4-H0.3-F0.6-A4-s42.json", "(f) L4"),
+            ("S8x7x4-LyuL5-H0.3-F0.6-A4-s42.json", "(g) L5"),
+            ("S8x8x4-LyuL6-H0.3-F0.6-A4-s42.json", "(h) L6"))
     for k, (rel, title) in enumerate(pubs):
         grid_panel(fig.add_subplot(bot[0, k]), rel, title)
 
