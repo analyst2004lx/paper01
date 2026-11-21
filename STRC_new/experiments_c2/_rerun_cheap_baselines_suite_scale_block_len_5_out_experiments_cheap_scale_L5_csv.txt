@@ -1,0 +1,90 @@
+  S8x4x4           s=42     ref= 117.0  R2:  120.5/  8.93ms/ok  RS:  122.0/  1.87ms/ok  RD:  113.5/  7.80ms/ok  RA:  120.5/  6.06ms/ok  RAF:  121.0/  6.13ms/ok
+  S8x4x4           s=7      ref= 125.0  R2:  129.5/  7.46ms/ok  RS:  130.0/  2.10ms/ok  RD:  117.0/  7.28ms/ok  RA:  129.5/  7.12ms/ok  RAF:  125.0/  7.12ms/ok
+  S8x4x4           s=2024   ref= 108.5  R2:  118.5/  9.07ms/ok  RS:  113.5/  2.06ms/FAIL  RD:  118.0/  8.55ms/ok  RA:  118.5/  7.67ms/ok  RAF:  113.0/  8.59ms/ok
+  S8x4x4           s=99     ref= 129.0  R2:  137.0/  6.49ms/ok  RS:  134.0/  2.37ms/ok  RD:  134.0/  8.03ms/ok  RA:  137.0/  6.17ms/ok  RAF:  132.5/  7.21ms/ok
+  S8x4x4           s=123    ref= 119.5  R2:  125.5/  7.65ms/ok  RS:  124.5/  2.40ms/ok  RD:  116.5/  9.36ms/ok  RA:  125.5/  7.10ms/ok  RAF:  121.0/  7.52ms/ok
+  S8x4x4           s=13     ref= 127.5  R2:  132.5/  7.53ms/ok  RS:  132.5/  3.19ms/ok  RD:  124.5/  7.81ms/ok  RA:  132.5/  7.25ms/ok  RAF:  133.0/  7.79ms/ok
+  S8x4x4           s=1      ref= 125.0  R2:  129.0/  7.50ms/ok  RS:  130.0/  1.83ms/ok  RD:  127.0/  8.38ms/ok  RA:  129.0/  6.38ms/ok  RAF:  129.0/  7.27ms/ok
+  S8x4x4           s=777    ref= 117.5  R2:  127.0/  5.83ms/ok  RS:  122.5/  2.66ms/FAIL  RD:  121.5/  7.95ms/ok  RA:  127.0/  5.88ms/ok  RAF:  121.5/  6.38ms/ok
+  S8x4x4           s=31415  ref= 108.0  R2:  122.5/  8.60ms/ok  RS:  113.0/  2.78ms/FAIL  RD:  114.0/  7.00ms/ok  RA:  122.5/  6.46ms/ok  RAF:  115.5/  6.86ms/ok
+  S8x4x4           s=8      ref= 113.0  R2:  120.0/  6.19ms/ok  RS:  118.0/  1.87ms/ok  RD:  113.5/  7.65ms/ok  RA:  118.0/  6.80ms/ok  RAF:  117.5/  7.45ms/ok
+  S10x5x5          s=42     ref= 112.5  R2:  122.0/  9.94ms/ok  RS:  117.5/  3.44ms/FAIL  RD:  106.0/ 11.05ms/ok  RA:  120.0/  8.69ms/ok  RAF:  116.5/  9.31ms/ok
+  S10x5x5          s=7      ref= 111.5  R2:  117.0/  7.74ms/ok  RS:  116.5/  2.68ms/FAIL  RD:  102.0/ 10.70ms/ok  RA:  117.0/  9.52ms/ok  RAF:  113.5/  9.66ms/ok
+  S10x5x5          s=2024   ref= 104.0  R2:  108.5/  8.76ms/ok  RS:  109.0/  3.18ms/ok  RD:  115.5/ 10.28ms/ok  RA:  112.0/  8.63ms/ok  RAF:  107.5/ 11.16ms/ok
+  S10x5x5          s=99     ref= 120.5  R2:  136.0/ 12.62ms/ok  RS:  125.5/  3.18ms/ok  RD:  124.0/ 11.71ms/ok  RA:  130.0/ 10.14ms/ok  RAF:  130.0/ 10.70ms/ok
+  S10x5x5          s=123    ref= 114.5  R2:      X/ 28.11ms/FAIL  RS:  119.5/  2.83ms/ok  RD:  114.5/ 13.09ms/ok  RA:      X/ 26.66ms/FAIL  RAF:      X/ 14.66ms/FAIL
+  S10x5x5          s=13     ref= 116.5  R2:  143.5/  8.85ms/ok  RS:  121.5/  2.89ms/ok  RD:      X/  2.03ms/FAIL  RA:  143.5/  7.89ms/ok  RAF:  116.5/  8.42ms/ok
+  S10x5x5          s=1      ref= 117.0  R2:  132.0/  7.94ms/ok  RS:  122.0/  2.21ms/ok  RD:  121.0/ 11.49ms/ok  RA:  132.0/  8.71ms/ok  RAF:  129.5/  9.50ms/ok
+  S10x5x5          s=777    ref= 113.5  R2:  120.5/ 10.91ms/ok  RS:  118.5/  2.04ms/ok  RD:  113.5/ 11.73ms/ok  RA:  120.5/  7.61ms/ok  RAF:  114.5/  7.92ms/ok
+  S10x5x5          s=31415  ref= 131.0  R2:  138.5/  9.46ms/ok  RS:  136.0/  2.25ms/FAIL  RD:  140.0/ 15.51ms/ok  RA:  138.5/  8.29ms/ok  RAF:  139.0/ 10.27ms/ok
+  S10x5x5          s=8      ref= 104.5  R2:  112.5/  7.58ms/ok  RS:  109.5/  2.19ms/ok  RD:  108.5/ 10.00ms/ok  RA:  109.5/  7.68ms/ok  RAF:  111.5/  8.57ms/ok
+  S12x6x6          s=42     ref= 126.0  R2:  134.0/ 12.65ms/ok  RS:  131.0/  3.02ms/ok  RD:  125.5/ 17.18ms/ok  RA:  134.0/ 11.52ms/ok  RAF:  141.0/ 13.25ms/ok
+  S12x6x6          s=7      ref= 133.5  R2:  141.5/ 12.32ms/ok  RS:  138.5/  3.81ms/ok  RD:  138.5/ 21.35ms/ok  RA:  138.0/ 13.60ms/ok  RAF:  140.5/ 14.59ms/ok
+  S12x6x6          s=2024   ref= 131.5  R2:  131.5/ 12.94ms/ok  RS:  136.5/  3.56ms/FAIL  RD:  132.0/ 17.06ms/ok  RA:  133.0/ 11.22ms/ok  RAF:  132.0/ 13.55ms/ok
+  S12x6x6          s=99     ref= 118.5  R2:  119.0/ 10.35ms/ok  RS:  123.5/  3.81ms/FAIL  RD:  124.0/ 15.92ms/ok  RA:  119.0/ 10.87ms/ok  RAF:  118.5/ 12.96ms/ok
+  S12x6x6          s=123    ref= 136.0  R2:  147.0/ 14.96ms/ok  RS:  141.0/  5.24ms/FAIL  RD:  135.5/ 25.54ms/ok  RA:  147.0/ 21.12ms/ok  RAF:  139.0/ 27.86ms/ok
+  S12x6x6          s=13     ref= 144.0  R2:  148.0/ 18.94ms/ok  RS:  149.0/  6.27ms/ok  RD:  149.0/ 34.27ms/ok  RA:  148.0/ 17.71ms/ok  RAF:  144.0/ 18.05ms/ok
+  S12x6x6          s=1      ref= 144.5  R2:  149.5/ 14.51ms/ok  RS:  149.5/  4.11ms/ok  RD:  142.0/ 22.90ms/ok  RA:  149.5/ 15.06ms/ok  RAF:  149.5/ 15.50ms/ok
+  S12x6x6          s=777    ref= 135.0  R2:  150.5/ 12.67ms/ok  RS:  140.0/  3.18ms/ok  RD:  135.0/ 21.14ms/ok  RA:  150.5/ 14.40ms/ok  RAF:  133.0/ 17.54ms/ok
+  S12x6x6          s=31415  ref= 136.5  R2:  139.5/ 11.84ms/ok  RS:  141.5/  4.12ms/ok  RD:  136.5/ 18.09ms/ok  RA:  139.5/ 10.86ms/ok  RAF:  140.0/ 14.25ms/ok
+  S12x6x6          s=8      ref= 131.0  R2:  148.0/ 12.25ms/ok  RS:  136.0/  2.67ms/ok  RD:  134.0/ 19.18ms/ok  RA:  139.5/ 12.40ms/ok  RAF:  141.5/ 13.88ms/ok
+  S14x7x7          s=42     ref= 133.5  R2:  138.5/ 16.58ms/ok  RS:  138.5/  4.95ms/ok  RD:  146.0/ 35.63ms/ok  RA:  138.5/ 15.05ms/ok  RAF:  137.0/ 18.25ms/ok
+  S14x7x7          s=7      ref= 130.0  R2:  137.5/ 15.04ms/ok  RS:  135.0/  3.29ms/FAIL  RD:  137.5/ 26.95ms/ok  RA:  137.5/ 13.54ms/ok  RAF:  138.5/ 17.27ms/ok
+  S14x7x7          s=2024   ref= 153.5  R2:  152.5/ 16.32ms/ok  RS:  158.5/  5.19ms/ok  RD:  153.0/ 38.82ms/ok  RA:  152.5/ 17.13ms/ok  RAF:  152.5/ 25.30ms/ok
+  S14x7x7          s=99     ref= 134.5  R2:  134.5/ 17.39ms/ok  RS:  139.5/  5.00ms/FAIL  RD:  150.5/ 46.81ms/ok  RA:  134.5/ 16.13ms/ok  RAF:  134.5/ 18.76ms/ok
+  S14x7x7          s=123    ref= 136.5  R2:  137.0/ 18.93ms/ok  RS:  141.5/  4.50ms/FAIL  RD:  137.5/ 34.45ms/ok  RA:  137.0/ 16.82ms/ok  RAF:  135.0/ 20.70ms/ok
+  S14x7x7          s=13     ref= 145.0  R2:  155.5/ 17.40ms/ok  RS:  150.0/  4.42ms/ok  RD:  141.0/ 22.11ms/ok  RA:  155.5/ 16.29ms/ok  RAF:  149.5/ 19.36ms/ok
+  S14x7x7          s=1      ref= 139.0  R2:  146.0/ 16.61ms/ok  RS:  144.0/  4.74ms/FAIL  RD:  149.0/ 45.59ms/ok  RA:  146.0/ 16.25ms/ok  RAF:  146.0/ 20.01ms/ok
+  S14x7x7          s=777    ref= 149.0  R2:      X/ 10.77ms/FAIL  RS:  154.0/  5.67ms/ok  RD:      X/  4.71ms/FAIL  RA:      X/  9.37ms/FAIL  RAF:      X/  5.02ms/FAIL
+  S14x7x7          s=31415  ref= 135.0  R2:  144.0/ 17.87ms/ok  RS:  140.0/  5.11ms/ok  RD:  136.0/ 35.94ms/ok  RA:  144.0/ 16.35ms/ok  RAF:  137.0/ 19.16ms/ok
+  S14x7x7          s=8      ref= 152.5  R2:  152.5/ 17.35ms/ok  RS:  157.5/  5.15ms/ok  RD:  152.0/ 29.23ms/ok  RA:  152.5/ 18.35ms/ok  RAF:  152.5/ 21.44ms/ok
+  S16x8x8          s=42     ref= 133.0  R2:  133.0/ 18.61ms/ok  RS:  138.0/  5.57ms/ok  RD:  131.0/ 41.42ms/ok  RA:  142.5/ 18.24ms/ok  RAF:  142.5/ 22.58ms/ok
+  S16x8x8          s=7      ref= 127.0  R2:  129.0/ 15.36ms/ok  RS:  132.0/  5.11ms/FAIL  RD:  127.0/ 35.27ms/ok  RA:  134.5/ 20.04ms/ok  RAF:  137.0/ 20.45ms/ok
+  S16x8x8          s=2024   ref= 140.5  R2:  140.5/ 18.12ms/ok  RS:  145.5/  4.63ms/ok  RD:  143.5/ 55.97ms/ok  RA:  140.5/ 19.27ms/ok  RAF:  140.5/ 20.78ms/ok
+  S16x8x8          s=99     ref= 123.0  R2:  141.5/ 15.86ms/ok  RS:  128.0/  5.88ms/FAIL  RD:  132.0/ 40.47ms/ok  RA:  137.5/ 16.11ms/ok  RAF:  137.5/ 19.04ms/ok
+  S16x8x8          s=123    ref= 132.0  R2:  132.0/ 14.87ms/ok  RS:  137.0/  4.27ms/FAIL  RD:  132.0/ 39.60ms/ok  RA:  132.0/ 15.28ms/ok  RAF:  132.0/ 20.01ms/ok
+  S16x8x8          s=13     ref= 134.0  R2:  134.0/ 17.09ms/ok  RS:  139.0/  5.08ms/ok  RD:  136.0/ 54.13ms/ok  RA:  134.0/ 17.50ms/ok  RAF:  134.0/ 21.70ms/ok
+  S16x8x8          s=1      ref= 133.5  R2:  140.0/ 18.53ms/ok  RS:  138.5/  4.51ms/FAIL  RD:  131.5/ 41.36ms/ok  RA:  151.5/ 15.63ms/ok  RAF:      X/  9.08ms/FAIL
+  S16x8x8          s=777    ref= 131.0  R2:  131.0/ 18.69ms/ok  RS:  136.0/  3.85ms/FAIL  RD:  136.5/ 38.63ms/ok  RA:  133.5/ 16.26ms/ok  RAF:  143.5/ 22.12ms/ok
+  S16x8x8          s=31415  ref= 134.5  R2:  134.5/ 14.90ms/ok  RS:  139.5/  4.59ms/FAIL  RD:  134.5/ 34.39ms/ok  RA:  134.5/ 15.53ms/ok  RAF:  134.5/ 19.21ms/ok
+  S16x8x8          s=8      ref= 129.0  R2:  129.0/ 16.41ms/ok  RS:  134.0/  6.94ms/FAIL  RD:  129.0/ 34.22ms/ok  RA:  129.0/ 13.95ms/ok  RAF:  129.0/ 16.07ms/ok
+  S18x9x9          s=42     ref= 143.5  R2:  143.5/ 19.25ms/ok  RS:  148.5/  6.36ms/FAIL  RD:  142.0/ 54.57ms/ok  RA:  144.5/ 20.19ms/ok  RAF:  140.5/ 25.96ms/ok
+  S18x9x9          s=7      ref= 141.0  R2:  150.0/ 25.78ms/ok  RS:  146.0/  6.62ms/FAIL  RD:  148.3/ 65.74ms/ok  RA:  150.0/ 24.79ms/ok  RAF:  152.5/ 30.50ms/ok
+  S18x9x9          s=2024   ref= 149.0  R2:  166.5/ 25.39ms/ok  RS:  154.0/  6.43ms/FAIL  RD:  144.5/ 58.90ms/ok  RA:  163.5/ 21.57ms/ok  RAF:  157.5/ 28.26ms/ok
+  S18x9x9          s=99     ref= 151.0  R2:  151.0/ 21.53ms/ok  RS:  156.0/  5.27ms/ok  RD:  141.5/ 58.40ms/ok  RA:  153.0/ 22.66ms/ok  RAF:  148.0/ 26.17ms/ok
+  S18x9x9          s=123    ref= 137.5  R2:  137.5/ 21.48ms/ok  RS:  142.5/  6.05ms/FAIL  RD:  132.5/ 57.09ms/ok  RA:  137.5/ 21.08ms/ok  RAF:  137.5/ 27.48ms/ok
+  S18x9x9          s=13     ref= 155.0  R2:      X/ 46.82ms/FAIL  RS:  160.0/  7.56ms/FAIL  RD:  152.5/ 67.46ms/ok  RA:      X/ 47.35ms/FAIL  RAF:      X/ 27.99ms/FAIL
+  S18x9x9          s=1      ref= 138.5  R2:  138.5/ 17.47ms/ok  RS:  143.5/  4.89ms/FAIL  RD:  147.0/ 51.11ms/ok  RA:  146.0/ 21.50ms/ok  RAF:  143.0/ 25.04ms/ok
+  S18x9x9          s=777    ref= 139.0  R2:  139.0/ 16.46ms/ok  RS:  144.0/  4.31ms/FAIL  RD:  141.0/ 49.57ms/ok  RA:  146.5/ 20.98ms/ok  RAF:  139.5/ 24.56ms/ok
+  S18x9x9          s=31415  ref= 131.5  R2:  131.5/ 22.68ms/ok  RS:  136.5/  4.65ms/FAIL  RD:      X/  4.90ms/FAIL  RA:  131.5/ 21.04ms/ok  RAF:  131.5/ 33.08ms/ok
+  S18x9x9          s=8      ref= 153.0  R2:  153.0/ 14.54ms/ok  RS:  158.0/  4.98ms/ok  RD:  145.5/ 51.92ms/ok  RA:  158.0/ 21.92ms/ok  RAF:  148.5/ 25.76ms/ok
+  S20x10x10        s=42     ref= 160.5  R2:  168.0/ 28.03ms/ok  RS:  165.5/  6.53ms/FAIL  RD:  160.5/ 90.43ms/ok  RA:  204.5/ 24.81ms/ok  RAF:  161.5/ 35.21ms/ok
+  S20x10x10        s=7      ref= 151.0  R2:  166.0/ 28.63ms/ok  RS:  156.0/  6.65ms/FAIL  RD:      X/  3.77ms/FAIL  RA:      X/ 17.68ms/FAIL  RAF:      X/  9.63ms/FAIL
+  S20x10x10        s=2024   ref= 142.5  R2:  168.0/ 26.39ms/ok  RS:  147.5/  7.13ms/FAIL  RD:  142.0/ 87.17ms/ok  RA:  144.9/ 33.45ms/ok  RAF:  152.0/ 40.87ms/ok
+  S20x10x10        s=99     ref= 153.5  R2:  154.0/ 30.15ms/ok  RS:  158.5/  7.32ms/FAIL  RD:  145.5/ 75.18ms/ok  RA:  153.5/ 26.84ms/ok  RAF:  153.5/ 37.95ms/ok
+  S20x10x10        s=123    ref= 138.5  R2:  154.5/ 59.55ms/ok  RS:  143.5/ 11.78ms/FAIL  RD:  151.0/ 89.99ms/ok  RA:  170.5/ 26.93ms/ok  RAF:  154.5/ 33.22ms/ok
+  S20x10x10        s=13     ref= 172.0  R2:  172.0/ 40.55ms/ok  RS:  177.0/  6.94ms/FAIL  RD:  173.0/105.17ms/ok  RA:      X/ 50.40ms/FAIL  RAF:      X/ 25.84ms/FAIL
+  S20x10x10        s=1      ref= 145.0  R2:  145.0/ 27.02ms/ok  RS:  150.0/  6.65ms/FAIL  RD:  151.0/ 88.73ms/ok  RA:  145.0/ 23.10ms/ok  RAF:  145.0/ 30.38ms/ok
+  S20x10x10        s=777    ref= 148.5  R2:  148.5/ 26.42ms/ok  RS:  153.5/  6.48ms/FAIL  RD:  141.5/ 78.20ms/ok  RA:  148.5/ 26.28ms/ok  RAF:  148.5/ 30.82ms/ok
+  S20x10x10        s=31415  ref= 136.0  R2:  142.5/ 32.79ms/ok  RS:  141.0/  6.62ms/FAIL  RD:  142.0/ 92.37ms/ok  RA:  142.5/ 29.50ms/ok  RAF:  135.5/ 36.40ms/ok
+  S20x10x10        s=8      ref= 160.0  R2:  160.0/ 25.07ms/ok  RS:  165.0/  6.84ms/FAIL  RD:  161.5/153.25ms/ok  RA:  160.0/ 26.81ms/ok  RAF:  157.0/ 32.80ms/ok
+
+wrote C:\Users\analy\Desktop\AI_Folder\STRC_new\experiments/cheap_scale_L5.csv  (350 rows)
+
+臂         可行     A2 越界格    Cmax 均值      耗时中位/ms       改动比例均值       释放/活预约
+R2  67/70    0/70             139.3        16.09        0.340        0.838
+RS  32/70    0/70             135.5         4.55        0.597           --
+RD  66/70    0/70             134.8        31.72        0.488           --
+RA  65/70    0/70             139.2        16.12        0.409        1.000
+RAF 64/70    0/70             136.0        18.50        0.392        1.000
+
+逐格 Cmax 胜负(仅两臂都可行的格):
+  R2 vs RS: 赢 13 平 3 输 14
+  R2 vs RD: 赢 18 平 4 输 42
+  R2 vs RA: 赢 13 平 42 输 10
+  R2 vs RAF: 赢 13 平 16 输 35
+
+R2 vs RA(画边界 vs 不画边界,同引擎):
+  改动比例 R2-RA: 均值 -0.070  中位 +0.000  (R2 更稳 25 平 37 更差 3)
+  Cmax 比 R2/RA: 均值 0.9959  [0.8215, 1.1596]
+  释放集比 R2/RA: 均值 0.834  [0.438, 0.989]

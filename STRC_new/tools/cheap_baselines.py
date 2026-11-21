@@ -1,0 +1,313 @@
+"""把对照阶梯中间那一档补上:便宜的全局重算,与闭包修复同协议对比。
+
+阶梯此前是 R1(释放集为空=不动)→ R2(闭包修复)→ R0+(种群搜索 0.2--2 s)。
+中间缺两档便宜方法,而它们恰是审稿人会问的:
+
+  RS  全局右移。不改路径/指派/序,把未完成的一切统一后推到阻断窗之后。
+      按 A2 可采纳(冻结判据与 R2 相同),O(|R|)。文献里最标准的快速响应做法。
+  RD  原染色体重解码。保持机器指派与扫描序,在装了阻断的路由层上解一遍。
+      默认走与 R0+ 同一套固定前缀解码(假设 A2);旧的从 t=0 重放仅在
+      respect_a2=False 时保留。本工具仍逐格报 past_changed。
+  RA  不画边界,释放 t_now 之后的全部预约再改路重放。它与 R2 共用同一引擎与同一
+      冻结判据,唯一差别是释放集取了平凡上界,故两臂之差可全部归因于闭包本身。
+      这一臂回答「既然闭包已占活预约九成,画这条边界还剩多少用」。
+
+协议与 expand_batch 的 E1/E2/E3 完全一致(繁忙走廊单窗阻断、t_now=0.35 Cmax、
+R2 关闭失败扩域),故本表可与 tab:e3 并读。
+
+用法:
+    py -m tools.cheap_baselines
+    py -m tools.cheap_baselines --out experiments/cheap_baselines.csv
+
+Fill the missing middle rung of the comparison ladder: cheap global recomputation, compared with closure repair under the same protocol.
+
+The ladder was R1 (empty release set = do nothing) → R2 (closure repair) → R0+ (population search, 0.2--2 s).
+Two cheap methods were missing in the middle, and they are exactly what a reviewer would ask about:
+
+  RS  Global right-shift. Do not change paths, assignments, or sequence; push everything unfinished back past the blockage window as one delay.
+      Admissible under A2 (same freeze test as R2), O(|R|). The standard fast-response method in the literature.
+  RD  Re-decode the original chromosome. Keep machine assignment and scan order, and solve once on the routing layer with the blockage installed.
+      By default it uses the same fixed-prefix decode as R0+ (assumption A2); the old replay from t=0 is kept only when
+      respect_a2=False. This tool still reports past_changed cell by cell.
+  RA  Draw no boundary: release every reservation after t_now, then reroute and replay. It shares the engine and the
+      freeze test with R2; the only difference is that the release set takes the trivial upper bound, so the gap between the arms is entirely due to the closure itself.
+      This arm answers "once the closure already covers nine tenths of the live reservations, how much use is left in drawing this boundary".
+
+The protocol matches E1/E2/E3 in expand_batch exactly (one window blocking the busy corridor, t_now=0.35 Cmax,
+R2 with widen-on-failure off), so this table can be read next to tab:e3.
+
+Usage:
+    py -m tools.cheap_baselines
+    py -m tools.cheap_baselines --out experiments/cheap_baselines.csv
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import os
+import statistics as st
+import sys
+import time
+from collections import defaultdict
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.dirname(HERE)
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+
+EPS = 1e-9
+_SEEDS = [42, 7, 2024, 99, 123, 13, 1, 777, 31415, 8]
+
+
+def parse_args() -> argparse.Namespace:
+    ap = argparse.ArgumentParser(description="cheap admissible baselines vs closure")
+    ap.add_argument("--seeds", default=",".join(str(s) for s in _SEEDS))
+    ap.add_argument("--t-now-frac", type=float, default=0.35)
+    ap.add_argument("--out", default="experiments/cheap_baselines.csv")
+    ap.add_argument("--block-len", type=float, default=None,
+                    help="阻断时长上限;缺省为覆盖该走廊全部尚未结束占用的整段阻断")
+    ap.add_argument("--suite", choices=("main", "scale"), default="main",
+                    help="main:五个主算例;scale:规模曲线的 S{2k}x{k}x{k} 系列(k=4..10)")
+    return ap.parse_args()
+
+
+def _scale_instances():
+    from tools.scale_curve import _path
+    return [(f"S{2 * k}x{k}x{k}", _path(k)) for k in range(4, 11)]
+
+
+def _instances():
+    from algorithm.clbs_bridge import CLBS_INPUT
+    return [
+        ("example_3x3x2", os.path.join(CLBS_INPUT, "example_3x3x2.json")),
+        ("congested_8x4x4", os.path.join(CLBS_INPUT, "congested_8x4x4.json")),
+        ("S8x4x4_high", os.path.join(
+            CLBS_INPUT, "ext", "S8x4x4-LD21-H0.3-F0.6-A4-s42.json")),
+        ("S8x4x4_funnel", os.path.join(
+            CLBS_INPUT, "ext", "S8x4x4-LD11-H0.3-F0.6-A4-s42.json")),
+        ("S8x4x4_mid", os.path.join(
+            CLBS_INPUT, "ext", "S8x4x4-LD22-H0.3-F0.6-A4-s42.json")),
+    ]
+
+
+def _redecode(inst, net, bundle, dist, *, respect_a2=True):
+    """RD:保持染色体重解码。默认固定前缀;respect_a2=False 才从 t=0 重放。
+
+RD: re-decode while keeping the chromosome. Fixed prefix by default; replay from t=0 only when respect_a2=False.
+"""
+    from algorithm.block_context import corridor_block_active, effective_block_windows
+    from algorithm.clbs_bridge import decode, validate
+    from algorithm.metrics import evaluate_deviation
+    from algorithm.prefix_decode import decode_from_now
+    from algorithm.repair import RepairResult
+    from algorithm.schedule_io import reservations_from_result
+
+    t0 = time.perf_counter()
+    if respect_a2:
+        res = decode_from_now(
+            inst, net, bundle.ma, bundle.os_seq, bundle, dist, dispatch="exact")
+    else:
+        with corridor_block_active(dist):
+            res = decode(inst, net, bundle.ma, bundle.os_seq,
+                         conflict_free=True, dispatch="exact")
+    dummy = res.makespan >= 1e17
+    errs = [] if dummy else validate(inst, res.to_timetable())
+    if dummy:
+        errs.append("prefix decode infeasible")
+    else:
+        refs = reservations_from_result(res)
+        for cid, a, b in effective_block_windows(dist, refs):
+            for r in refs:
+                if r.corridor == cid and r.overlaps(a, b):
+                    errs.append(f"post-redecode still on blocked corridor: {r.task}")
+    wall = (time.perf_counter() - t0) * 1000
+    ok = not errs
+    return RepairResult(
+        feasible=ok,
+        makespan=None if dummy or not ok else res.makespan,
+        makespan_ref=bundle.makespan,
+        deviation=None if dummy or not ok else evaluate_deviation(bundle.result, res),
+        wall_ms=wall,
+        result=None if dummy or not ok else res,
+        errors=errs,
+        meta={"arm": "RD", "respect_a2": respect_a2},
+    )
+
+
+def _profile(res, t_now):
+    """每次尚未完成的运输:(走廊序列, 进入时刻序列)。"""
+    from algorithm.repair import _op_from_task
+    out = defaultdict(list)
+    for r in res:
+        if r.t_end > t_now + EPS:
+            k = _op_from_task(r.task)
+            if k is not None:
+                out[k].append(r)
+    return {k: (tuple(r.corridor for r in sorted(v, key=lambda r: r.t_start)),
+                tuple(round(r.t_start, 6) for r in sorted(v, key=lambda r: r.t_start)))
+            for k, v in out.items()}
+
+
+def _row(name, seed, arm, rep, bundle, t_now):
+    from algorithm.metrics import reservation_delta_before
+    from algorithm.schedule_io import reservations_from_result
+    d = rep.deviation
+    base = _profile(bundle.reservations, t_now)
+    route = timing = None
+    if rep.result is not None:
+        new_res = reservations_from_result(rep.result)
+        pc, pt = reservation_delta_before(bundle.reservations, new_res, t_now=t_now)
+        new = _profile(new_res, t_now)
+        n = max(1, len(base))
+        route = round(sum(1 for k in base if k in new and new[k][0] != base[k][0]) / n, 4)
+        timing = round(sum(1 for k in base if k in new and new[k][0] == base[k][0]
+                           and new[k][1] != base[k][1]) / n, 4)
+    else:
+        pc, pt = None, None
+    alive = sum(1 for r in bundle.reservations if r.t_end > t_now + EPS)
+    m = rep.meta or {}
+    return {
+        "instance": name, "seed": seed, "arm": arm,
+        "feasible": rep.feasible,
+        "makespan": rep.makespan,
+        "makespan_ref": rep.makespan_ref,
+        "wall_ms": round(rep.wall_ms, 3),
+        "res_frac": (None if d is None or d.reservation_total <= 0 else
+                     round(d.reservation_changed / d.reservation_total, 3)),
+        "past_changed": pc, "past_total": pt,
+        "release_size": rep.closure_size or None,
+        "alive_size": alive,
+        "delta": m.get("delta"),
+        "alive_tasks": len(base),
+        "n_W": m.get("n_W0", m.get("closed_tasks")),
+        "n_replan": m.get("replan_tasks"),
+        "n_promoted": m.get("promoted"),
+        "tier_fallback": m.get("tier_fallback"),
+        "retries": m.get("retries"),
+        "closure_ms": None if m.get("closure_ms") is None else round(m["closure_ms"], 3),
+        "route_frac": route,
+        "time_frac": timing,
+    }
+
+
+def main() -> int:
+    args = parse_args()
+    from algorithm.clbs_bridge import Network, load_instance
+    from algorithm.disturbance import Disturbance
+    from algorithm.repair import (precompute_dependence, repair_with_all_future,
+                                  repair_with_strc)
+    from algorithm.rightshift import repair_by_right_shift
+    from algorithm.schedule_io import build_baseline, pick_busy_corridor
+
+    seeds = [int(x) for x in args.seeds.split(",")]
+    rows = []
+    for name, path in (_scale_instances() if args.suite == "scale" else _instances()):
+        if not os.path.isfile(path):
+            print(f"  skip missing {path}")
+            continue
+        inst = load_instance(path)
+        net = Network(inst.nodes, inst.corridors, inst.lu_node)
+        net.check_reachability()
+        for seed in seeds:
+            bundle = build_baseline(inst, net, seed=seed, mode="heuristic")
+            t_now = args.t_now_frac * bundle.makespan
+            cid, t0, t1, _ = pick_busy_corridor(bundle.reservations, t_now=t_now)
+            if args.block_len is not None:
+                t1 = min(t1, t0 + args.block_len)
+            dist = Disturbance(type="corridor_block", t_now=t_now, corridor=cid,
+                               t_start=t0, t_end=t1)
+            precompute_dependence(bundle)
+            arms = {
+                "R2": repair_with_strc(inst, net, bundle, dist, expand_on_fail=False),
+                "RS": repair_by_right_shift(inst, net, bundle, dist),
+                "RD": _redecode(inst, net, bundle, dist),
+                "RA": repair_with_all_future(inst, net, bundle, dist),
+                "RAF": repair_with_all_future(inst, net, bundle, dist, tiers=False),
+            }
+            for arm, rep in arms.items():
+                rows.append(_row(name, seed, arm, rep, bundle, t_now))
+            print(f"  {name:<16} s={seed:<6} ref={bundle.makespan:>6.1f}  " + "  ".join(
+                f"{a}: {('%.1f' % r.makespan) if r.makespan else 'X':>6}"
+                f"/{r.wall_ms:>6.2f}ms/{'ok' if r.feasible else 'FAIL'}"
+                for a, r in arms.items()))
+
+    out = os.path.join(ROOT, args.out) if not os.path.isabs(args.out) else args.out
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w", newline="", encoding="utf-8") as f:
+        w = csv.DictWriter(f, fieldnames=list(rows[0].keys()))
+        w.writeheader()
+        w.writerows(rows)
+    print(f"\nwrote {out}  ({len(rows)} rows)")
+
+    by = defaultdict(list)
+    for r in rows:
+        by[r["arm"]].append(r)
+    print(f"\n{'臂':<4}{'可行':>8}{'A2 越界格':>11}{'Cmax 均值':>11}"
+          f"{'耗时中位/ms':>13}{'改动比例均值':>13}{'释放/活预约':>13}")
+    for arm in ("R2", "RS", "RD", "RA", "RAF"):
+        rs = by[arm]
+        feas = [r for r in rs if r["feasible"]]
+        bad = sum(1 for r in rs if (r["past_changed"] or 0) > 0)
+        cm = st.mean(r["makespan"] for r in feas) if feas else float("nan")
+        ms = st.median(r["wall_ms"] for r in rs)
+        rf = st.mean(r["res_frac"] for r in rs if r["res_frac"] is not None)
+        share = [r["release_size"] / r["alive_size"] for r in rs
+                 if r["release_size"] and r["alive_size"]]
+        sh = f"{st.mean(share):>13.3f}" if share else f"{'--':>13}"
+        print(f"{arm:<4}{len(feas)}/{len(rs):<6}{bad}/{len(rs):<9}"
+              f"{cm:>11.1f}{ms:>13.2f}{rf:>13.3f}{sh}")
+
+    print("\n逐格 Cmax 胜负(仅两臂都可行的格):")
+    idx = {(r["instance"], r["seed"], r["arm"]): r for r in rows}
+    keys = sorted({(r["instance"], r["seed"]) for r in rows})
+    for other in ("RS", "RD", "RA", "RAF"):
+        win = lose = tie = 0
+        for k in keys:
+            a, b = idx[(k[0], k[1], "R2")], idx[(k[0], k[1], other)]
+            if not (a["feasible"] and b["feasible"]):
+                continue
+            if a["makespan"] < b["makespan"] - EPS:
+                win += 1
+            elif a["makespan"] > b["makespan"] + EPS:
+                lose += 1
+            else:
+                tie += 1
+        print(f"  R2 vs {other}: 赢 {win} 平 {tie} 输 {lose}")
+
+# R2 vs RA 是本表的关键对照:同一引擎、同一冻结判据,只差释放集取闭包还是取
+# 平凡上界。稳定性(改动比例)而非 Cmax 才是闭包该兑现的那个量。
+# R2 vs RA is the key comparison in this table: same engine, same freeze test; the release set is either the closure or
+# the trivial upper bound. Stability (the change ratio), not Cmax, is what the closure is supposed to deliver.
+    print("\nR2 vs RA(画边界 vs 不画边界,同引擎):")
+    d_ms, d_rf, d_rel = [], [], []
+    rf_win = rf_tie = rf_lose = 0
+    for k in keys:
+        a, b = idx[(k[0], k[1], "R2")], idx[(k[0], k[1], "RA")]
+        if not (a["feasible"] and b["feasible"]):
+            continue
+        if a["makespan"] and b["makespan"]:
+            d_ms.append(a["makespan"] / b["makespan"])
+        if a["res_frac"] is not None and b["res_frac"] is not None:
+            d_rf.append(a["res_frac"] - b["res_frac"])
+            if a["res_frac"] < b["res_frac"] - 1e-6:
+                rf_win += 1
+            elif a["res_frac"] > b["res_frac"] + 1e-6:
+                rf_lose += 1
+            else:
+                rf_tie += 1
+        if a["release_size"] and b["release_size"]:
+            d_rel.append(a["release_size"] / b["release_size"])
+    if d_rf:
+        print(f"  改动比例 R2-RA: 均值 {st.mean(d_rf):+.3f}  "
+              f"中位 {st.median(d_rf):+.3f}  (R2 更稳 {rf_win} 平 {rf_tie} 更差 {rf_lose})")
+    if d_ms:
+        print(f"  Cmax 比 R2/RA: 均值 {st.mean(d_ms):.4f}  "
+              f"[{min(d_ms):.4f}, {max(d_ms):.4f}]")
+    if d_rel:
+        print(f"  释放集比 R2/RA: 均值 {st.mean(d_rel):.3f}  "
+              f"[{min(d_rel):.3f}, {max(d_rel):.3f}]")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

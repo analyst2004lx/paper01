@@ -1,0 +1,55 @@
+  example_3x3x2    s=42     |Cl|=  16 |U+|=  17 |R_alive|=  17
+  example_3x3x2    s=7      |Cl|=  20 |U+|=  21 |R_alive|=  21
+  example_3x3x2    s=2024   |Cl|=  14 |U+|=  16 |R_alive|=  16
+  example_3x3x2    s=99     |Cl|=  16 |U+|=  17 |R_alive|=  17
+  example_3x3x2    s=123    |Cl|=   9 |U+|=  13 |R_alive|=  16
+  example_3x3x2    s=13     |Cl|=  17 |U+|=  17 |R_alive|=  17
+  example_3x3x2    s=1      |Cl|=  19 |U+|=  19 |R_alive|=  23
+  example_3x3x2    s=777    |Cl|=  19 |U+|=  19 |R_alive|=  19
+  example_3x3x2    s=31415  |Cl|=  13 |U+|=  15 |R_alive|=  19
+  example_3x3x2    s=8      |Cl|=  18 |U+|=  19 |R_alive|=  19
+  congested_8x4x4  s=42     |Cl|=  66 |U+|=  73 |R_alive|=  73
+  congested_8x4x4  s=7      |Cl|=  67 |U+|=  72 |R_alive|=  72
+  congested_8x4x4  s=2024   |Cl|=  74 |U+|=  76 |R_alive|=  76
+  congested_8x4x4  s=99     |Cl|=  61 |U+|=  66 |R_alive|=  67
+  congested_8x4x4  s=123    |Cl|=  79 |U+|=  83 |R_alive|=  83
+  congested_8x4x4  s=13     |Cl|=  60 |U+|=  65 |R_alive|=  67
+  congested_8x4x4  s=1      |Cl|=  68 |U+|=  73 |R_alive|=  73
+  congested_8x4x4  s=777    |Cl|=  63 |U+|=  73 |R_alive|=  73
+  congested_8x4x4  s=31415  |Cl|=  68 |U+|=  68 |R_alive|=  68
+  congested_8x4x4  s=8      |Cl|=  73 |U+|=  78 |R_alive|=  80
+  S8x4x4_high      s=42     |Cl|=  82 |U+|=  90 |R_alive|=  95
+  S8x4x4_high      s=7      |Cl|= 104 |U+|= 107 |R_alive|= 111
+  S8x4x4_high      s=2024   |Cl|=  89 |U+|=  96 |R_alive|= 107
+  S8x4x4_high      s=99     |Cl|=  86 |U+|=  90 |R_alive|=  91
+  S8x4x4_high      s=123    |Cl|= 112 |U+|= 115 |R_alive|= 115
+  S8x4x4_high      s=13     |Cl|= 108 |U+|= 111 |R_alive|= 112
+  S8x4x4_high      s=1      |Cl|= 112 |U+|= 114 |R_alive|= 116
+  S8x4x4_high      s=777    |Cl|=  91 |U+|=  97 |R_alive|= 100
+  S8x4x4_high      s=31415  |Cl|=  91 |U+|=  93 |R_alive|=  93
+  S8x4x4_high      s=8      |Cl|=  95 |U+|=  96 |R_alive|= 103
+  S8x4x4_funnel    s=42     |Cl|=  83 |U+|=  88 |R_alive|=  93
+  S8x4x4_funnel    s=7      |Cl|= 104 |U+|= 106 |R_alive|= 114
+  S8x4x4_funnel    s=2024   |Cl|=  89 |U+|=  96 |R_alive|= 105
+  S8x4x4_funnel    s=99     |Cl|=  88 |U+|=  94 |R_alive|=  95
+  S8x4x4_funnel    s=123    |Cl|= 105 |U+|= 109 |R_alive|= 109
+  S8x4x4_funnel    s=13     |Cl|= 102 |U+|= 105 |R_alive|= 105
+  S8x4x4_funnel    s=1      |Cl|= 114 |U+|= 117 |R_alive|= 119
+  S8x4x4_funnel    s=777    |Cl|=  93 |U+|= 101 |R_alive|= 104
+  S8x4x4_funnel    s=31415  |Cl|= 101 |U+|= 105 |R_alive|= 105
+  S8x4x4_funnel    s=8      |Cl|=  86 |U+|=  89 |R_alive|=  99
+  S8x4x4_mid       s=42     |Cl|=  85 |U+|=  88 |R_alive|=  96
+  S8x4x4_mid       s=7      |Cl|=  97 |U+|= 105 |R_alive|= 113
+  S8x4x4_mid       s=2024   |Cl|= 114 |U+|= 119 |R_alive|= 121
+  S8x4x4_mid       s=99     |Cl|=  83 |U+|=  96 |R_alive|=  99
+  S8x4x4_mid       s=123    |Cl|= 106 |U+|= 107 |R_alive|= 109
+  S8x4x4_mid       s=13     |Cl|= 110 |U+|= 111 |R_alive|= 114
+  S8x4x4_mid       s=1      |Cl|=  96 |U+|= 107 |R_alive|= 113
+  S8x4x4_mid       s=777    |Cl|=  75 |U+|=  91 |R_alive|=  99
+  S8x4x4_mid       s=31415  |Cl|=  97 |U+|= 106 |R_alive|= 106
+  S8x4x4_mid       s=8      |Cl|=  77 |U+|=  86 |R_alive|= 104
+
+pairs with U+ > Cl : 46/50
+|U+ \ Cl| mean     : 4.4   max: 16
+mean |Cl|/|R_alive|: 0.90
+mean |U+|/|R_alive|: 0.96

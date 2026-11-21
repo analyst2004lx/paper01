@@ -20,7 +20,7 @@ def _collect_text() -> str:
     chars.update("αβγδεζηθικλμνξοπρστυφχψω")
     chars.update("—–…·×÷±≤≥≠≈∞°′″φα")
     chars.update("，。、；：？！（）【】《》“”‘’")
-    for path in glob.glob(os.path.join(HERE, "*_CN.py")):
+    for path in glob.glob(os.path.join(HERE, "*_CN*.py")):
         with open(path, encoding="utf-8") as fh:
             chars.update(fh.read())
     return "".join(chars)
@@ -30,7 +30,7 @@ def _subset_stale() -> bool:
     if not os.path.isfile(SUBSET) or os.path.getsize(SUBSET) < 1000:
         return True
     mtime = os.path.getmtime(SUBSET)
-    watched = glob.glob(os.path.join(HERE, "*_CN.py"))
+    watched = glob.glob(os.path.join(HERE, "*_CN*.py"))
     watched.append(os.path.join(HERE, "_cjk_mpl.py"))
     return any(os.path.isfile(p) and os.path.getmtime(p) > mtime for p in watched)
 

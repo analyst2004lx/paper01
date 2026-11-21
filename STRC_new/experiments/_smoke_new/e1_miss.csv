@@ -1,0 +1,11 @@
+instance,seed,corridor,n_reservations,n_T_impact,n_seeds,n_closure,closure_frac,feasible_after_block,structural_leaks,pass_C1,ref_makespan
+example_3x3x2,42,c2|r2,26,0,6,16,0.6154,False,0,True,48.0
+example_3x3x2,7,c2|r2,30,0,7,19,0.6333,False,0,True,49.0
+congested_8x4x4,42,c2|r3,104,0,21,58,0.5577,False,0,True,137.5
+congested_8x4x4,7,c2|r4,114,0,21,66,0.5789,False,0,True,151.5
+S8x4x4_high,42,g1|h1,166,0,12,82,0.494,False,0,True,130.5
+S8x4x4_high,7,h2|r3,180,0,16,104,0.5778,False,0,True,132.0
+S8x4x4_funnel,42,h2|r3,170,0,14,82,0.4824,False,0,True,144.5
+S8x4x4_funnel,7,h1|r1,184,0,16,104,0.5652,False,0,True,142.0
+S8x4x4_mid,42,h1|r1,158,0,15,83,0.5253,False,0,True,117.0
+S8x4x4_mid,7,h1|r1,180,0,16,97,0.5389,False,0,True,125.0

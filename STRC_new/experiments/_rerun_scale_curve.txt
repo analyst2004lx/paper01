@@ -1,0 +1,90 @@
+  k=4   s=42     |R|=160   live=101   clo=90   (0.89)  R2:   9.27ms  RS:   1.94ms  RD:   9.37ms
+  k=4   s=7      |R|=166   live=104   clo=98   (0.94)  R2:   7.65ms  RS:   1.98ms  RD:   7.98ms
+  k=4   s=2024   |R|=176   live=111   clo=107  (0.96)  R2:   7.49ms  RS:   3.14ms  RD:   8.73ms
+  k=4   s=99     |R|=177   live=104   clo=97   (0.93)  R2:   9.22ms  RS:   2.17ms  RD:   9.21ms
+  k=4   s=123    |R|=161   live=101   clo=94   (0.93)  R2:   7.65ms  RS:   2.03ms  RD:   9.30ms
+  k=4   s=13     |R|=152   live=102   clo=96   (0.94)  R2:   7.95ms  RS:   2.55ms  RD:  11.05ms
+  k=4   s=1      |R|=162   live=106   clo=90   (0.85)  R2:   8.22ms  RS:   1.84ms  RD:   9.24ms
+  k=4   s=777    |R|=156   live=97    clo=76   (0.78)  R2:   7.70ms  RS:   2.00ms  RD:   8.40ms
+  k=4   s=31415  |R|=148   live=88    clo=78   (0.89)  R2:   7.56ms  RS:   2.07ms  RD:   7.80ms
+  k=4   s=8      |R|=152   live=95    clo=89   (0.94)  R2:   7.41ms  RS:   2.14ms  RD:   8.24ms
+  k=5   s=42     |R|=217   live=134   clo=108  (0.81)  R2:   9.17ms  RS:   2.17ms  RD:  11.09ms
+  k=5   s=7      |R|=184   live=115   clo=103  (0.90)  R2:   8.10ms  RS:   2.05ms  RD:  12.84ms
+  k=5   s=2024   |R|=196   live=119   clo=101  (0.85)  R2:  10.02ms  RS:   2.82ms  RD:  17.12ms
+  k=5   s=99     |R|=201   live=120   clo=105  (0.88)  R2:  11.13ms  RS:   2.69ms  RD:  12.32ms
+  k=5   s=123    |R|=182   live=115   clo=101  (0.88)  R2:   8.96ms  RS:   3.05ms  RD:  15.65ms
+  k=5   s=13     |R|=190   live=116   clo=112  (0.97)  R2:   9.35ms  RS:   1.97ms  RD:  10.02ms
+  k=5   s=1      |R|=186   live=106   clo=92   (0.87)  R2:   8.86ms  RS:   2.66ms  RD:  12.47ms
+  k=5   s=777    |R|=190   live=115   clo=102  (0.89)  R2:   8.08ms  RS:   2.85ms  RD:  10.75ms
+  k=5   s=31415  |R|=202   live=126   clo=114  (0.90)  R2:   9.10ms  RS:   3.09ms  RD:  12.37ms
+  k=5   s=8      |R|=186   live=110   clo=89   (0.81)  R2:   8.82ms  RS:   2.72ms  RD:  13.88ms
+  k=6   s=42     |R|=254   live=154   clo=148  (0.96)  R2:  14.07ms  RS:   2.98ms  RD:  20.35ms
+  k=6   s=7      |R|=244   live=152   clo=135  (0.89)  R2:  12.13ms  RS:   3.44ms  RD:  21.51ms
+  k=6   s=2024   |R|=251   live=157   clo=147  (0.94)  R2:  12.79ms  RS:   3.44ms  RD:  17.71ms
+  k=6   s=99     |R|=241   live=150   clo=131  (0.87)  R2:  13.80ms  RS:   3.77ms  RD:  14.58ms
+  k=6   s=123    |R|=254   live=150   clo=148  (0.99)  R2:  12.75ms  RS:   3.27ms  RD:  18.47ms
+  k=6   s=13     |R|=277   live=165   clo=153  (0.93)  R2:  12.92ms  RS:   3.83ms  RD:  21.01ms
+  k=6   s=1      |R|=228   live=127   clo=112  (0.88)  R2:  12.41ms  RS:   3.09ms  RD:  20.91ms
+  k=6   s=777    |R|=262   live=166   clo=157  (0.95)  R2:  14.20ms  RS:   3.99ms  RD:  22.31ms
+  k=6   s=31415  |R|=253   live=151   clo=135  (0.89)  R2:  12.56ms  RS:   2.92ms  RD:  20.47ms
+  k=6   s=8      |R|=254   live=158   clo=144  (0.91)  R2:  11.83ms  RS:   3.50ms  RD:  19.17ms
+  k=7   s=42     |R|=317   live=192   clo=183  (0.95)  R2:  26.39ms  RS:   5.70ms  RD:  29.00ms
+  k=7   s=7      |R|=299   live=186   clo=165  (0.89)  R2:  24.75ms  RS:   4.88ms  RD:  28.07ms
+  k=7   s=2024   |R|=322   live=191   clo=169  (0.88)  R2:  16.50ms  RS:   4.33ms  RD:  32.36ms
+  k=7   s=99     |R|=300   live=188   clo=180  (0.96)  R2:  16.50ms  RS:   4.19ms  RD:  26.40ms
+  k=7   s=123    |R|=303   live=182   clo=148  (0.81)  R2:  15.49ms  RS:   4.26ms  RD:  30.41ms
+  k=7   s=13     |R|=300   live=172   clo=158  (0.92)  R2:  15.23ms  RS:   4.25ms  RD:  27.74ms
+  k=7   s=1      |R|=288   live=163   clo=150  (0.92)  R2:  15.91ms  RS:   4.37ms  RD:  35.53ms
+  k=7   s=777    |R|=310   live=193   clo=192  (0.99)  R2:  21.99ms  RS:   4.52ms  RD:  43.07ms
+  k=7   s=31415  |R|=305   live=186   clo=172  (0.92)  R2:  14.80ms  RS:   5.08ms  RD:  35.75ms
+  k=7   s=8      |R|=292   live=168   clo=149  (0.89)  R2:  17.26ms  RS:   4.47ms  RD:  29.14ms
+  k=8   s=42     |R|=331   live=213   clo=193  (0.91)  R2:  20.95ms  RS:   5.26ms  RD:  37.66ms
+  k=8   s=7      |R|=332   live=193   clo=149  (0.77)  R2:  20.39ms  RS:   4.68ms  RD:  43.28ms
+  k=8   s=2024   |R|=328   live=188   clo=147  (0.78)  R2:  16.67ms  RS:   4.42ms  RD:  32.71ms
+  k=8   s=99     |R|=343   live=200   clo=191  (0.95)  R2:  18.71ms  RS:   3.58ms  RD:  37.42ms
+  k=8   s=123    |R|=326   live=207   clo=193  (0.93)  R2:  22.41ms  RS:   4.59ms  RD:  39.48ms
+  k=8   s=13     |R|=320   live=188   clo=164  (0.87)  R2:  20.45ms  RS:   5.39ms  RD:  40.76ms
+  k=8   s=1      |R|=312   live=193   clo=175  (0.91)  R2:  18.13ms  RS:   5.29ms  RD:  36.86ms
+  k=8   s=777    |R|=337   live=192   clo=168  (0.88)  R2:  20.37ms  RS:   5.20ms  RD:  41.02ms
+  k=8   s=31415  |R|=324   live=191   clo=124  (0.65)  R2:  15.74ms  RS:   4.18ms  RD:  35.19ms
+  k=8   s=8      |R|=324   live=184   clo=165  (0.90)  R2:  15.96ms  RS:   4.50ms  RD:  32.33ms
+  k=9   s=42     |R|=372   live=230   clo=160  (0.70)  R2:  17.16ms  RS:   4.06ms  RD:  54.98ms
+  k=9   s=7      |R|=378   live=225   clo=211  (0.94)  R2:  22.45ms  RS:   5.78ms  RD:  45.43ms
+  k=9   s=2024   |R|=396   live=255   clo=233  (0.91)  R2:  25.87ms  RS:   5.47ms  RD:  44.47ms
+  k=9   s=99     |R|=402   live=252   clo=217  (0.86)  R2:  22.65ms  RS:   5.12ms  RD:  49.84ms
+  k=9   s=123    |R|=370   live=230   clo=182  (0.79)  R2:  18.17ms  RS:   4.05ms  RD:   2.67ms
+  k=9   s=13     |R|=389   live=242   clo=214  (0.88)  R2:  21.39ms  RS:   4.52ms  RD:  46.02ms
+  k=9   s=1      |R|=385   live=247   clo=204  (0.83)  R2:  21.90ms  RS:   5.14ms  RD:  58.46ms
+  k=9   s=777    |R|=376   live=245   clo=121  (0.49)  R2:  18.17ms  RS:   4.40ms  RD:  39.96ms
+  k=9   s=31415  |R|=396   live=252   clo=233  (0.92)  R2:  22.36ms  RS:   5.14ms  RD:  57.58ms
+  k=9   s=8      |R|=395   live=246   clo=217  (0.88)  R2:  23.14ms  RS:   8.79ms  RD:  53.10ms
+  k=10  s=42     |R|=435   live=251   clo=218  (0.87)  R2:  25.18ms  RS:   4.81ms  RD:  86.61ms
+  k=10  s=7      |R|=440   live=251   clo=241  (0.96)  R2:  31.76ms  RS:   6.33ms  RD:  66.94ms
+  k=10  s=2024   |R|=446   live=284   clo=243  (0.86)  R2:  29.70ms  RS:   4.96ms  RD: 111.93ms
+  k=10  s=99     |R|=442   live=260   clo=238  (0.92)  R2:  26.36ms  RS:   5.80ms  RD:  92.66ms
+  k=10  s=123    |R|=422   live=256   clo=237  (0.93)  R2:  25.23ms  RS:   4.90ms  RD:  69.03ms
+  k=10  s=13     |R|=456   live=266   clo=230  (0.86)  R2:  28.02ms  RS:   6.67ms  RD:  86.52ms
+  k=10  s=1      |R|=431   live=259   clo=244  (0.94)  R2:  26.32ms  RS:   6.15ms  RD:  85.93ms
+  k=10  s=777    |R|=443   live=255   clo=216  (0.85)  R2:  29.59ms  RS:   5.07ms  RD:  55.28ms
+  k=10  s=31415  |R|=423   live=261   clo=240  (0.92)  R2:  24.43ms  RS:   6.25ms  RD:  73.23ms
+  k=10  s=8      |R|=439   live=261   clo=231  (0.89)  R2:  23.08ms  RS:   5.04ms  RD:  73.68ms
+
+wrote C:\Users\analy\Desktop\AI_Folder\STRC_new\experiments/scale_curve.csv  (210 rows)
+
+  k   工件    |R|     活跃     闭包     占比    R2/ms    RS/ms    RD/ms   RD/R2     首级      终可行
+  4    8    161    101     92  0.906     7.68     2.05     8.97    1.1710/1010/     10
+  5   10    193    118    103  0.874     9.03     2.70    12.42    1.3810/1010/     10
+  6   12    252    153    141  0.920    12.77     3.44    20.41    1.6010/1010/     10
+  7   14    304    182    167  0.914    16.50     4.42    29.77    1.809/109/     10
+  8   16    328    195    167  0.855    19.54     4.63    37.54    1.9210/1010/     10
+  9   18    386    242    199  0.821    22.13     5.13    47.93    2.179/109/     10
+ 10   20    438    260    234  0.898    26.34     5.43    79.80    3.0310/1010/     10
+
+逐 k 的 Cmax 胜负(R2 赢/平/输):
+  k=4    vs RS: 6/1/1  vs RD: 3/1/6
+  k=5    vs RS: 3/0/1  vs RD: 2/0/8
+  k=6    vs RS: 2/0/1  vs RD: 3/0/7
+  k=7    vs RS: 3/0/4  vs RD: 0/0/9
+  k=8    vs RS: 2/0/0  vs RD: 2/0/8
+  k=9    vs RS: 3/0/0  vs RD: 2/0/6
+  k=10   vs RS: 4/0/0  vs RD: 4/0/6
