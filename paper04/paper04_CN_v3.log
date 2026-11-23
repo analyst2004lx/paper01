@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2026.8.8)  21 NOV 2026 23:22
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.8.28)  23 NOV 2026 16:51
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -2375,83 +2375,70 @@ LaTeX Font Info:    Font shape `TU/LinLibertine(0)/b/n' will be
 File: figures/fig_strc_motivate_CN.pdf Graphic file (type pdf)
 <use figures/fig_strc_motivate_CN.pdf>
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/n' will be
-(Font)              scaled to size 8.0pt on input line 391.
+(Font)              scaled to size 8.0pt on input line 392.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 8.0pt on input line 391.
+(Font)              scaled to size 8.0pt on input line 392.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 6.0pt on input line 391.
+(Font)              scaled to size 6.0pt on input line 392.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 5.0pt on input line 391.
+(Font)              scaled to size 5.0pt on input line 392.
+
+Underfull \vbox (badness 7012) has occurred while \output is active []
+
  [2.2]
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/b/sc' will be
 (Font)              scaled to size 9.0pt on input line 423.
 
 [3.3] [4.4]
-Underfull \hbox (badness 1655) in paragraph at lines 569--569
-[]|\TU/SimSun(0)/b/n/8 失 效 沿 哪 些 途 径
- []
-
-
-Underfull \hbox (badness 1655) in paragraph at lines 582--582
-[]|\TU/SimSun(0)/m/n/8 智 能 体 间 路 径 冲
- []
-
-
-Underfull \hbox (badness 1552) in paragraph at lines 583--583
-[]|\TU/SimSun(0)/m/n/8 常 数 或 聚 合 运 输 时 间 \TU/LinLibertine(1)/m/n/8 [[],
- []
-
-
-Underfull \hbox (badness 1655) in paragraph at lines 589--589
-[]|\TU/SimSun(0)/b/n/8 工 序 事 件 与 走 廊
+Underfull \hbox (badness 6876) in paragraph at lines 587--587
+[]|\TU/SimSun(0)/b/n/8 工 序 事 件、| \TU/LinLibertine(0)/b/n/8 AGV
  []
 
 [5.5]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/it' will be
-(Font)              scaled to size 9.0pt on input line 625.
+(Font)              scaled to size 9.0pt on input line 622.
 
 
 LaTeX Font Warning: Font shape `TU/MicrosoftYaHei(0)/m/it' undefined
-(Font)              using `TU/MicrosoftYaHei(0)/m/n' instead on input line 625.
+(Font)              using `TU/MicrosoftYaHei(0)/m/n' instead on input line 622.
 
 
 [6.6] [7.7]
 File: figures/fig_strc_graphs_CN.pdf Graphic file (type pdf)
 <use figures/fig_strc_graphs_CN.pdf>
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 7.2pt on input line 764.
+(Font)              scaled to size 7.2pt on input line 770.
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/n' will be
-(Font)              scaled to size 5.4pt on input line 764.
+(Font)              scaled to size 5.4pt on input line 770.
  [8.8]
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/sc' will be
-(Font)              scaled to size 9.0pt on input line 782.
+(Font)              scaled to size 9.0pt on input line 788.
 
 
 LaTeX Font Warning: Font shape `TU/SimSun(0)/m/sc' undefined
-(Font)              using `TU/SimSun(0)/m/n' instead on input line 782.
+(Font)              using `TU/SimSun(0)/m/n' instead on input line 788.
 
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/b/it' will be
-(Font)              scaled to size 9.0pt on input line 785.
+(Font)              scaled to size 9.0pt on input line 791.
 
 LaTeX Font Warning: Font shape `TU/SimSun(0)/b/it' undefined
-(Font)              using `TU/SimSun(0)/b/n' instead on input line 785.
+(Font)              using `TU/SimSun(0)/b/n' instead on input line 791.
 
-[9.9]
+[9.9] [10.10]
 File: figures/fig_strc_framework_CN_new.pdf Graphic file (type pdf)
 <use figures/fig_strc_framework_CN_new.pdf>
- [10.10]
-LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
-(Font)              scaled to size 7.2pt on input line 943.
-LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
-(Font)              scaled to size 5.4pt on input line 943.
-LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/scit' will be
-(Font)              scaled to size 9.0pt on input line 946.
  [11.11]
+LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
+(Font)              scaled to size 7.2pt on input line 950.
+LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
+(Font)              scaled to size 5.4pt on input line 950.
+LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/scit' will be
+(Font)              scaled to size 9.0pt on input line 953.
 File: figures/fig_strc_closure_CN.pdf Graphic file (type pdf)
 <use figures/fig_strc_closure_CN.pdf>
  [12.12] [13.13]
 Package hyperref Info: bookmark level for unknown algorithm defaults to 0 on in
-put line 1113.
+put line 1122.
  [14.14] [15.15] [16.16]
 
 Package fontspec Info: Could not resolve font "FangSong/BI" (it probably
@@ -2480,48 +2467,60 @@ Package fontspec Info: Font family 'FangSong(0)' created for font 'FangSong'
 (fontspec)             <->"FangSong/OT:script=hani;language=dflt;"
 (fontspec)             - 'small caps'  (m/sc) with NFSS spec.: 
 
+
+Underfull \vbox (badness 2521) has occurred while \output is active []
+
+ [17.17]
 File: figures/fig_strc_layouts_CN_new.pdf Graphic file (type pdf)
 <use figures/fig_strc_layouts_CN_new.pdf>
- [17.17] [18.18]
-[19.19] [20.20]
+
+[18.18]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [19.19]
+[20.20]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/it' will be
-(Font)              scaled to size 8.0pt on input line 1503.
+(Font)              scaled to size 8.0pt on input line 1512.
  [21.21]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/sc' will be
-(Font)              scaled to size 8.0pt on input line 1554.
+(Font)              scaled to size 8.0pt on input line 1563.
 File: figures/fig_strc_e1e3_CN_new.pdf Graphic file (type pdf)
 <use figures/fig_strc_e1e3_CN_new.pdf>
  [22.22]
 File: figures/fig_strc_case_CN_new.pdf Graphic file (type pdf)
 <use figures/fig_strc_case_CN_new.pdf>
- [23.23]
+ [23.23] [24.24]
 File: figures/fig_strc_e5_CN_new.pdf Graphic file (type pdf)
 <use figures/fig_strc_e5_CN_new.pdf>
- [24.24] [25.25] [26.26]
+ [25.25]
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+ [26.26]
 LaTeX Font Info:    Font shape `TU/LinBiolinum(0)/m/scit' will be
-(Font)              scaled to size 9.0pt on input line 1854.
- [27.27]
-[28.28]
+(Font)              scaled to size 9.0pt on input line 1862.
+
+[27.27] [28.28]
 File: figures/fig_strc_scale_CN_new.pdf Graphic file (type pdf)
 <use figures/fig_strc_scale_CN_new.pdf>
+ [29.29] [30.30]
+Underfull \vbox (badness 7012) has occurred while \output is active []
 
-Underfull \vbox (badness 1377) has occurred while \output is active []
+ [31.31]
+[32.32]
+Underfull \vbox (badness 2073) has occurred while \output is active []
 
- [29.29]
-Underfull \vbox (badness 1748) has occurred while \output is active []
-
- [30.30]
-[31.31] [32.32] [33.33] (./paper04_CN_v3.bbl
+ [33.33]
+(./paper04_CN_v3.bbl
 LaTeX Font Info:    Font shape `TU/LinLibertine(0)/m/it' will be
 (Font)              scaled to size 7.0pt on input line 46.
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
 (Font)              scaled to size 7.0pt on input line 50.
 
-Underfull \vbox (badness 10000) has occurred while \output is active []
+Underfull \vbox (badness 5260) has occurred while \output is active []
 
  [34.34])
 LaTeX Font Info:    Font shape `TU/LinLibertine(1)/m/n' will be
-(Font)              scaled to size 10.95pt on input line 2272.
+(Font)              scaled to size 10.95pt on input line 2260.
 
 (c:/texlive/2024/texmf-dist/tex/generic/stringenc/se-pdfdoc.def
 File: se-pdfdoc.def 2019/11/29 v1.12 stringenc: PDFDocEncoding
@@ -2542,12 +2541,12 @@ Package rerunfilecheck Info: File `paper04_CN_v3.out' has not changed.
 (rerunfilecheck)             Checksum: ACEEAC9BE6B15027A35CAA2B7FF3962A;4853.
  ) 
 Here is how much of TeX's memory you used:
- 50827 strings out of 474772
- 1102343 string characters out of 5761269
- 1981842 words of memory out of 5000000
- 71983 multiletter control sequences out of 15000+600000
+ 50806 strings out of 474772
+ 1101016 string characters out of 5761268
+ 1983842 words of memory out of 5000000
+ 71962 multiletter control sequences out of 15000+600000
  573090 words of font info for 214 fonts, out of 8000000 for 9000
  1509 hyphenation exceptions out of 8191
- 105i,17n,135p,1010b,32978s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 105i,17n,135p,1010b,32979s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on paper04_CN_v3.pdf (35 pages).
+Output written on paper04_CN_v3.xdv (35 pages, 1200316 bytes).

@@ -19,7 +19,7 @@ from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Patch, Rectangle
 T_NOW = 5.0
 BLOCK = (7.0, 9.0)
 XMIN, XMAX = -0.2, 20.0
-YMIN_STRC = -1.9
+YMIN_STRC = -1.1
 HEIGHT_RATIOS = [9.6 + 0.9, 9.6 - YMIN_STRC]
 
 Y = {"M1": 8.3, "M2": 7.3, "e*": 4.9, "e2": 3.9, "e3": 2.9}
@@ -167,7 +167,6 @@ def draw_strc(ax, L):
 
     arrow("v1e", "v2e", "-", -0.55)          # yield on e*
     arrow("v1e", "v1f", "--", 0.0)           # same vehicle V1
-    arrow("v2e", "v2f", "--", 0.0)           # same vehicle V2
     arrow("v1f", "v2f", ":", 0.3)            # same machine M2: O12 -> O22
 
     def tag(x, y, s, ha="center"):
@@ -177,7 +176,6 @@ def draw_strc(ax, L):
 
     tag(10.25, Y["e*"] + 0.62, L["tag_yield"], ha="left")
     tag(8.5, Y["e2"] + 0.38, L["tag_vehicle"], ha="right")
-    tag(12.8, Y["e*"] - 0.38, L["tag_vehicle"], ha="left")
     tag(11.0, Y["e2"] - 0.62, L["tag_machine"], ha="right")
 
     ax.add_patch(FancyBboxPatch(

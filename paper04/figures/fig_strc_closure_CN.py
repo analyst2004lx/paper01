@@ -20,9 +20,9 @@ L = {
     "closure": r"$\mathrm{Cl}(\mathrm{Src})$",
     "seed": "起点",
     "outside": "r6：只有指向集内的边，\n从起点不可达，\n保持原计划",
-    "e_yield": "让行（同走廊、异车）",
-    "e_agv": "同车后继",
-    "e_job": "同工件后继",
+    "e_yield": "让行边",
+    "e_agv": "同车边",
+    "e_job": "同工件边",
 }
 
 if __name__ == "__main__":
