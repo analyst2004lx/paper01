@@ -30,6 +30,7 @@ A multi-agent system for FJSP with setup and transportation times.pdf
 综述_A Review of Flexible Job Shop Scheduling Problems Considering Transportation Vehicles.pdf
 9001_27001
 项目管理
+其它
 script/Toggle-443Forward.ps1
 </Ignore>
 
@@ -46,6 +47,9 @@ paper04_CN_AI-Modify-26-09-17.aux
 paper04_CN_AI-Modify-26-09-17.fdb_latexmk
 paper01_new
 paper01_old
+paper02_old
+paper03_old
+paper04_old
 paper01/figures
 汇报稿_应用场景介绍.files
 cursor_document_conversion_request.md
@@ -260,9 +264,7 @@ paper04\paper04-20260817.pdf
 paper04\paper04-20260817.tex
 paper04\paper04-20260820.pdf
 paper04\paper04-20260820.tex
-paper04_old
 开题报告\于琪-开题报告(20260909).docx
 开题报告\于琪-开题PPT(20260909).pptx
 开题报告\图书馆-听课凭证.docx
-其它
 </Delete>
