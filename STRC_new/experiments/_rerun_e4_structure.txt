@@ -1,0 +1,11 @@
+=== STRC E4: funnel vs high (block LU-cut corridor) ===
+  A funnel   seed=42 cut=1 on_cut=True |cl|=153 frac=0.607
+  A funnel   seed=7 cut=1 on_cut=False |cl|=127 frac=0.510
+  A funnel   seed=2024 cut=1 on_cut=True |cl|=92 frac=0.374
+  A high     seed=42 cut=2 on_cut=True |cl|=133 frac=0.519
+  A high     seed=7 cut=2 on_cut=True |cl|=70 frac=0.312
+  A high     seed=2024 cut=2 on_cut=True |cl|=128 frac=0.496
+[E4] closure_frac funnel mean/med=0.497/0.510  high=0.443/0.496
+[E4] n_seeds      funnel mean/med=10.0/7.0  high=2.0/2.0
+[E4] pred (med funnel>high or seeds)=PASS
+  wrote C:\Users\analy\Desktop\AI_Folder\STRC_new\experiments\e4_structure.csv

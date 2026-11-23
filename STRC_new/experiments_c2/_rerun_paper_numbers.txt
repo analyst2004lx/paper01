@@ -1,0 +1,194 @@
+== E1 (n=50) ==
+C1 pass 50/50
+  example_3x3x2    n=10  |Seeds|=  5.7  |Cl|= 16.1  Cl/|R|=0.563  |R|= 28.6
+  congested_8x4x4  n=10  |Seeds|= 21.2  |Cl|= 67.9  Cl/|R|=0.617  |R|=110.0
+  S8x4x4_high      n=10  |Seeds|= 14.8  |Cl|= 97.0  Cl/|R|=0.559  |R|=173.3
+  S8x4x4_funnel    n=10  |Seeds|= 15.9  |Cl|= 96.5  Cl/|R|=0.547  |R|=176.5
+  S8x4x4_mid       n=10  |Seeds|= 14.8  |Cl|= 94.0  Cl/|R|=0.545  |R|=172.0
+
+== E2 (n=50) ==
+E2a 50/50   feasible 49/50   E2b 49/50
+  example_3x3x2    E2b 10/10
+  congested_8x4x4  E2b 10/10
+  S8x4x4_high      E2b 10/10
+  S8x4x4_funnel    E2b 9/10
+  S8x4x4_mid       E2b 10/10
+
+== E3 (n=50) ==
+miss_B 50/50   R1 feasible 0/50   R2 feasible 49/50
+R2 wall ms: median=7.75  mean=7.02  max=11.57
+  example_3x3x2    R2 ms mean= 1.40  |R2 release|= 16.1
+  congested_8x4x4  R2 ms mean= 6.52  |R2 release|= 67.9
+  S8x4x4_high      R2 ms mean= 8.61  |R2 release|= 97.0
+  S8x4x4_funnel    R2 ms mean= 8.81  |R2 release|= 96.5
+  S8x4x4_mid       R2 ms mean= 9.76  |R2 release|= 94.0
+
+== E5 ==
+  congested_8x4x4  bud=0.2  R0 Cmax= 204.0  R2 Cmax= 229.7  R0 resfrac=0.648  R2 resfrac=0.623
+  congested_8x4x4  bud=1.0  R0 Cmax= 185.3  R2 Cmax= 229.7  R0 resfrac=0.642  R2 resfrac=0.623
+  congested_8x4x4  bud=2.0  R0 Cmax= 170.7  R2 Cmax= 229.7  R0 resfrac=0.648  R2 resfrac=0.623
+  example_3x3x2    bud=0.2  R0 Cmax=  61.0  R2 Cmax=  78.3  R0 resfrac=0.606  R2 resfrac=0.571
+  example_3x3x2    bud=1.0  R0 Cmax=  60.3  R2 Cmax=  78.3  R0 resfrac=0.606  R2 resfrac=0.571
+  example_3x3x2    bud=2.0  R0 Cmax=  60.3  R2 Cmax=  78.3  R0 resfrac=0.606  R2 resfrac=0.571
+  R2 worse than R0+ in 17/18 budget points (no crossing)
+  R0+ past_changed min=0 max=0 (A2 leak, reservations)
+
+== scale ==
+  speedup min=179 max=3463
+  example_3x3x2    feas 50/50  ms 0.6-2.7  speedup 750-3463
+  congested_8x4x4  feas 50/50  ms 5.8-11.9  speedup 179-382
+
+== E6 ==
+  corridor_block     class=B n=50  R1 empty 50/50  T_imp=  0.0  |R1|=  0.0  |Cl|= 74.3  Cl/alive=0.904  R2>=R1 50/50
+  corridor_slowdown  class=B n=50  R1 empty 50/50  T_imp=  0.0  |R1|=  0.0  |Cl|= 71.9  Cl/alive=0.875  R2>=R1 50/50
+  agv_breakdown      class=A n=50  R1 empty 0/50  T_imp=  6.7  |R1|= 35.3  |Cl|= 67.9  Cl/alive=0.838  R2>=R1 50/50
+  ra_failure         class=A n=50  R1 empty 0/50  T_imp= 12.0  |R1|= 51.3  |Cl|= 73.7  Cl/alive=0.907  R2>=R1 50/50
+  block vs slowdown identical closure on 25/50 pairs (same seeding rule -> not an independent observation)
+
+== pub layouts: E1/E2/E3 (n=50) ==
+  C1 pass 50/50   E2a 50/50   E2b 50/50   R1 feas 0/50   R2 feas 50/50
+  structural leaks total 0
+  E1 Cl/|R| per-layout medians 0.465--0.523
+
+== pub layouts: E4 structure (matched parameters) ==
+  external    n_layouts=5  Cl/|R| medians 0.388--0.552  spread 0.165
+              lu_min_cut set [2]  funnel_share set [0.0]  corridors_per_node set [1.4375, 1.52]
+                LyuL2_4m           0.552
+                LyuL3_5m           0.388
+                LyuL4_6m           0.493
+                LyuL5_7m           0.521
+                LyuL6_8m           0.420
+  self-built  n_layouts=3  Cl/|R| medians 0.466--0.539  spread 0.073
+              lu_min_cut set [1, 2]  funnel_share set [0.2857]  corridors_per_node set [0.8889, 1.0, 1.0909]
+                self_high_LD21     0.539
+                self_funnel_LD11   0.512
+                self_mid_LD22      0.466
+
+== pub layouts: E5 ==
+  R2 worse than R0+ in 17/18 budget points (no crossing)
+  R2 wall ms 5.8--8.2   R0+ wall ms 208--2186
+
+== cheap baselines: E7 (n=250 rows) ==
+  RS  feas 43/50  A2 bad 0/50  ms med 2.07  deg 55.7%  res_frac 0.614  rel/alive --
+  RD  feas 47/50  A2 bad 0/50  ms med 9.14  deg 50.5%  res_frac 0.575  rel/alive --
+  RA  feas 49/50  A2 bad 0/50  ms med 7.25  deg 52.3%  res_frac 0.566  rel/alive 1.000 [1.000, 1.000]
+  RAF feas 49/50  A2 bad 0/50  ms med 7.30  deg 52.1%  res_frac 0.566  rel/alive 1.000 [1.000, 1.000]
+  R2  feas 49/50  A2 bad 0/50  ms med 7.77  deg 52.3%  res_frac 0.564  rel/alive 0.904 [0.562, 1.000]
+  R2 vs RS  win/tie/loss 24/12/7
+  R2 vs RD  win/tie/loss 14/10/23
+  R2 vs RA  win/tie/loss 0/49/0
+  R2 vs RAF  win/tie/loss 0/44/5
+  R2 vs RD on A2-clean cells only (n=47): 14/10/23
+  R2 vs RA (closure vs no boundary, same engine):
+    res_frac diff mean -0.002 median +0.000; better/tie/worse 5/44/0; signrank p=nan
+    Cmax ratio mean 1.0000 [1.0000, 1.0000]
+    release ratio mean 0.904 [0.562, 1.000]
+
+== scale curve: E8 (n=210 rows) ==
+   8x4x4   |R|=172  Cl/|R|=0.545  R2  7.61 ms  RD   8.42 ms  RD/R2 1.11  first-level feas 10/10  vs RS 4/0/3
+  10x5x5   |R|=202  Cl/|R|=0.534  R2  9.94 ms  RD  13.63 ms  RD/R2 1.37  first-level feas 10/10  vs RS 4/0/3
+  12x6x6   |R|=276  Cl/|R|=0.560  R2 16.27 ms  RD  23.40 ms  RD/R2 1.44  first-level feas 10/10  vs RS 5/2/0
+  14x7x7   |R|=324  Cl/|R|=0.559  R2 19.01 ms  RD  36.48 ms  RD/R2 1.92  first-level feas 9/10  vs RS 2/1/2
+  16x8x8   |R|=346  Cl/|R|=0.491  R2 20.20 ms  RD  43.61 ms  RD/R2 2.16  first-level feas 10/10  vs RS 3/0/0
+  18x9x9   |R|=416  Cl/|R|=0.498  R2 23.57 ms  RD  60.25 ms  RD/R2 2.56  first-level feas 9/10  vs RS 2/0/0
+  20x10x10  |R|=468  Cl/|R|=0.521  R2 31.53 ms  RD  83.34 ms  RD/R2 2.64  first-level feas 9/10  vs RS 0/0/0
+  overall: first-level feas 67/70, final feas 68/70, Cl/|R| 0.352--0.626, R2 ms 6.43--187.88
+
+== E7 worth rule (post-hoc, thresh=0.93) ==
+  n=49  below n=25 mean Δ=0.003  above n=24 mean Δ=0.001
+  example_3x3x2    share 0.873  Δ 0.000
+  congested_8x4x4  share 0.927  Δ 0.002
+  S8x4x4_high      share 0.929  Δ 0.004
+  S8x4x4_funnel    share 0.919  Δ 0.005
+  S8x4x4_mid       share 0.872  Δ 0.000
+
+== edge probe ==
+  pairs 50  with delay-leak 4/50  total leaks 4  abut 0  same-AGV 0
+
+== E6 repair ==
+  corridor_block     R2 feas 49/50  expand 49/50
+  corridor_slowdown  R2 feas 49/50  expand 50/50
+  agv_breakdown      R2 feas 50/50  expand 50/50
+  ra_failure         R2 feas 48/50  expand 48/50
+
+== weight sweep E1/E3 ==
+  lognormal  C1 50/50  R1 0/50  R2 45/50
+  lu_far     C1 50/50  R1 0/50  R2 49/50
+  split      C1 50/50  R1 0/50  R2 46/50
+
+== layered repair: cheap_baselines.csv ==
+  R2  n=49  W/alive 0.955  replan/W 0.695 [0.500, 0.895]  promoted/W 0.005  fallback 0  route 0.147  time-only 0.750  ms med 7.77
+  RA  n=49  W/alive 1.000  replan/W 0.663 [0.444, 0.895]  promoted/W 0.004  fallback 0  route 0.142  time-only 0.760  ms med 7.02
+  RAF n=49  W/alive 1.000  replan/W 1.000 [1.000, 1.000]  promoted/W --  fallback 0  route 0.162  time-only 0.742  ms med 7.30
+  R2 closure online ms: median 0.60  mean 0.64  max 1.82
+  closure share of R2 time: 0.086
+
+== layered repair: cheap_baselines_L5.csv ==
+  R2  n=48  W/alive 0.920  replan/W 0.144 [0.053, 0.667]  promoted/W 0.009  fallback 0  route 0.094  time-only 0.652  ms med 7.41
+  RA  n=49  W/alive 1.000  replan/W 0.127 [0.050, 0.429]  promoted/W 0.007  fallback 0  route 0.087  time-only 0.679  ms med 6.58
+  RAF n=49  W/alive 1.000  replan/W 1.000 [1.000, 1.000]  promoted/W --  fallback 0  route 0.128  time-only 0.624  ms med 7.15
+  R2 closure online ms: median 0.65  mean 0.67  max 2.11
+  closure share of R2 time: 0.103
+
+== layered repair: cheap_baselines_L2.csv ==
+  R2  n=46  W/alive 0.902  replan/W 0.098 [0.053, 0.333]  promoted/W 0.009  fallback 0  route 0.073  time-only 0.581  ms med 6.71
+  RA  n=50  W/alive 1.000  replan/W 0.084 [0.050, 0.188]  promoted/W 0.007  fallback 0  route 0.064  time-only 0.622  ms med 6.20
+  RAF n=50  W/alive 1.000  replan/W 1.000 [1.000, 1.000]  promoted/W --  fallback 0  route 0.093  time-only 0.566  ms med 7.02
+  R2 closure online ms: median 0.55  mean 0.57  max 1.37
+  closure share of R2 time: 0.097
+
+== layered repair: cheap_scale_full.csv ==
+  R2  n=67  W/alive 0.883  replan/W 0.580 [0.441, 0.812]  promoted/W 0.012  fallback 0  route 0.413  time-only 0.377  ms med 19.17
+  RA  n=66  W/alive 1.000  replan/W 0.513 [0.383, 0.688]  promoted/W 0.015  fallback 0  route 0.419  time-only 0.414  ms med 17.56
+  RAF n=65  W/alive 1.000  replan/W 1.000 [1.000, 1.000]  promoted/W --  fallback 0  route 0.500  time-only 0.333  ms med 19.26
+  R2 closure online ms: median 1.16  mean 1.29  max 2.79
+  closure share of R2 time: 0.064
+
+== layered repair: cheap_scale_L5.csv ==
+  R2  n=67  W/alive 0.838  replan/W 0.101 [0.023, 1.000]  promoted/W 0.012  fallback 1  route 0.144  time-only 0.414  ms med 15.86
+  RA  n=65  W/alive 1.000  replan/W 0.077 [0.022, 0.250]  promoted/W 0.014  fallback 0  route 0.162  time-only 0.523  ms med 15.62
+  RAF n=64  W/alive 1.000  replan/W 1.000 [1.000, 1.000]  promoted/W --  fallback 0  route 0.299  time-only 0.356  ms med 18.90
+  R2 closure online ms: median 1.12  mean 1.18  max 2.38
+  closure share of R2 time: 0.068
+
+== layered repair: cheap_scale_L2.csv ==
+  R2  n=67  W/alive 0.817  replan/W 0.058 [0.020, 0.188]  promoted/W 0.012  fallback 0  route 0.107  time-only 0.343  ms med 16.73
+  RA  n=65  W/alive 1.000  replan/W 0.050 [0.021, 0.250]  promoted/W 0.014  fallback 0  route 0.137  time-only 0.459  ms med 16.24
+  RAF n=64  W/alive 1.000  replan/W 1.000 [1.000, 1.000]  promoted/W --  fallback 0  route 0.240  time-only 0.333  ms med 20.38
+  R2 closure online ms: median 1.25  mean 1.25  max 2.84
+  closure share of R2 time: 0.076
+
+== boundary payoff: R2 vs RA (both layered) ==
+ main full: pairs 50, R2 feas 49, RA feas 49
+  all        n=49  W/alive 0.955  RA-changed 0.902  dres -0.002 (W/T/L 5/44/0, p=nan)  Cmax 1.0000 (W/T/L 0/49/0)  time R2/RA med 1.17  R2 ms med 7.77  RA ms med 7.02  cl ms med 0.61
+ main L5: pairs 50, R2 feas 48, RA feas 49
+  all        n=48  W/alive 0.920  RA-changed 0.764  dres -0.008 (W/T/L 10/38/0, p=0.0051)  Cmax 1.0009 (W/T/L 0/45/3)  time R2/RA med 1.10  R2 ms med 7.41  RA ms med 6.57  cl ms med 0.65
+ main L2: pairs 50, R2 feas 46, RA feas 50
+  all        n=46  W/alive 0.902  RA-changed 0.663  dres -0.004 (W/T/L 3/40/3, p=0.75)  Cmax 1.0029 (W/T/L 1/39/6)  time R2/RA med 1.10  R2 ms med 6.71  RA ms med 6.09  cl ms med 0.55
+ scale full: pairs 70, R2 feas 67, RA feas 66
+  all        n=65  W/alive 0.883  RA-changed 0.831  dres -0.024 (W/T/L 19/45/1, p=0.00052)  Cmax 1.0013 (W/T/L 6/52/7)  time R2/RA med 1.07  R2 ms med 18.82  RA ms med 17.55  cl ms med 1.08
+  S8x4x4     n=10  W/alive 0.884  RA-changed 0.859  dres +0.000 (W/T/L 0/10/0, p=nan)  Cmax 1.0000 (W/T/L 0/10/0)  time R2/RA med 1.07  R2 ms med 8.60  RA ms med 8.76  cl ms med 0.63
+  S10x5x5    n=10  W/alive 0.905  RA-changed 0.865  dres -0.006 (W/T/L 2/8/0, p=nan)  Cmax 1.0053 (W/T/L 0/9/1)  time R2/RA med 1.13  R2 ms med 11.72  RA ms med 10.06  cl ms med 0.79
+  S12x6x6    n=10  W/alive 0.922  RA-changed 0.873  dres -0.003 (W/T/L 2/8/0, p=nan)  Cmax 1.0000 (W/T/L 0/10/0)  time R2/RA med 1.11  R2 ms med 16.09  RA ms med 14.25  cl ms med 1.11
+  S14x7x7    n= 9  W/alive 0.929  RA-changed 0.841  dres -0.002 (W/T/L 2/7/0, p=nan)  Cmax 1.0000 (W/T/L 0/9/0)  time R2/RA med 1.01  R2 ms med 19.78  RA ms med 19.34  cl ms med 1.45
+  S16x8x8    n=10  W/alive 0.821  RA-changed 0.745  dres -0.044 (W/T/L 5/5/0, p=nan)  Cmax 1.0192 (W/T/L 0/6/4)  time R2/RA med 1.05  R2 ms med 20.68  RA ms med 19.73  cl ms med 1.07
+  S18x9x9    n= 9  W/alive 0.835  RA-changed 0.823  dres -0.088 (W/T/L 5/4/0, p=nan)  Cmax 0.9836 (W/T/L 4/5/0)  time R2/RA med 1.05  R2 ms med 26.33  RA ms med 25.59  cl ms med 2.24
+  S20x10x10  n= 7  W/alive 0.882  RA-changed 0.806  dres -0.030 (W/T/L 3/3/1, p=nan)  Cmax 0.9985 (W/T/L 2/3/2)  time R2/RA med 1.06  R2 ms med 29.49  RA ms med 30.02  cl ms med 1.95
+ scale L5: pairs 70, R2 feas 67, RA feas 65
+  all        n=65  W/alive 0.837  RA-changed 0.685  dres -0.070 (W/T/L 25/37/3, p=5e-05)  Cmax 0.9959 (W/T/L 13/42/10)  time R2/RA med 1.04  R2 ms med 15.36  RA ms med 15.62  cl ms med 1.08
+  S8x4x4     n=10  W/alive 0.867  RA-changed 0.830  dres -0.017 (W/T/L 2/8/0, p=nan)  Cmax 1.0017 (W/T/L 0/9/1)  time R2/RA med 1.06  R2 ms med 7.52  RA ms med 6.63  cl ms med 0.59
+  S10x5x5    n= 9  W/alive 0.821  RA-changed 0.813  dres -0.028 (W/T/L 4/5/0, p=nan)  Cmax 1.0066 (W/T/L 1/5/3)  time R2/RA med 1.12  R2 ms med 8.85  RA ms med 8.63  cl ms med 0.74
+  S12x6x6    n=10  W/alive 0.889  RA-changed 0.729  dres -0.042 (W/T/L 2/7/1, p=nan)  Cmax 1.0075 (W/T/L 1/7/2)  time R2/RA med 0.98  R2 ms med 12.66  RA ms med 13.00  cl ms med 0.97
+  S14x7x7    n= 9  W/alive 0.916  RA-changed 0.667  dres -0.002 (W/T/L 1/8/0, p=nan)  Cmax 1.0000 (W/T/L 0/9/0)  time R2/RA med 1.08  R2 ms med 17.35  RA ms med 16.29  cl ms med 1.27
+  S16x8x8    n=10  W/alive 0.760  RA-changed 0.516  dres -0.146 (W/T/L 6/4/0, p=0.028)  Cmax 0.9827 (W/T/L 4/5/1)  time R2/RA med 0.98  R2 ms med 16.75  RA ms med 16.18  cl ms med 1.08
+  S18x9x9    n= 9  W/alive 0.765  RA-changed 0.657  dres -0.235 (W/T/L 6/3/0, p=0.028)  Cmax 0.9849 (W/T/L 5/3/1)  time R2/RA med 0.95  R2 ms med 21.48  RA ms med 21.50  cl ms med 1.33
+  S20x10x10  n= 8  W/alive 0.845  RA-changed 0.569  dres -0.014 (W/T/L 4/2/2, p=0.6)  Cmax 0.9863 (W/T/L 2/4/2)  time R2/RA med 1.12  R2 ms med 27.52  RA ms med 26.82  cl ms med 1.67
+ scale L2: pairs 70, R2 feas 67, RA feas 65
+  all        n=64  W/alive 0.816  RA-changed 0.592  dres -0.080 (W/T/L 22/38/4, p=0.0003)  Cmax 0.9923 (W/T/L 14/43/7)  time R2/RA med 1.01  R2 ms med 16.41  RA ms med 16.13  cl ms med 1.19
+  S8x4x4     n=10  W/alive 0.862  RA-changed 0.745  dres +0.004 (W/T/L 0/9/1, p=nan)  Cmax 1.0039 (W/T/L 0/9/1)  time R2/RA med 1.07  R2 ms med 8.19  RA ms med 7.54  cl ms med 0.66
+  S10x5x5    n= 9  W/alive 0.789  RA-changed 0.591  dres -0.070 (W/T/L 3/6/0, p=nan)  Cmax 0.9881 (W/T/L 3/5/1)  time R2/RA med 1.09  R2 ms med 9.34  RA ms med 8.49  cl ms med 0.81
+  S12x6x6    n=10  W/alive 0.869  RA-changed 0.555  dres -0.045 (W/T/L 2/7/1, p=nan)  Cmax 0.9970 (W/T/L 1/9/0)  time R2/RA med 1.04  R2 ms med 14.03  RA ms med 14.29  cl ms med 1.15
+  S14x7x7    n= 9  W/alive 0.909  RA-changed 0.541  dres -0.001 (W/T/L 1/8/0, p=nan)  Cmax 1.0000 (W/T/L 0/9/0)  time R2/RA med 1.08  R2 ms med 18.05  RA ms med 17.13  cl ms med 1.28
+  S16x8x8    n= 9  W/alive 0.733  RA-changed 0.474  dres -0.131 (W/T/L 5/4/0, p=nan)  Cmax 0.9870 (W/T/L 3/5/1)  time R2/RA med 0.91  R2 ms med 16.28  RA ms med 17.88  cl ms med 1.09
+  S18x9x9    n= 9  W/alive 0.754  RA-changed 0.655  dres -0.238 (W/T/L 6/3/0, p=0.028)  Cmax 0.9849 (W/T/L 5/3/1)  time R2/RA med 1.00  R2 ms med 21.61  RA ms med 21.11  cl ms med 1.62
+  S20x10x10  n= 8  W/alive 0.779  RA-changed 0.566  dres -0.092 (W/T/L 5/1/2, p=0.24)  Cmax 0.9825 (W/T/L 2/3/3)  time R2/RA med 0.96  R2 ms med 23.46  RA ms med 24.43  cl ms med 1.41

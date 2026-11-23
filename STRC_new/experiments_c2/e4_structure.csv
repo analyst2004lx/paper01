@@ -1,0 +1,7 @@
+case,tag,seed,lu_min_cut,far_group_cut,cut_corridors,blocked_on_cut,makespan,n_reservations,n_hits,n_seeds,n_closure,closure_frac,corridor
+A funnel,funnel,42,1,1,e1|v0,True,118.5,271,12,12,159,0.5867,e1|v0
+A funnel,funnel,7,1,1,e1|v0,True,122.0,258,5,5,115,0.4457,e1|v0
+A funnel,funnel,2024,1,1,e1|v0,True,114.5,237,8,8,130,0.5485,e1|v0
+A high,high,42,2,1,e1|v0|e2|v0,True,111.5,277,6,6,132,0.4765,e1|v0
+A high,high,7,2,1,e1|v0|e2|v0,True,112.5,276,3,3,104,0.3768,e1|v0
+A high,high,2024,2,1,e1|v0|e2|v0,True,112.5,263,6,6,127,0.4829,e1|v0

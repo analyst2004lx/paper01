@@ -1,0 +1,176 @@
+=== expand_batch: E1/E2/E3 ===
+  E1-3 example_3x3x2 seed=42
+  E1-3 example_3x3x2 seed=7
+  E1-3 example_3x3x2 seed=2024
+  E1-3 example_3x3x2 seed=99
+  E1-3 example_3x3x2 seed=123
+  E1-3 example_3x3x2 seed=13
+  E1-3 example_3x3x2 seed=1
+  E1-3 example_3x3x2 seed=777
+  E1-3 example_3x3x2 seed=31415
+  E1-3 example_3x3x2 seed=8
+  E1-3 congested_8x4x4 seed=42
+  E1-3 congested_8x4x4 seed=7
+  E1-3 congested_8x4x4 seed=2024
+  E1-3 congested_8x4x4 seed=99
+  E1-3 congested_8x4x4 seed=123
+  E1-3 congested_8x4x4 seed=13
+  E1-3 congested_8x4x4 seed=1
+  E1-3 congested_8x4x4 seed=777
+  E1-3 congested_8x4x4 seed=31415
+  E1-3 congested_8x4x4 seed=8
+  E1-3 S8x4x4_high seed=42
+  E1-3 S8x4x4_high seed=7
+  E1-3 S8x4x4_high seed=2024
+  E1-3 S8x4x4_high seed=99
+  E1-3 S8x4x4_high seed=123
+  E1-3 S8x4x4_high seed=13
+  E1-3 S8x4x4_high seed=1
+  E1-3 S8x4x4_high seed=777
+  E1-3 S8x4x4_high seed=31415
+  E1-3 S8x4x4_high seed=8
+  E1-3 S8x4x4_funnel seed=42
+  E1-3 S8x4x4_funnel seed=7
+  E1-3 S8x4x4_funnel seed=2024
+  E1-3 S8x4x4_funnel seed=99
+  E1-3 S8x4x4_funnel seed=123
+  E1-3 S8x4x4_funnel seed=13
+  E1-3 S8x4x4_funnel seed=1
+  E1-3 S8x4x4_funnel seed=777
+  E1-3 S8x4x4_funnel seed=31415
+  E1-3 S8x4x4_funnel seed=8
+  E1-3 S8x4x4_mid seed=42
+  E1-3 S8x4x4_mid seed=7
+  E1-3 S8x4x4_mid seed=2024
+  E1-3 S8x4x4_mid seed=99
+  E1-3 S8x4x4_mid seed=123
+  E1-3 S8x4x4_mid seed=13
+  E1-3 S8x4x4_mid seed=1
+  E1-3 S8x4x4_mid seed=777
+  E1-3 S8x4x4_mid seed=31415
+  E1-3 S8x4x4_mid seed=8
+=== expand_batch: scale_compare ===
+  scale example_3x3x2 seed=42 φ=0.10 STRC=True/0.8ms R0=True/2022ms
+  scale example_3x3x2 seed=42 φ=0.25 STRC=True/2.1ms R0=True/2003ms
+  scale example_3x3x2 seed=42 φ=0.50 STRC=True/1.4ms R0=True/2040ms
+  scale example_3x3x2 seed=42 φ=0.75 STRC=True/1.5ms R0=True/2008ms
+  scale example_3x3x2 seed=42 φ=1.00 STRC=True/2.2ms R0=True/2007ms
+  scale example_3x3x2 seed=7 φ=0.10 STRC=True/0.6ms R0=True/2006ms
+  scale example_3x3x2 seed=7 φ=0.25 STRC=True/1.3ms R0=True/2027ms
+  scale example_3x3x2 seed=7 φ=0.50 STRC=True/1.6ms R0=True/2025ms
+  scale example_3x3x2 seed=7 φ=0.75 STRC=True/1.4ms R0=True/2041ms
+  scale example_3x3x2 seed=7 φ=1.00 STRC=True/1.5ms R0=True/2011ms
+  scale example_3x3x2 seed=2024 φ=0.10 STRC=True/1.5ms R0=True/2002ms
+  scale example_3x3x2 seed=2024 φ=0.25 STRC=True/1.6ms R0=True/2008ms
+  scale example_3x3x2 seed=2024 φ=0.50 STRC=True/1.8ms R0=True/2023ms
+  scale example_3x3x2 seed=2024 φ=0.75 STRC=True/1.5ms R0=True/2042ms
+  scale example_3x3x2 seed=2024 φ=1.00 STRC=True/1.6ms R0=True/2026ms
+  scale example_3x3x2 seed=99 φ=0.10 STRC=True/1.3ms R0=True/2035ms
+  scale example_3x3x2 seed=99 φ=0.25 STRC=True/1.6ms R0=True/2004ms
+  scale example_3x3x2 seed=99 φ=0.50 STRC=True/2.0ms R0=True/2007ms
+  scale example_3x3x2 seed=99 φ=0.75 STRC=True/1.4ms R0=True/2037ms
+  scale example_3x3x2 seed=99 φ=1.00 STRC=True/2.1ms R0=True/2037ms
+  scale example_3x3x2 seed=123 φ=0.10 STRC=True/1.0ms R0=True/2010ms
+  scale example_3x3x2 seed=123 φ=0.25 STRC=True/1.3ms R0=True/2012ms
+  scale example_3x3x2 seed=123 φ=0.50 STRC=True/1.4ms R0=True/2012ms
+  scale example_3x3x2 seed=123 φ=0.75 STRC=True/1.4ms R0=True/2032ms
+  scale example_3x3x2 seed=123 φ=1.00 STRC=True/1.7ms R0=True/2006ms
+  scale example_3x3x2 seed=13 φ=0.10 STRC=True/0.6ms R0=True/2022ms
+  scale example_3x3x2 seed=13 φ=0.25 STRC=True/2.0ms R0=True/2025ms
+  scale example_3x3x2 seed=13 φ=0.50 STRC=True/1.2ms R0=True/2023ms
+  scale example_3x3x2 seed=13 φ=0.75 STRC=True/1.2ms R0=True/2004ms
+  scale example_3x3x2 seed=13 φ=1.00 STRC=True/1.5ms R0=True/2031ms
+  scale example_3x3x2 seed=1 φ=0.10 STRC=True/1.6ms R0=True/2027ms
+  scale example_3x3x2 seed=1 φ=0.25 STRC=True/1.8ms R0=True/2008ms
+  scale example_3x3x2 seed=1 φ=0.50 STRC=True/1.5ms R0=True/2012ms
+  scale example_3x3x2 seed=1 φ=0.75 STRC=True/2.6ms R0=True/2019ms
+  scale example_3x3x2 seed=1 φ=1.00 STRC=True/2.6ms R0=True/2035ms
+  scale example_3x3x2 seed=777 φ=0.10 STRC=True/0.8ms R0=True/2001ms
+  scale example_3x3x2 seed=777 φ=0.25 STRC=True/2.3ms R0=True/2021ms
+  scale example_3x3x2 seed=777 φ=0.50 STRC=True/1.8ms R0=True/2024ms
+  scale example_3x3x2 seed=777 φ=0.75 STRC=True/2.7ms R0=True/2024ms
+  scale example_3x3x2 seed=777 φ=1.00 STRC=True/2.4ms R0=True/2035ms
+  scale example_3x3x2 seed=31415 φ=0.10 STRC=True/1.0ms R0=True/2007ms
+  scale example_3x3x2 seed=31415 φ=0.25 STRC=True/1.3ms R0=True/2025ms
+  scale example_3x3x2 seed=31415 φ=0.50 STRC=True/1.3ms R0=True/2005ms
+  scale example_3x3x2 seed=31415 φ=0.75 STRC=True/1.7ms R0=True/2043ms
+  scale example_3x3x2 seed=31415 φ=1.00 STRC=True/2.7ms R0=True/2037ms
+  scale example_3x3x2 seed=8 φ=0.10 STRC=True/1.5ms R0=True/2020ms
+  scale example_3x3x2 seed=8 φ=0.25 STRC=True/1.8ms R0=True/2032ms
+  scale example_3x3x2 seed=8 φ=0.50 STRC=True/2.2ms R0=True/2030ms
+  scale example_3x3x2 seed=8 φ=0.75 STRC=True/2.3ms R0=True/2022ms
+  scale example_3x3x2 seed=8 φ=1.00 STRC=True/1.7ms R0=True/2016ms
+  scale congested_8x4x4 seed=42 φ=0.10 STRC=True/6.5ms R0=True/2035ms
+  scale congested_8x4x4 seed=42 φ=0.25 STRC=True/6.2ms R0=True/2249ms
+  scale congested_8x4x4 seed=42 φ=0.50 STRC=True/9.0ms R0=True/2058ms
+  scale congested_8x4x4 seed=42 φ=0.75 STRC=True/7.9ms R0=True/2097ms
+  scale congested_8x4x4 seed=42 φ=1.00 STRC=True/11.9ms R0=True/2129ms
+  scale congested_8x4x4 seed=7 φ=0.10 STRC=True/6.8ms R0=True/2063ms
+  scale congested_8x4x4 seed=7 φ=0.25 STRC=True/7.9ms R0=True/2294ms
+  scale congested_8x4x4 seed=7 φ=0.50 STRC=True/9.0ms R0=True/2105ms
+  scale congested_8x4x4 seed=7 φ=0.75 STRC=True/8.4ms R0=True/2224ms
+  scale congested_8x4x4 seed=7 φ=1.00 STRC=True/9.7ms R0=True/2057ms
+  scale congested_8x4x4 seed=2024 φ=0.10 STRC=True/6.2ms R0=True/2192ms
+  scale congested_8x4x4 seed=2024 φ=0.25 STRC=True/6.6ms R0=True/2115ms
+  scale congested_8x4x4 seed=2024 φ=0.50 STRC=True/8.3ms R0=True/2025ms
+  scale congested_8x4x4 seed=2024 φ=0.75 STRC=True/11.4ms R0=True/2058ms
+  scale congested_8x4x4 seed=2024 φ=1.00 STRC=True/11.1ms R0=True/2224ms
+  scale congested_8x4x4 seed=99 φ=0.10 STRC=True/6.8ms R0=True/2168ms
+  scale congested_8x4x4 seed=99 φ=0.25 STRC=True/6.5ms R0=True/2049ms
+  scale congested_8x4x4 seed=99 φ=0.50 STRC=True/7.6ms R0=True/2205ms
+  scale congested_8x4x4 seed=99 φ=0.75 STRC=True/10.3ms R0=True/2103ms
+  scale congested_8x4x4 seed=99 φ=1.00 STRC=True/8.1ms R0=True/2317ms
+  scale congested_8x4x4 seed=123 φ=0.10 STRC=True/5.8ms R0=True/2212ms
+  scale congested_8x4x4 seed=123 φ=0.25 STRC=True/7.3ms R0=True/2177ms
+  scale congested_8x4x4 seed=123 φ=0.50 STRC=True/8.2ms R0=True/2197ms
+  scale congested_8x4x4 seed=123 φ=0.75 STRC=True/9.6ms R0=True/2061ms
+  scale congested_8x4x4 seed=123 φ=1.00 STRC=True/11.3ms R0=True/2225ms
+  scale congested_8x4x4 seed=13 φ=0.10 STRC=True/5.8ms R0=True/2011ms
+  scale congested_8x4x4 seed=13 φ=0.25 STRC=True/6.4ms R0=True/2235ms
+  scale congested_8x4x4 seed=13 φ=0.50 STRC=True/7.7ms R0=True/2227ms
+  scale congested_8x4x4 seed=13 φ=0.75 STRC=True/7.8ms R0=True/2167ms
+  scale congested_8x4x4 seed=13 φ=1.00 STRC=True/8.6ms R0=True/2137ms
+  scale congested_8x4x4 seed=1 φ=0.10 STRC=True/6.5ms R0=True/2215ms
+  scale congested_8x4x4 seed=1 φ=0.25 STRC=True/6.2ms R0=True/2019ms
+  scale congested_8x4x4 seed=1 φ=0.50 STRC=True/8.6ms R0=True/2100ms
+  scale congested_8x4x4 seed=1 φ=0.75 STRC=True/8.5ms R0=True/2358ms
+  scale congested_8x4x4 seed=1 φ=1.00 STRC=True/9.0ms R0=True/2197ms
+  scale congested_8x4x4 seed=777 φ=0.10 STRC=True/7.3ms R0=True/2040ms
+  scale congested_8x4x4 seed=777 φ=0.25 STRC=True/7.8ms R0=True/2084ms
+  scale congested_8x4x4 seed=777 φ=0.50 STRC=True/8.9ms R0=True/2255ms
+  scale congested_8x4x4 seed=777 φ=0.75 STRC=True/9.2ms R0=True/2060ms
+  scale congested_8x4x4 seed=777 φ=1.00 STRC=True/9.1ms R0=True/2138ms
+  scale congested_8x4x4 seed=31415 φ=0.10 STRC=True/5.8ms R0=True/2161ms
+  scale congested_8x4x4 seed=31415 φ=0.25 STRC=True/6.8ms R0=True/2120ms
+  scale congested_8x4x4 seed=31415 φ=0.50 STRC=True/8.0ms R0=True/2345ms
+  scale congested_8x4x4 seed=31415 φ=0.75 STRC=True/8.2ms R0=True/2126ms
+  scale congested_8x4x4 seed=31415 φ=1.00 STRC=True/10.0ms R0=True/2104ms
+  scale congested_8x4x4 seed=8 φ=0.10 STRC=True/8.6ms R0=True/2242ms
+  scale congested_8x4x4 seed=8 φ=0.25 STRC=True/11.0ms R0=True/2113ms
+  scale congested_8x4x4 seed=8 φ=0.50 STRC=True/11.9ms R0=True/2136ms
+  scale congested_8x4x4 seed=8 φ=0.75 STRC=True/10.0ms R0=True/2264ms
+  scale congested_8x4x4 seed=8 φ=1.00 STRC=True/10.5ms R0=True/2280ms
+=== expand_batch: E5 ===
+  e5 example_3x3x2 seed=42 bud=0.2 R0 Cmax=74.0 R2 Cmax=74.0 past R0=0/9 R2=0/9
+  e5 example_3x3x2 seed=42 bud=1.0 R0 Cmax=72.0 R2 Cmax=74.0 past R0=0/9 R2=0/9
+  e5 example_3x3x2 seed=42 bud=2.0 R0 Cmax=72.0 R2 Cmax=74.0 past R0=0/9 R2=0/9
+  e5 example_3x3x2 seed=7 bud=0.2 R0 Cmax=51.0 R2 Cmax=77.0 past R0=0/9 R2=0/9
+  e5 example_3x3x2 seed=7 bud=1.0 R0 Cmax=51.0 R2 Cmax=77.0 past R0=0/9 R2=0/9
+  e5 example_3x3x2 seed=7 bud=2.0 R0 Cmax=51.0 R2 Cmax=77.0 past R0=0/9 R2=0/9
+  e5 example_3x3x2 seed=2024 bud=0.2 R0 Cmax=58.0 R2 Cmax=84.0 past R0=0/12 R2=0/12
+  e5 example_3x3x2 seed=2024 bud=1.0 R0 Cmax=58.0 R2 Cmax=84.0 past R0=0/12 R2=0/12
+  e5 example_3x3x2 seed=2024 bud=2.0 R0 Cmax=58.0 R2 Cmax=84.0 past R0=0/12 R2=0/12
+  e5 congested_8x4x4 seed=42 bud=0.2 R0 Cmax=188.0 R2 Cmax=212.5 past R0=0/31 R2=0/31
+  e5 congested_8x4x4 seed=42 bud=1.0 R0 Cmax=162.5 R2 Cmax=212.5 past R0=0/31 R2=0/31
+  e5 congested_8x4x4 seed=42 bud=2.0 R0 Cmax=162.5 R2 Cmax=212.5 past R0=0/31 R2=0/31
+  e5 congested_8x4x4 seed=7 bud=0.2 R0 Cmax=220.0 R2 Cmax=240.5 past R0=0/42 R2=0/42
+  e5 congested_8x4x4 seed=7 bud=1.0 R0 Cmax=204.5 R2 Cmax=240.5 past R0=0/42 R2=0/42
+  e5 congested_8x4x4 seed=7 bud=2.0 R0 Cmax=187.5 R2 Cmax=240.5 past R0=0/42 R2=0/42
+  e5 congested_8x4x4 seed=2024 bud=0.2 R0 Cmax=204.0 R2 Cmax=236.0 past R0=0/32 R2=0/32
+  e5 congested_8x4x4 seed=2024 bud=1.0 R0 Cmax=189.0 R2 Cmax=236.0 past R0=0/32 R2=0/32
+  e5 congested_8x4x4 seed=2024 bud=2.0 R0 Cmax=162.0 R2 Cmax=236.0 past R0=0/32 R2=0/32
+=== expand_batch: E6 disturbance types ===
+wrote summary C:\Users\analy\Desktop\AI_Folder\STRC_new\experiments\expanded\summary.md
+E1 C1 pass 50/50
+E2b pass 49/50
+E3 R2 feas 49/50

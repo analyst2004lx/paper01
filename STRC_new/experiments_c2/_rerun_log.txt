@@ -1,0 +1,30 @@
+﻿start 11/21/2026 18:16:34
+=== py -m tools.cheap_baselines  11/21/2026 18:16:34
+exit 0
+=== py -m tools.cheap_baselines --block-len 5 --out experiments/cheap_baselines_L5.csv  11/21/2026 18:16:36
+exit 0
+=== py -m tools.cheap_baselines --block-len 2 --out experiments/cheap_baselines_L2.csv  11/21/2026 18:16:39
+exit 0
+=== py -m tools.cheap_baselines --suite scale --out experiments/cheap_scale_full.csv  11/21/2026 18:16:41
+exit 0
+=== py -m tools.cheap_baselines --suite scale --block-len 5 --out experiments/cheap_scale_L5.csv  11/21/2026 18:16:53
+exit 0
+=== py -m tools.cheap_baselines --suite scale --block-len 2 --out experiments/cheap_scale_L2.csv  11/21/2026 18:17:04
+exit 0
+=== py -m tools.expand_batch  11/21/2026 18:17:15
+exit 0
+=== py -m tools.scale_curve  11/21/2026 18:21:10
+exit 0
+=== py -m tools.e4_structure  11/21/2026 18:21:19
+exit 0
+=== py -m tools.pub_batch  11/21/2026 18:21:20
+exit 0
+=== py -m tools.edge_probe --full  11/21/2026 18:21:43
+exit 0
+=== py -m tools.seg_completion  11/21/2026 18:21:44
+exit 0
+=== py -m tools.weight_sweep  11/21/2026 18:21:45
+exit 0
+=== py -m tools.paper_numbers  11/21/2026 18:21:49
+exit 0
+done 11/21/2026 18:21:49
