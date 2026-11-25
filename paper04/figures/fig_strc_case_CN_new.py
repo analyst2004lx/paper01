@@ -113,7 +113,7 @@ def main() -> None:
     _draw_panel(
         axes[1], rep.result, closed_ops,
         t_now=t_now, block=block,
-        title=(f"(b) 在预约影响集内分层回放后  $C_{{\\max}}={rep.makespan:.0f}$  "
+        title=(f"(b) 在预约影响集内分层改写后  $C_{{\\max}}={rep.makespan:.0f}$  "
                f"耗时 {rep.wall_ms:.1f} ms"),
         show_legend=False,
     )

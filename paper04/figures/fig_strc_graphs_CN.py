@@ -63,11 +63,11 @@ def main() -> None:
     ):
         ax.annotate("", xy=(x2, y2 + 0.58), xytext=(x1 + 2.0, y1 + 0.58),
                     arrowprops=dict(arrowstyle="->", color="#2e7d4f", lw=1.15))
-    ax.text(3.35, 7.25, "同工件先后", fontsize=7, color="#2e7d4f", ha="center")
+    ax.text(3.35, 7.25, "工件先后", fontsize=7, color="#2e7d4f", ha="center")
     ax.annotate("", xy=(4.9, 4.05), xytext=(4.9, 5.9),
                 arrowprops=dict(arrowstyle="->", color="#6b4c7a",
                                 lw=1.15, linestyle="--"))
-    ax.text(5.05, 4.95, r"同机先后（$O_{12}$、$O_{22}$ 在同一台机器上）",
+    ax.text(5.05, 4.95, r"机器先后（$O_{12}$、$O_{22}$ 在同一台机器上）",
             fontsize=7, color="#6b4c7a", va="center")
 
     ax.add_patch(Rectangle((2.3, 8.45), 5.4, 1.0, facecolor="#f7e6e6",
@@ -111,26 +111,26 @@ def main() -> None:
                 color=("#8b1e1e" if k == "p1" else "#333333"), linespacing=1.15)
 
     c_yield, c_agv, c_job, c_mach = "#c45c26", "#1f4e79", "#2e7d4f", "#6b4c7a"
-    _arrow(ax, pos["p1"], pos["p2"], c_agv)               # 同车
-    _arrow(ax, pos["p2"], pos["p3"], c_job)               # 同工件:O12 -> O13
+    _arrow(ax, pos["p1"], pos["p2"], c_agv)               # 车辆接续
+    _arrow(ax, pos["p2"], pos["p3"], c_job)               # 工件接续:O12 -> O13
     _arrow(ax, pos["p1"], pos["p4"], c_yield)             # 让行:同在 e*
-    _arrow(ax, pos["p2"], pos["p4"], c_mach, style="--")  # 同机:O12 -> O22
+    _arrow(ax, pos["p2"], pos["p4"], c_mach, style="--")  # 机器接续:O12 -> O22
 
-    ax.text(3.2, 6.95, "同车", fontsize=7, color=c_agv, fontweight="bold", ha="center", va="top")
-    ax.text(6.8, 6.95, "同工件", fontsize=7, color=c_job, fontweight="bold", ha="center", va="top")
+    ax.text(3.2, 6.95, "车辆接续", fontsize=7, color=c_agv, fontweight="bold", ha="center", va="top")
+    ax.text(6.8, 6.95, "工件接续", fontsize=7, color=c_job, fontweight="bold", ha="center", va="top")
     ax.text(2.75, 5.2, "让行", fontsize=7, color=c_yield, fontweight="bold", ha="center")
-    ax.text(5.3, 5.55, "同机", fontsize=7, color=c_mach, fontweight="bold", ha="left")
+    ax.text(5.3, 5.55, "机器接续", fontsize=7, color=c_mach, fontweight="bold", ha="left")
 
     ax.text(5.0, 1.55, r"从起点 $\rho_1$ 沿边可达 $\rho_2$、$\rho_3$、$\rho_4$",
             ha="center", fontsize=9, fontweight="bold", color="#1f4e79")
-    ax.text(5.0, 0.65, "同工件边、同机边分别对应 (a) 中的同工件先后、同机先后",
+    ax.text(5.0, 0.65, "工件接续边、机器接续边分别对应 (a) 中的工件先后、机器先后",
             ha="center", fontsize=7.5, color="#555555")
 
     handles = [
         Line2D([0], [0], color=c_yield, lw=1.6, label="让行边"),
-        Line2D([0], [0], color=c_agv, lw=1.6, label="同车边"),
-        Line2D([0], [0], color=c_job, lw=1.6, label="同工件边"),
-        Line2D([0], [0], color=c_mach, lw=1.6, linestyle="--", label="同机边"),
+        Line2D([0], [0], color=c_agv, lw=1.6, label="车辆接续边"),
+        Line2D([0], [0], color=c_job, lw=1.6, label="工件接续边"),
+        Line2D([0], [0], color=c_mach, lw=1.6, linestyle="--", label="机器接续边"),
     ]
     ax.legend(handles=handles, loc="lower center", bbox_to_anchor=(0.5, -0.06),
               fontsize=6.8, frameon=False, ncol=4, handlelength=1.6,
