@@ -1,0 +1,172 @@
+=== pub_batch: E1/E2/E3 ===
+  E1-3 LyuL2_4m seed=42
+  E1-3 LyuL2_4m seed=7
+  E1-3 LyuL2_4m seed=2024
+  E1-3 LyuL2_4m seed=99
+  E1-3 LyuL2_4m seed=123
+  E1-3 LyuL2_4m seed=13
+  E1-3 LyuL2_4m seed=1
+  E1-3 LyuL2_4m seed=777
+  E1-3 LyuL2_4m seed=31415
+  E1-3 LyuL2_4m seed=8
+  E1-3 LyuL3_5m seed=42
+  E1-3 LyuL3_5m seed=7
+  E1-3 LyuL3_5m seed=2024
+  E1-3 LyuL3_5m seed=99
+  E1-3 LyuL3_5m seed=123
+  E1-3 LyuL3_5m seed=13
+  E1-3 LyuL3_5m seed=1
+  E1-3 LyuL3_5m seed=777
+  E1-3 LyuL3_5m seed=31415
+  E1-3 LyuL3_5m seed=8
+  E1-3 LyuL4_6m seed=42
+  E1-3 LyuL4_6m seed=7
+  E1-3 LyuL4_6m seed=2024
+  E1-3 LyuL4_6m seed=99
+  E1-3 LyuL4_6m seed=123
+  E1-3 LyuL4_6m seed=13
+  E1-3 LyuL4_6m seed=1
+  E1-3 LyuL4_6m seed=777
+  E1-3 LyuL4_6m seed=31415
+  E1-3 LyuL4_6m seed=8
+  E1-3 LyuL5_7m seed=42
+  E1-3 LyuL5_7m seed=7
+  E1-3 LyuL5_7m seed=2024
+  E1-3 LyuL5_7m seed=99
+  E1-3 LyuL5_7m seed=123
+  E1-3 LyuL5_7m seed=13
+  E1-3 LyuL5_7m seed=1
+  E1-3 LyuL5_7m seed=777
+  E1-3 LyuL5_7m seed=31415
+  E1-3 LyuL5_7m seed=8
+  E1-3 LyuL6_8m seed=42
+  E1-3 LyuL6_8m seed=7
+  E1-3 LyuL6_8m seed=2024
+  E1-3 LyuL6_8m seed=99
+  E1-3 LyuL6_8m seed=123
+  E1-3 LyuL6_8m seed=13
+  E1-3 LyuL6_8m seed=1
+  E1-3 LyuL6_8m seed=777
+  E1-3 LyuL6_8m seed=31415
+  E1-3 LyuL6_8m seed=8
+=== pub_batch: E4 structure (外部 + 自建对照) ===
+  e4 LyuL2_4m seed=42 cut=2 on_cut=True |cl|=72 frac=0.562
+  e4 LyuL2_4m seed=7 cut=2 on_cut=True |cl|=73 frac=0.514
+  e4 LyuL2_4m seed=2024 cut=2 on_cut=True |cl|=85 frac=0.578
+  e4 LyuL2_4m seed=99 cut=2 on_cut=True |cl|=46 frac=0.377
+  e4 LyuL2_4m seed=123 cut=2 on_cut=True |cl|=71 frac=0.564
+  e4 LyuL2_4m seed=13 cut=2 on_cut=True |cl|=67 frac=0.540
+  e4 LyuL2_4m seed=1 cut=2 on_cut=True |cl|=78 frac=0.542
+  e4 LyuL2_4m seed=777 cut=2 on_cut=True |cl|=78 frac=0.600
+  e4 LyuL2_4m seed=31415 cut=2 on_cut=True |cl|=71 frac=0.538
+  e4 LyuL2_4m seed=8 cut=2 on_cut=True |cl|=83 frac=0.610
+  e4 LyuL3_5m seed=42 cut=2 on_cut=True |cl|=59 frac=0.509
+  e4 LyuL3_5m seed=7 cut=2 on_cut=True |cl|=45 frac=0.375
+  e4 LyuL3_5m seed=2024 cut=2 on_cut=True |cl|=58 frac=0.500
+  e4 LyuL3_5m seed=99 cut=2 on_cut=True |cl|=37 frac=0.343
+  e4 LyuL3_5m seed=123 cut=2 on_cut=True |cl|=10 frac=0.083
+  e4 LyuL3_5m seed=13 cut=2 on_cut=True |cl|=47 frac=0.470
+  e4 LyuL3_5m seed=1 cut=2 on_cut=True |cl|=34 frac=0.288
+  e4 LyuL3_5m seed=777 cut=2 on_cut=True |cl|=48 frac=0.400
+  e4 LyuL3_5m seed=31415 cut=2 on_cut=True |cl|=57 frac=0.491
+  e4 LyuL3_5m seed=8 cut=2 on_cut=True |cl|=23 frac=0.185
+  e4 LyuL4_6m seed=42 cut=2 on_cut=True |cl|=81 frac=0.540
+  e4 LyuL4_6m seed=7 cut=2 on_cut=True |cl|=70 frac=0.449
+  e4 LyuL4_6m seed=2024 cut=2 on_cut=True |cl|=83 frac=0.500
+  e4 LyuL4_6m seed=99 cut=2 on_cut=True |cl|=48 frac=0.358
+  e4 LyuL4_6m seed=123 cut=2 on_cut=True |cl|=79 frac=0.459
+  e4 LyuL4_6m seed=13 cut=2 on_cut=True |cl|=71 frac=0.486
+  e4 LyuL4_6m seed=1 cut=2 on_cut=True |cl|=84 frac=0.506
+  e4 LyuL4_6m seed=777 cut=2 on_cut=True |cl|=84 frac=0.545
+  e4 LyuL4_6m seed=31415 cut=2 on_cut=True |cl|=86 frac=0.524
+  e4 LyuL4_6m seed=8 cut=2 on_cut=True |cl|=64 frac=0.421
+  e4 LyuL5_7m seed=42 cut=2 on_cut=True |cl|=87 frac=0.489
+  e4 LyuL5_7m seed=7 cut=2 on_cut=True |cl|=108 frac=0.568
+  e4 LyuL5_7m seed=2024 cut=2 on_cut=True |cl|=74 frac=0.398
+  e4 LyuL5_7m seed=99 cut=2 on_cut=True |cl|=55 frac=0.299
+  e4 LyuL5_7m seed=123 cut=2 on_cut=True |cl|=110 frac=0.567
+  e4 LyuL5_7m seed=13 cut=2 on_cut=True |cl|=60 frac=0.353
+  e4 LyuL5_7m seed=1 cut=2 on_cut=True |cl|=112 frac=0.554
+  e4 LyuL5_7m seed=777 cut=2 on_cut=True |cl|=93 frac=0.554
+  e4 LyuL5_7m seed=31415 cut=2 on_cut=True |cl|=94 frac=0.559
+  e4 LyuL5_7m seed=8 cut=2 on_cut=True |cl|=81 frac=0.460
+  e4 LyuL6_8m seed=42 cut=2 on_cut=True |cl|=72 frac=0.500
+  e4 LyuL6_8m seed=7 cut=2 on_cut=True |cl|=23 frac=0.158
+  e4 LyuL6_8m seed=2024 cut=2 on_cut=True |cl|=33 frac=0.250
+  e4 LyuL6_8m seed=99 cut=2 on_cut=True |cl|=25 frac=0.174
+  e4 LyuL6_8m seed=123 cut=2 on_cut=True |cl|=62 frac=0.383
+  e4 LyuL6_8m seed=13 cut=2 on_cut=True |cl|=72 frac=0.507
+  e4 LyuL6_8m seed=1 cut=2 on_cut=True |cl|=71 frac=0.507
+  e4 LyuL6_8m seed=777 cut=2 on_cut=True |cl|=49 frac=0.377
+  e4 LyuL6_8m seed=31415 cut=2 on_cut=True |cl|=70 frac=0.522
+  e4 LyuL6_8m seed=8 cut=2 on_cut=True |cl|=66 frac=0.458
+  e4 self_high_LD21 seed=42 cut=2 on_cut=True |cl|=81 frac=0.587
+  e4 self_high_LD21 seed=7 cut=2 on_cut=True |cl|=84 frac=0.560
+  e4 self_high_LD21 seed=2024 cut=2 on_cut=True |cl|=91 frac=0.520
+  e4 self_high_LD21 seed=99 cut=2 on_cut=True |cl|=67 frac=0.459
+  e4 self_high_LD21 seed=123 cut=2 on_cut=True |cl|=72 frac=0.514
+  e4 self_high_LD21 seed=13 cut=2 on_cut=True |cl|=66 frac=0.516
+  e4 self_high_LD21 seed=1 cut=2 on_cut=True |cl|=79 frac=0.488
+  e4 self_high_LD21 seed=777 cut=2 on_cut=True |cl|=87 frac=0.588
+  e4 self_high_LD21 seed=31415 cut=2 on_cut=True |cl|=82 frac=0.558
+  e4 self_high_LD21 seed=8 cut=2 on_cut=True |cl|=81 frac=0.562
+  e4 self_funnel_LD11 seed=42 cut=1 on_cut=True |cl|=87 frac=0.604
+  e4 self_funnel_LD11 seed=7 cut=1 on_cut=True |cl|=89 frac=0.563
+  e4 self_funnel_LD11 seed=2024 cut=1 on_cut=True |cl|=86 frac=0.500
+  e4 self_funnel_LD11 seed=99 cut=1 on_cut=True |cl|=67 frac=0.459
+  e4 self_funnel_LD11 seed=123 cut=1 on_cut=True |cl|=60 frac=0.382
+  e4 self_funnel_LD11 seed=13 cut=1 on_cut=True |cl|=64 frac=0.508
+  e4 self_funnel_LD11 seed=1 cut=1 on_cut=True |cl|=79 frac=0.482
+  e4 self_funnel_LD11 seed=777 cut=1 on_cut=True |cl|=80 frac=0.516
+  e4 self_funnel_LD11 seed=31415 cut=1 on_cut=True |cl|=78 frac=0.538
+  e4 self_funnel_LD11 seed=8 cut=1 on_cut=True |cl|=79 frac=0.552
+  e4 self_mid_LD22 seed=42 cut=2 on_cut=True |cl|=66 frac=0.446
+  e4 self_mid_LD22 seed=7 cut=2 on_cut=True |cl|=44 frac=0.275
+  e4 self_mid_LD22 seed=2024 cut=2 on_cut=True |cl|=50 frac=0.333
+  e4 self_mid_LD22 seed=99 cut=2 on_cut=True |cl|=35 frac=0.238
+  e4 self_mid_LD22 seed=123 cut=2 on_cut=True |cl|=47 frac=0.329
+  e4 self_mid_LD22 seed=13 cut=2 on_cut=True |cl|=74 frac=0.552
+  e4 self_mid_LD22 seed=1 cut=2 on_cut=True |cl|=82 frac=0.532
+  e4 self_mid_LD22 seed=777 cut=2 on_cut=True |cl|=78 frac=0.513
+  e4 self_mid_LD22 seed=31415 cut=2 on_cut=True |cl|=73 frac=0.487
+  e4 self_mid_LD22 seed=8 cut=2 on_cut=True |cl|=88 frac=0.595
+=== pub_batch: E5 ===
+  e5 LyuL2_4m seed=42 bud=0.2 R0 Cmax=139.0 R2 Cmax=162.0 past R0=0/48 R2=0/48
+  e5 LyuL2_4m seed=42 bud=1.0 R0 Cmax=134.0 R2 Cmax=162.0 past R0=0/48 R2=0/48
+  e5 LyuL2_4m seed=42 bud=2.0 R0 Cmax=128.0 R2 Cmax=162.0 past R0=0/48 R2=0/48
+  e5 LyuL2_4m seed=7 bud=0.2 R0 Cmax=138.5 R2 Cmax=177.5 past R0=0/56 R2=0/56
+  e5 LyuL2_4m seed=7 bud=1.0 R0 Cmax=122.0 R2 Cmax=177.5 past R0=0/56 R2=0/56
+  e5 LyuL2_4m seed=7 bud=2.0 R0 Cmax=122.0 R2 Cmax=177.5 past R0=0/56 R2=0/56
+  e5 LyuL2_4m seed=2024 bud=0.2 R0 Cmax=142.5 R2 Cmax=141.0 past R0=0/47 R2=0/47
+  e5 LyuL2_4m seed=2024 bud=1.0 R0 Cmax=135.0 R2 Cmax=141.0 past R0=0/47 R2=0/47
+  e5 LyuL2_4m seed=2024 bud=2.0 R0 Cmax=133.0 R2 Cmax=141.0 past R0=0/47 R2=0/47
+  e5 LyuL6_8m seed=42 bud=0.2 R0 Cmax=158.0 R2 Cmax=159.0 past R0=0/46 R2=0/46
+  e5 LyuL6_8m seed=42 bud=1.0 R0 Cmax=140.5 R2 Cmax=159.0 past R0=0/46 R2=0/46
+  e5 LyuL6_8m seed=42 bud=2.0 R0 Cmax=138.0 R2 Cmax=159.0 past R0=0/46 R2=0/46
+  e5 LyuL6_8m seed=7 bud=0.2 R0 Cmax=143.0 R2 Cmax=167.0 past R0=0/59 R2=0/59
+  e5 LyuL6_8m seed=7 bud=1.0 R0 Cmax=136.0 R2 Cmax=167.0 past R0=0/59 R2=0/59
+  e5 LyuL6_8m seed=7 bud=2.0 R0 Cmax=121.5 R2 Cmax=167.0 past R0=0/59 R2=0/59
+  e5 LyuL6_8m seed=2024 bud=0.2 R0 Cmax=144.0 R2 Cmax=144.0 past R0=0/48 R2=0/48
+  e5 LyuL6_8m seed=2024 bud=1.0 R0 Cmax=132.0 R2 Cmax=144.0 past R0=0/48 R2=0/48
+  e5 LyuL6_8m seed=2024 bud=2.0 R0 Cmax=118.0 R2 Cmax=144.0 past R0=0/48 R2=0/48
+
+wrote summary C:\Users\analy\Desktop\AI_Folder\STRC_new\experiments\pub_layouts\summary.md
+E1 C1 pass  50/50
+E2a pass    50/50
+E2b pass    50/50
+E3 R1 feas  0/50
+E3 R2 feas  50/50
+
+[E4/外部] 逐布局 Cl/|R| 中位:LyuL2_4m=0.552, LyuL3_5m=0.388, LyuL4_6m=0.493, LyuL5_7m=0.521, LyuL6_8m=0.420
+[E4/外部] 闭包占比极差 0.165(min 0.388 / max 0.552)
+[E4/外部] LU割 [2];漏斗占比 [0.0];每节点走廊 [1.4375, 1.52]
+[E4/外部] LU割 vs 闭包占比:指标在本组无方差,无法区分
+[E4/外部] 漏斗占比 vs 闭包占比:指标在本组无方差,无法区分
+[E4/外部] 每节点走廊 vs 闭包占比:rho=0.0
+
+[E4/自建] 逐布局 Cl/|R| 中位:self_high_LD21=0.539, self_funnel_LD11=0.512, self_mid_LD22=0.466
+[E4/自建] 闭包占比极差 0.073(min 0.466 / max 0.539)
+[E4/自建] LU割 [1, 2];漏斗占比 [0.2857];每节点走廊 [0.8889, 1.0, 1.0909]
+[E4/自建] LU割 vs 闭包占比:rho=0.0
+[E4/自建] 漏斗占比 vs 闭包占比:指标在本组无方差,无法区分
+[E4/自建] 每节点走廊 vs 闭包占比:rho=-0.5

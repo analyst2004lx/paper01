@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
   Daytime sync between a GitHub repo and a local folder.
@@ -725,8 +725,11 @@ try {
     # HTTP/1.1 + larger buffer helps when HTTPS pack download stalls mid-way
     # Do not set http.lowSpeedLimit for fetch: a 193 MB pack was aborted 14 KB
     # from the end ("Less than 1000 bytes/sec ... 60 seconds") on WireGuard.
+    # openssl, not schannel: schannel treats a missing TLS close_notify as a
+    # failed download even when only a few dozen bytes of the pack remain.
     $httpHardening = @(
         '-c', 'http.version=HTTP/1.1'
+        '-c', 'http.sslBackend=openssl'
         '-c', 'http.postBuffer=524288000'
     )
     Write-Log 'preflight: ls-remote origin (checks GitHub without downloading a pack)...'
@@ -774,9 +777,12 @@ try {
             Write-Log ('fetch attempt {0}/{1} (idle={2}s, max={3}s, ref={4})...' -f $i, $maxTry, $fetchIdle, $fetchMax, $fetchBranch)
             # Do not use --depth 1 here. On an existing full repo it truncates history
             # and leaves .git/shallow.lock if the download is killed.
-            $fetchArgs = $httpHardening + @('fetch', '--prune', '--no-tags', 'origin', $fetchBranch)
-            if ($i -gt 2) {
-                Write-Log 'Retrying full fetch (shallow fetch disabled; it would truncate local history)...' -Level WARN
+            # blob:none keeps this response to commits and trees. A single ~40 MB
+            # pack of file contents has been closed by the path in the last
+            # few dozen bytes (early EOF); those blobs are fetched afterwards.
+            $fetchArgs = $httpHardening + @('fetch', '--filter=blob:none', '--prune', '--no-tags', 'origin', $fetchBranch)
+            if ($i -gt 1) {
+                Write-Log 'Retrying commit/tree fetch (file blobs are downloaded separately)...' -Level WARN
             }
             $fetch = Invoke-Git -GitArgs $fetchArgs -AllowFail -HeartbeatSec 15 `
                 -TimeoutSec $fetchIdle -MaxSec $fetchMax -ProgressDir $packDir
@@ -800,6 +806,231 @@ try {
         Write-Log 'This usually means GitHub pack download stalled (not a script logic bug).' -Level ERROR
         Write-Log 'Hints: 1) Connect WireGuard/VPN  2) Open https://github.com  3) git -c http.version=HTTP/1.1 ls-remote origin  4) Retry later' -Level ERROR
         exit 2
+    }
+
+    # File contents omitted by --filter=blob:none. Git's pack download is closed
+    # by this path in the last few dozen bytes and cannot resume, so each missing
+    # blob is fetched with curl -C (HTTP range resume) and stored with hash-object.
+    $backfillRef = 'origin/{0}' -f $fetchBranch
+    $tipRes = Invoke-Git -GitArgs @('rev-parse', $backfillRef) -AllowFail
+    if ($tipRes.ExitCode -ne 0) { throw ('Cannot resolve {0}' -f $backfillRef) }
+    $tipSha = ($tipRes.Output -split "`n" | Select-Object -First 1).Trim()
+    if ($Config.RepoUrl -notmatch 'github\.com[:/]([^/]+)/([^/]+?)(?:\.git)?$') {
+        throw ('RepoUrl is not a GitHub URL: {0}' -f $Config.RepoUrl)
+    }
+    # api.github.com allows 60 unauthenticated requests per hour. A size check
+    # plus a download used two of them, so a normal sync hit 403 and waited.
+    # raw.githubusercontent.com serves the same bytes, supports Range, and is
+    # not on that quota.
+    $rawRoot = 'https://raw.githubusercontent.com/{0}/{1}/{2}' -f $Matches[1], $Matches[2], $tipSha
+    $treeRes = Invoke-Git -GitArgs @('ls-tree', '-r', $backfillRef) -AllowFail
+    $blobPath = @{}
+    foreach ($line in ($treeRes.Output -split "`r?`n")) {
+        if ($line -match '^(\d+) blob ([0-9a-f]{40})\t(.+)$') {
+            $blobPath[$Matches[2]] = $Matches[3]
+        }
+    }
+    $missRes = Invoke-Git -GitArgs @('rev-list', '--objects', '--missing=print', $backfillRef) -AllowFail
+    $missingOids = @(
+        $missRes.Output -split "`r?`n" |
+            Where-Object { $_ -match '^\?([0-9a-f]{40})' } |
+            ForEach-Object { $Matches[1] }
+    )
+    $tipOids = @(
+        $missingOids |
+            Where-Object { $blobPath.ContainsKey($_) } |
+            Sort-Object { if ($blobPath[$_] -match '\.(pdf|zip)$') { 1 } else { 0 } }
+    )
+    $historyOnly = $missingOids.Count - $tipOids.Count
+    if ($historyOnly -gt 0) {
+        Write-Log ('{0} missing object(s) are not in the current tree; sync only needs current files.' -f $historyOnly)
+    }
+    if ($tipOids.Count -eq 0) {
+        Write-Log 'No missing file blobs.'
+    } else {
+        Write-Log ('Downloading {0} missing file blob(s) with resume...' -f $tipOids.Count)
+        $blobTmp = Join-Path $env:TEMP 'sync-git-blobs'
+        New-Item -ItemType Directory -Path $blobTmp -Force | Out-Null
+        $curl = (Get-Command curl.exe -ErrorAction SilentlyContinue).Source
+        if (-not $curl) { throw 'curl.exe not found; it is required to resume blob downloads.' }
+        $bi = 0
+        foreach ($oid in $tipOids) {
+            $bi++
+            $rel = $blobPath[$oid]
+            if (-not $rel) {
+                throw ('Missing blob {0} has no path in {1}' -f $oid, $backfillRef)
+            }
+            $enc = (($rel -split '/') | ForEach-Object { [uri]::EscapeDataString($_) }) -join '/'
+            $url = '{0}/{1}' -f $rawRoot, $enc
+            $tmpFile = Join-Path $blobTmp $oid
+            Write-Log ('blob {0}/{1}: {2}' -f $bi, $tipOids.Count, $rel)
+            $ok = $false
+            $hdr = Join-Path $blobTmp ($oid + '.hdr')
+            $total = $null
+            for ($probe = 1; $probe -le 30 -and $null -eq $total; $probe++) {
+                if (Test-Path -LiteralPath $hdr) { Remove-Item -LiteralPath $hdr -Force -ErrorAction SilentlyContinue }
+                & $curl -L --http1.1 -sS -D $hdr -o NUL -r 0-0 --max-time 60 -H 'User-Agent: Sync-GitHubLocal' $url | Out-Null
+                $hdrText = ''
+                if (Test-Path -LiteralPath $hdr) {
+                    $hdrText = Get-Content -LiteralPath $hdr -Raw -ErrorAction SilentlyContinue
+                    Remove-Item -LiteralPath $hdr -Force -ErrorAction SilentlyContinue
+                }
+                if ($hdrText -match 'content-range:\s*bytes\s+\d+-\d+/(\d+)') { $total = [int64]$Matches[1] }
+                if ($null -eq $total) {
+                    Write-Log ('size probe failed for {0} (try {1}); retrying' -f $rel, $probe) -Level WARN
+                    Start-Sleep -Seconds 5
+                }
+            }
+            $useParts = ($null -ne $total -and $total -ge 1MB)
+            if ($useParts) {
+                $segments = 4
+                $chunk = [int64][Math]::Ceiling($total / $segments)
+                Write-Log ('{0} is {1} bytes; downloading in {2} parts' -f $rel, $total, $segments)
+                $parts = @()
+                for ($i = 0; $i -lt $segments; $i++) {
+                    $start = [int64]$i * $chunk
+                    if ($start -ge $total) { break }
+                    $end = $start + $chunk - 1
+                    if ($end -ge $total) { $end = $total - 1 }
+                    $parts += [pscustomobject]@{
+                        Start = [int64]$start
+                        End = [int64]$end
+                        Expect = [int64]($end - $start + 1)
+                        Path = ('{0}.p{1}' -f $tmpFile, $i)
+                        Piece = ('{0}.p{1}.part' -f $tmpFile, $i)
+                    }
+                }
+                if ((Test-Path -LiteralPath $tmpFile) -and -not (Test-Path -LiteralPath $parts[0].Path)) {
+                    $curLen = [int64](Get-Item -LiteralPath $tmpFile).Length
+                    if ($curLen -gt 0 -and $curLen -le $parts[0].Expect) {
+                        Move-Item -LiteralPath $tmpFile -Destination $parts[0].Path
+                        Write-Log ('seeded part 0 with {0} bytes already downloaded' -f $curLen)
+                    }
+                }
+                for ($round = 1; $round -le 80; $round++) {
+                    $pending = @()
+                    foreach ($p in $parts) {
+                        $have = 0L
+                        if (Test-Path -LiteralPath $p.Path) { $have = [int64](Get-Item -LiteralPath $p.Path).Length }
+                        if ($have -gt $p.Expect) {
+                            Remove-Item -LiteralPath $p.Path -Force
+                            $have = 0L
+                        }
+                        if ($have -lt $p.Expect) { $pending += [pscustomobject]@{ Part = $p; Have = $have } }
+                    }
+                    if ($pending.Count -eq 0) { break }
+                    $procs = @()
+                    foreach ($item in $pending) {
+                        $p = $item.Part
+                        $range = '{0}-{1}' -f ($p.Start + $item.Have), $p.End
+                        if (Test-Path -LiteralPath $p.Piece) { Remove-Item -LiteralPath $p.Piece -Force }
+                        $psi = New-Object System.Diagnostics.ProcessStartInfo
+                        $psi.FileName = $curl
+                        $psi.UseShellExecute = $false
+                        $psi.CreateNoWindow = $true
+                        $psi.RedirectStandardError = $true
+                        $psi.Arguments = ('-L --http1.1 --fail -sS --speed-time 30 --speed-limit 1000 -o "{0}" -r {1} -H "User-Agent: Sync-GitHubLocal" "{2}"' -f $p.Piece, $range, $url)
+                        $procs += [pscustomobject]@{ Proc = [System.Diagnostics.Process]::Start($psi); Part = $p }
+                    }
+                    while (@($procs | Where-Object { -not $_.Proc.HasExited }).Count -gt 0) {
+                        Start-Sleep -Seconds 20
+                        $got = 0L
+                        foreach ($p in $parts) {
+                            if (Test-Path -LiteralPath $p.Path) { $got += [int64](Get-Item -LiteralPath $p.Path).Length }
+                            if (Test-Path -LiteralPath $p.Piece) { $got += [int64](Get-Item -LiteralPath $p.Piece).Length }
+                        }
+                        Write-Log ('{0}: {1:N0} / {2:N0} bytes' -f $rel, $got, $total)
+                    }
+                    $sawRateLimit = $false
+                    foreach ($item in $procs) {
+                        $p = $item.Part
+                        $err = $item.Proc.StandardError.ReadToEnd()
+                        if ($item.Proc.ExitCode -ne 0 -and $err) {
+                            $errOne = $err.Trim() -replace '\s+', ' '
+                            Write-Log ('part curl: {0}' -f $errOne) -Level WARN
+                            if ($errOne -match 'rate limit exceeded') { $sawRateLimit = $true }
+                        }
+                        if (-not (Test-Path -LiteralPath $p.Piece)) { continue }
+                        $pieceLen = [int64](Get-Item -LiteralPath $p.Piece).Length
+                        if ($pieceLen -le 0 -or ($item.Proc.ExitCode -ne 0 -and $pieceLen -lt 512)) {
+                            Remove-Item -LiteralPath $p.Piece -Force -ErrorAction SilentlyContinue
+                            continue
+                        }
+                        $outFs = [System.IO.File]::Open($p.Path, [System.IO.FileMode]::Append, [System.IO.FileAccess]::Write)
+                        $inFs = [System.IO.File]::OpenRead($p.Piece)
+                        $inFs.CopyTo($outFs)
+                        $inFs.Close()
+                        $outFs.Close()
+                        Remove-Item -LiteralPath $p.Piece -Force
+                    }
+                    if ($sawRateLimit) {
+                        Write-Log 'Download was rate-limited; waiting 30 seconds before resume...' -Level WARN
+                        Start-Sleep -Seconds 30
+                    }
+                }
+                $allDone = $true
+                foreach ($p in $parts) {
+                    $have = 0L
+                    if (Test-Path -LiteralPath $p.Path) { $have = [int64](Get-Item -LiteralPath $p.Path).Length }
+                    if ($have -ne $p.Expect) { $allDone = $false }
+                }
+                if ($allDone) {
+                    if (Test-Path -LiteralPath $tmpFile) { Remove-Item -LiteralPath $tmpFile -Force }
+                    $outFs = [System.IO.File]::Create($tmpFile)
+                    foreach ($p in $parts) {
+                        $inFs = [System.IO.File]::OpenRead($p.Path)
+                        $inFs.CopyTo($outFs)
+                        $inFs.Close()
+                        Remove-Item -LiteralPath $p.Path -Force
+                    }
+                    $outFs.Close()
+                    $hashed = Invoke-Git -GitArgs @('hash-object', '--', $tmpFile) -AllowFail
+                    $got = ($hashed.Output -split "`n" | Select-Object -First 1).Trim()
+                    if ($hashed.ExitCode -eq 0 -and $got -eq $oid) {
+                        $stored = Invoke-Git -GitArgs @('hash-object', '-w', '--', $tmpFile) -AllowFail
+                        if ($stored.ExitCode -ne 0) { throw ('hash-object -w failed for {0}' -f $rel) }
+                        Remove-Item -LiteralPath $tmpFile -Force -ErrorAction SilentlyContinue
+                        $ok = $true
+                    } else {
+                        Write-Log ('blob hash mismatch for {0}: got {1}' -f $rel, $got) -Level WARN
+                        Remove-Item -LiteralPath $tmpFile -Force -ErrorAction SilentlyContinue
+                    }
+                }
+            } else {
+                $blobTries = 40
+                for ($t = 1; $t -le $blobTries; $t++) {
+                    & $curl -L --http1.1 --fail -sS --retry 5 --retry-all-errors --retry-delay 2 -C - --speed-time 30 --speed-limit 1000 -H 'User-Agent: Sync-GitHubLocal' -o $tmpFile $url
+                    $curlExit = $LASTEXITCODE
+                    $have = Test-Path -LiteralPath $tmpFile
+                    $sz = 0
+                    if ($have) { $sz = (Get-Item -LiteralPath $tmpFile).Length }
+                    if ($curlExit -ne 0 -and -not $have) {
+                        Write-Log ('curl exit {0} for {1} (try {2}/{3}, no file yet)' -f $curlExit, $rel, $t, $blobTries) -Level WARN
+                        continue
+                    }
+                    $hashed = Invoke-Git -GitArgs @('hash-object', '--', $tmpFile) -AllowFail
+                    $got = ($hashed.Output -split "`n" | Select-Object -First 1).Trim()
+                    if ($hashed.ExitCode -eq 0 -and $got -eq $oid) {
+                        $stored = Invoke-Git -GitArgs @('hash-object', '-w', '--', $tmpFile) -AllowFail
+                        if ($stored.ExitCode -ne 0) { throw ('hash-object -w failed for {0}' -f $rel) }
+                        Remove-Item -LiteralPath $tmpFile -Force -ErrorAction SilentlyContinue
+                        $ok = $true
+                        break
+                    }
+                    if ($curlExit -eq 0) {
+                        Write-Log ('blob hash mismatch for {0}: got {1}' -f $rel, $got) -Level WARN
+                        Remove-Item -LiteralPath $tmpFile -Force -ErrorAction SilentlyContinue
+                    } else {
+                        Write-Log ('curl exit {0} for {1} (try {2}/{3}, kept {4} bytes)' -f $curlExit, $rel, $t, $blobTries, $sz) -Level WARN
+                    }
+                }
+            }
+            if (-not $ok) {
+                Write-Log ('Could not download blob {0} ({1})' -f $rel, $oid) -Level ERROR
+                exit 2
+            }
+        }
+        Write-Log 'Missing file blobs are now present.'
     }
 
     $branch = $Config.Branch
@@ -1258,6 +1489,7 @@ try {
         $pullCount, $pushCandidates.Count, $equalCount, $conflictCount, $skipCount, $errorCount, $deleteRmCount)
 
     $pushOk = $true
+    $stashPopConflict = $false
     if ($pushCandidates.Count -gt 0) {
         Write-Log ('Staging {0} local-changed/local-only files...' -f $pushCandidates.Count)
         $added = 0
@@ -1386,6 +1618,13 @@ try {
                         if ($pop.ExitCode -ne 0) {
                             Write-Log ('stash pop had conflicts/issues (stash kept): {0}' -f $pop.Output) -Level WARN
                             Write-Log 'Inspect with: git stash list / git status' -Level WARN
+                            $unmerged = Invoke-Git -GitArgs @('diff', '--name-only', '--diff-filter=U') -AllowFail
+                            $conflictPaths = @($unmerged.Output -split "`r?`n" | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+                            if ($conflictPaths.Count -gt 0) {
+                                Write-Log ('Restoring {0} conflicted path(s) to HEAD. Local copies remain in the stash.' -f $conflictPaths.Count) -Level WARN
+                                [void](Invoke-Git -GitArgs (@('checkout', 'HEAD', '--') + $conflictPaths) -AllowFail)
+                            }
+                            $stashPopConflict = $true
                         } else {
                             Write-Log 'stash pop ok (local uncommitted changes restored)'
                         }
@@ -1441,6 +1680,10 @@ try {
         }
     }
 
+    if ($stashPopConflict) {
+        Write-Log '========== sync finished with stash conflicts ==========' -Level WARN
+        exit 4
+    }
     if ($pushOk) {
         Write-Log '========== sync success =========='
         exit 0

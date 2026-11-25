@@ -1,0 +1,11 @@
+instance,seed,corridor,R1_release,R2_release,R1_feasible,R2_feasible,R1_makespan,R2_makespan,R1_wall_ms,R2_wall_ms,miss_on_B,quality_winner
+example_3x3x2,42,c2|r2,0,16,False,True,,74.0,0.09,1.07,True,R2
+example_3x3x2,7,c2|r2,0,19,False,True,,77.0,0.11,1.2,True,R2
+congested_8x4x4,42,c2|r3,0,58,False,True,,212.5,0.24,4.99,True,R2
+congested_8x4x4,7,c2|r4,0,66,False,True,,240.5,0.22,4.84,True,R2
+S8x4x4_high,42,g1|h1,0,82,False,True,,199.5,0.39,6.02,True,R2
+S8x4x4_high,7,h2|r3,0,104,False,True,,207.5,0.45,7.46,True,R2
+S8x4x4_funnel,42,h2|r3,0,82,False,True,,204.0,0.43,5.42,True,R2
+S8x4x4_funnel,7,h1|r1,0,104,False,True,,221.5,0.37,6.75,True,R2
+S8x4x4_mid,42,h1|r1,0,83,False,True,,170.5,0.35,6.39,True,R2
+S8x4x4_mid,7,h1|r1,0,97,False,True,,188.0,0.32,7.87,True,R2
