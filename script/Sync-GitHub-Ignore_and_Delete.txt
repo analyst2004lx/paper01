@@ -30,6 +30,7 @@ A multi-agent system for FJSP with setup and transportation times.pdf
 综述_A Review of Flexible Job Shop Scheduling Problems Considering Transportation Vehicles.pdf
 9001_27001
 项目管理
+其它
 script/Toggle-443Forward.ps1
 </Ignore>
 
@@ -46,6 +47,9 @@ paper04_CN_AI-Modify-26-09-17.aux
 paper04_CN_AI-Modify-26-09-17.fdb_latexmk
 paper01_new
 paper01_old
+paper02_old
+paper03_old
+paper04_old
 paper01/figures
 汇报稿_应用场景介绍.files
 cursor_document_conversion_request.md
@@ -57,6 +61,12 @@ md_to_word_html.py
 Convert_MD_to_Html(open_and_save_in_Word).py
 paper02/database/ft_trier_iot_log/DQI_Event_Log.zip
 paper02/database/ft_trier_iot_log/Cleaned_Event_Log.zip
+paper01/xelatex17248.fls
+paper01/xelatex4100.fls
+paper01/pdflatex24736.fls
+paper01/pdflatex22600.fls
+paper01/pdflatex18228.fls
+paper01/pdflatex6124.fls
 paper01/paper-20260818.pdf
 paper01/paper-20260818.tex
 paper01/_preview_cn-01.png
@@ -250,9 +260,11 @@ paper04\sec_sizes.txt
 paper04\table_inventory.py
 paper04\table_inventory.txt
 paper04\texput.log
-paper04_old
+paper04\paper04-20260817.pdf
+paper04\paper04-20260817.tex
+paper04\paper04-20260820.pdf
+paper04\paper04-20260820.tex
 开题报告\于琪-开题报告(20260909).docx
 开题报告\于琪-开题PPT(20260909).pptx
 开题报告\图书馆-听课凭证.docx
-
 </Delete>
