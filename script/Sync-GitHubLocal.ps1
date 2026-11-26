@@ -851,8 +851,26 @@ try {
         Write-Log ('Downloading {0} missing file blob(s) with resume...' -f $tipOids.Count)
         $blobTmp = Join-Path $env:TEMP 'sync-git-blobs'
         New-Item -ItemType Directory -Path $blobTmp -Force | Out-Null
-        $curl = (Get-Command curl.exe -ErrorAction SilentlyContinue).Source
+        $curlCandidates = @()
+        if ($script:GitExe) {
+            $curlCandidates += (Join-Path (Split-Path -Parent $script:GitExe) 'curl.exe')
+        }
+        $curlCandidates += (Join-Path $env:SystemRoot 'System32\curl.exe')
+        $curlCmd = Get-Command curl.exe -ErrorAction SilentlyContinue
+        if ($curlCmd) { $curlCandidates += $curlCmd.Source }
+        $curl = $null
+        foreach ($candidate in $curlCandidates) {
+            if ($candidate -and (Test-Path -LiteralPath $candidate)) { $curl = $candidate; break }
+        }
         if (-not $curl) { throw 'curl.exe not found; it is required to resume blob downloads.' }
+        $curlRetryAll = $false
+        $curlVer = & $curl --version | Select-Object -First 1
+        if ($curlVer -match 'curl (\d+)\.(\d+)') {
+            $curlMaj = [int]$Matches[1]
+            $curlMin = [int]$Matches[2]
+            if ($curlMaj -gt 7 -or ($curlMaj -eq 7 -and $curlMin -ge 71)) { $curlRetryAll = $true }
+        }
+        Write-Log ('curl: {0} ({1})' -f $curl, $curlVer)
         $bi = 0
         foreach ($oid in $tipOids) {
             $bi++
@@ -999,7 +1017,9 @@ try {
             } else {
                 $blobTries = 40
                 for ($t = 1; $t -le $blobTries; $t++) {
-                    & $curl -L --http1.1 --fail -sS --retry 5 --retry-all-errors --retry-delay 2 -C - --speed-time 30 --speed-limit 1000 -H 'User-Agent: Sync-GitHubLocal' -o $tmpFile $url
+                    $curlArgs = @('-L', '--http1.1', '--fail', '-sS', '--retry', '5', '--retry-delay', '2', '-C', '-', '--speed-time', '30', '--speed-limit', '1000', '-H', 'User-Agent: Sync-GitHubLocal', '-o', $tmpFile, $url)
+                    if ($curlRetryAll) { $curlArgs = @('-L', '--http1.1', '--fail', '-sS', '--retry', '5', '--retry-all-errors', '--retry-delay', '2', '-C', '-', '--speed-time', '30', '--speed-limit', '1000', '-H', 'User-Agent: Sync-GitHubLocal', '-o', $tmpFile, $url) }
+                    & $curl @curlArgs
                     $curlExit = $LASTEXITCODE
                     $have = Test-Path -LiteralPath $tmpFile
                     $sz = 0

@@ -48,10 +48,10 @@ def main() -> None:
     ax.axis("off")
 
     fs = 8.0
-    # 输入与离线部分
+    # 输入与预先建好的部分
     box(ax, 0.1, 6.35, 2.2, 1.6, "初始排程 $\\mathcal{S}^0$\n+ 扰动 $\\mathcal{D}$",
         fc="#eef2f6", fs=8.5)
-    box(ax, 2.75, 8.6, 5.6, 0.9, "扰动到来前（离线）：由 $\\mathcal{S}^0$ 建好占用之间的依赖图 $G_R$",
+    box(ax, 2.75, 8.6, 5.6, 0.9, "扰动发生前预先建好：由 $\\mathcal{S}^0$ 建立预约依赖图 $G_R$",
         fc="#f2f2f2", ec=C_OFF, fs=fs, tc="#333333", ls="--")
 
     # 第一步:划界
@@ -67,10 +67,10 @@ def main() -> None:
         fc="#dce6f1", ec=C_MEAS, fs=fs, tc=C_MEAS)
     arrow(ax, 6.95, 8.6, 6.95, 7.8, C_OFF, ls="--")
 
-    # 第二步:分层回放
+    # 第二步:分层改写
     ax.add_patch(Rectangle((8.8, 5.75), 5.65, 2.6, facecolor="#e9f5ee",
                            edgecolor=C_REP, lw=1.2, alpha=0.55, zorder=0))
-    ax.text(11.6, 8.02, "第二步：分层回放", ha="center", fontsize=9,
+    ax.text(11.6, 8.02, "第二步：分层改写", ha="center", fontsize=9,
             color=C_REP, fontweight="bold")
     box(ax, 8.95, 5.95, 3.75, 1.85,
         "冻结的运输（$F$）：原样保留\n与扰动直接冲突的运输（$Q_0$）：\n在全图上重规划\n其余改写运输（$T$）：\n沿原路线只改时刻",
@@ -87,17 +87,17 @@ def main() -> None:
     arrow(ax, 14.3, 6.9, 14.85, 6.9, C_REP)
     ax.text(14.57, 7.08, "通过", fontsize=7.5, color=C_REP, ha="center")
 
-    # 第三步:失败后放宽
+    # 第三步:失败后重试
     ax.add_patch(Rectangle((2.6, 2.5), 11.85, 2.6, facecolor="#fff8f0",
                            edgecolor=C_CTRL, lw=1.1, alpha=0.6, zorder=0))
-    ax.text(8.5, 4.78, "第三步：失败后放宽（每放宽一级，都重新执行第二步）", ha="center", fontsize=9,
+    ax.text(8.5, 4.78, "第三步：失败后重试（每重试一级，都重新执行第二步）", ha="center", fontsize=9,
             color="#7a3b10", fontweight="bold")
-    box(ax, 2.75, 2.7, 3.3, 1.7, "(1) 调整次序重试\n规划失败的运输提前规划，\n至多 3 次",
+    box(ax, 2.75, 2.7, 3.3, 1.7, "(1) 调整规划次序\n规划失败的运输提前规划，\n至多 3 次",
         fc="#fff4e8", ec=C_CTRL, fs=fs, tc="#7a3b10")
     box(ax, 6.45, 2.7, 3.3, 1.7, "(2) 全图重规划\n$W$ 内全部运输\n都在全图上重规划",
         fc="#fff4e8", ec=C_CTRL, fs=fs, tc="#7a3b10")
     box(ax, 10.15, 2.7, 4.15, 1.7,
-        "(3) 扩大改写集 $W$\n依次加入同一工件此后的运输、\n同一 AGV 此后的运输、\n全部尚未完成的运输",
+        "(3) 扩大改写集 $W$\n依次加入 $W$ 内运输所属工件\n此后的运输、承运 AGV 此后的\n运输、全部尚未完成的运输",
         fc="#fff4e8", ec=C_CTRL, fs=fs, tc="#7a3b10")
     arrow(ax, 6.05, 3.55, 6.45, 3.55, C_CTRL)
     arrow(ax, 9.75, 3.55, 10.15, 3.55, C_CTRL)
